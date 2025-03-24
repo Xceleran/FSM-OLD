@@ -213,6 +213,7 @@
     <Compile Include="Dashboard.aspx.designer.cs">
       <DependentUpon>Dashboard.aspx</DependentUpon>
     </Compile>
+    <Compile Include="Database.cs" />
     <Compile Include="Dispatch.aspx.cs">
       <DependentUpon>Dispatch.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
@@ -230,6 +231,8 @@
     <Compile Include="Invoice.aspx.designer.cs">
       <DependentUpon>Invoice.aspx</DependentUpon>
     </Compile>
+    <Compile Include="Models\Customer\CustomerEntity.cs" />
+    <Compile Include="Processors\CustomerProcessor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="FSM.Master.cs">
       <DependentUpon>FSM.Master</DependentUpon>
