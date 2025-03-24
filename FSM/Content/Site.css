@@ -255,14 +255,6 @@ body {
 }
 
 
-form {
-    display: flex;
-    flex-direction: row;
-    flex: 1;
-    min-height: 100%;
-    overflow: hidden;
-}
-
 @media (max-width: 849px) {
     .sidebar {
         width: 64%;
