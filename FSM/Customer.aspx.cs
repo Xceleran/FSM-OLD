@@ -21,7 +21,6 @@ namespace FSM
             if (!IsPostBack)
             {
                 LoadCustomers();
-                GetCustomerDetails("A7AD4C87-C788-4EC8-854A-0DD2178F8984", "7");
             }
         }
 
