@@ -149,45 +149,7 @@
                 </div>
                 <div class="cust-details-content">
                     <!-- Dashboard for Appointments and Invoices -->
-                    <div class="cust-section-block">
-                        <button class="cust-section-toggle" data-section="dashboard" id="dashboardBtn">Dashboard</button>
-                        <div class="cust-section-content" id="dashboard">
-                            <div class="cust-dashboard">
-                                <div class="cust-dashboard-item">
-                                    <h3>Pending Appointments</h3>
-                                    <p id="pendingAppointments">1</p>
-                                </div>
-                                <div class="cust-dashboard-item">
-                                    <h3>Scheduled Appointments</h3>
-                                    <p id="scheduledAppointments">1</p>
-                                </div>
-                                <div class="cust-dashboard-item">
-                                    <h3>Completed Appointments</h3>
-                                    <p id="completedAppointments">6</p>
-                                </div>
-                                <div class="cust-dashboard-item">
-                                    <h3>Custom Tabs</h3>
-                                    <p id="customTabs">3</p>
-                                </div>
-                                <div class="cust-dashboard-item invoice">
-                                    <h3>Estimates</h3>
-                                    <p id="estimates">1</p>
-                                </div>
-                                <div class="cust-dashboard-item invoice">
-                                    <h3>Open Invoices</h3>
-                                    <p id="openInvoices">1</p>
-                                </div>
-                                <div class="cust-dashboard-item invoice">
-                                    <h3>Unpaid Invoices</h3>
-                                    <p id="unpaidInvoices">6</p>
-                                </div>
-                                <div class="cust-dashboard-item invoice">
-                                    <h3>Paid Invoices</h3>
-                                    <p id="paidInvoices">3</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+               
 
                     <!-- Contact Info -->
                     <div class="cust-section-block">
@@ -205,14 +167,7 @@
                             <div class="cust-site-card" data-site-id="1">
                                 <h3 class="cust-site-title">Main Residence</h3>
                                 <p class="cust-site-info">Address: 123 Elm St, City, ST 12345</p>
-                                <p class="cust-site-info">Contact: Jane Smith (555-987-6543)</p>
-                                <p class="cust-site-info">Equipment: HVAC Unit</p>
-                                <p class="cust-site-info">Warranty: Active until 2026</p>
-                                <p class="cust-site-info">Service History: Last visit on 03/10/2025</p>
-                                <p class="cust-site-info">Photos: 2 uploaded</p>
-                                <p class="cust-site-info">Service Agreement: Annual Maintenance (Signed)</p>
-                                <p class="cust-site-info">Alarms: Next service due 03/10/2026</p>
-                                <p class="cust-site-info">Special Instructions: Check filter replacement</p>
+                                <p class="cust-site-info">Contact: Jane Smith (555-987-6543)</p>                       
                                 <div class="cust-site-actions">
                                     <button class="cust-site-edit-btn" data-site-id="1">Edit</button>
                                     <a href="CustomerDetails.aspx?siteId=1" class="cust-site-view-link">View Details</a>
@@ -222,13 +177,6 @@
                                 <h3 class="cust-site-title">Vacation Home</h3>
                                 <p class="cust-site-info">Address: 456 Oak Rd, City, ST 12345</p>
                                 <p class="cust-site-info">Contact: Bob Johnson (555-456-7890)</p>
-                                <p class="cust-site-info">Equipment: Generator</p>
-                                <p class="cust-site-info">Warranty: Active until 2027</p>
-                                <p class="cust-site-info">Service History: Last visit on 01/15/2025</p>
-                                <p class="cust-site-info">Photos: 1 uploaded</p>
-                                <p class="cust-site-info">Service Agreement: None</p>
-                                <p class="cust-site-info">Alarms: None</p>
-                                <p class="cust-site-info">Special Instructions: Ensure generator fuel level</p>
                                 <div class="cust-site-actions">
                                     <button class="cust-site-edit-btn" data-site-id="2">Edit</button>
                                     <a href="CustomerDetails.aspx?siteId=2" class="cust-site-view-link">View Details</a>
