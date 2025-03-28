@@ -11,6 +11,8 @@ namespace FSM
     {
         protected void Page_Load(object sender, EventArgs e)
         {
+            string customerId = Request.QueryString["custId"];
+            string customerGuid = Request.QueryString["custGuid"];
         }
     }
 }

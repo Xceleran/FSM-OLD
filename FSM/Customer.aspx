@@ -614,7 +614,7 @@
                         <div class="cust-section-content" id="sites">
                             <div class="cust-site-card" data-site-id="1">
                                 <h3 class="cust-site-title">Main Residence</h3>
-                                <p class="cust-site-info">Address: 123 Elm St, City, ST 12345</p>
+                                <p class="cust-site-info" id="address-1">Address: 123 Elm St, City, ST 12345</p>
                                 <p class="cust-site-info">Contact: Jane Smith (555-987-6543)</p>
                                 <div class="cust-site-actions">
                                     <button class="cust-site-edit-btn" data-site-id="1">Edit</button>
@@ -623,7 +623,7 @@
                             </div>
                             <div class="cust-site-card" data-site-id="2">
                                 <h3 class="cust-site-title">Vacation Home</h3>
-                                <p class="cust-site-info">Address: 456 Oak Rd, City, ST 12345</p>
+                                <p class="cust-site-info" id="address-2">Address: 456 Oak Rd, City, ST 12345</p>
                                 <p class="cust-site-info">Contact: Bob Johnson (555-456-7890)</p>
                                 <div class="cust-site-actions">
                                     <button class="cust-site-edit-btn" data-site-id="2">Edit</button>
@@ -1422,10 +1422,7 @@
                     if (api.rows().count() > 0) {
                         api.row(0).select();
                         var firstRowData = api.row(0).data();
-                        console.log(firstRowData);
-
-                        var customerId = firstRowData.CustomerID;
-                        var customerGuid = firstRowData.CustomerGuid;
+                        generateCustomerDetails(firstRowData);
                     }
                 }
             });
@@ -1436,13 +1433,21 @@
         $('#customerTable tbody').on('click', 'tr', function () {
             var data = $('#customerTable').DataTable().row(this).data();  // Get data for the clicked row
             if (data) {
-                var customerId = data.CustomerID;
-                var customerGuid = data.CustomerGuid;
-
-                console.log(customerId);
-                console.log(customerGuid);
+                generateCustomerDetails(data);
             }
         });
+
+        function generateCustomerDetails(data) {
+            if (data) {
+                document.getElementById('customerName').textContent = data.FirstName +" "+ data.LastName;
+                document.getElementById('customerEmail').textContent = data.Email;
+                document.getElementById('customerPhone').textContent = data.Phone;
+                document.getElementById('address-1').textContent = data.Address1;
+                document.getElementById('address-2').textContent = data.Address2;
+                $(".cust-site-view-link").attr("href", "CustomerDetails.aspx?custId=" + data.CustomerID + "&custGuid=" + data.CustomerGuid);
+            }
+
+        }
 
     </script>
 </asp:Content>
