@@ -1,104 +1,542 @@
-﻿<%@ Page Title="Customers" Language="C#" MasterPageFile="~/FSM.Master" AutoEventWireup="true" CodeBehind="Customer.aspx.cs" Inherits="FSM.Customers" %>
+﻿<%@ Page Title="Customers" Language="C#" MasterPageFile="~/FSM.Master" AutoEventWireup="true" CodeBehind="Customer.aspx.cs" Inherits="FSM.Customer" %>
 
 <asp:Content ID="BodyContent" ContentPlaceHolderID="MainContent" runat="server">
+
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.2.2/css/dataTables.dataTables.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/select/3.0.0/css/select.dataTables.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/2.2.2/js/dataTables.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/select/3.0.0/js/dataTables.select.min.js"></script>
+
     <style type="text/css">
         /* Unique raw CSS classes */
-        .cust-page-container { width: 100%; padding: 0; margin: 0 auto; margin-top: 50px; padding: 0 25px; }
-        .cust-header { display: flex; flex-direction: column; justify-content: space-between; margin-bottom: 20px; }
-        .cust-title { font-size: 24px; font-weight: bold; color: #f97316; }
-        .cust-search-container { display: flex; flex-direction: column; gap: 10px; width: 100%; }
-        .cust-search-input { border: 1px solid #d1d5db; border-radius: 8px; padding: 8px; width: 100%; box-sizing: border-box; }
-        .cust-add-btn { background-color: #2563eb; color: #ffffff; padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer; }
-        .cust-add-btn:hover { background-color: #1d4ed8; }
-        
-        .cust-section { display: flex; flex-direction: column; gap: 20px; }
-        .cust-list-container { width: 100%; background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); overflow: hidden; }
-        .cust-list-header { display: none; grid-template-columns: repeat(4, 1fr); padding: 10px; background-color: #f3f4f6; color: #6b7280; font-weight: 500; font-size: 14px; position: sticky; top: 0; z-index: 10; }
-        .cust-list-header span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .cust-list { max-height: calc(100vh - 192px); overflow-y: auto; padding: 8px; }
-        .cust-item { padding: 12px; border-bottom: 1px solid #e5e7eb; cursor: pointer; }
-        .cust-item:hover { background-color: #f9fafb; }
-        .cust-item-active { background-color: #ccfbf1; }
-        .cust-item-field { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .cust-item-label { font-weight: 500; color: #374151; display: inline; }
-        .cust-status-badge { display: inline-block; padding: 4px 8px; border-radius: 9999px; font-size: 12px; margin-left: 8px; }
-        .cust-status-active { background-color: #16a34a; color: #ffffff; }
-        .cust-status-inactive { background-color: #dc2626; color: #ffffff; }
-        
-        .cust-details-container { width: 100%; background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); padding: 16px; overflow: hidden; }
-        .cust-details-header { display: flex; flex-direction: column; justify-content: space-between; margin-bottom: 20px; gap: 10px; }
-        .cust-details-title { font-size: 20px; font-weight: 600; color: #1f2937; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .cust-details-btns { display: flex; flex-direction: column; gap: 8px; width: 100%; }
-        .cust-edit-btn, .cust-message-btn { background-color: #e5e7eb; color: #374151; padding: 4px 12px; border-radius: 8px; border: none; cursor: pointer; }
-        .cust-edit-btn:hover, .cust-message-btn:hover { background-color: #d1d5db; }
-        
-        .cust-details-content { max-height: calc(100vh - 192px); overflow-y: auto; }
-        .cust-section-block { border-bottom: 1px solid #e5e7eb; }
-        .cust-section-toggle { width: 100%; padding: 16px; background-color: #f9fafb; text-align: left; font-weight: 500; color: #374151; border: none; cursor: pointer; }
-        .cust-section-toggle:hover { background-color: #f3f4f6; }
-        .cust-section-content { padding: 16px; display: none; }
-        .cust-info-text { margin-bottom: 8px; }
-        .cust-info-label { color: #4b5563; font-weight: 500; }
-        .cust-info-value { color: #1f2937; word-wrap: break-word; }
-        
-        .cust-site-card { padding: 16px; border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 16px; }
-        .cust-site-title { font-size: 18px; font-weight: 500; color: #1f2937; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .cust-site-info { color: #4b5563; margin: 4px 0; }
-        .cust-site-actions { margin-top: 8px; display: flex; flex-direction: column; gap: 8px; }
-        .cust-site-edit-btn { background-color: #e5e7eb; color: #374151; padding: 4px 8px; border-radius: 8px; border: none; cursor: pointer; }
-        .cust-site-edit-btn:hover { background-color: #d1d5db; }
-        .cust-site-view-link { background-color: #2563eb; color: #ffffff; padding: 4px 8px; border-radius: 8px; text-decoration: none; display: inline-block; }
-        .cust-site-view-link:hover { background-color: #1d4ed8; }
-        .cust-site-add-btn { background-color: #e5e7eb; color: #374151; padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer; }
-        .cust-site-add-btn:hover { background-color: #d1d5db; }
-        
-        .cust-status-tags { display: flex; flex-wrap: wrap; gap: 8px; }
-        .cust-status-tag { display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 9999px; background-color: #e5e7eb; cursor: pointer; }
-        .cust-status-tag:hover { opacity: 0.8; }
-        .cust-tag-delete { margin-left: 8px; font-size: 14px; color: #6b7280; border: none; background: none; cursor: pointer; }
-        .cust-tag-delete:hover { color: #dc2626; }
-        .cust-tag-input-container { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
-        .cust-tag-input { border: 1px solid #d1d5db; border-radius: 8px; padding: 8px; width: 100%; box-sizing: border-box; }
-        .cust-tag-add-btn { background-color: #e5e7eb; color: #374151; padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer; }
-        .cust-tag-add-btn:hover { background-color: #d1d5db; }
-        
-        .cust-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); justify-content: center; align-items: center; z-index: 1000; }
-        .cust-modal-content { background-color: #ffffff; padding: 16px; border-radius: 8px; width: 90%; max-width: 500px; }
-        .cust-modal-title { font-size: 20px; font-weight: 600; margin-bottom: 16px; }
-        .cust-modal-form { display: flex; flex-direction: column; gap: 16px; }
-        .cust-modal-field { display: flex; flex-direction: column; }
-        .cust-modal-label { margin-bottom: 4px; }
-        .cust-modal-input { width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 8px; box-sizing: border-box; }
-        .cust-modal-btns { display: flex; gap: 8px; }
-        .cust-modal-submit { background-color: #2563eb; color: #ffffff; padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer; }
-        .cust-modal-submit:hover { background-color: #1d4ed8; }
-        .cust-modal-cancel { background-color: #e5e7eb; color: #374151; padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer; }
-        .cust-modal-cancel:hover { background-color: #d1d5db; }
+        .cust-page-container {
+            width: 100%;
+            padding: 0;
+            margin: 0 auto;
+            margin-top: 50px;
+            padding: 0 25px;
+        }
 
-        .cust-dashboard { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 20px; }
-        .cust-dashboard-item { flex: 1 1 100%; background-color: #3b82f6; color: white; padding: 16px; border-radius: 8px; text-align: center; }
-        .cust-dashboard-item h3 { font-size: 16px; margin-bottom: 8px; }
-        .cust-dashboard-item p { font-size: 24px; font-weight: bold; }
-        .cust-dashboard-item.invoice { background-color: #16a34a; }
+        .cust-header {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .cust-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #f97316;
+        }
+
+        .cust-search-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .cust-search-input {
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            padding: 8px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .cust-add-btn {
+            background-color: #2563eb;
+            color: #ffffff;
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+        }
+
+            .cust-add-btn:hover {
+                background-color: #1d4ed8;
+            }
+
+        .cust-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .cust-list-container {
+            width: 100%;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .cust-list-header {
+            display: none;
+            grid-template-columns: repeat(4, 1fr);
+            padding: 10px;
+            background-color: #f3f4f6;
+            color: #6b7280;
+            font-weight: 500;
+            font-size: 14px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+            .cust-list-header span {
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+        .cust-list {
+            max-height: calc(100vh - 192px);
+            overflow-y: auto;
+            padding: 8px;
+        }
+
+        .cust-item {
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+            cursor: pointer;
+        }
+
+            .cust-item:hover {
+                background-color: #f9fafb;
+            }
+
+        .cust-item-active {
+            background-color: #ccfbf1;
+        }
+
+        .cust-item-field {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .cust-item-label {
+            font-weight: 500;
+            color: #374151;
+            display: inline;
+        }
+
+        .cust-status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 9999px;
+            font-size: 12px;
+            margin-left: 8px;
+        }
+
+        .cust-status-active {
+            background-color: #16a34a;
+            color: #ffffff;
+        }
+
+        .cust-status-inactive {
+            background-color: #dc2626;
+            color: #ffffff;
+        }
+
+        .cust-details-container {
+            width: 100%;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 16px;
+            overflow: hidden;
+        }
+
+        .cust-details-header {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            gap: 10px;
+        }
+
+        .cust-details-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1f2937;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .cust-details-btns {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .cust-edit-btn, .cust-message-btn {
+            background-color: #e5e7eb;
+            color: #374151;
+            padding: 4px 12px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+        }
+
+            .cust-edit-btn:hover, .cust-message-btn:hover {
+                background-color: #d1d5db;
+            }
+
+        .cust-details-content {
+            max-height: calc(100vh - 192px);
+            overflow-y: auto;
+        }
+
+        .cust-section-block {
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .cust-section-toggle {
+            width: 100%;
+            padding: 16px;
+            background-color: #f9fafb;
+            text-align: left;
+            font-weight: 500;
+            color: #374151;
+            border: none;
+            cursor: pointer;
+        }
+
+            .cust-section-toggle:hover {
+                background-color: #f3f4f6;
+            }
+
+        .cust-section-content {
+            padding: 16px;
+            display: none;
+        }
+
+        .cust-info-text {
+            margin-bottom: 8px;
+        }
+
+        .cust-info-label {
+            color: #4b5563;
+            font-weight: 500;
+        }
+
+        .cust-info-value {
+            color: #1f2937;
+            word-wrap: break-word;
+        }
+
+        .cust-site-card {
+            padding: 16px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .cust-site-title {
+            font-size: 18px;
+            font-weight: 500;
+            color: #1f2937;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .cust-site-info {
+            color: #4b5563;
+            margin: 4px 0;
+        }
+
+        .cust-site-actions {
+            margin-top: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .cust-site-edit-btn {
+            background-color: #e5e7eb;
+            color: #374151;
+            padding: 4px 8px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+        }
+
+            .cust-site-edit-btn:hover {
+                background-color: #d1d5db;
+            }
+
+        .cust-site-view-link {
+            background-color: #2563eb;
+            color: #ffffff;
+            padding: 4px 8px;
+            border-radius: 8px;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+            .cust-site-view-link:hover {
+                background-color: #1d4ed8;
+            }
+
+        .cust-site-add-btn {
+            background-color: #e5e7eb;
+            color: #374151;
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+        }
+
+            .cust-site-add-btn:hover {
+                background-color: #d1d5db;
+            }
+
+        .cust-status-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .cust-status-tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 12px;
+            border-radius: 9999px;
+            background-color: #e5e7eb;
+            cursor: pointer;
+        }
+
+            .cust-status-tag:hover {
+                opacity: 0.8;
+            }
+
+        .cust-tag-delete {
+            margin-left: 8px;
+            font-size: 14px;
+            color: #6b7280;
+            border: none;
+            background: none;
+            cursor: pointer;
+        }
+
+            .cust-tag-delete:hover {
+                color: #dc2626;
+            }
+
+        .cust-tag-input-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .cust-tag-input {
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            padding: 8px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .cust-tag-add-btn {
+            background-color: #e5e7eb;
+            color: #374151;
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+        }
+
+            .cust-tag-add-btn:hover {
+                background-color: #d1d5db;
+            }
+
+        .cust-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .cust-modal-content {
+            background-color: #ffffff;
+            padding: 16px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+        }
+
+        .cust-modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .cust-modal-form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .cust-modal-field {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .cust-modal-label {
+            margin-bottom: 4px;
+        }
+
+        .cust-modal-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            box-sizing: border-box;
+        }
+
+        .cust-modal-btns {
+            display: flex;
+            gap: 8px;
+        }
+
+        .cust-modal-submit {
+            background-color: #2563eb;
+            color: #ffffff;
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+        }
+
+            .cust-modal-submit:hover {
+                background-color: #1d4ed8;
+            }
+
+        .cust-modal-cancel {
+            background-color: #e5e7eb;
+            color: #374151;
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+        }
+
+            .cust-modal-cancel:hover {
+                background-color: #d1d5db;
+            }
+
+        .cust-dashboard {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .cust-dashboard-item {
+            flex: 1 1 100%;
+            background-color: #3b82f6;
+            color: white;
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+            .cust-dashboard-item h3 {
+                font-size: 16px;
+                margin-bottom: 8px;
+            }
+
+            .cust-dashboard-item p {
+                font-size: 24px;
+                font-weight: bold;
+            }
+
+            .cust-dashboard-item.invoice {
+                background-color: #16a34a;
+            }
 
         /* Responsive adjustments */
         @media (min-width: 768px) {
-            .cust-header { flex-direction: row; align-items: center; }
-            .cust-search-container { flex-direction: row; width: auto; }
-            .cust-search-input { width: 256px; }
-            .cust-section { flex-direction: row; }
-            .cust-list-container, .cust-details-container { width: 66.66%; }
-            .cust-details-header { flex-direction: row; align-items: center; }
-            .cust-details-btns { flex-direction: row; width: auto; }
-            .cust-site-actions { flex-direction: row; }
-            .cust-tag-input-container { flex-direction: row; }
-            .cust-dashboard-item { flex: 1 1 45%; }
+            .cust-header {
+                flex-direction: row;
+                align-items: center;
+            }
+
+            .cust-search-container {
+                flex-direction: row;
+                width: auto;
+            }
+
+            .cust-search-input {
+                width: 256px;
+            }
+
+            .cust-section {
+                flex-direction: row;
+            }
+
+            .cust-list-container, .cust-details-container {
+                width: 66.66%;
+            }
+
+            .cust-details-header {
+                flex-direction: row;
+                align-items: center;
+            }
+
+            .cust-details-btns {
+                flex-direction: row;
+                width: auto;
+            }
+
+            .cust-site-actions {
+                flex-direction: row;
+            }
+
+            .cust-tag-input-container {
+                flex-direction: row;
+            }
+
+            .cust-dashboard-item {
+                flex: 1 1 45%;
+            }
         }
+
         @media (min-width: 1280px) {
-            .cust-list-header { display: grid; }
-            .cust-item { display: grid; grid-template-columns: repeat(4, 1fr); }
-            .cust-item-label { display: none; }
-            .cust-dashboard-item { flex: 1 1 22%; }
+            .cust-list-header {
+                display: grid;
+            }
+
+            .cust-item {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+            }
+
+            .cust-item-label {
+                display: none;
+            }
+
+            .cust-dashboard-item {
+                flex: 1 1 22%;
+            }
+        }
+
+        .dataTable tr {
+            cursor: pointer;
         }
     </style>
 
@@ -136,6 +574,16 @@
                         <div class="cust-item-field"><span class="cust-item-label">Sites: </span>3</div>
                     </div>
                 </div>
+
+                <table id="customerTable" class="display" style="width: 100%">
+                    <thead>
+                        <tr>
+                            <th>First Name</th>
+                            <th>Last Name</th>
+                            <th>Email</th>
+                        </tr>
+                    </thead>
+                </table>
             </div>
 
             <!-- Customer Details -->
@@ -149,7 +597,7 @@
                 </div>
                 <div class="cust-details-content">
                     <!-- Dashboard for Appointments and Invoices -->
-               
+
 
                     <!-- Contact Info -->
                     <div class="cust-section-block">
@@ -167,7 +615,7 @@
                             <div class="cust-site-card" data-site-id="1">
                                 <h3 class="cust-site-title">Main Residence</h3>
                                 <p class="cust-site-info">Address: 123 Elm St, City, ST 12345</p>
-                                <p class="cust-site-info">Contact: Jane Smith (555-987-6543)</p>                       
+                                <p class="cust-site-info">Contact: Jane Smith (555-987-6543)</p>
                                 <div class="cust-site-actions">
                                     <button class="cust-site-edit-btn" data-site-id="1">Edit</button>
                                     <a href="CustomerDetails.aspx?siteId=1" class="cust-site-view-link">View Details</a>
@@ -191,8 +639,10 @@
                         <button class="cust-section-toggle" data-section="status" id="statusBtn">Status Tags</button>
                         <div class="cust-section-content" id="status">
                             <div class="cust-status-tags" id="statusTags">
-                                <span class="cust-status-tag" data-tag="active">Active<button class="cust-tag-delete">×</button></span>
-                                <span class="cust-status-tag" data-tag="pending">Pending<button class="cust-tag-delete">×</button></span>
+                                <span class="cust-status-tag" data-tag="active">Active
+                                    <button class="cust-tag-delete">×</button></span>
+                                <span class="cust-status-tag" data-tag="pending">Pending
+                                    <button class="cust-tag-delete">×</button></span>
                             </div>
                             <div class="cust-tag-input-container">
                                 <input type="text" placeholder="Add new tag..." class="cust-tag-input" id="newTagInput" />
@@ -922,7 +1372,77 @@
             });
 
             // Open the dashboard section by default
-            document.getElementById('dashboard').style.display = 'block';
+            // document.getElementById('dashboard').style.display = 'block';
         });
+
+        loadCustomers();
+
+        function loadCustomers() {
+            var table = $('#customerTable').DataTable({
+                "processing": true,
+                "serverSide": true,
+                "filter": true,
+                "ajax": {
+                    "url": "Customer.aspx/LoadCustomers",
+                    "type": "POST",
+                    "contentType": "application/json; charset=utf-8",
+                    "dataType": "json",
+                    "data": function (d) {
+                        return JSON.stringify({
+                            draw: d.draw,
+                            start: d.start,
+                            length: d.length,
+                            searchValue: d.search.value,
+                            sortColumn: d.columns[d.order[0].column].data,
+                            sortDirection: d.order[0].dir
+                        });
+                    },
+                    "dataSrc": function (json) {
+                        console.log(json);
+                        if (json.error) {
+                            alert(json.error);
+                            return [];
+                        }
+                        return json.data;
+                    }
+                },
+                "paging": true,
+                "pageLength": 10,
+                "columns": [
+                    { "data": "FirstName", "name": "First Name", "autoWidth": true},
+                    { "data": "LastName", "name": "Last Name", "autoWidth": true },
+                    { "data": "Email", "name": "Email", "autoWidth": true },
+                ],
+                "select": {
+                    "style": "single" // Enables single row selection
+                },
+
+                "drawCallback": function (settings) {
+                    var api = this.api();
+                    if (api.rows().count() > 0) {
+                        api.row(0).select();
+                        var firstRowData = api.row(0).data();
+                        console.log(firstRowData);
+
+                        var customerId = firstRowData.CustomerID;
+                        var customerGuid = firstRowData.CustomerGuid;
+                    }
+                }
+            });
+        }
+
+
+
+        $('#customerTable tbody').on('click', 'tr', function () {
+            var data = $('#customerTable').DataTable().row(this).data();  // Get data for the clicked row
+            if (data) {
+                var customerId = data.CustomerID;
+                var customerGuid = data.CustomerGuid;
+
+                console.log(customerId);
+                console.log(customerGuid);
+            }
+        });
+
     </script>
 </asp:Content>

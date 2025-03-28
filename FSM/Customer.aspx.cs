@@ -1,4 +1,5 @@
 ﻿using FSM.Models.Customer;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -6,35 +7,58 @@ using System.Linq;
 using System.Reflection;
 using System.Security.Policy;
 using System.Web;
+using System.Web.Http.Results;
+using System.Web.Script.Services;
+using System.Web.Services;
 using System.Web.UI;
 using System.Web.UI.WebControls;
 using System.Xml.Linq;
 
 namespace FSM
 {
-    public partial class Customers : System.Web.UI.Page
+    public partial class Customer : System.Web.UI.Page
     {
         string CompanyID = "";
         protected void Page_Load(object sender, EventArgs e)
-        {
+         {
             HttpContext.Current.Session["CompanyID"] = "13185";
-            if (!IsPostBack)
-            {
-                LoadCustomers();
-            }
+            //if (!IsPostBack)
+            //{
+            //    LoadCustomers();
+            //}
         }
 
-        public List<CustomerEntity> LoadCustomers()
+        [WebMethod]
+        [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
+        public static string LoadCustomers(int draw, int start, int length, string searchValue, string sortColumn, string sortDirection)
         {
-            string companyid = Session["CompanyID"].ToString();
+            string companyid = HttpContext.Current.Session["CompanyID"].ToString();
+            int totalRecords = 0;
             Database db = new Database();
             DataTable dt = new DataTable();
             var customers = new List<CustomerEntity>();
             try
             {
-                string Sql = @"Select * From [msSchedulerV3].[dbo].[tbl_Customer] where CompanyID = '"+ companyid + "' order by FirstName asc;";
+                string whereCondition = "WHERE CompanyID = '" + companyid + "' ";
+                if (!string.IsNullOrEmpty(searchValue))
+                {
+                    whereCondition += "AND (FirstName LIKE '%" + searchValue + "%' OR LastName LIKE '%" + searchValue + "%' OR Email LIKE '%" + searchValue + "%') ";
+                }
+
+                string countSql = @"SELECT COUNT(*) FROM [msSchedulerV3].[dbo].[tbl_Customer] " + whereCondition;
                 db.Open();
-                db.Execute(Sql, out dt);
+                object result =  db.ExecuteScalar(countSql);
+                if (result != null)
+                {
+                    totalRecords = Convert.ToInt32(result);
+                }
+                db.Close();
+
+                string sql = $@"SELECT * FROM [msSchedulerV3].[dbo].[tbl_Customer] {whereCondition}
+                                ORDER BY {sortColumn} {sortDirection} OFFSET {start} ROWS FETCH NEXT {length} ROWS ONLY;";
+
+                db.Open();
+                db.Execute(sql, out dt);
                 db.Close();
                 if (dt.Rows.Count > 0)
                 {
@@ -46,8 +70,8 @@ namespace FSM
                             CustomerID = dr["CustomerID"].ToString(),
                             BusinessID = Convert.ToInt32(dr["BusinessID"]),
                             CustomerGuid = dr["CustomerGuid"].ToString(),
-                           // Address1 = dr["Address1"].ToString(),
-                            //Address2 = dr["Address2"].ToString(),
+                            Address1 = dr["Address1"].ToString(),
+                            Address2 = dr["Address2"].ToString(),
                             FirstName = dr["FirstName"].ToString(),
                             //FirstName2 = dr["FirstName2"].ToString(),
                             LastName = dr["LastName"].ToString(),
@@ -56,13 +80,13 @@ namespace FSM
                             //Title2 = dr["Title2"].ToString(),
                             //JobTitle = dr["JobTitle"].ToString(),
                             //JobTitle2 = dr["JobTitle2"].ToString(),
-                           // City = dr["City"].ToString(),
+                            // City = dr["City"].ToString(),
                             //State = dr["State"].ToString(),
                             //ZipCode = dr["ZipCode"].ToString(),
-                           // Phone = dr["Phone"].ToString(),
+                            Phone = dr["Phone"].ToString(),
                             //Mobile = dr["Mobile"].ToString(),
                             Email = dr["Email"].ToString(),
-                           // Notes = dr["Notes"].ToString(),
+                            // Notes = dr["Notes"].ToString(),
                             CompanyName = dr["CompanyName"].ToString(),
                             //CompanyName2 = dr["CompanyName2"].ToString(),
                             //BusinessName = dr["BusinessName"].ToString(),
@@ -81,11 +105,18 @@ namespace FSM
 
             catch (Exception ex)
             {
-                throw ex;
+                return JsonConvert.SerializeObject(new { error = ex.Message });
             }
-            return customers;
-        }
+            var response = new
+            {
+                draw = draw,
+                recordsTotal = totalRecords,
+                recordsFiltered = totalRecords,
+                data = customers
+            };
 
+            return JsonConvert.SerializeObject(response);
+        }
 
         public CustomerEntity GetCustomerDetails(string CustomerGuid, string customerId)
         {
@@ -157,7 +188,7 @@ namespace FSM
                 customer.CustomFields.Add("TotalInvoice", TotalInvoice.ToString());
                 customer.CustomFields.Add("TotalAppoinment", TotalAppoinment.ToString());
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 throw ex;
             }
