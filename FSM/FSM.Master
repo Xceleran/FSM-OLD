@@ -1,4 +1,5 @@
 ﻿<%@ Master Language="C#" AutoEventWireup="true" CodeBehind="FSM.master.cs" Inherits="FSM.FSMMaster" %>
+<%@ Register Assembly="System.Web.Optimization" Namespace="System.Web.Optimization" TagPrefix="webopt" %>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -12,6 +13,9 @@
     <webopt:BundleReference runat="server" Path="~/Content/css" />
     <link href="~/favicon.ico" rel="shortcut icon" type="image/x-icon" />
     <link href="~/Content/custom.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+
 </head>
 <body runat="server" id="bodyTag">
     <form runat="server">
@@ -19,7 +23,7 @@
             <Scripts>
                 <asp:ScriptReference Name="MsAjaxBundle" />
                 <asp:ScriptReference Name="jquery" />
-                <asp:ScriptReference Name="bootstrap" />
+                  <asp:ScriptReference Path="~/Scripts/bootstrap.js" />
                 <asp:ScriptReference Name="WebForms.js" Assembly="System.Web" Path="~/Scripts/WebForms/WebForms.js" />
                 <asp:ScriptReference Name="WebUIValidation.js" Assembly="System.Web" Path="~/Scripts/WebForms/WebUIValidation.js" />
                 <asp:ScriptReference Name="MenuStandards.js" Assembly="System.Web" Path="~/Scripts/WebForms/MenuStandards.js" />
@@ -73,14 +77,14 @@
                             <span class="sidebar-text">Appointments</span>
                         </a>
                     </li>
-                    <li id="dispatch-link" class="sidebar-nav-item">
+                  <%--  <li id="dispatch-link" class="sidebar-nav-item">
                         <a href="Dispatch.aspx" class="sidebar-nav-link">
                             <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                             </svg>
                             <span class="sidebar-text">Dispatch</span>
                         </a>
-                    </li>
+                    </li>--%>
                     <li id="item-link" class="sidebar-nav-item">
                         <a href="BillableItems.aspx" class="sidebar-nav-link">
                             <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">

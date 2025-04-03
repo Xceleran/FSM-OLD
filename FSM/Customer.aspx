@@ -5,7 +5,7 @@
         /* Unique raw CSS classes */
         .cust-page-container { width: 100%; padding: 0; margin: 0 auto; margin-top: 50px; padding: 0 25px; }
         .cust-header { display: flex; flex-direction: column; justify-content: space-between; margin-bottom: 20px; }
-        .cust-title { font-size: 24px; font-weight: bold; color: #f97316; }
+        .cust-title { font-size: 24px; font-weight: bold; color: #ff520d; }
         .cust-search-container { display: flex; flex-direction: column; gap: 10px; width: 100%; }
         .cust-search-input { border: 1px solid #d1d5db; border-radius: 8px; padding: 8px; width: 100%; box-sizing: border-box; }
         .cust-add-btn { background-color: #2563eb; color: #ffffff; padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer; }
@@ -104,7 +104,7 @@
 
     <div class="cust-page-container">
         <!-- Page Header -->
-        <header class="cust-header">
+        <header class="cust-header mt-3">
             <h1 class="cust-title">Customers</h1>
             <div class="cust-search-container">
                 <input type="text" placeholder="Search customers..." class="cust-search-input" id="customerSearch" />

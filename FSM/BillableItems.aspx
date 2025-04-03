@@ -2,185 +2,170 @@
 
 <asp:Content ID="BodyContent" ContentPlaceHolderID="MainContent" runat="server">
     <style type="text/css">
-        .bill-container { width: 100%; margin-top: 50px; padding: 0 25px; box-sizing: border-box; }
-        .bill-header { display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px; }
-        .bill-title { font-size: 24px; font-weight: bold; color: #f97316; }
-        .bill-btn-container { display: flex; flex-direction: column; gap: 16px; }
-        .bill-btn { padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer; color: #ffffff; }
-        .bill-sync-btn { background-color: #16a34a; }
-        .bill-sync-btn:hover { background-color: #15803d; }
-        .bill-add-btn { background-color: #2563eb; }
-        .bill-add-btn:hover { background-color: #1d4ed8; }
-        .bill-filter-section { display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px; }
-        .bill-entries { display: flex; align-items: center; gap: 8px; font-size: 14px; }
-        .bill-select { border: 1px solid #d1d5db; border-radius: 8px; padding: 4px 12px; background-color: #ffffff; }
-        .bill-search { border: 1px solid #d1d5db; border-radius: 8px; padding: 8px 16px; width: 100%; max-width: 256px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); }
-        .bill-list-view { background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); overflow-x: auto; }
-        .bill-table { width: 100%; border-collapse: collapse; }
-        .bill-table th, .bill-table td { border: 1px solid #e5e7eb; padding: 12px; text-align: left; }
-        .bill-table th { background-color: #f3f4f6; color: #4b5563; font-weight: 600; font-size: 12px; text-transform: uppercase; }
-        .bill-table td { color: #1f2937; }
+        .bill-container { width: 100%; margin-top: 75px; padding: 0 15px; }
+        .bill-title { font-size: 24px; font-weight: bold; color: #f84700; }
+        .bill-table { width: 100%; }
+        .bill-table th, .bill-table td { padding: 12px; text-align: left; }
+        .bill-table th { font-size: 12px; text-transform: uppercase; }
         .bill-edit-btn, .bill-delete-btn { font-weight: 600; background: none; border: none; cursor: pointer; padding: 0 8px; }
         .bill-edit-btn { color: #2563eb; }
         .bill-edit-btn:hover { color: #1d4ed8; }
         .bill-delete-btn { color: #dc2626; }
         .bill-delete-btn:hover { color: #b91c1c; }
-        .bill-image-view { display: none; grid-template-columns: repeat(1, 1fr); gap: 24px; }
-        .bill-image-card { background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); padding: 16px; text-align: center; }
+        .bill-image-view { display: none; }
+        .bill-image-card { text-align: center; }
         .bill-image { width: 128px; height: 128px; object-fit: cover; border-radius: 8px; margin-bottom: 8px; }
-        .bill-image-title { font-size: 18px; font-weight: 600; color: #1f2937; }
-        .bill-image-text { font-size: 14px; color: #4b5563; }
-        .bill-pagination { display: flex; justify-content: center; align-items: center; gap: 16px; margin-top: 24px; }
-        .bill-page-btn { background-color: #e5e7eb; color: #374151; padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer; }
-        .bill-page-btn:hover:not(:disabled) { background-color: #d1d5db; }
-        .bill-page-btn:disabled { background-color: #f3f4f6; color: #6b7280; cursor: not-allowed; }
-        .bill-page-info { font-size: 14px; font-weight: 500; color: #374151; }
-        .bill-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); justify-content: center; align-items: center; z-index: 1000; }
-        .bill-modal-content { background-color: #ffffff; padding: 24px; border-radius: 8px; width: 90%; max-width: 500px; }
-        .bill-modal-title { font-size: 20px; font-weight: 600; margin-bottom: 24px; }
-        .bill-modal-form { display: flex; flex-direction: column; gap: 24px; }
-        .bill-modal-field { display: flex; flex-direction: column; gap: 8px; }
-        .bill-modal-label { font-weight: 500; color: #374151; }
-        .bill-modal-input { padding: 8px; border: 1px solid #d1d5db; border-radius: 8px; width: 100%; box-sizing: border-box; }
-        .bill-modal-radio-group { display: flex; gap: 16px; }
-        .bill-modal-radio { display: flex; align-items: center; gap: 4px; }
-        .bill-modal-image-section { display: none; margin-top: 8px; }
+        .bill-image-title { font-size: 18px; font-weight: 600; }
+        .bill-image-text { font-size: 14px; }
         .bill-modal-image-preview { max-width: 100%; height: auto; border-radius: 8px; display: none; }
         .bill-modal-error { color: #dc2626; font-size: 14px; margin-top: 4px; display: none; }
-        .bill-modal-btns { display: flex; gap: 8px; }
-        .bill-modal-submit { background-color: #2563eb; color: #ffffff; padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer; }
-        .bill-modal-submit:hover { background-color: #1d4ed8; }
-        .bill-modal-cancel { background-color: #e5e7eb; color: #374151; padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer; }
-        .bill-modal-cancel:hover { background-color: #d1d5db; }
 
-        @media (min-width: 640px) {
-            .bill-header { flex-direction: row; justify-content: space-between; align-items: center; }
-            .bill-btn-container { flex-direction: row; }
-            .bill-filter-section { flex-direction: row; justify-content: space-between; align-items: center; }
-        }
-        @media (min-width: 768px) {
-            .bill-title { font-size: 30px; }
-            .bill-image-view { grid-template-columns: repeat(3, 1fr); }
-        }
-        @media (min-width: 1024px) {
-            .bill-image-view { grid-template-columns: repeat(5, 1fr); }
+        @media (max-width: 576px) {
+            .bill-table { font-size: 14px; }
+            .bill-table th, .bill-table td { padding: 8px; }
+            .bill-image { width: 100px; height: 100px; }
         }
     </style>
 
     <input type="hidden" id="companyId" value="7369" />
 
     <div class="bill-container">
-        <header class="bill-header">
-            <h1 class="bill-title">Billable Items</h1>
-            <div class="bill-btn-container">
-                <button class="bill-btn bill-sync-btn" id="syncBtn">Sync with CEC/QBO</button>
-                <button class="bill-btn bill-add-btn" id="addItemBtn">+ Add Item</button>
+        <header class="mb-4">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h1 class="bill-title mb-3 mb-md-0">Billable Items</h1>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <button class="btn btn-success me-2 mb-2 mb-md-0" id="syncBtn">Sync with CEC/QBO</button>
+                    <button class="btn btn-primary" id="addItemBtn">+ Add Item</button>
+                </div>
             </div>
         </header>
 
-        <section class="bill-filter-section">
-            <div class="bill-entries">
-                <span>Show</span>
-                <select id="entriesPerPage" class="bill-select">
-                    <option value="10">10</option>
-                    <option value="25">25</option>
-                    <option value="50">50</option>
-                    <option value="100">100</option>
-                </select>
-                <span>entries</span>
-            </div>
-            <div class="bill-btn-container">
-                <select id="categoryFilter" class="bill-select">
-                    <option value="all">All Categories</option>
-                </select>
-                <select id="viewToggle" class="bill-select">
-                    <option value="list" selected>List View</option> <!-- Default to List View -->
-                    <option value="image">Image View</option>
-                </select>
-                <input type="text" id="searchBar" class="bill-search" placeholder="Search..." />
+        <section class="mb-4">
+            <div class="row align-items-center">
+                <div class="col-md-6 mb-3 mb-md-0">
+                    <div class="d-flex align-items-center gap-2">
+                        <span>Show</span>
+                        <select id="entriesPerPage" class="form-select w-auto">
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                        <span>entries</span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="d-flex justify-content-md-end gap-2 flex-wrap">
+                        <select id="categoryFilter" class="form-select w-auto"></select>
+                        <select id="viewToggle" class="form-select w-auto">
+                            <option value="list" selected>List View</option>
+                            <option value="image">Image View</option>
+                        </select>
+                        <input type="text" id="searchBar" class="form-control w-auto" placeholder="Search..." />
+                    </div>
+                </div>
             </div>
         </section>
 
-        <section id="listView" class="bill-list-view">
-            <table class="bill-table">
-                <thead>
-                    <tr>
-                        <th>Item Name</th>
-                        <th>Description</th>
-                        <th>Barcode</th>
-                        <th>Price</th>
-                        <th>Taxable</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="itemList"></tbody>
-            </table>
+        <section id="listView" class="card mb-4">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="bill-table table table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Item Name</th>
+                                <th>Description</th>
+                                <th>Barcode</th>
+                                <th>Price</th>
+                                <th>Taxable</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="itemList"></tbody>
+                    </table>
+                </div>
+            </div>
         </section>
 
-        <section id="imageView" class="bill-image-view"></section>
+        <section id="imageView" class="bill-image-view row"></section>
 
-        <footer class="bill-pagination">
-            <button class="bill-page-btn" id="prevPage">Previous</button>
-            <span class="bill-page-info" id="pageInfo"></span>
-            <button class="bill-page-btn" id="nextPage">Next</button>
+        <footer class="d-flex justify-content-center align-items-center gap-3">
+            <button class="btn btn-secondary" id="prevPage">Previous</button>
+            <span id="pageInfo" class="fw-medium"></span>
+            <button class="btn btn-secondary" id="nextPage">Next</button>
         </footer>
 
-        <div class="bill-modal" id="itemModal">
-            <div class="bill-modal-content">
-                <h2 class="bill-modal-title" id="modalTitle">Add New Item</h2>
-                <form id="itemForm" class="bill-modal-form">
-                    <div class="bill-modal-field">
-                        <label class="bill-modal-label">Item Name</label>
-                        <input type="text" id="itemName" class="bill-modal-input" required />
+        <div class="modal fade" id="itemModal" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2 class="modal-title fs-5" id="modalTitle">Add New Item</h2>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="bill-modal-field">
-                        <label class="bill-modal-label">Description</label>
-                        <input type="text" id="description" class="bill-modal-input" />
-                    </div>
-                    <div class="bill-modal-field">
-                        <label class="bill-modal-label">Barcode</label>
-                        <input type="text" id="barcode" class="bill-modal-input" />
-                    </div>
-                    <div class="bill-modal-field">
-                        <label class="bill-modal-label">Price</label>
-                        <input type="number" id="price" class="bill-modal-input" step="0.01" required />
-                    </div>
-                    <div class="bill-modal-field">
-                        <label class="bill-modal-label">Taxable</label>
-                        <div class="bill-modal-radio-group">
-                            <label class="bill-modal-radio"><input type="radio" name="taxable" value="YES" checked /> Yes</label>
-                            <label class="bill-modal-radio"><input type="radio" name="taxable" value="NO" /> No</label>
+                    <form id="itemForm" class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-medium">Item Name</label>
+                                <input type="text" id="itemName" class="form-control" required />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-medium">Description</label>
+                                <input type="text" id="description" class="form-control" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-medium">Barcode</label>
+                                <input type="text" id="barcode" class="form-control" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-medium">Price</label>
+                                <input type="number" id="price" class="form-control" step="0.01" required />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-medium">Taxable</label>
+                                <div class="d-flex gap-3">
+                                    <div class="form-check">
+                                        <input type="radio" name="taxable" value="YES" id="taxYes" class="form-check-input" checked />
+                                        <label class="form-check-label" for="taxYes">Yes</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input type="radio" name="taxable" value="NO" id="taxNo" class="form-check-input" />
+                                        <label class="form-check-label" for="taxNo">No</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-medium">Category</label>
+                                <select id="category" class="form-select">
+                                    <option value="Charges">Charges</option>
+                                    <option value="Blinds">Blinds</option>
+                                    <option value="Shades">Shades</option>
+                                    <option value="Valances">Valances</option>
+                                    <option value="create">Create New Category</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-medium">Location</label>
+                                <input type="text" id="location" class="form-control" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-medium">Item Type</label>
+                                <input type="text" id="itemType" class="form-control" />
+                            </div>
+                            <div class="col-12 mb-3 bill-modal-image-section" id="imageSection" style="display: none;">
+                                <label class="form-label fw-medium">Item Image</label>
+                                <input type="file" id="itemImage" class="form-control" accept="image/*" />
+                                <img id="imagePreview" class="bill-modal-image-preview mt-2" alt="Preview" />
+                                <span id="imageError" class="bill-modal-error"></span>
+                            </div>
                         </div>
-                    </div>
-                    <div class="bill-modal-field">
-                        <label class="bill-modal-label">Category</label>
-                        <select id="category" class="bill-modal-input">
-                            <option value="Charges">Charges</option>
-                            <option value="Blinds">Blinds</option>
-                            <option value="Shades">Shades</option>
-                            <option value="Valances">Valances</option>
-                            <option value="create">Create New Category</option>
-                        </select>
-                    </div>
-                    <div class="bill-modal-field">
-                        <label class="bill-modal-label">Location</label>
-                        <input type="text" id="location" class="bill-modal-input" />
-                    </div>
-                    <div class="bill-modal-field">
-                        <label class="bill-modal-label">Item Type</label>
-                        <input type="text" id="itemType" class="bill-modal-input" />
-                    </div>
-                    <div class="bill-modal-image-section" id="imageSection">
-                        <label class="bill-modal-label">Item Image</label>
-                        <input type="file" id="itemImage" class="bill-modal-input" accept="image/*" />
-                        <img id="imagePreview" class="bill-modal-image-preview" alt="Preview" />
-                        <span id="imageError" class="bill-modal-error"></span>
-                    </div>
-                    <div class="bill-modal-btns">
-                        <button type="submit" class="bill-modal-submit" id="submitBtn">Add Item</button>
-                        <button type="button" class="bill-modal-cancel" id="cancelBtn">Cancel</button>
-                    </div>
-                </form>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" id="cancelBtn" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary" id="submitBtn">Add Item</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
@@ -197,7 +182,7 @@
             const nextPageBtn = document.getElementById('nextPage');
             const pageInfo = document.getElementById('pageInfo');
             const addItemBtn = document.getElementById('addItemBtn');
-            const itemModal = document.getElementById('itemModal');
+            const itemModal = new bootstrap.Modal(document.getElementById('itemModal'));
             const itemForm = document.getElementById('itemForm');
             const cancelBtn = document.getElementById('cancelBtn');
             const categoryFilter = document.getElementById('categoryFilter');
@@ -220,7 +205,7 @@
             let filteredItems = [...items];
             let currentPage = 1;
             let itemsPerPage = parseInt(entriesPerPage.value);
-            let currentView = 'list'; // Explicitly set to list for initial load
+            let currentView = 'list';
             const maxImageSize = 500;
 
             // Populate category filter
@@ -251,7 +236,7 @@
                     listView.style.display = 'block';
                     imageView.style.display = 'none';
                     itemList.innerHTML = paginatedItems.length === 0
-                        ? `<tr><td colspan="6" style="text-align: center; color: #6b7280;">No items found</td></tr>`
+                        ? `<tr><td colspan="6" class="text-center text-muted">No items found</td></tr>`
                         : paginatedItems.map(item => `
                             <tr>
                                 <td>${item.name}</td>
@@ -266,19 +251,23 @@
                             </tr>`).join('');
                 } else {
                     listView.style.display = 'none';
-                    imageView.style.display = 'grid';
+                    imageView.style.display = 'flex';
                     imageView.innerHTML = paginatedItems.length === 0
-                        ? `<p style="grid-column: span 5; text-align: center; color: #6b7280;">No items found</p>`
+                        ? `<p class="col-12 text-center text-muted">No items found</p>`
                         : paginatedItems.map(item => `
-                            <div class="bill-image-card">
-                                <img src="${item.imageUrl || 'https://via.placeholder.com/150'}" class="bill-image" alt="${item.name}" />
-                                <h3 class="bill-image-title">${item.name}</h3>
-                                <p class="bill-image-text">${item.description || 'No description'}</p>
-                                <p class="bill-image-text">$${item.price.toFixed(2)}</p>
-                                <p class="bill-image-text">${item.taxable}</p>
-                                <div>
-                                    <button class="bill-edit-btn" data-name="${item.name}">Edit</button>
-                                    <button class="bill-delete-btn" data-name="${item.name}">Delete</button>
+                            <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-4">
+                                <div class="bill-image-card card h-100">
+                                    <img src="${item.imageUrl || 'https://via.placeholder.com/150'}" class="bill-image card-img-top" alt="${item.name}" />
+                                    <div class="card-body">
+                                        <h3 class="bill-image-title card-title">${item.name}</h3>
+                                        <p class="bill-image-text card-text">${item.description || 'No description'}</p>
+                                        <p class="bill-image-text card-text">$${item.price.toFixed(2)}</p>
+                                        <p class="bill-image-text card-text">${item.taxable}</p>
+                                        <div>
+                                            <button class="bill-edit-btn" data-name="${item.name}">Edit</button>
+                                            <button class="bill-delete-btn" data-name="${item.name}">Delete</button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>`).join('');
                 }
@@ -305,9 +294,9 @@
             // Initialize
             function initialize() {
                 updateCategoryFilter();
-                currentView = viewToggle.value; // Sync with dropdown
-                renderItems(); // Render immediately
-                listView.style.display = 'block'; // Ensure list view is visible on load
+                currentView = viewToggle.value;
+                renderItems();
+                listView.style.display = 'block';
                 imageView.style.display = 'none';
             }
 
@@ -326,11 +315,11 @@
                 imageSection.style.display = 'none';
                 imagePreview.style.display = 'none';
                 imageError.style.display = 'none';
-                itemModal.style.display = 'flex';
+                itemModal.show();
             });
 
             cancelBtn.addEventListener('click', () => {
-                itemModal.style.display = 'none';
+                itemModal.hide();
             });
 
             categorySelect.addEventListener('change', (e) => {
@@ -395,10 +384,10 @@
 
             function saveItem(item) {
                 const index = items.findIndex(i => i.name === item.name);
-                if (index !== -1) items[index] = item; // Update existing item
-                else items.push(item); // Add new item
+                if (index !== -1) items[index] = item;
+                else items.push(item);
                 updateCategoryFilter();
-                itemModal.style.display = 'none';
+                itemModal.hide();
                 renderItems();
             }
 
@@ -442,7 +431,7 @@
                         imageSection.style.display = 'none';
                     }
                     imageError.style.display = 'none';
-                    itemModal.style.display = 'flex';
+                    itemModal.show();
                 }
             }
 
