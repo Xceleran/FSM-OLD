@@ -62,35 +62,35 @@
                 <div class="custdet-overview">
                     <div class="custdet-card appointment">
                         <h3>Pending Appointments</h3>
-                        <p id="pendingAppts">0</p>
+                        <p id="pendingAppts"><asp:Label ID="lblpendingAppts" runat="server" /></p>
                     </div>
                     <div class="custdet-card appointment">
                         <h3>Scheduled Appointments</h3>
-                        <p id="scheduledAppts">0</p>
+                        <p id="scheduledAppts"><asp:Label ID="lblscheduledAppts" runat="server" /></p>
                     </div>
                     <div class="custdet-card appointment">
                         <h3>Completed Appointments</h3>
-                        <p id="completedAppts">0</p>
+                        <p id="completedAppts"><asp:Label ID="lblcompletedAppts" runat="server" /></p>
                     </div>
                     <div class="custdet-card appointment">
                         <h3>Custom Tags</h3>
-                        <p id="customTags">0</p>
+                        <p id="customTags"><asp:Label ID="lblcustomTags" runat="server" /></p>
                     </div>
                     <div class="custdet-card invoice">
                         <h3>Estimates</h3>
-                        <p id="estimates">0</p>
+                        <p id="estimates"><asp:Label ID="lblestimates" runat="server" /></p>
                     </div>
                     <div class="custdet-card invoice">
                         <h3>Open Invoices</h3>
-                        <p id="openInvoices">0</p>
+                        <p id="openInvoices"><asp:Label ID="lblopenInvoices" runat="server" /></p>
                     </div>
                     <div class="custdet-card invoice">
                         <h3>Unpaid Invoices</h3>
-                        <p id="unpaidInvoices">0</p>
+                        <p id="unpaidInvoices"><asp:Label ID="lblunpaidInvoices" runat="server" /></p>
                     </div>
                     <div class="custdet-card invoice">
                         <h3>Paid Invoices</h3>
-                        <p id="paidInvoices">0</p>
+                        <p id="paidInvoices"><asp:Label ID="lblpaidInvoices" runat="server" /></p>
                     </div>
                 </div>
             </div>
@@ -346,14 +346,14 @@
             };
 
             // Populate Overview
-            document.getElementById('pendingAppts').textContent = site.overview.appointments.pending;
-            document.getElementById('scheduledAppts').textContent = site.overview.appointments.scheduled;
-            document.getElementById('completedAppts').textContent = site.overview.appointments.completed;
-            document.getElementById('customTags').textContent = site.overview.appointments.custom;
-            document.getElementById('estimates').textContent = site.overview.invoices.estimates;
-            document.getElementById('openInvoices').textContent = site.overview.invoices.open;
-            document.getElementById('unpaidInvoices').textContent = site.overview.invoices.unpaid;
-            document.getElementById('paidInvoices').textContent = site.overview.invoices.paid;
+            //document.getElementById('pendingAppts').textContent = site.overview.appointments.pending;
+            //document.getElementById('scheduledAppts').textContent = site.overview.appointments.scheduled;
+            //document.getElementById('completedAppts').textContent = site.overview.appointments.completed;
+            //document.getElementById('customTags').textContent = site.overview.appointments.custom;
+            //document.getElementById('estimates').textContent = site.overview.invoices.estimates;
+            //document.getElementById('openInvoices').textContent = site.overview.invoices.open;
+            //document.getElementById('unpaidInvoices').textContent = site.overview.invoices.unpaid;
+            //document.getElementById('paidInvoices').textContent = site.overview.invoices.paid;
 
             // Basic Info
             document.getElementById('siteName').textContent = site.name;

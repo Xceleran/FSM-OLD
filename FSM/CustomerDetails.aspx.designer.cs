@@ -7,9 +7,83 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace FSM {
-    
-    
-    public partial class CustomerDetails {
+namespace FSM
+{
+
+
+    public partial class CustomerDetails
+    {
+
+        /// <summary>
+        /// lblpendingAppts control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblpendingAppts;
+
+        /// <summary>
+        /// lblscheduledAppts control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblscheduledAppts;
+
+        /// <summary>
+        /// lblcompletedAppts control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblcompletedAppts;
+
+        /// <summary>
+        /// lblcustomTags control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblcustomTags;
+
+        /// <summary>
+        /// lblestimates control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblestimates;
+
+        /// <summary>
+        /// lblopenInvoices control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblopenInvoices;
+
+        /// <summary>
+        /// lblunpaidInvoices control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblunpaidInvoices;
+
+        /// <summary>
+        /// lblpaidInvoices control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblpaidInvoices;
     }
 }

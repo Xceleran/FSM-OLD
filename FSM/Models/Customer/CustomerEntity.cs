@@ -54,4 +54,18 @@ namespace FSM.Models.Customer
         public Dictionary<string, string> CustomFields { get; set; }
 
     }
+    public class CustomerSummeryCount
+    {
+        public string CompanyID { get; set; }
+        public string CustomerID { get; set; }
+        public string CustomerGuid { get; set; }
+
+        public int PendingAppointments { get; set; }
+        public int ScheduledAppointments { get; set; }
+        public int CompletedAppointments { get; set; }
+        public int Estimates { get; set; }
+        public int OpenInvoices { get; set; }
+        public int UnpaidInvoices { get; set; }
+        public int PaidInvoices { get; set; }
+    }
 }
