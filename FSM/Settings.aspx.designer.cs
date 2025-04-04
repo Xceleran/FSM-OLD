@@ -11,7 +11,7 @@ namespace FSM
 {
 
 
-    public partial class Appointments
+    public partial class Settings
     {
     }
 }

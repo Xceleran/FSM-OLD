@@ -16,7 +16,7 @@
             .dashboard-header h1 {
                 font-size: 28px;
                 font-weight: 700;
-                color: #1e40af;
+                color: #f84700;
             }
 
         .header-actions {
@@ -363,7 +363,7 @@
         }
     </style>
     <main class="main-content">
-        <header class="dashboard-header">
+        <header class="dashboard-header mt-3">
             <h1>Dashboard</h1>
             <div class="header-actions">
                 <input type="text" placeholder="Search..." class="search-bar" id="searchBar">
