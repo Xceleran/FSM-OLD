@@ -106,9 +106,9 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr><td>Customer Name</td><td id="customerName">Loading...</td></tr>
-                        <tr><td>Site Contact</td><td id="siteContact">Loading...</td></tr>
-                        <tr><td>Address</td><td id="siteAddress">Loading...</td></tr>
+                        <tr><td>Customer Name</td><td id="customerName"><asp:Label ID="lblCustomerName" runat="server" /></td></tr>
+                        <tr><td>Site Contact</td><td id="siteContact"><asp:Label ID="lblPhone" runat="server" /></td></tr>
+                        <tr><td>Address</td><td id="siteAddress"><asp:Label ID="lblAddress1" runat="server" /></td></tr>
                         <tr><td>Status</td><td id="siteStatus">Loading...</td></tr>
                         <tr><td>Description</td><td id="siteDescription">Loading...</td></tr>
                         <tr><td>Special Instructions</td><td id="siteInstructions">Loading...</td></tr>
@@ -329,9 +329,9 @@
             const siteId = urlParams.get('siteId');
             const site = siteData[siteId] || {
                 name: "Unknown Site",
-                customerName: "Unknown",
-                siteContact: "N/A",
-                address: "N/A",
+                //customerName: "Unknown",
+                //siteContact: "N/A",
+                //address: "N/A",
                 status: "N/A",
                 description: "N/A",
                 specialInstructions: "N/A",
@@ -357,9 +357,9 @@
 
             // Basic Info
             document.getElementById('siteName').textContent = site.name;
-            document.getElementById('customerName').textContent = site.customerName;
-            document.getElementById('siteContact').textContent = site.siteContact;
-            document.getElementById('siteAddress').textContent = site.address;
+            //document.getElementById('customerName').textContent = site.customerName;
+            //document.getElementById('siteContact').textContent = site.siteContact;
+            //document.getElementById('siteAddress').textContent = site.address;
             document.getElementById('siteStatus').textContent = site.status;
             document.getElementById('siteDescription').textContent = site.description;
             document.getElementById('siteInstructions').textContent = site.specialInstructions;
