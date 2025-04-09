@@ -14,6 +14,11 @@
             border-radius: 8px; 
             box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
         }
+         .page-title {
+     font-size: 24px;
+     font-weight: bold;
+     color: #f84700;
+ }
         .invoice-table th { 
             background: #f3f4f6; 
             color: #010101; 
@@ -34,6 +39,7 @@
         .btn-bluelight { 
             background-color: #4d78b1; 
             color: #fff; 
+            margin-right: 5px;
         }
         .btn-bluelight:hover { 
             background-color: #3b5e8c; 
@@ -57,6 +63,10 @@
             color: #dc3545; 
             font-size: 14px; 
         }
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+        }
         @media (max-width: 768px) {
             .invoice-container { 
                 padding: 10px; 
@@ -79,8 +89,19 @@
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.3/css/dataTables.bootstrap5.min.css" />
     <script src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.11.3/js/dataTables.bootstrap5.min.js"></script>
-
+    
+      
     <div class="invoice-container">
+          <header class="mb-4">
+      <div class="row align-items-center">
+          <div class="col-md-6">
+              <h1 class="page-title mb-3 mb-md-0">Invoices/Estimates</h1>
+          </div>
+          <div class="col-md-6 text-md-end">
+                                 <button id="createBtn" class="btn btn-bluelight" title="Create New Invoice/Estimate">Create</button>
+          </div>
+      </div>
+  </header>
         <div class="card card-custom">
             <div class="row filter-section">
                 <div class="col-md-2 mb-3">
@@ -121,7 +142,10 @@
 
             <div class="row mb-3">
                 <div class="col-12">
-                    <button id="syncQuickBookBtn" class="btn btn-bluelight" title="QuickBooks Online Sync">QuickBooks Online Sync</button>
+                    <button id="sendBtn" class="btn btn-bluelight" title="Send Selected">Send</button>
+                    <button id="addBillableBtn" class="btn btn-bluelight" title="Add Billable Items (QBO Sync)">Add Billable</button>
+                    <button id="viewTaxRatesBtn" class="btn btn-bluelight" title="View Tax Rates (QBO Sync - View Only)">View Tax Rates</button>
+                    <button id="syncQuickBookBtn" class="btn btn-bluelight" title="QuickBooks Online Sync">QuickBooks Sync</button>
                     <span id="progressGIF" style="display: none; margin-left: 10px;">
                         <img src="images/Rolling.gif" alt="Loading" /> Sync in progress...
                     </span>
@@ -134,6 +158,7 @@
                 <table id="invoiceTable" class="invoice-table">
                     <thead>
                         <tr>
+                            <th><input type="checkbox" id="selectAll" /></th>
                             <th>Name</th>
                             <th>Type</th>
                             <th>Number</th>
@@ -157,17 +182,22 @@
         document.addEventListener('DOMContentLoaded', () => {
             // Sample invoice data
             const invoices = [
-                { name: "John Doe", type: "Invoice", number: "INV001", date: "2025-03-15", subtotal: 1000, discount: 50, tax: 80, total: 1030, paid: 500, due: 530, status: "Due", city: "New York" },
-                { name: "Jane Smith", type: "Estimate", number: "EST002", date: "2025-03-20", subtotal: 2000, discount: 0, tax: 160, total: 2160, paid: 0, due: 2160, status: "Due", city: "Los Angeles" },
-                { name: "Alice Johnson", type: "Invoice", number: "INV003", date: "2025-04-01", subtotal: 1500, discount: 100, tax: 120, total: 1520, paid: 1520, due: 0, status: "Paid", city: "Chicago" },
-                { name: "Bob Brown", type: "Invoice", number: "INV004", date: "2025-04-10", subtotal: 800, discount: 20, tax: 64, total: 844, paid: 400, due: 444, status: "Due", city: "Houston" },
-                { name: "Eve White", type: "Estimate", number: "EST005", date: "2025-04-15", subtotal: 1200, discount: 30, tax: 96, total: 1266, paid: 0, due: 1266, status: "Due", city: "Seattle" }
+                { id: 1, name: "John Doe", type: "Invoice", number: "INV001", date: "2025-03-15", subtotal: 1000, discount: 50, tax: 80, total: 1030, paid: 500, due: 530, status: "Due", city: "New York" },
+                { id: 2, name: "Jane Smith", type: "Estimate", number: "EST002", date: "2025-03-20", subtotal: 2000, discount: 0, tax: 160, total: 2160, paid: 0, due: 2160, status: "Due", city: "Los Angeles" },
+                { id: 3, name: "Alice Johnson", type: "Invoice", number: "INV003", date: "2025-04-01", subtotal: 1500, discount: 100, tax: 120, total: 1520, paid: 1520, due: 0, status: "Paid", city: "Chicago" },
+                { id: 4, name: "Bob Brown", type: "Invoice", number: "INV004", date: "2025-04-10", subtotal: 800, discount: 20, tax: 64, total: 844, paid: 400, due: 444, status: "Due", city: "Houston" },
+                { id: 5, name: "Eve White", type: "Estimate", number: "EST005", date: "2025-04-15", subtotal: 1200, discount: 30, tax: 96, total: 1266, paid: 0, due: 1266, status: "Due", city: "Seattle" }
             ];
 
             // Initialize DataTable
             const table = $('#invoiceTable').DataTable({
                 data: invoices,
                 columns: [
+                    {
+                        data: 'id',
+                        render: data => `<input type="checkbox" class="row-select" value="${data}" />`,
+                        orderable: false
+                    },
                     { data: 'name' },
                     { data: 'type' },
                     { data: 'number' },
@@ -199,8 +229,13 @@
             const fromDate = document.getElementById('fromDate');
             const toDate = document.getElementById('toDate');
             const searchBtn = document.getElementById('searchBtn');
+            const createBtn = document.getElementById('createBtn');
+            const sendBtn = document.getElementById('sendBtn');
+            const addBillableBtn = document.getElementById('addBillableBtn');
+            const viewTaxRatesBtn = document.getElementById('viewTaxRatesBtn');
             const syncQuickBookBtn = document.getElementById('syncQuickBookBtn');
             const progressGIF = document.getElementById('progressGIF');
+            const selectAll = document.getElementById('selectAll');
 
             // Custom filter function
             function filterInvoices() {
@@ -246,17 +281,62 @@
                 table.rows.add(filtered).draw();
             }
 
-            // Sync simulation
+            // Helper functions for new features
+            function createInvoice() {
+                alert('Create new Invoice/Estimate functionality (Primary Functionality) - To be implemented');
+                // Add logic to create new invoice/estimate
+            }
+
+            function sendInvoices() {
+                const selected = getSelectedIds();
+                if (selected.length === 0) {
+                    alert('Please select at least one invoice/estimate to send');
+                    return;
+                }
+                progressGIF.style.display = 'inline';
+                setTimeout(() => {
+                    progressGIF.style.display = 'none';
+                    alert(`Sending ${selected.length} selected items (simulated)`);
+                }, 2000);
+            }
+
+            function addBillableItems() {
+                const selected = getSelectedIds();
+                if (selected.length === 0) {
+                    alert('Please select at least one invoice/estimate to add billable items');
+                    return;
+                }
+                progressGIF.style.display = 'inline';
+                setTimeout(() => {
+                    progressGIF.style.display = 'none';
+                    alert(`Adding billable items to ${selected.length} selected items (QBO Sync simulated)`);
+                }, 2000);
+            }
+
+            function viewTaxRates() {
+                alert('Viewing Tax Rates (View Only - Synced from QBO)');
+                // Add logic to show tax rates in read-only mode
+            }
+
             function syncQuickBook() {
                 progressGIF.style.display = 'inline';
                 setTimeout(() => {
                     progressGIF.style.display = 'none';
-                    alert('QuickBooks Sync completed (simulated).');
+                    alert('QuickBooks Sync completed (simulated)');
                 }, 2000);
+            }
+
+            function getSelectedIds() {
+                const checkboxes = document.querySelectorAll('.row-select:checked');
+                return Array.from(checkboxes).map(cb => parseInt(cb.value));
             }
 
             // Event Listeners
             searchBtn.addEventListener('click', filterInvoices);
+            createBtn.addEventListener('click', createInvoice);
+            sendBtn.addEventListener('click', sendInvoices);
+            addBillableBtn.addEventListener('click', addBillableItems);
+            viewTaxRatesBtn.addEventListener('click', viewTaxRates);
             syncQuickBookBtn.addEventListener('click', syncQuickBook);
             searchValue.addEventListener('input', filterInvoices);
             searchBy.addEventListener('change', filterInvoices);
@@ -267,6 +347,12 @@
                     toDate.value = fromDate.value;
                 }
                 filterInvoices();
+            });
+
+            selectAll.addEventListener('change', (e) => {
+                document.querySelectorAll('.row-select').forEach(cb => {
+                    cb.checked = e.target.checked;
+                });
             });
         });
     </script>
