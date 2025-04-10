@@ -21,7 +21,7 @@ namespace FSM
         string CompanyID = "";
         protected void Page_Load(object sender, EventArgs e)
          {
-            HttpContext.Current.Session["CompanyID"] = "13185";
+            HttpContext.Current.Session["CompanyID"] = "7369";
             //if (!IsPostBack)
             //{
             //    LoadCustomers();
@@ -39,7 +39,7 @@ namespace FSM
             var customers = new List<CustomerEntity>();
             try
             {
-                string whereCondition = "WHERE CompanyID = '" + companyid + "' ";
+                string whereCondition = "WHERE IsBusinessContact=0 and CompanyID = '" + companyid + "' ";
                 if (!string.IsNullOrEmpty(searchValue))
                 {
                     whereCondition += "AND (FirstName LIKE '%" + searchValue + "%' OR LastName LIKE '%" + searchValue + "%' OR Email LIKE '%" + searchValue + "%') ";

@@ -68,4 +68,21 @@ namespace FSM.Models.Customer
         public int UnpaidInvoices { get; set; }
         public int PaidInvoices { get; set; }
     }
+
+    public class CustomerAppoinment
+    {
+        public string CompanyID { get; set; }
+        public string CustomerID { get; set; }
+        public string CustomerGuid { get; set; }
+
+        public string AppoinmentDate { get; set; }
+        public string RequestDate { get; set; }
+        public string ServiceType { get; set; }
+        public string ResourceName { get; set; }
+        public string TimeSlot { get; set; }
+
+        public string TicketStatus { get; set; }
+        public string CustomTags { get; set; }
+        public string AppoinmentStatus { get; set; }
+    }
 }

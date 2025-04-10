@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Web;
+using System.Web.Script.Services;
+using System.Web.Services;
 using System.Web.UI;
 using System.Web.UI.WebControls;
 
@@ -32,6 +34,7 @@ namespace FSM
                 lblCustomerName.Text = customer?.FirstName + " " + customer?.LastName;
                 lblAddress1.Text = customer?.Address1;
                 lblPhone.Text = customer?.Phone;
+                lblCustomerId.Text = customerId;
             }
         }
 
@@ -40,7 +43,7 @@ namespace FSM
         {
             string companyid = HttpContext.Current.Session["CompanyID"].ToString();
             Database db = new Database();
-            customerId = "302"; //static value for testing
+            //customerId = "302"; //static value for testing
             string sql = "";
             var customerData = new CustomerSummeryCount();
             customerData.CompanyID = companyid;
@@ -49,19 +52,24 @@ namespace FSM
             {
                 db.Open();
                 DataTable dt1 = new DataTable();
-                string invoiceQuery = @"SELECT 
-                        COUNT(CASE WHEN LoanStatus IN('LOAN CONFIRMED','SETTLED') THEN 1 END) AS PaidInvoiceCount,
-                        COUNT(CASE WHEN LoanStatus IN('INITIATED', 'ACTIONS REQUIRED', 'AUTHORIZED') THEN 1 END) AS InProgressInvoiceCount
-                            FROM tbl_Invoice WHERE Type = 'Invoice' AND CustomerID = @CustomerID and CompanyID=@CompanyID";
+                string invoiceQuery = @"select Total, AmountCollect FROM [msSchedulerV3].[dbo].[tbl_Invoice] WHERE Type = 'Invoice' AND CustomerID = @CustomerID and CompnyID=@CompanyID";
                 db.AddParameter("@CompanyID", companyid, SqlDbType.NVarChar);
                 db.AddParameter("@CustomerID", customerId, SqlDbType.NVarChar);
                 db.ExecuteParam(invoiceQuery, out dt1);
 
                 if (dt1.Rows.Count > 0)
                 {
-                    DataRow dataRow = dt1.Rows[0];
-                    customerData.PaidInvoices = dataRow.Field<int?>("PaidInvoiceCount") ?? 0;
-                    customerData.OpenInvoices = dataRow.Field<int?>("InProgressInvoiceCount") ?? 0;
+                    foreach(DataRow row in dt1.Rows)
+                    {
+                        if ((Convert.ToDouble(row["Total"].ToString()) - Convert.ToDouble(row["AmountCollect"].ToString())) <= 0)
+                        {
+                            customerData.PaidInvoices++;
+                        }
+                        else
+                        {
+                            customerData.UnpaidInvoices++;
+                        }
+                    }
                 }
 
                 db.Command.Parameters.Clear();
@@ -150,6 +158,58 @@ namespace FSM
             }
 
             return customer;
+        }
+
+        [WebMethod]
+        [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
+        public static List<CustomerAppoinment> GetCustomerAppoinmets(string customerId)
+        {
+            var appoinments = new List<CustomerAppoinment>();
+            string companyid = HttpContext.Current.Session["CompanyID"].ToString();
+            Database db = new Database();
+            //customerId = "302"; // for testing purpose
+            try
+            {
+                db.Open();
+                DataTable dt = new DataTable();
+                string sql = @"SELECT CONVERT(VARCHAR(10), apt.ApptDateTime, 101) AS ApptDateTimeConverted,  
+                            apt.*, rsc.Name AS ResourceName, srv.ServiceName, 
+                            CASE WHEN apt.Status = 'Deleted' THEN 'N/A' ELSE sts.StatusName END AS AppStatus, tkt.StatusName AS AppTicketStatus
+                            FROM tbl_Appointment AS apt LEFT JOIN tbl_Resources AS rsc  ON apt.ResourceID = rsc.Id AND apt.CompanyID = rsc.CompanyID
+                            LEFT JOIN tbl_ServiceType AS srv ON apt.ServiceType = srv.ServiceTypeID AND apt.CompanyID = srv.CompanyID
+                            LEFT JOIN tbl_Status AS sts ON TRY_CAST(apt.Status AS INT) = sts.StatusID AND apt.CompanyID = sts.CompanyID
+                            LEFT JOIN tbl_TicketStatus AS tkt ON apt.TicketStatus = tkt.StatusID AND apt.CompanyID = tkt.CompanyID
+                            WHERE  apt.CustomerID='" + customerId +"' and apt.CompanyID ='"+ companyid +"';";
+                db.ExecuteParam(sql, out dt);
+                db.Close();
+                if (dt.Rows.Count > 0)
+                {
+                    foreach (DataRow row in dt.Rows)
+                    {
+                        var appoinment = new CustomerAppoinment();
+                        appoinment.CustomerID = customerId;
+                        appoinment.CustomerID = companyid;
+                        appoinment.AppoinmentStatus = row.Field<string>("AppStatus") ?? "";
+                        appoinment.TicketStatus = row.Field<string>("AppTicketStatus") ?? "";
+                        appoinment.ResourceName = row.Field<string>("ResourceName") ?? "";
+                        appoinment.ServiceType = row.Field<string>("ServiceName") ?? "";
+                        appoinment.RequestDate = row.Field<string>("ApptDateTimeConverted") ?? "";
+                        appoinment.TimeSlot = row.Field<string>("TimeSlot") ?? "";
+                        appoinment.AppoinmentDate = row.Field<string>("ApptDateTimeConverted") ?? "";
+
+                        appoinments.Add(appoinment);
+                    }
+                }
+            }
+            catch(Exception ex)
+            {
+                return appoinments;
+            }
+            finally
+            {
+                db.Close();
+            }
+            return appoinments;
         }
     }
 }

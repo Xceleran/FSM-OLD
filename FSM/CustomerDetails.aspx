@@ -98,6 +98,7 @@
             <!-- Basic Information -->
             <div class="custdet-section">
                 <h2 class="custdet-section-title">Basic Information</h2>
+                <asp:Label Style="display:none;" ID="lblCustomerId" runat="server" />
                 <table class="custdet-table">
                     <thead>
                         <tr>
@@ -123,9 +124,9 @@
                     <input type="text" id="apptSearch" class="custdet-input" placeholder="Search appointments...">
                     <select id="apptFilter" class="custdet-select">
                         <option value="all">All Status</option>
-                        <option value="scheduler">Scheduler</option>
+                        <option value="scheduled">Scheduled</option>
                         <option value="pending">Pending</option>
-                        <option value="completed">Completed</option>
+                        <option value="closed">Closed</option>
                     </select>
                     <button id="apptExport" class="custdet-btn custdet-btn-primary">Export to Excel</button>
                 </div>
@@ -365,43 +366,43 @@
             document.getElementById('siteInstructions').textContent = site.specialInstructions;
 
             // Appointments
-            function renderAppointments(page = 1, filter = 'all', search = '') {
-                const tbody = document.getElementById('apptTableBody');
-                const filtered = site.appointments.filter(a => 
-                    (filter === 'all' || a.status === filter) &&
-                    (!search || Object.values(a).some(v => v.toString().toLowerCase().includes(search)))
-                );
-                const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
-                const start = (page - 1) * ITEMS_PER_PAGE;
-                const paginated = filtered.slice(start, start + ITEMS_PER_PAGE);
+            //function renderAppointments(page = 1, filter = 'all', search = '') {
+            //    const tbody = document.getElementById('apptTableBody');
+            //    const filtered = site.appointments.filter(a => 
+            //        (filter === 'all' || a.status === filter) &&
+            //        (!search || Object.values(a).some(v => v.toString().toLowerCase().includes(search)))
+            //    );
+            //    const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+            //    const start = (page - 1) * ITEMS_PER_PAGE;
+            //    const paginated = filtered.slice(start, start + ITEMS_PER_PAGE);
 
-                tbody.innerHTML = paginated.map(a => `
-                    <tr>
-                        <td>${a.requestDate}</td>
-                        <td>${a.timeSlot}</td>
-                        <td>${a.serviceType}</td>
-                        <td>${a.status}</td>
-                        <td>${a.resource}</td>
-                        <td>${a.ticketStatus}</td>
-                        <td>${a.customTags.join(', ')}</td>
-                    </tr>
-                `).join('') || '<tr><td colspan="7">No appointments found</td></tr>';
+            //    tbody.innerHTML = paginated.map(a => `
+            //        <tr>
+            //            <td>${a.requestDate}</td>
+            //            <td>${a.timeSlot}</td>
+            //            <td>${a.serviceType}</td>
+            //            <td>${a.status}</td>
+            //            <td>${a.resource}</td>
+            //            <td>${a.ticketStatus}</td>
+            //            <td>${a.customTags.join(', ')}</td>
+            //        </tr>
+            //    `).join('') || '<tr><td colspan="7">No appointments found</td></tr>';
                 
-                document.getElementById('apptPageInfo').textContent = `Page ${page} of ${totalPages}`;
-                document.getElementById('apptPrev').disabled = page === 1;
-                document.getElementById('apptNext').disabled = page === totalPages || totalPages === 0;
-                return filtered;
-            }
+            //    document.getElementById('apptPageInfo').textContent = `Page ${page} of ${totalPages}`;
+            //    document.getElementById('apptPrev').disabled = page === 1;
+            //    document.getElementById('apptNext').disabled = page === totalPages || totalPages === 0;
+            //    return filtered;
+            //}
 
-            let apptPage = 1;
-            document.getElementById('apptPrev').addEventListener('click', () => { apptPage--; renderAppointments(apptPage, document.getElementById('apptFilter').value, document.getElementById('apptSearch').value.toLowerCase()); });
-            document.getElementById('apptNext').addEventListener('click', () => { apptPage++; renderAppointments(apptPage, document.getElementById('apptFilter').value, document.getElementById('apptSearch').value.toLowerCase()); });
-            document.getElementById('apptFilter').addEventListener('change', (e) => { apptPage = 1; renderAppointments(1, e.target.value, document.getElementById('apptSearch').value.toLowerCase()); });
-            document.getElementById('apptSearch').addEventListener('input', (e) => { apptPage = 1; renderAppointments(1, document.getElementById('apptFilter').value, e.target.value.toLowerCase()); });
-            document.getElementById('apptExport').addEventListener('click', () => {
-                const data = renderAppointments(apptPage, document.getElementById('apptFilter').value, document.getElementById('apptSearch').value.toLowerCase());
-                exportToExcel(data, 'appointments.xlsx', ['Request Date', 'Time Slot', 'Service Type', 'Status', 'Resource', 'Ticket Status', 'Custom Tags']);
-            });
+            //let apptPage = 1;
+            //document.getElementById('apptPrev').addEventListener('click', () => { apptPage--; renderAppointments(apptPage, document.getElementById('apptFilter').value, document.getElementById('apptSearch').value.toLowerCase()); });
+            //document.getElementById('apptNext').addEventListener('click', () => { apptPage++; renderAppointments(apptPage, document.getElementById('apptFilter').value, document.getElementById('apptSearch').value.toLowerCase()); });
+            //document.getElementById('apptFilter').addEventListener('change', (e) => { apptPage = 1; renderAppointments(1, e.target.value, document.getElementById('apptSearch').value.toLowerCase()); });
+            //document.getElementById('apptSearch').addEventListener('input', (e) => { apptPage = 1; renderAppointments(1, document.getElementById('apptFilter').value, e.target.value.toLowerCase()); });
+            //document.getElementById('apptExport').addEventListener('click', () => {
+            //    const data = renderAppointments(apptPage, document.getElementById('apptFilter').value, document.getElementById('apptSearch').value.toLowerCase());
+            //    exportToExcel(data, 'appointments.xlsx', ['Request Date', 'Time Slot', 'Service Type', 'Status', 'Resource', 'Ticket Status', 'Custom Tags']);
+            //});
 
             // Invoices
             function renderInvoices(page = 1, filter = 'all', search = '') {
@@ -551,9 +552,326 @@
             }
 
             // Initial Render
-            renderAppointments(1);
+           // renderAppointments(1);
             renderInvoices(1);
             renderPictures('equipment');
         });
+
+        loadData();
+
+
+        let appointmentData = [];
+        let filteredData = [];    
+        let currentPage = 1;
+        const pageSize = 10;
+        function loadData() {
+            var customerId = document.getElementById('<%= lblCustomerId.ClientID %>').innerText;
+            loadAppoinments(customerId);
+        }
+
+        function loadAppoinments(customerId) {
+            $.ajax({
+                url: 'CustomerDetails.aspx/GetCustomerAppoinmets',
+                type: "POST",
+                contentType: "application/json; charset=utf-8",
+                data: JSON.stringify({ customerId: customerId }),
+                dataType: 'json',
+                success: function (rs) {
+                    console.log(appointmentData);
+                    appointmentData = rs.d || [];
+                    //appointmentData = [
+                    //    {
+                    //        "__type": "FSM.Models.Customer.CustomerAppoinment",
+                    //        "CompanyID": null,
+                    //        "CustomerID": "13185",
+                    //        "CustomerGuid": null,
+                    //        "AppoinmentDate": "03/07/2025",
+                    //        "RequestDate": "03/07/2025",
+                    //        "ServiceType": "Estimate",
+                    //        "ResourceName": "Estimator",
+                    //        "TimeSlot": "Select",
+                    //        "TicketStatus": "Ready to Schedule | Measurement",
+                    //        "CustomTags": null,
+                    //        "AppoinmentStatus": "Pending"
+                    //    },
+                    //    {
+                    //        "__type": "FSM.Models.Customer.CustomerAppoinment",
+                    //        "CompanyID": null,
+                    //        "CustomerID": "13185",
+                    //        "CustomerGuid": null,
+                    //        "AppoinmentDate": "03/07/2025",
+                    //        "RequestDate": "03/07/2025",
+                    //        "ServiceType": "Estimate",
+                    //        "ResourceName": "Saif",
+                    //        "TimeSlot": "Afternoon Appointments ( 1:00PM - 4:30PM )",
+                    //        "TicketStatus": "Completed",
+                    //        "CustomTags": null,
+                    //        "AppoinmentStatus": "Closed"
+                    //    },
+                    //    {
+                    //        "__type": "FSM.Models.Customer.CustomerAppoinment",
+                    //        "CompanyID": null,
+                    //        "CustomerID": "13185",
+                    //        "CustomerGuid": null,
+                    //        "AppoinmentDate": "03/10/2025",
+                    //        "RequestDate": "03/10/2025",
+                    //        "ServiceType": "Estimate",
+                    //        "ResourceName": "Estimator",
+                    //        "TimeSlot": "Morning Appointment ( 9:00AM - 11:30AM )",
+                    //        "TicketStatus": "Ready to Schedule | Measurement",
+                    //        "CustomTags": null,
+                    //        "AppoinmentStatus": "Scheduled"
+                    //    },
+                    //    {
+                    //        "__type": "FSM.Models.Customer.CustomerAppoinment",
+                    //        "CompanyID": null,
+                    //        "CustomerID": "13185",
+                    //        "CustomerGuid": null,
+                    //        "AppoinmentDate": "03/07/2025",
+                    //        "RequestDate": "03/07/2025",
+                    //        "ServiceType": "Service Call",
+                    //        "ResourceName": "Saruf",
+                    //        "TimeSlot": "(01:00 PM - 02:30 PM )",
+                    //        "TicketStatus": "0",
+                    //        "CustomTags": null,
+                    //        "AppoinmentStatus": "Scheduled"
+                    //    },
+                    //    {
+                    //        "__type": "FSM.Models.Customer.CustomerAppoinment",
+                    //        "CompanyID": null,
+                    //        "CustomerID": "13185",
+                    //        "CustomerGuid": null,
+                    //        "AppoinmentDate": "03/07/2025",
+                    //        "RequestDate": "03/07/2025",
+                    //        "ServiceType": "Estimate",
+                    //        "ResourceName": "GAR",
+                    //        "TimeSlot": "Select",
+                    //        "TicketStatus": "0",
+                    //        "CustomTags": null,
+                    //        "AppoinmentStatus": "Pending"
+                    //    },
+                    //    {
+                    //        "__type": "FSM.Models.Customer.CustomerAppoinment",
+                    //        "CompanyID": null,
+                    //        "CustomerID": "13185",
+                    //        "CustomerGuid": null,
+                    //        "AppoinmentDate": "03/07/2025",
+                    //        "RequestDate": "03/07/2025",
+                    //        "ServiceType": "Estimate",
+                    //        "ResourceName": "Estimator",
+                    //        "TimeSlot": "Afternoon Appointments ( 1:00PM - 4:30PM )",
+                    //        "TicketStatus": "0",
+                    //        "CustomTags": null,
+                    //        "AppoinmentStatus": "Scheduled"
+                    //    },
+                    //    {
+                    //        "__type": "FSM.Models.Customer.CustomerAppoinment",
+                    //        "CompanyID": null,
+                    //        "CustomerID": "13185",
+                    //        "CustomerGuid": null,
+                    //        "AppoinmentDate": "03/10/2025",
+                    //        "RequestDate": "03/10/2025",
+                    //        "ServiceType": "Service Call",
+                    //        "ResourceName": "Estimator",
+                    //        "TimeSlot": "Morning Appointment ( 9:00AM - 11:30AM )",
+                    //        "TicketStatus": "0",
+                    //        "CustomTags": null,
+                    //        "AppoinmentStatus": "Scheduled"
+                    //    },
+                    //    {
+                    //        "__type": "FSM.Models.Customer.CustomerAppoinment",
+                    //        "CompanyID": null,
+                    //        "CustomerID": "13185",
+                    //        "CustomerGuid": null,
+                    //        "AppoinmentDate": "03/07/2025",
+                    //        "RequestDate": "03/07/2025",
+                    //        "ServiceType": "WIndow Installation",
+                    //        "ResourceName": "Estimator",
+                    //        "TimeSlot": "(01:00 PM - 02:30 PM )",
+                    //        "TicketStatus": "Ordered",
+                    //        "CustomTags": null,
+                    //        "AppoinmentStatus": "Scheduled"
+                    //    },
+                    //    {
+                    //        "__type": "FSM.Models.Customer.CustomerAppoinment",
+                    //        "CompanyID": null,
+                    //        "CustomerID": "13185",
+                    //        "CustomerGuid": null,
+                    //        "AppoinmentDate": "03/07/2025",
+                    //        "RequestDate": "03/07/2025",
+                    //        "ServiceType": "WIndow Installation",
+                    //        "ResourceName": "Estimator",
+                    //        "TimeSlot": "Select",
+                    //        "TicketStatus": "Ready to Schedule | Measurement",
+                    //        "CustomTags": null,
+                    //        "AppoinmentStatus": "Pending"
+                    //    },
+                    //    {
+                    //        "__type": "FSM.Models.Customer.CustomerAppoinment",
+                    //        "CompanyID": null,
+                    //        "CustomerID": "13185",
+                    //        "CustomerGuid": null,
+                    //        "AppoinmentDate": "03/07/2025",
+                    //        "RequestDate": "03/07/2025",
+                    //        "ServiceType": "QuickBooks Products",
+                    //        "ResourceName": "Saif",
+                    //        "TimeSlot": "Afternoon Appointments ( 1:00PM - 4:30PM )",
+                    //        "TicketStatus": "Completed",
+                    //        "CustomTags": null,
+                    //        "AppoinmentStatus": "Closed"
+                    //    },
+                    //    {
+                    //        "__type": "FSM.Models.Customer.CustomerAppoinment",
+                    //        "CompanyID": null,
+                    //        "CustomerID": "13185",
+                    //        "CustomerGuid": null,
+                    //        "AppoinmentDate": "03/11/2025",
+                    //        "RequestDate": "03/11/2025",
+                    //        "ServiceType": "Estimate",
+                    //        "ResourceName": "Saruf",
+                    //        "TimeSlot": "Morning Appointment ( 9:00AM - 11:30AM )",
+                    //        "TicketStatus": "Ordered",
+                    //        "CustomTags": null,
+                    //        "AppoinmentStatus": "Scheduled"
+                    //    },
+                    //    {
+                    //        "__type": "FSM.Models.Customer.CustomerAppoinment",
+                    //        "CompanyID": null,
+                    //        "CustomerID": "13185",
+                    //        "CustomerGuid": null,
+                    //        "AppoinmentDate": "03/08/2025",
+                    //        "RequestDate": "03/08/2025",
+                    //        "ServiceType": "QuickBooks Products",
+                    //        "ResourceName": "GAR",
+                    //        "TimeSlot": "(01:00 PM - 02:30 PM )",
+                    //        "TicketStatus": "Ordered",
+                    //        "CustomTags": null,
+                    //        "AppoinmentStatus": "Scheduled"
+                    //    },
+                    //    {
+                    //        "__type": "FSM.Models.Customer.CustomerAppoinment",
+                    //        "CompanyID": null,
+                    //        "CustomerID": "13185",
+                    //        "CustomerGuid": null,
+                    //        "AppoinmentDate": "03/10/2025",
+                    //        "RequestDate": "03/10/2025",
+                    //        "ServiceType": "Estimate",
+                    //        "ResourceName": "Estimator",
+                    //        "TimeSlot": "Morning Appointment ( 9:00AM - 11:30AM )",
+                    //        "TicketStatus": "Ready to Schedule | Measurement",
+                    //        "CustomTags": null,
+                    //        "AppoinmentStatus": "Scheduled"
+                    //    },
+                    //    {
+                    //        "__type": "FSM.Models.Customer.CustomerAppoinment",
+                    //        "CompanyID": null,
+                    //        "CustomerID": "13185",
+                    //        "CustomerGuid": null,
+                    //        "AppoinmentDate": "03/15/2025",
+                    //        "RequestDate": "03/15/2025",
+                    //        "ServiceType": "Service Call",
+                    //        "ResourceName": "Saruf",
+                    //        "TimeSlot": "(02:00 PM - 02:30 PM )",
+                    //        "TicketStatus": "0",
+                    //        "CustomTags": null,
+                    //        "AppoinmentStatus": "Scheduled"
+                    //    },
+                    //];
+                    console.log(appointmentData);
+                    currentPage = 1;
+                    applyFilters(); 
+                },
+                error: function (error) { }
+            })
+        }
+
+        function renderAppointments() {
+            const startIndex = (currentPage - 1) * pageSize;
+            const pageData = filteredData.slice(startIndex, startIndex + pageSize);
+            const tbody = $('#apptTableBody');
+            tbody.empty();
+
+            if (pageData.length === 0) {
+                tbody.append('<tr><td colspan="7">No appointments found.</td></tr>');
+                return;
+            }
+
+            pageData.forEach(item => {
+                tbody.append(`
+                <tr>
+                    <td>${item.RequestDate || ''}</td>
+                    <td>${item.TimeSlot || ''}</td>
+                    <td>${item.ServiceType || ''}</td>
+                    <td>${item.AppoinmentStatus || ''}</td>
+                    <td>${item.ResourceName || ''}</td>
+                    <td>${item.TicketStatus || ''}</td>
+                    <td>${item.CustomTags || ''}</td>
+                </tr>
+            `);
+            });
+        }
+
+        function updatePagination() {
+            const totalPages = Math.ceil(filteredData.length / pageSize);
+            $('#apptPageInfo').text(`Page ${currentPage} of ${totalPages || 1}`);
+
+            $('#apptPrev').prop('disabled', currentPage <= 1);
+            $('#apptNext').prop('disabled', currentPage >= totalPages);
+        }
+
+        $('#apptPrev').click(function () {
+            if (currentPage > 1) {
+                currentPage--;
+                renderAppointments();
+                updatePagination();
+            }
+        });
+
+        $('#apptNext').click(function () {
+            const totalPages = Math.ceil(filteredData.length / pageSize);
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderAppointments();
+                updatePagination();
+            }
+        });
+
+        function applyFilters() {
+            const searchTerm = $('#apptSearch').val().trim().toLowerCase();
+            const statusFilter = $('#apptFilter').val();
+            filteredData = appointmentData.filter(item => {
+                // Filter by status if not "all"
+                const matchesStatus = statusFilter === 'all' ||
+                    (item.AppoinmentStatus && item.AppoinmentStatus.toLowerCase() === statusFilter);
+
+                // Search in multiple fields
+                const combinedText = [
+                    item.RequestDate,
+                    item.TimeSlot,
+                    item.ServiceType,
+                    item.AppoinmentStatus,
+                    item.ResourceName,
+                    item.TicketStatus,
+                    item.CustomTags
+                ].join(' ').toLowerCase();
+
+                const matchesSearch = combinedText.includes(searchTerm);
+
+                return matchesStatus && matchesSearch;
+            });
+
+            currentPage = 1;
+            renderAppointments();
+            updatePagination();
+        }
+
+        $('#apptSearch').on('input', function () {
+            applyFilters();
+        });
+
+        $('#apptFilter').on('change', function () {
+            applyFilters();
+        });
+
     </script>
 </asp:Content>
