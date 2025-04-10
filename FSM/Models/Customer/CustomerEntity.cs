@@ -85,4 +85,26 @@ namespace FSM.Models.Customer
         public string CustomTags { get; set; }
         public string AppoinmentStatus { get; set; }
     }
+
+    public class CustomerInvoice
+    {
+        public string CompanyID { get; set; }
+        public string CustomerID { get; set; }
+        public string CustomerGuid { get; set; }
+
+        public string InvoiceDate { get; set; }
+        public string InvoiceNumber { get; set; }
+        public string InvoiceType { get; set; }
+
+        public string Subtotal { get; set; }
+        public string Discount { get; set; }
+        public string Tax { get; set; }
+        public string Total { get; set; }
+        public string Due { get; set; }
+        public string DepositAmount { get; set; }
+
+        public string InvoiceStatus { get; set; }
+
+        public string CustomTags { get; set; }
+    }
 }

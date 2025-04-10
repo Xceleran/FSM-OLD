@@ -2,55 +2,185 @@
 
 <asp:Content ID="BodyContent" ContentPlaceHolderID="MainContent" runat="server">
     <style type="text/css">
-        .custdet-container { padding: 20px; margin-top: 35px; }
-        .custdet-title { font-size: 28px; font-weight: bold; color: #2d3748; margin-bottom: 20px; }
-        .custdet-content { background: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 20px; }
-        .custdet-section { margin-bottom: 30px; }
-        .custdet-section-title { font-size: 20px; font-weight: 600; color: #4a5568; margin-bottom: 15px; }
-        
-        .custdet-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
-        .custdet-table th, .custdet-table td { padding: 10px; border: 1px solid #e2e8f0; }
-        .custdet-table th { background: #edf2f7; font-weight: 600; color: #4a5568; }
-        .custdet-table td { color: #2d3748; }
-        
-        .custdet-controls { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
-        .custdet-input { padding: 8px; border: 1px solid #cbd5e0; border-radius: 4px; flex: 1; min-width: 200px; }
-        .custdet-select { padding: 8px; border: 1px solid #cbd5e0; border-radius: 4px; min-width: 150px; }
-        .custdet-btn { padding: 8px 16px; border-radius: 4px; border: none; cursor: pointer; }
-        .custdet-btn-primary { background: #3182ce; color: #fff; }
-        .custdet-btn-primary:hover { background: #2b6cb0; }
-        .custdet-btn-secondary { background: #e2e8f0; color: #4a5568; }
-        .custdet-btn-secondary:hover { background: #cbd5e0; }
-        
-        .custdet-pagination { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
-        .custdet-page-info { color: #4a5568; }
-        
-        .custdet-gallery { display: flex; flex-wrap: wrap; gap: 10px; }
-        .custdet-gallery-item { position: relative; }
-        .custdet-gallery img { max-width: 120px; max-height: 120px; border-radius: 4px; object-fit: cover; }
-        .custdet-delete-btn { position: absolute; top: 5px; right: 5px; background: #e53e3e; color: #fff; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; }
-        
-        .custdet-overview { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .custdet-card { 
-            padding: 20px; 
-            border-radius: 12px; 
-            color: #fff; 
-            text-align: center; 
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1), 0 1px 3px rgba(0,0,0,0.08); 
-            transition: transform 0.2s ease, box-shadow 0.2s ease; 
+        .custdet-container {
+            padding: 20px;
+            margin-top: 35px;
         }
-        .custdet-card:hover { 
-            transform: translateY(-2px); 
-            box-shadow: 0 7px 14px rgba(0,0,0,0.1), 0 3px 6px rgba(0,0,0,0.08); 
+
+        .custdet-title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 20px;
         }
-        .custdet-card.appointment { 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+
+        .custdet-content {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 20px;
         }
-        .custdet-card.invoice { 
-            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); 
+
+        .custdet-section {
+            margin-bottom: 30px;
         }
-        .custdet-card h3 { font-size: 16px; font-weight: 600; margin-bottom: 12px; opacity: 0.9; }
-        .custdet-card p { font-size: 28px; font-weight: bold; }
+
+        .custdet-section-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 15px;
+        }
+
+        .custdet-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+
+            .custdet-table th, .custdet-table td {
+                padding: 10px;
+                border: 1px solid #e2e8f0;
+            }
+
+            .custdet-table th {
+                background: #edf2f7;
+                font-weight: 600;
+                color: #4a5568;
+            }
+
+            .custdet-table td {
+                color: #2d3748;
+            }
+
+        .custdet-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .custdet-input {
+            padding: 8px;
+            border: 1px solid #cbd5e0;
+            border-radius: 4px;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .custdet-select {
+            padding: 8px;
+            border: 1px solid #cbd5e0;
+            border-radius: 4px;
+            min-width: 150px;
+        }
+
+        .custdet-btn {
+            padding: 8px 16px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .custdet-btn-primary {
+            background: #3182ce;
+            color: #fff;
+        }
+
+            .custdet-btn-primary:hover {
+                background: #2b6cb0;
+            }
+
+        .custdet-btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+            .custdet-btn-secondary:hover {
+                background: #cbd5e0;
+            }
+
+        .custdet-pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .custdet-page-info {
+            color: #4a5568;
+        }
+
+        .custdet-gallery {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .custdet-gallery-item {
+            position: relative;
+        }
+
+        .custdet-gallery img {
+            max-width: 120px;
+            max-height: 120px;
+            border-radius: 4px;
+            object-fit: cover;
+        }
+
+        .custdet-delete-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #e53e3e;
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .custdet-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .custdet-card {
+            padding: 20px;
+            border-radius: 12px;
+            color: #fff;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1), 0 1px 3px rgba(0,0,0,0.08);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+            .custdet-card:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 7px 14px rgba(0,0,0,0.1), 0 3px 6px rgba(0,0,0,0.08);
+            }
+
+            .custdet-card.appointment {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            }
+
+            .custdet-card.invoice {
+                background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            }
+
+            .custdet-card h3 {
+                font-size: 16px;
+                font-weight: 600;
+                margin-bottom: 12px;
+                opacity: 0.9;
+            }
+
+            .custdet-card p {
+                font-size: 28px;
+                font-weight: bold;
+            }
     </style>
 
     <div class="custdet-container">
@@ -62,35 +192,51 @@
                 <div class="custdet-overview">
                     <div class="custdet-card appointment">
                         <h3>Pending Appointments</h3>
-                        <p id="pendingAppts"><asp:Label ID="lblpendingAppts" runat="server" /></p>
+                        <p id="pendingAppts">
+                            <asp:Label ID="lblpendingAppts" runat="server" />
+                        </p>
                     </div>
                     <div class="custdet-card appointment">
                         <h3>Scheduled Appointments</h3>
-                        <p id="scheduledAppts"><asp:Label ID="lblscheduledAppts" runat="server" /></p>
+                        <p id="scheduledAppts">
+                            <asp:Label ID="lblscheduledAppts" runat="server" />
+                        </p>
                     </div>
                     <div class="custdet-card appointment">
                         <h3>Completed Appointments</h3>
-                        <p id="completedAppts"><asp:Label ID="lblcompletedAppts" runat="server" /></p>
+                        <p id="completedAppts">
+                            <asp:Label ID="lblcompletedAppts" runat="server" />
+                        </p>
                     </div>
                     <div class="custdet-card appointment">
                         <h3>Custom Tags</h3>
-                        <p id="customTags"><asp:Label ID="lblcustomTags" runat="server" /></p>
+                        <p id="customTags">
+                            <asp:Label ID="lblcustomTags" runat="server" />
+                        </p>
                     </div>
                     <div class="custdet-card invoice">
                         <h3>Estimates</h3>
-                        <p id="estimates"><asp:Label ID="lblestimates" runat="server" /></p>
+                        <p id="estimates">
+                            <asp:Label ID="lblestimates" runat="server" />
+                        </p>
                     </div>
                     <div class="custdet-card invoice">
                         <h3>Open Invoices</h3>
-                        <p id="openInvoices"><asp:Label ID="lblopenInvoices" runat="server" /></p>
+                        <p id="openInvoices">
+                            <asp:Label ID="lblopenInvoices" runat="server" />
+                        </p>
                     </div>
                     <div class="custdet-card invoice">
                         <h3>Unpaid Invoices</h3>
-                        <p id="unpaidInvoices"><asp:Label ID="lblunpaidInvoices" runat="server" /></p>
+                        <p id="unpaidInvoices">
+                            <asp:Label ID="lblunpaidInvoices" runat="server" />
+                        </p>
                     </div>
                     <div class="custdet-card invoice">
                         <h3>Paid Invoices</h3>
-                        <p id="paidInvoices"><asp:Label ID="lblpaidInvoices" runat="server" /></p>
+                        <p id="paidInvoices">
+                            <asp:Label ID="lblpaidInvoices" runat="server" />
+                        </p>
                     </div>
                 </div>
             </div>
@@ -98,7 +244,8 @@
             <!-- Basic Information -->
             <div class="custdet-section">
                 <h2 class="custdet-section-title">Basic Information</h2>
-                <asp:Label Style="display:none;" ID="lblCustomerId" runat="server" />
+                <asp:Label Style="display: none;" ID="lblCustomerId" runat="server" />
+                <asp:Label Style="display: none;" ID="lblCustomerGuid" runat="server" />
                 <table class="custdet-table">
                     <thead>
                         <tr>
@@ -107,12 +254,33 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr><td>Customer Name</td><td id="customerName"><asp:Label ID="lblCustomerName" runat="server" /></td></tr>
-                        <tr><td>Site Contact</td><td id="siteContact"><asp:Label ID="lblPhone" runat="server" /></td></tr>
-                        <tr><td>Address</td><td id="siteAddress"><asp:Label ID="lblAddress1" runat="server" /></td></tr>
-                        <tr><td>Status</td><td id="siteStatus">Loading...</td></tr>
-                        <tr><td>Description</td><td id="siteDescription">Loading...</td></tr>
-                        <tr><td>Special Instructions</td><td id="siteInstructions">Loading...</td></tr>
+                        <tr>
+                            <td>Customer Name</td>
+                            <td id="customerName">
+                                <asp:Label ID="lblCustomerName" runat="server" /></td>
+                        </tr>
+                        <tr>
+                            <td>Site Contact</td>
+                            <td id="siteContact">
+                                <asp:Label ID="lblPhone" runat="server" /></td>
+                        </tr>
+                        <tr>
+                            <td>Address</td>
+                            <td id="siteAddress">
+                                <asp:Label ID="lblAddress1" runat="server" /></td>
+                        </tr>
+                        <tr>
+                            <td>Status</td>
+                            <td id="siteStatus">Loading...</td>
+                        </tr>
+                        <tr>
+                            <td>Description</td>
+                            <td id="siteDescription">Loading...</td>
+                        </tr>
+                        <tr>
+                            <td>Special Instructions</td>
+                            <td id="siteInstructions">Loading...</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -156,10 +324,14 @@
                 <h2 class="custdet-section-title">Invoices & Estimates</h2>
                 <div class="custdet-controls">
                     <input type="text" id="invSearch" class="custdet-input" placeholder="Search invoices...">
+                    <select id="invFilterType" class="custdet-select">
+                        <option value="all">All Type</option>
+                        <option value="invoice">Invoice</option>
+                        <option value="proposal">Estimate</option>
+                    </select>
                     <select id="invFilter" class="custdet-select">
                         <option value="all">All Status</option>
-                        <option value="in-progress">In Progress</option>
-                        <option value="complete-unpaid">Complete/Unpaid</option>
+                        <option value="unpaid">Unpaid</option>
                         <option value="paid">Paid</option>
                     </select>
                     <button id="invExport" class="custdet-btn custdet-btn-primary">Export to Excel</button>
@@ -167,14 +339,15 @@
                 <table class="custdet-table">
                     <thead>
                         <tr>
-                            <th>Type</th>
                             <th>Number</th>
+                            <th>Type</th>
                             <th>Date</th>
                             <th>Subtotal</th>
                             <th>Discount</th>
                             <th>Tax</th>
                             <th>Total</th>
                             <th>Due</th>
+                            <th>Diposit</th>
                             <th>Status</th>
                             <th>Custom Tags</th>
                         </tr>
@@ -387,7 +560,7 @@
             //            <td>${a.customTags.join(', ')}</td>
             //        </tr>
             //    `).join('') || '<tr><td colspan="7">No appointments found</td></tr>';
-                
+
             //    document.getElementById('apptPageInfo').textContent = `Page ${page} of ${totalPages}`;
             //    document.getElementById('apptPrev').disabled = page === 1;
             //    document.getElementById('apptNext').disabled = page === totalPages || totalPages === 0;
@@ -407,7 +580,7 @@
             // Invoices
             function renderInvoices(page = 1, filter = 'all', search = '') {
                 const tbody = document.getElementById('invTableBody');
-                const filtered = site.invoices.filter(i => 
+                const filtered = site.invoices.filter(i =>
                     (filter === 'all' || i.status === filter) &&
                     (!search || Object.values(i).some(v => v.toString().toLowerCase().includes(search)))
                 );
@@ -436,15 +609,15 @@
                 return filtered;
             }
 
-            let invPage = 1;
-            document.getElementById('invPrev').addEventListener('click', () => { invPage--; renderInvoices(invPage, document.getElementById('invFilter').value, document.getElementById('invSearch').value.toLowerCase()); });
-            document.getElementById('invNext').addEventListener('click', () => { invPage++; renderInvoices(invPage, document.getElementById('invFilter').value, document.getElementById('invSearch').value.toLowerCase()); });
-            document.getElementById('invFilter').addEventListener('change', (e) => { invPage = 1; renderInvoices(1, e.target.value, document.getElementById('invSearch').value.toLowerCase()); });
-            document.getElementById('invSearch').addEventListener('input', (e) => { invPage = 1; renderInvoices(1, document.getElementById('invFilter').value, e.target.value.toLowerCase()); });
-            document.getElementById('invExport').addEventListener('click', () => {
-                const data = renderInvoices(invPage, document.getElementById('invFilter').value, document.getElementById('invSearch').value.toLowerCase());
-                exportToExcel(data, 'invoices.xlsx', ['Type', 'Number', 'Date', 'Subtotal', 'Discount', 'Tax', 'Total', 'Due', 'Status', 'Custom Tags']);
-            });
+            //let invPage = 1;
+            //document.getElementById('invPrev').addEventListener('click', () => { invPage--; renderInvoices(invPage, document.getElementById('invFilter').value, document.getElementById('invSearch').value.toLowerCase()); });
+            //document.getElementById('invNext').addEventListener('click', () => { invPage++; renderInvoices(invPage, document.getElementById('invFilter').value, document.getElementById('invSearch').value.toLowerCase()); });
+            //document.getElementById('invFilter').addEventListener('change', (e) => { invPage = 1; renderInvoices(1, e.target.value, document.getElementById('invSearch').value.toLowerCase()); });
+            //document.getElementById('invSearch').addEventListener('input', (e) => { invPage = 1; renderInvoices(1, document.getElementById('invFilter').value, e.target.value.toLowerCase()); });
+            //document.getElementById('invExport').addEventListener('click', () => {
+            //    const data = renderInvoices(invPage, document.getElementById('invFilter').value, document.getElementById('invSearch').value.toLowerCase());
+            //    exportToExcel(data, 'invoices.xlsx', ['Type', 'Number', 'Date', 'Subtotal', 'Discount', 'Tax', 'Total', 'Due', 'Status', 'Custom Tags']);
+            //});
 
             // Equipment
             const equipBody = document.getElementById('equipTableBody');
@@ -552,7 +725,7 @@
             }
 
             // Initial Render
-           // renderAppointments(1);
+            // renderAppointments(1);
             renderInvoices(1);
             renderPictures('equipment');
         });
@@ -561,12 +734,20 @@
 
 
         let appointmentData = [];
-        let filteredData = [];    
+        let filteredData = [];
         let currentPage = 1;
         const pageSize = 10;
+
+        let invoiceData = [];
+        let filteredInvoiceData = [];
+        let currentPageInv = 1;
+        const pageSizeInv = 10;
+
+
         function loadData() {
             var customerId = document.getElementById('<%= lblCustomerId.ClientID %>').innerText;
             loadAppoinments(customerId);
+            loadInvoices(customerId);
         }
 
         function loadAppoinments(customerId) {
@@ -779,7 +960,7 @@
                     //];
                     console.log(appointmentData);
                     currentPage = 1;
-                    applyFilters(); 
+                    applyFilters();
                 },
                 error: function (error) { }
             })
@@ -873,5 +1054,131 @@
             applyFilters();
         });
 
+
+        function loadInvoices(customerId) {
+            $.ajax({
+                url: 'CustomerDetails.aspx/GetCustomerInvoices',
+                type: "POST",
+                contentType: "application/json; charset=utf-8",
+                data: JSON.stringify({ customerId: customerId }),
+                dataType: 'json',
+                success: function (rs) {
+                    console.log(invoiceData);
+                    invoiceData = rs.d || [];
+                    console.log(invoiceData);
+                    currentPage = 1;
+                    applyFiltersInv();
+                },
+                error: function (error) { }
+            })
+        }
+
+        function renderInvoices() {
+            const startIndex = (currentPageInv - 1) * pageSizeInv;
+            const pageData = filteredInvoiceData.slice(startIndex, startIndex + pageSizeInv);
+            const tbody = $('#invTableBody');
+            tbody.empty();
+
+            if (pageData.length === 0) {
+                tbody.append('<tr><td colspan="7">No invoices found.</td></tr>');
+                return;
+            }
+
+            pageData.forEach(item => {
+                tbody.append(`
+                <tr>
+                <td>${item.InvoiceNumber || ''}</td>
+                <td>${item.InvoiceType || ''}</td>
+                <td>${item.InvoiceDate || ''}</td>
+                <td>${item.Subtotal || ''}</td>
+                <td>${item.Discount || ''}</td>
+                <td>${item.Tax || ''}</td>
+                <td>${item.Total || ''}</td>
+                <td>${item.Due || ''}</td>
+                <td>${item.DepositAmount || ''}</td>
+                <td>${item.InvoiceStatus || ''}</td>
+                <td>${item.CustomTags || ''}</td>
+                </tr>
+                `);
+            });
+        }
+
+        function updatePaginationInv() {
+            const totalPages = Math.ceil(filteredInvoiceData.length / pageSizeInv);
+            $('#invPageInfo').text(`Page ${currentPageInv} of ${totalPages || 1}`);
+
+            $('#invPrev').prop('disabled', currentPageInv <= 1);
+            $('#invNext').prop('disabled', currentPageInv >= totalPages);
+        }
+
+        $('#invPrev').click(function () {
+            if (currentPageInv > 1) {
+                currentPageInv--;
+                renderInvoices();
+                updatePaginationInv();
+            }
+        });
+
+        $('#invNext').click(function () {
+            const totalPages = Math.ceil(filteredInvoiceData.length / pageSizeInv);
+            if (currentPageInv < totalPages) {
+                currentPageInv++;
+                renderInvoices();
+                updatePaginationInv();
+            }
+        });
+
+        function applyFiltersInv() {
+            const searchTerm = $('#invSearch').val().trim().toLowerCase();
+            const statusFilter = $('#invFilter').val();
+            const typeFilter = $('#invFilterType').val();
+            filteredInvoiceData = invoiceData.filter(item => {
+                // Filter by status if not "all"
+                const matchesStatus = statusFilter === 'all' ||
+                    (item.InvoiceStatus && item.InvoiceStatus.toLowerCase() === statusFilter);
+
+                const matchesType = typeFilter === 'all' ||
+                    (item.InvoiceType && item.InvoiceType.toLowerCase() === typeFilter);
+
+                if (item.InvoiceType === "Proposal") {
+                    item.InvoiceType = "Estimate"
+                }
+
+                // Search in multiple fields
+                const combinedText = [
+                    item.InvoiceNumber,
+                    item.InvoiceType,
+                    item.InvoiceDate,
+                    item.Subtotal,
+                    item.Discount,
+                    item.Tax,
+                    item.Total,
+                    item.Due,
+                    item.DepositAmount,
+                    item.InvoiceStatus,
+                    item.CustomTags
+                ].join(' ').toLowerCase();
+
+                const matchesSearch = combinedText.includes(searchTerm);
+
+                return matchesStatus && matchesType && matchesSearch;
+            });
+
+            currentPage = 1;
+            renderInvoices();
+            updatePaginationInv();
+        }
+
+        $('#invSearch').on('input', function () {
+            applyFiltersInv();
+        });
+
+        $('#invFilter').on('change', function () {
+            applyFiltersInv();
+        });
+
+        $('#invFilterType').on('change', function () {
+            applyFiltersInv();
+        });
     </script>
 </asp:Content>
