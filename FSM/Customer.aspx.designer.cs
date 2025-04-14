@@ -7,9 +7,11 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace FSM {
-    
-    
-    public partial class Customers {
+namespace FSM
+{
+
+
+    public partial class Customer
+    {
     }
 }
