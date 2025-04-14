@@ -195,5 +195,95 @@ namespace FSM
 
             return customer;
         }
+
+        [WebMethod]
+        [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
+        public static bool SaveCustomerSiteData(CustomerSiteInfo site)
+        {
+            string companyid = HttpContext.Current.Session["CompanyID"].ToString();
+            if (!string.IsNullOrEmpty(site.CustomerID))
+            {
+                if (site.ID > 0)
+                {
+                    return UpdateCustomerSiteInfo(site);
+                }
+                else
+                {
+                    return InsertCustomerSiteInfo(site);
+                }
+            }
+
+            return false;
+        }
+
+        public static bool InsertCustomerSiteInfo(CustomerSiteInfo site)
+        {
+            bool success = false;
+            string companyid = HttpContext.Current.Session["CompanyID"].ToString();
+            Database db = new Database();
+            try
+            {
+                db.Open();
+                string strSQL = @"INSERT INTO [msSchedulerV3].dbo.tbl_CustomerSite
+                        (CompanyID, CustomerID, CustomerGuid, SiteName, Address, Contact, Instructions,Active) 
+                        VALUES (@CompanyID, @CustomerID, @CustomerGuid, @SiteName, @Address, @Contact, @Instructions, @Active)";
+                db.AddParameter("@CompanyID", companyid, SqlDbType.NVarChar);
+                db.AddParameter("@CustomerID", site.CustomerID, SqlDbType.NVarChar);
+                db.AddParameter("@CustomerGuid", site.CustomerGuid, SqlDbType.NVarChar);
+                db.AddParameter("@SiteName", site.SiteName, SqlDbType.NVarChar);
+                db.AddParameter("@Address", site.Address, SqlDbType.NVarChar);
+                db.AddParameter("@Contact", site.Contact, SqlDbType.NVarChar);
+                db.AddParameter("@Instructions", site.Instructions, SqlDbType.NVarChar);
+                db.AddParameter("@Active", true, SqlDbType.Bit);
+                object result = db.ExecuteScalarData(strSQL);
+                if (result != null)
+                {
+                    success = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                success = false;
+            }
+            finally
+            {
+                db.Close();
+            }
+            return success;
+        }
+
+        public static bool UpdateCustomerSiteInfo(CustomerSiteInfo site)
+        {
+            bool success = false;
+            string companyid = HttpContext.Current.Session["CompanyID"].ToString();
+            Database db = new Database();
+            try
+            {
+                db.Open();
+                string strSQL = @"UPDATE [msSchedulerV3].dbo.tbl_CustomerSite SET 
+                                    SiteName = @SiteName,
+                                    Address = @Address,
+                                    Contact = @Contact,
+                                    Instructions = @Instructions,
+                                    Active = @Active WHERE ID=@ID";
+                db.AddParameter("@SiteName", site.SiteName, SqlDbType.NVarChar);
+                db.AddParameter("@Address", site.Address, SqlDbType.NVarChar);
+                db.AddParameter("@Contact", site.Contact, SqlDbType.NVarChar);
+                db.AddParameter("@Instructions", site.Instructions, SqlDbType.NVarChar);
+                db.AddParameter("@Active", true, SqlDbType.Bit);
+                db.AddParameter("@ID", site.ID, SqlDbType.Int);
+                success = db.UpdateSql(strSQL);
+                db.Close();
+            }
+            catch(Exception ex)
+            {
+                success = false;
+            }
+            finally
+            {
+                db.Close();
+            }
+            return success;
+        }
     }
 }

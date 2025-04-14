@@ -353,7 +353,7 @@
                     <label class="cust-modal-label">Site Contact</label>
                     <input type="text" name="contact" class="cust-modal-input" />
                 </div>
-                <div class="cust-modal-field">
+                <%--<div class="cust-modal-field">
                     <label class="cust-modal-label">Equipment</label>
                     <input type="text" name="equipment" class="cust-modal-input" />
                 </div>
@@ -376,7 +376,7 @@
                 <div class="cust-modal-field">
                     <label class="cust-modal-label">Alarms</label>
                     <input type="text" name="alarms" class="cust-modal-input" />
-                </div>
+                </div>--%>
                 <div class="cust-modal-field">
                     <label class="cust-modal-label">Special Instructions</label>
                     <input type="text" name="specialInstructions" class="cust-modal-input" />

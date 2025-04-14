@@ -830,6 +830,30 @@ public class Database
             }
         }
     }
+
+    public bool UpdateSql(string sql)
+    {
+        bool result = false;
+        try
+        {
+            this.Connection = new SqlConnection(this.ConnectionString);
+            this.Connection.Open();
+            this.Command.Connection = this.Connection;
+            this.Command.CommandText = sql;
+            int rowsAffected = this.Command.ExecuteNonQuery();
+            result = rowsAffected > 0;
+        }
+        catch (Exception ex)
+        {
+            this.Error = ex;
+            throw ex;
+        }
+        finally
+        {
+            this.Connection.Close();
+        }
+        return result;
+    }
 }
 
 
