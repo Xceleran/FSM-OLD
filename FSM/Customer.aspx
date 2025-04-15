@@ -759,6 +759,7 @@
             });
 
             function generateCustomerDetails(data) {
+                console.log(data);
                 if (data) {
                     document.getElementById('customerName').textContent = data.FirstName + " " + data.LastName;
                     document.getElementById('customerEmail').textContent = data.Email || '-';
@@ -783,6 +784,8 @@
                                 <a href="CustomerDetails.aspx?siteId=${site.siteId}" class="cust-site-view-link">View Details</a>
                             </div>
                         `;
+
+                        $(".cust-site-view-link").attr("href", "CustomerDetails.aspx?custId=" + data.CustomerID + "&custGuid=" + data.CustomerGuid);
                         sitesContainer.appendChild(siteCard);
                     });
                     sitesContainer.appendChild(addSiteBtn);

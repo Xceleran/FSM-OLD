@@ -1,5 +1,8 @@
 ﻿using FSM.Models.Customer;
+using FSM.Models.Enums;
 using System;
+using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.Data;
 using System.Web;
 using System.Web.Script.Services;
@@ -28,10 +31,45 @@ namespace FSM
 
         public static CustomerEntity GetCustomerDetails(string customerId)
         {
+            var customer = new CustomerEntity();
             string companyid = HttpContext.Current.Session["CompanyID"].ToString();
             Database db = new Database();
-            //customerId = "302"; //static value for testing
-            string sql = "";
+            try
+            {
+                db.Open();
+                DataTable dt = new DataTable();
+                string sql = @"SELECT * FROM [msSchedulerV3].[dbo].[tbl_Customer] WHERE CustomerID = @CustomerID AND CompanyID = @CompanyID;";
+                db.AddParameter("@CompanyID", companyid, SqlDbType.NVarChar);
+                db.AddParameter("@CustomerID", customerId, SqlDbType.NVarChar);
+                db.ExecuteParam(sql, out dt);
+                db.Close();
+                if (dt.Rows.Count > 0)
+                {
+                    DataRow dataRow = dt.Rows[0];
+                    customer.BusinessID = dataRow.Field<int?>("BusinessID") ?? 0;
+                    customer.CustomerGuid = dataRow.Field<string>("CustomerGuid") ?? "";
+                    customer.Address1 = dataRow.Field<string>("Address1") ?? "";
+                    customer.Address2 = dataRow.Field<string>("Address2") ?? "";
+                    customer.FirstName = dataRow.Field<string>("FirstName") ?? "";
+                    customer.LastName = dataRow.Field<string>("LastName") ?? "";
+                    customer.Phone = dataRow.Field<string>("Phone") ?? "";
+                    customer.Mobile = dataRow.Field<string>("Mobile") ?? "";
+                    customer.CompanyName = dataRow.Field<string>("CompanyName") ?? "";
+                    customer.Email = dataRow.Field<string>("Email") ?? "";
+                }
+            }
+            catch (Exception ex)
+            {
+                db.Close();
+                return customer;
+            }
+            return customer;
+        }
+
+        public static CustomerSummeryCount GetCustomerSummery(string customerId)
+        {
+            string companyid = HttpContext.Current.Session["CompanyID"].ToString();
+            Database db = new Database();
             var customerData = new CustomerSummeryCount();
             customerData.CompanyID = companyid;
             customerData.CustomerID = customerId;
@@ -46,7 +84,7 @@ namespace FSM
 
                 if (dt1.Rows.Count > 0)
                 {
-                    foreach(DataRow row in dt1.Rows)
+                    foreach (DataRow row in dt1.Rows)
                     {
                         if ((Convert.ToDouble(row["Total"].ToString()) - Convert.ToDouble(row["AmountCollect"].ToString())) <= 0)
                         {
@@ -104,41 +142,13 @@ namespace FSM
                 db.Close();
             }
 
-            string companyid = HttpContext.Current.Session["CompanyID"].ToString();
-            Database db = new Database();
-            var customer = new CustomerEntity();
-            try
-            {
-                db.Open();
-                DataTable dt = new DataTable();
-                string sql = @"SELECT * FROM [msSchedulerV3].[dbo].[tbl_Customer] WHERE CustomerID = @CustomerID AND CompanyID = @CompanyID;";
-                db.AddParameter("@CompanyID", companyid, SqlDbType.NVarChar);
-                db.AddParameter("@CustomerID", customerId, SqlDbType.NVarChar);
-                db.ExecuteParam(sql, out dt);
-                db.Close();
-                if (dt.Rows.Count > 0)
-                {
-                    DataRow dataRow = dt.Rows[0];
-                    customer.BusinessID = dataRow.Field<int?>("BusinessID") ?? 0;
-                    customer.CustomerGuid = dataRow.Field<string>("CustomerGuid") ?? "";
-                    customer.Address1 = dataRow.Field<string>("Address1") ?? "";
-                    customer.Address2 = dataRow.Field<string>("Address2") ?? "";
-                    customer.FirstName = dataRow.Field<string>("FirstName") ?? "";
-                    customer.LastName = dataRow.Field<string>("LastName") ?? "";
-                    customer.Phone = dataRow.Field<string>("Phone") ?? "";
-                    customer.Mobile = dataRow.Field<string>("Mobile") ?? "";
-                    customer.CompanyName = dataRow.Field<string>("CompanyName") ?? "";
-                    customer.Email = dataRow.Field<string>("Email") ?? "";
-                }
-            }
             catch (Exception ex)
             {
-                // Log the exception (optional)
-                System.Diagnostics.Debug.WriteLine($"Error in GetCustomerDetails: {ex.Message}");
                 db.Close();
+                return customerData;
             }
 
-            return customer;
+            return customerData;
         }
 
         [WebMethod]

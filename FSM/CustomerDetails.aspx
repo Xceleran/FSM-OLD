@@ -3,22 +3,86 @@
 <asp:Content ID="BodyContent" ContentPlaceHolderID="MainContent" runat="server">
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
-    
+
     <style type="text/css">
-        .custdet-main-container { padding: 20px; margin-top: 35px; }
-        .custdet-container { background: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 20px; margin-bottom: 20px; }
-        .custdet-controls .input-group { max-width: 500px; display: flex; gap: 10px; }
-        .custdet-controls .input-group .form-control,
-        .custdet-controls .input-group .form-select { flex: 1; }
-        .custdet-controls .btn { margin-left: 10px; }
-        .custdet-gallery img { max-width: 120px; max-height: 120px; border-radius: 4px; object-fit: cover; }
-        .custdet-gallery-item { position: relative; }
-        .custdet-delete-btn { position: absolute; top: 5px; right: 5px; background: #dc3545; color: #fff; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; line-height: 20px; text-align: center; cursor: pointer; }
-        .custdet-pdf-preview { width: 100%; height: 300px; border: 1px solid #dee2e6; border-radius: 4px; }
+        .custdet-main-container {
+            padding: 20px;
+            margin-top: 35px;
+        }
+
+        .custdet-container {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .custdet-controls .input-group {
+            max-width: 500px;
+            display: flex;
+            gap: 10px;
+        }
+
+            .custdet-controls .input-group .form-control,
+            .custdet-controls .input-group .form-select {
+                flex: 1;
+            }
+
+        .custdet-controls .btn {
+            margin-left: 10px;
+        }
+
+        .custdet-gallery img {
+            max-width: 120px;
+            max-height: 120px;
+            border-radius: 4px;
+            object-fit: cover;
+        }
+
+        .custdet-gallery-item {
+            position: relative;
+        }
+
+        .custdet-delete-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #dc3545;
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            line-height: 20px;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .custdet-pdf-preview {
+            width: 100%;
+            height: 300px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+        }
+
         @media (max-width: 576px) {
-            .custdet-controls .input-group { flex-direction: column; max-width: 100%; gap: 10px; }
-            .custdet-controls .input-group > * { width: 100%; }
-            .custdet-controls .btn { width: 100%; margin-left: 0; margin-top: 10px; }
+            .custdet-controls .input-group {
+                flex-direction: column;
+                max-width: 100%;
+                gap: 10px;
+            }
+
+                .custdet-controls .input-group > * {
+                    width: 100%;
+                }
+
+            .custdet-controls .btn {
+                width: 100%;
+                margin-left: 0;
+                margin-top: 10px;
+            }
         }
     </style>
 
@@ -28,6 +92,8 @@
         <!-- Basic Information Container -->
         <div class="custdet-container">
             <h2 class="h4 mb-3">Basic Information</h2>
+            <asp:Label Style="display: none;" ID="lblCustomerId" runat="server" />
+            <asp:Label Style="display: none;" ID="lblCustomerGuid" runat="server" />
             <div class="table-responsive">
                 <table class="table table-bordered table-hover">
                     <thead class="table-light">
@@ -754,6 +820,8 @@
 
         function loadData() {
             var customerId = document.getElementById('<%= lblCustomerId.ClientID %>').innerText;
+            console.log(customerId);
+
             loadAppoinments(customerId);
             loadInvoices(customerId);
         }
