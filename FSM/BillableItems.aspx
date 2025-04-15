@@ -35,10 +35,10 @@
                 <div class="col-md-6">
                     <h1 class="bill-title mb-3 mb-md-0">Billable Items</h1>
                 </div>
-                <div class="col-md-6 text-md-end">
+               <%-- <div class="col-md-6 text-md-end">
                     <button class="btn btn-success me-2 mb-2 mb-md-0" id="syncBtn">Sync with CEC/QBO</button>
                     <button class="btn btn-primary" id="addItemBtn">+ Add Item</button>
-                </div>
+                </div>--%>
             </div>
         </header>
 
@@ -59,11 +59,12 @@
                 <div class="col-md-6">
                     <div class="d-flex justify-content-md-end gap-2 flex-wrap">
                         <select id="categoryFilter" class="form-select w-auto"></select>
-                        <select id="viewToggle" class="form-select w-auto">
+                        <%--<select id="viewToggle" class="form-select w-auto">
                             <option value="list" selected>List View</option>
                             <option value="image">Image View</option>
-                        </select>
+                        </select>--%>
                         <input type="text" id="searchBar" class="form-control w-auto" placeholder="Search..." />
+                        <button id="clearSearchBtn" class="btn btn-outline-secondary" type="button">Clear</button>
                     </div>
                 </div>
             </div>
@@ -75,11 +76,13 @@
                     <table class="bill-table table table-bordered">
                         <thead class="table-light">
                             <tr>
+                                <th>#</th>
                                 <th>Item Name</th>
+                                <th>Item Type</th>
                                 <th>Description</th>
                                 <th>Barcode</th>
                                 <th>Price</th>
-                                <th>Taxable</th>
+                                <th>Is Taxable</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -95,6 +98,7 @@
             <button class="btn btn-secondary" id="prevPage">Previous</button>
             <span id="pageInfo" class="fw-medium"></span>
             <button class="btn btn-secondary" id="nextPage">Next</button>
+            <p id="itemSummary" class="mt-2 text-muted"></p>
         </footer>
 
         <div class="modal fade" id="itemModal" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true">
@@ -105,6 +109,7 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <form id="itemForm" class="modal-body">
+                        <input type="text" id="Id" hidden="hidden" />
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-medium">Item Name</label>
@@ -126,43 +131,33 @@
                                 <label class="form-label fw-medium">Taxable</label>
                                 <div class="d-flex gap-3">
                                     <div class="form-check">
-                                        <input type="radio" name="taxable" value="YES" id="taxYes" class="form-check-input" checked />
+                                        <input type="radio" name="taxable" value="1" id="taxYes" class="form-check-input" checked />
                                         <label class="form-check-label" for="taxYes">Yes</label>
                                     </div>
                                     <div class="form-check">
-                                        <input type="radio" name="taxable" value="NO" id="taxNo" class="form-check-input" />
+                                        <input type="radio" name="taxable" value="0" id="taxNo" class="form-check-input" />
                                         <label class="form-check-label" for="taxNo">No</label>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label fw-medium">Category</label>
-                                <select id="category" class="form-select">
-                                    <option value="Charges">Charges</option>
-                                    <option value="Blinds">Blinds</option>
-                                    <option value="Shades">Shades</option>
-                                    <option value="Valances">Valances</option>
-                                    <option value="create">Create New Category</option>
-                                </select>
+                                <label class="form-label fw-medium">Item Type</label>
+                                <select id="itemType" class="form-select"></select>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-medium">Location</label>
                                 <input type="text" id="location" class="form-control" />
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-medium">Item Type</label>
-                                <input type="text" id="itemType" class="form-control" />
-                            </div>
-                            <div class="col-12 mb-3 bill-modal-image-section" id="imageSection" style="display: none;">
+                            <%--<div class="col-12 mb-3 bill-modal-image-section" id="imageSection" style="display: none;">
                                 <label class="form-label fw-medium">Item Image</label>
                                 <input type="file" id="itemImage" class="form-control" accept="image/*" />
                                 <img id="imagePreview" class="bill-modal-image-preview mt-2" alt="Preview" />
                                 <span id="imageError" class="bill-modal-error"></span>
-                            </div>
+                            </div>--%>
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" id="cancelBtn" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-primary" id="submitBtn">Add Item</button>
+                            <button type="button" onclick="updateItem(event)" class="btn btn-primary" id="submitBtn">Add Item</button>
                         </div>
                     </form>
                 </div>
@@ -173,109 +168,30 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // DOM Elements
-            const itemList = document.getElementById('itemList');
-            const imageView = document.getElementById('imageView');
-            const listView = document.getElementById('listView');
-            const searchBar = document.getElementById('searchBar');
-            const entriesPerPage = document.getElementById('entriesPerPage');
-            const prevPageBtn = document.getElementById('prevPage');
-            const nextPageBtn = document.getElementById('nextPage');
-            const pageInfo = document.getElementById('pageInfo');
-            const addItemBtn = document.getElementById('addItemBtn');
-            const itemModal = new bootstrap.Modal(document.getElementById('itemModal'));
-            const itemForm = document.getElementById('itemForm');
-            const cancelBtn = document.getElementById('cancelBtn');
-            const categoryFilter = document.getElementById('categoryFilter');
-            const viewToggle = document.getElementById('viewToggle');
-            const categorySelect = document.getElementById('category');
-            const imageSection = document.getElementById('imageSection');
-            const itemImage = document.getElementById('itemImage');
-            const imagePreview = document.getElementById('imagePreview');
-            const imageError = document.getElementById('imageError');
-            const modalTitle = document.getElementById('modalTitle');
-            const submitBtn = document.getElementById('submitBtn');
+            //const itemList = document.getElementById('itemList');
+            //const imageView = document.getElementById('imageView');
+            //const listView = document.getElementById('listView');
+            //const searchBar = document.getElementById('searchBar');
+            //const entriesPerPage = document.getElementById('entriesPerPage');
+            //const prevPageBtn = document.getElementById('prevPage');
+            //const nextPageBtn = document.getElementById('nextPage');
+            //const pageInfo = document.getElementById('pageInfo');
+            //const addItemBtn = document.getElementById('addItemBtn');
+            //const itemModal = new bootstrap.Modal(document.getElementById('itemModal'));
+            //const itemForm = document.getElementById('itemForm');
+            //const cancelBtn = document.getElementById('cancelBtn');
+            //const categoryFilter = document.getElementById('categoryFilter');
+            //const viewToggle = document.getElementById('viewToggle');
+            //const categorySelect = document.getElementById('category');
+            //const imageSection = document.getElementById('imageSection');
+            //const itemImage = document.getElementById('itemImage');
+            //const imagePreview = document.getElementById('imagePreview');
+            //const imageError = document.getElementById('imageError');
+            
 
-            // Initial Data
-            let items = [
-                { name: "Window Blind", description: "Standard white blind", barcode: "BLD123", price: 45.99, taxable: "YES", category: "Blinds", location: "Warehouse A", itemType: "Type 1", imageUrl: null },
-                { name: "Service Charge", description: "Installation fee", barcode: "CHG001", price: 25.00, taxable: "YES", category: "Charges", location: "", itemType: "Service", imageUrl: null },
-                { name: "Shade Roller", description: "Blackout shade", barcode: "SHD456", price: 60.50, taxable: "NO", category: "Shades", location: "Warehouse B", itemType: "Type 2", imageUrl: null },
-                { name: "Valance Trim", description: "Decorative valance", barcode: "VAL789", price: 15.75, taxable: "YES", category: "Valances", location: "Storefront", itemType: "Type 3", imageUrl: null }
-            ];
-            let filteredItems = [...items];
-            let currentPage = 1;
-            let itemsPerPage = parseInt(entriesPerPage.value);
+            //let itemsPerPage = parseInt(entriesPerPage.value);
             let currentView = 'list';
             const maxImageSize = 500;
-
-            // Populate category filter
-            function updateCategoryFilter() {
-                const categories = ['all', ...new Set(items.map(item => item.category))];
-                categoryFilter.innerHTML = categories.map(cat => `<option value="${cat}">${cat === 'all' ? 'All Categories' : cat}</option>`).join('');
-            }
-
-            // Filter items
-            function filterItems() {
-                const query = searchBar.value.toLowerCase();
-                const category = categoryFilter.value;
-                return items.filter(item =>
-                    (item.name.toLowerCase().includes(query) || item.description.toLowerCase().includes(query) || (item.barcode && item.barcode.toLowerCase().includes(query))) &&
-                    (category === 'all' || item.category === category)
-                );
-            }
-
-            // Render items
-            function renderItems() {
-                filteredItems = filterItems();
-                const start = (currentPage - 1) * itemsPerPage;
-                const end = start + itemsPerPage;
-                const paginatedItems = filteredItems.slice(start, end);
-                const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
-
-                if (currentView === 'list') {
-                    listView.style.display = 'block';
-                    imageView.style.display = 'none';
-                    itemList.innerHTML = paginatedItems.length === 0
-                        ? `<tr><td colspan="6" class="text-center text-muted">No items found</td></tr>`
-                        : paginatedItems.map(item => `
-                            <tr>
-                                <td>${item.name}</td>
-                                <td>${item.description}</td>
-                                <td>${item.barcode || 'N/A'}</td>
-                                <td>$${item.price.toFixed(2)}</td>
-                                <td>${item.taxable}</td>
-                                <td>
-                                    <button class="bill-edit-btn" data-name="${item.name}">Edit</button>
-                                    <button class="bill-delete-btn" data-name="${item.name}">Delete</button>
-                                </td>
-                            </tr>`).join('');
-                } else {
-                    listView.style.display = 'none';
-                    imageView.style.display = 'flex';
-                    imageView.innerHTML = paginatedItems.length === 0
-                        ? `<p class="col-12 text-center text-muted">No items found</p>`
-                        : paginatedItems.map(item => `
-                            <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-4">
-                                <div class="bill-image-card card h-100">
-                                    <img src="${item.imageUrl || 'https://via.placeholder.com/150'}" class="bill-image card-img-top" alt="${item.name}" />
-                                    <div class="card-body">
-                                        <h3 class="bill-image-title card-title">${item.name}</h3>
-                                        <p class="bill-image-text card-text">${item.description || 'No description'}</p>
-                                        <p class="bill-image-text card-text">$${item.price.toFixed(2)}</p>
-                                        <p class="bill-image-text card-text">${item.taxable}</p>
-                                        <div>
-                                            <button class="bill-edit-btn" data-name="${item.name}">Edit</button>
-                                            <button class="bill-delete-btn" data-name="${item.name}">Delete</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>`).join('');
-                }
-
-                pageInfo.textContent = `Page ${currentPage} of ${totalPages || 1}`;
-                prevPageBtn.disabled = currentPage === 1;
-                nextPageBtn.disabled = currentPage === totalPages;
-            }
 
             // Validate image
             function validateImage(file) {
@@ -293,150 +209,262 @@
 
             // Initialize
             function initialize() {
-                updateCategoryFilter();
-                currentView = viewToggle.value;
-                renderItems();
-                listView.style.display = 'block';
-                imageView.style.display = 'none';
+                //listView.style.display = 'block';
             }
-
-            // Event Listeners
-            searchBar.addEventListener('input', () => { currentPage = 1; renderItems(); });
-            entriesPerPage.addEventListener('change', (e) => { itemsPerPage = parseInt(e.target.value); currentPage = 1; renderItems(); });
-            prevPageBtn.addEventListener('click', () => { if (currentPage > 1) { currentPage--; renderItems(); } });
-            nextPageBtn.addEventListener('click', () => { if (currentPage < Math.ceil(filteredItems.length / itemsPerPage)) { currentPage++; renderItems(); } });
-            categoryFilter.addEventListener('change', () => { currentPage = 1; renderItems(); });
-            viewToggle.addEventListener('change', (e) => { currentView = e.target.value; currentPage = 1; renderItems(); });
-
-            addItemBtn.addEventListener('click', () => {
-                modalTitle.textContent = 'Add New Item';
-                submitBtn.textContent = 'Add Item';
-                itemForm.reset();
-                imageSection.style.display = 'none';
-                imagePreview.style.display = 'none';
-                imageError.style.display = 'none';
-                itemModal.show();
-            });
-
-            cancelBtn.addEventListener('click', () => {
-                itemModal.hide();
-            });
-
-            categorySelect.addEventListener('change', (e) => {
-                imageSection.style.display = e.target.value === 'create' ? 'block' : 'none';
-            });
-
-            itemImage.addEventListener('change', (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    validateImage(file)
-                        .then(() => {
-                            const reader = new FileReader();
-                            reader.onload = (ev) => {
-                                imagePreview.src = ev.target.result;
-                                imagePreview.style.display = 'block';
-                                imageError.style.display = 'none';
-                            };
-                            reader.readAsDataURL(file);
-                        })
-                        .catch(err => {
-                            imageError.textContent = err;
-                            imageError.style.display = 'block';
-                            imagePreview.style.display = 'none';
-                            itemImage.value = '';
-                        });
-                }
-            });
-
-            itemForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const newItem = {
-                    name: document.getElementById('itemName').value,
-                    description: document.getElementById('description').value,
-                    barcode: document.getElementById('barcode').value || '',
-                    price: parseFloat(document.getElementById('price').value),
-                    taxable: document.querySelector('input[name="taxable"]:checked').value,
-                    category: categorySelect.value === 'create' ? prompt('New category name:') || 'Uncategorized' : categorySelect.value,
-                    location: document.getElementById('location').value,
-                    itemType: document.getElementById('itemType').value,
-                    imageUrl: imagePreview.src && imagePreview.style.display !== 'none' ? imagePreview.src : null
-                };
-
-                const file = itemImage.files[0];
-                if (file) {
-                    validateImage(file)
-                        .then(() => {
-                            const reader = new FileReader();
-                            reader.onload = (ev) => {
-                                newItem.imageUrl = ev.target.result;
-                                saveItem(newItem);
-                            };
-                            reader.readAsDataURL(file);
-                        })
-                        .catch(err => {
-                            imageError.textContent = err;
-                            imageError.style.display = 'block';
-                        });
-                } else {
-                    saveItem(newItem);
-                }
-            });
-
-            function saveItem(item) {
-                const index = items.findIndex(i => i.name === item.name);
-                if (index !== -1) items[index] = item;
-                else items.push(item);
-                updateCategoryFilter();
-                itemModal.hide();
-                renderItems();
-            }
-
-            function deleteItem(name) {
-                if (confirm(`Are you sure you want to delete "${name}"?`)) {
-                    items = items.filter(item => item.name !== name);
-                    updateCategoryFilter();
-                    renderItems();
-                }
-            }
-
-            itemList.addEventListener('click', (e) => {
-                if (e.target.classList.contains('bill-edit-btn')) handleEdit(e);
-                else if (e.target.classList.contains('bill-delete-btn')) deleteItem(e.target.dataset.name);
-            });
-
-            imageView.addEventListener('click', (e) => {
-                if (e.target.classList.contains('bill-edit-btn')) handleEdit(e);
-                else if (e.target.classList.contains('bill-delete-btn')) deleteItem(e.target.dataset.name);
-            });
-
-            function handleEdit(e) {
-                const item = items.find(i => i.name === e.target.dataset.name);
-                if (item) {
-                    modalTitle.textContent = 'Edit Item';
-                    submitBtn.textContent = 'Save Changes';
-                    document.getElementById('itemName').value = item.name;
-                    document.getElementById('description').value = item.description || '';
-                    document.getElementById('barcode').value = item.barcode || '';
-                    document.getElementById('price').value = item.price;
-                    document.getElementById('location').value = item.location || '';
-                    document.getElementById('itemType').value = item.itemType || '';
-                    document.querySelector(`input[name="taxable"][value="${item.taxable}"]`).checked = true;
-                    categorySelect.value = item.category;
-                    if (item.imageUrl) {
-                        imagePreview.src = item.imageUrl;
-                        imagePreview.style.display = 'block';
-                        imageSection.style.display = 'block';
-                    } else {
-                        imagePreview.style.display = 'none';
-                        imageSection.style.display = 'none';
-                    }
-                    imageError.style.display = 'none';
-                    itemModal.show();
-                }
-            }
-
             // Start
-            initialize();
+            //initialize();
         });
+
+
+        let itemData = [];
+        let filteredData = [];
+        let currentPage = 1;
+        let pageSize = 10;
+        let itemTypes = [];
+        const itemModal = new bootstrap.Modal(document.getElementById('itemModal'));
+        const cancelBtn = document.getElementById('cancelBtn');
+        const modalTitle = document.getElementById('modalTitle');
+        const submitBtn = document.getElementById('submitBtn');
+
+        cancelBtn.addEventListener('click', () => {
+            itemModal.hide();
+        });
+
+        loadCategory();
+
+        function loadItems() {
+            $.ajax({
+                url: 'BillableItems.aspx/GetBillableItems',
+                type: "POST",
+                contentType: "application/json; charset=utf-8",
+                data: {},
+                dataType: 'json',
+                success: function (rs) {
+                    itemData = rs.d || [];
+                    console.log(itemData);
+                    currentPage = 1;
+                    applyFilters();
+                },
+                error: function (error) { }
+            })
+        }
+
+        function applyFilters() {
+            const searchTerm = $('#searchBar').val().trim().toLowerCase();
+            console.log($('#categoryFilter').val());
+            const selectedType = $('#categoryFilter').val().toLowerCase();
+
+            filteredData = itemData.filter(item => {
+                const typeName = (itemTypes.find(t => t.Id === item.ItemTypeId)?.Name || "").toLowerCase();
+                const matchesType = selectedType === 'all' || selectedType === "" || typeName === selectedType;
+                const combinedText = [
+                    item.ItemName,
+                    item.typeName,
+                    item.Description,
+                    item.Barcode,
+                    item.Price,
+                    item.Taxable
+                ].join(' ').toLowerCase();
+
+                const matchesSearch = combinedText.includes(searchTerm);
+                return matchesType && matchesSearch;
+            });
+
+            currentPage = 1;
+            renderItems();
+            updatePagination();
+        }
+
+        function renderItems() {
+            const startIndex = (currentPage - 1) * pageSize;
+            const pageData = filteredData.slice(startIndex, startIndex + pageSize);
+            const tbody = $('#itemList');
+            tbody.empty();
+
+            if (pageData.length === 0) {
+                tbody.append('<tr><td colspan="7">No items found.</td></tr>');
+                return;
+            }
+
+            pageData.forEach((item, index) => {
+                const serialNumber = startIndex + index + 1;
+                const typeName = itemTypes.find(t => t.Id === item.ItemTypeId)?.Name || "";
+                tbody.append(`
+                <tr>
+                <td>${serialNumber}</td>
+                <td>${item.ItemName || ''}</td>
+                <td>${typeName}</td>
+                <td>${item.Description || ''}</td>
+                <td>${item.Barcode || ''}</td>
+                <td>${item.Price || ''}</td>
+                <td>${item.Taxable || ''}</td>
+                <td>
+                    <button onclick="editItem('${item.Id}')" class="btn btn-sm btn-primary edit-btn">Edit</button>
+                </td>
+                </tr>`
+                );
+            });
+
+            const endIndex = Math.min(startIndex + pageSize, filteredData.length);
+            $('#itemSummary').text(`Showing ${startIndex + 1}–${endIndex} of ${filteredData.length} items`);
+        }
+
+        function updatePagination() {
+            const totalPages = Math.ceil(filteredData.length / pageSize);
+            $('#pageInfo').text(`Page ${currentPage} of ${totalPages || 1}`);
+            $('#prevPage').prop('disabled', currentPage <= 1);
+            $('#nextPage').prop('disabled', currentPage >= totalPages);
+        }
+
+        $('#prevPage').click(function () {
+            if (currentPage > 1) {
+                currentPage--;
+                renderItems();
+                updatePagination();
+            }
+        });
+
+        $('#nextPage').click(function () {
+            const totalPages = Math.ceil(filteredData.length / pageSize);
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderItems();
+                updatePagination();
+            }
+        });
+
+        $('#searchBar').on('input', function () {
+            applyFilters();
+        });
+
+        $('#categoryFilter').on('change', function () {
+            applyFilters();
+        });
+
+        $('#clearSearchBtn').click(function () {
+            $('#searchBar').val('');
+            $('#categoryFilter').val('all'); 
+            applyFilters();
+        });
+
+        $('#entriesPerPage').on('change', function () {
+            pageSize = parseInt(entriesPerPage.value);
+            currentPage = 1;
+            renderItems();
+            updatePagination();
+        });
+
+        function loadCategory() {
+            $.ajax({
+                url: 'BillableItems.aspx/GetItemTypes',
+                type: "POST",
+                contentType: "application/json; charset=utf-8",
+                data: {},
+                dataType: 'json',
+                success: function (rs) {
+                    itemTypes = rs.d;
+
+                    const $dropdown = $('#categoryFilter');
+                    $dropdown.empty(); // clear if anything exists
+
+                    // Add static options
+                    $dropdown.append('<option selected="selected" value="all">Select Item</option>');
+
+                    // Add dynamic options from the server
+                    itemTypes.forEach(function (item) {
+                        $dropdown.append(`<option value="${item.Name}">${item.Name}</option>`);
+                    });
+                    loadItems();
+                },
+                error: function (error) { }
+            })
+        }
+
+        function getItemTypeName(id) {
+            const type = itemTypes.find(t => t.Id === id);
+            return type ? type.Name : '';
+        }
+
+        function editItem(id) {
+            if (id) {
+                $.ajax({
+                    url: 'BillableItems.aspx/GetItemById',
+                    type: "POST",
+                    contentType: "application/json; charset=utf-8",
+                    data: JSON.stringify({ itemId: id }),
+                    dataType: 'json',
+                    success: function (rs) {
+                        console.log(rs.d);
+                        const data = rs.d;
+                        $('#modalTitle').text("Edit Item");
+                        $('#submitBtn').text("Update");
+                        $('#itemName').val(data.ItemName);
+                        $('#Id').val(data.Id);
+                        $('#description').val(data.Description);
+                        $('#barcode').val(data.Barcode);
+                        $('#price').val(data.Price);
+                        $('#location').val(data.Location);
+                        populateItemTypes(data.ItemTypeId);
+                        if (data.IsTaxable === "YES") {
+                            $('#taxYes').prop('checked', true);
+                        } else {
+                            $('#taxNo').prop('checked', true);
+                        }
+                        itemModal.show();
+                    },
+                    error: function (error) { }
+                })
+            }
+        }
+
+        function populateItemTypes(selectedId) {
+            const $dropdown = $('#itemType');
+            $dropdown.empty(); // clear if anything exists
+
+            $.each(itemTypes, function (i, item) {
+                const isSelected = item.Id === selectedId;
+                const option = `<option value="${item.Id}" ${isSelected ? 'selected' : ''}>${item.Name}</option>`;
+                $dropdown.append(option);
+            });
+        }
+
+        function updateItem(e) {
+            e.preventDefault();
+            const itemData = {
+                Id: $('#Id').val(),
+                CompanyID: $('#companyId').val(),
+                ItemName: $('#itemName').val().trim(),
+                Description: $('#description').val().trim(),
+                Barcode: $('#barcode').val().trim(),
+                Price: parseFloat($('#price').val()) || 0,
+                IsTaxable: $('input[name="taxable"]:checked').val() === "1",
+                Location: $('#location').val().trim(),
+                ItemTypeId: parseInt($('#itemType').val().trim()),
+            };
+
+            console.log(itemData);
+
+            $.ajax({
+                type: "POST",
+                url: "BillableItems.aspx/SaveItemData",
+                data: JSON.stringify({ itemData: itemData }),
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (response) {
+                    console.log(response);
+                    if (response.d) {
+                        alert("Item updated successfully!");
+                        itemModal.hide();
+                        loadItems();
+                    }
+                    else {
+                        alert("Something went wrong!");
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error updating details: ", error);
+                }
+            });
+        }
     </script>
 </asp:Content>

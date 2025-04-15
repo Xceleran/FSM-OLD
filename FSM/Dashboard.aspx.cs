@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Web;
 
 namespace FSM
 {
@@ -6,7 +7,19 @@ namespace FSM
     {
         protected void Page_Load(object sender, EventArgs e)
         {
-            // Your code here
+            string userID = "";
+            string companyID = "";
+
+            if (Request.QueryString["companyID"] != null)
+            {
+                companyID = Request.QueryString["companyID"].ToString();
+                HttpContext.Current.Session["CompanyID"] = companyID;
+            }
+
+            else
+            {
+                HttpContext.Current.Session["CompanyID"] = "7369";
+            }
         }
     }
 }
