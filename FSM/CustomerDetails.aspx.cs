@@ -1,9 +1,6 @@
 ﻿using FSM.Models.Customer;
-using FSM.Models.Enums;
 using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Linq;
 using System.Web;
 using System.Web.Script.Services;
 using System.Web.Services;
@@ -12,7 +9,7 @@ using System.Web.UI.WebControls;
 
 namespace FSM
 {
-    public partial class CustomerDetails : System.Web.UI.Page  // Changed from 'Customer' to 'Customers'
+    public partial class CustomerDetails : System.Web.UI.Page
     {
         protected void Page_Load(object sender, EventArgs e)
         {
@@ -20,16 +17,6 @@ namespace FSM
             string customerGuid = Request.QueryString["custGuid"];
             if (!IsPostBack)
             {
-                var customerData = GetCustomerSummery(customerId);
-                lblpendingAppts.Text = customerData?.PendingAppointments.ToString();
-                lblscheduledAppts.Text = customerData?.ScheduledAppointments.ToString();
-                lblcompletedAppts.Text = customerData?.CompletedAppointments.ToString();
-                lblcustomTags.Text = "0";
-                lblestimates.Text = customerData?.Estimates.ToString();
-                lblopenInvoices.Text = customerData?.OpenInvoices.ToString();
-                lblunpaidInvoices.Text = customerData?.UnpaidInvoices.ToString();
-                lblpaidInvoices.Text = customerData?.PaidInvoices.ToString();
-
                 var customer = GetCustomerDetails(customerId);
                 lblCustomerName.Text = customer?.FirstName + " " + customer?.LastName;
                 lblAddress1.Text = customer?.Address1;
@@ -39,8 +26,7 @@ namespace FSM
             }
         }
 
-
-        public static CustomerSummeryCount GetCustomerSummery(string customerId)
+        public static CustomerEntity GetCustomerDetails(string customerId)
         {
             string companyid = HttpContext.Current.Session["CompanyID"].ToString();
             Database db = new Database();
@@ -118,15 +104,6 @@ namespace FSM
                 db.Close();
             }
 
-            catch (Exception ex)
-            {
-                db.Close();
-            }
-            return customerData;
-        }
-
-        public static CustomerEntity GetCustomerDetails(string customerId)
-        {
             string companyid = HttpContext.Current.Session["CompanyID"].ToString();
             Database db = new Database();
             var customer = new CustomerEntity();
@@ -134,7 +111,7 @@ namespace FSM
             {
                 db.Open();
                 DataTable dt = new DataTable();
-                string sql = $@"SELECT * FROM [msSchedulerV3].[dbo].[tbl_Customer] where CustomerID = @CustomerID and CompanyID=@CompanyID;";
+                string sql = @"SELECT * FROM [msSchedulerV3].[dbo].[tbl_Customer] WHERE CustomerID = @CustomerID AND CompanyID = @CompanyID;";
                 db.AddParameter("@CompanyID", companyid, SqlDbType.NVarChar);
                 db.AddParameter("@CustomerID", customerId, SqlDbType.NVarChar);
                 db.ExecuteParam(sql, out dt);
@@ -156,6 +133,8 @@ namespace FSM
             }
             catch (Exception ex)
             {
+                // Log the exception (optional)
+                System.Diagnostics.Debug.WriteLine($"Error in GetCustomerDetails: {ex.Message}");
                 db.Close();
             }
 
