@@ -902,12 +902,19 @@
                                 <h3 class="cust-site-title">${site.SiteName}</h3>
                                 <p class="cust-site-info">Address: ${site.Address}</p>
                                 <p class="cust-site-info">Contact: ${site.Contact || '-'}</p>
+                                <p class="cust-site-active"> ${site.IsActive ? "Active" : "Disabled"}</p>
                                 <div class="cust-site-actions">
                                 <button class="cust-site-edit-btn" data-site-id="${site.Id}">Edit</button>
                                 <a href="CustomerDetails.aspx?siteId=${site.Id}&custId=${site.CustomerID}" class="cust-site-view-link">View Details</a>
                                 </div>`;
                                 sitesContainer.appendChild(siteCard);
+                                if (!site.IsActive) {
+                                    $('.cust-site-view-link').addClass("d-none");
+                                }
                             });
+
+
+
                             sitesContainer.appendChild(addSiteBtn);
 
 
