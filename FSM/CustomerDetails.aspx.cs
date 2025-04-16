@@ -17,15 +17,20 @@ namespace FSM
         protected void Page_Load(object sender, EventArgs e)
         {
             string customerId = Request.QueryString["custId"];
-            string customerGuid = Request.QueryString["custGuid"];
+            string siteId = Request.QueryString["siteId"];
             if (!IsPostBack)
             {
                 var customer = GetCustomerDetails(customerId);
+                var site = GetCustomerSitebyId(customerId, Convert.ToInt32(siteId));
                 lblCustomerName.Text = customer?.FirstName + " " + customer?.LastName;
-                lblAddress1.Text = customer?.Address1;
-                lblPhone.Text = customer?.Phone;
+                lblAddress.Text = site?.Address;
+                lblPhone.Text = site?.Contact;
                 lblCustomerId.Text = customerId;
-                lblCustomerGuid.Text = customerGuid;
+                lblSiteId.Text = siteId;
+                lblActive.Text = site?.IsActive == true ? "Active" : "Disabled";
+                lblNote.Text = site?.Note;
+                lblCreatedOn.Text = site?.CreatedDateTime?.ToString("yyyy-MM-dd");
+                lblSiteName.Text = site?.SiteName;
             }
         }
 
@@ -65,6 +70,41 @@ namespace FSM
             }
             return customer;
         }
+
+        public static CustomerSite GetCustomerSitebyId(string customerId, int siteId)
+        {
+            var site = new CustomerSite();
+            Database db = new Database();
+            DataTable dt = new DataTable();
+            try
+            {
+                db.Open();
+                string strSQL = @"SELECT * FROM [msSchedulerV3].dbo.tbl_CustomerSite WHERE Id ='" + siteId + "' AND CustomerID='" + customerId + "';";
+                db.Open();
+                db.Execute(strSQL, out dt);
+                if (dt.Rows.Count > 0)
+                {
+                    DataRow dataRow = dt.Rows[0];
+                    site.Id = dataRow.Field<int?>("Id") ?? 0;
+                    site.SiteName = dataRow.Field<string>("SiteName") ?? "";
+                    site.Address = dataRow.Field<string>("Address") ?? "";
+                    site.Contact = dataRow.Field<string>("Contact") ?? "";
+                    site.Note = dataRow.Field<string>("Note") ?? "";
+                    site.IsActive = dataRow.Field<bool?>("IsActive") ?? false;
+                    site.CreatedDateTime = Convert.ToDateTime(dataRow["CreatedDateTime"]);
+                }
+            }
+            catch (Exception ex)
+            {
+                return site;
+            }
+            finally
+            {
+                db.Close();
+            }
+            return site;
+        }
+
 
         public static CustomerSummeryCount GetCustomerSummery(string customerId)
         {

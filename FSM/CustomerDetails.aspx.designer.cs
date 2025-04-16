@@ -15,6 +15,15 @@ namespace FSM
     {
 
         /// <summary>
+        /// lblSiteName control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblSiteName;
+
+        /// <summary>
         /// lblCustomerId control.
         /// </summary>
         /// <remarks>
@@ -24,13 +33,13 @@ namespace FSM
         protected global::System.Web.UI.WebControls.Label lblCustomerId;
 
         /// <summary>
-        /// lblCustomerGuid control.
+        /// lblSiteId control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Label lblCustomerGuid;
+        protected global::System.Web.UI.WebControls.Label lblSiteId;
 
         /// <summary>
         /// lblCustomerName control.
@@ -51,12 +60,39 @@ namespace FSM
         protected global::System.Web.UI.WebControls.Label lblPhone;
 
         /// <summary>
-        /// lblAddress1 control.
+        /// lblAddress control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Label lblAddress1;
+        protected global::System.Web.UI.WebControls.Label lblAddress;
+
+        /// <summary>
+        /// lblActive control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblActive;
+
+        /// <summary>
+        /// lblNote control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblNote;
+
+        /// <summary>
+        /// lblCreatedOn control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblCreatedOn;
     }
 }

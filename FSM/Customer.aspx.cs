@@ -198,12 +198,58 @@ namespace FSM
 
         [WebMethod]
         [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
-        public static bool SaveCustomerSiteData(CustomerSiteInfo site)
+        public static List<CustomerSite> GetCustomerSiteData(string customerId)
+        {
+            var sites = new List<CustomerSite>();
+            string companyid = HttpContext.Current.Session["CompanyID"].ToString();
+            Database db = new Database();
+            DataTable dt = new DataTable();
+            try
+            {
+                db.Open();
+                string strSQL = @"SELECT * FROM [msSchedulerV3].dbo.tbl_CustomerSite WHERE CompanyID='"+ companyid +"' AND CustomerID='"+ customerId +"' order by SiteName";
+                db.Open();
+                db.Execute(strSQL, out dt);
+                db.Close();
+                if(dt.Rows.Count > 0)
+                {
+                    foreach (DataRow dr in dt.Rows)
+                    {
+                        sites.Add(new CustomerSite
+                        {
+                            Id = Convert.ToInt32(dr["Id"]),
+                            CompanyID = companyid,
+                            CustomerID = dr["CustomerID"].ToString(),
+                            CustomerGuid = dr["CustomerGuid"].ToString(),
+                            SiteName = dr["SiteName"].ToString() ?? "",
+                            Address = dr["Address"].ToString() ?? "",
+                            Contact = dr["Contact"].ToString() ?? "",
+                            Note = dr["Note"].ToString() ?? "",
+                            IsActive = Convert.ToBoolean(dr["IsActive"]),
+                            CreatedDateTime = Convert.ToDateTime(dr["CreatedDateTime"])
+                        });
+                    }
+                }
+            }
+            catch(Exception ex)
+            {
+                return sites;
+            }
+            finally
+            {
+                db.Close();
+            }
+            return sites;
+        }
+
+        [WebMethod]
+        [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
+        public static bool SaveCustomerSiteData(CustomerSite site)
         {
             string companyid = HttpContext.Current.Session["CompanyID"].ToString();
             if (!string.IsNullOrEmpty(site.CustomerID))
             {
-                if (site.ID > 0)
+                if (site.Id > 0)
                 {
                     return UpdateCustomerSiteInfo(site);
                 }
@@ -216,7 +262,7 @@ namespace FSM
             return false;
         }
 
-        public static bool InsertCustomerSiteInfo(CustomerSiteInfo site)
+        public static bool InsertCustomerSiteInfo(CustomerSite site)
         {
             bool success = false;
             string companyid = HttpContext.Current.Session["CompanyID"].ToString();
@@ -225,16 +271,16 @@ namespace FSM
             {
                 db.Open();
                 string strSQL = @"INSERT INTO [msSchedulerV3].dbo.tbl_CustomerSite
-                        (CompanyID, CustomerID, CustomerGuid, SiteName, Address, Contact, Instructions,Active) 
-                        VALUES (@CompanyID, @CustomerID, @CustomerGuid, @SiteName, @Address, @Contact, @Instructions, @Active)";
+                        (CompanyID, CustomerID, CustomerGuid, SiteName, Address, Contact, Note, IsActive) output INSERTED.ID
+                        VALUES (@CompanyID, @CustomerID, @CustomerGuid, @SiteName, @Address, @Contact, @Note, @IsActive)";
                 db.AddParameter("@CompanyID", companyid, SqlDbType.NVarChar);
                 db.AddParameter("@CustomerID", site.CustomerID, SqlDbType.NVarChar);
                 db.AddParameter("@CustomerGuid", site.CustomerGuid, SqlDbType.NVarChar);
                 db.AddParameter("@SiteName", site.SiteName, SqlDbType.NVarChar);
                 db.AddParameter("@Address", site.Address, SqlDbType.NVarChar);
                 db.AddParameter("@Contact", site.Contact, SqlDbType.NVarChar);
-                db.AddParameter("@Instructions", site.Instructions, SqlDbType.NVarChar);
-                db.AddParameter("@Active", true, SqlDbType.Bit);
+                db.AddParameter("@Note", site.Note, SqlDbType.NVarChar);
+                db.AddParameter("@IsActive", site.IsActive, SqlDbType.Bit);
                 object result = db.ExecuteScalarData(strSQL);
                 if (result != null)
                 {
@@ -252,7 +298,7 @@ namespace FSM
             return success;
         }
 
-        public static bool UpdateCustomerSiteInfo(CustomerSiteInfo site)
+        public static bool UpdateCustomerSiteInfo(CustomerSite site)
         {
             bool success = false;
             string companyid = HttpContext.Current.Session["CompanyID"].ToString();
@@ -264,16 +310,16 @@ namespace FSM
                                     SiteName = @SiteName,
                                     Address = @Address,
                                     Contact = @Contact,
-                                    Instructions = @Instructions,
-                                    Active = @Active WHERE ID=@ID";
+                                    Note = @Note,
+                                    IsActive = @IsActive WHERE Id=@Id and CustomerID = @CustomerID";
                 db.AddParameter("@SiteName", site.SiteName, SqlDbType.NVarChar);
+                db.AddParameter("@CustomerID", site.CustomerID, SqlDbType.NVarChar);
                 db.AddParameter("@Address", site.Address, SqlDbType.NVarChar);
                 db.AddParameter("@Contact", site.Contact, SqlDbType.NVarChar);
-                db.AddParameter("@Instructions", site.Instructions, SqlDbType.NVarChar);
-                db.AddParameter("@Active", true, SqlDbType.Bit);
-                db.AddParameter("@ID", site.ID, SqlDbType.Int);
+                db.AddParameter("@Note", site.Note, SqlDbType.NVarChar);
+                db.AddParameter("@IsActive", site.IsActive, SqlDbType.Bit);
+                db.AddParameter("@Id", site.Id, SqlDbType.Int);
                 success = db.UpdateSql(strSQL);
-                db.Close();
             }
             catch(Exception ex)
             {

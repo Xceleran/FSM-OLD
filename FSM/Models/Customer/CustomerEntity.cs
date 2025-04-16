@@ -59,17 +59,6 @@ namespace FSM.Models.Customer
 
     }
 
-    public class CustomerSiteInfo : CustomerBaseEntity
-    {
-        public int ID { get; set; }
-        public string SiteName { get; set; }
-        public string Address { get; set; }
-        public string Contact { get; set; }
-        public string Instructions { get; set; }
-
-        public bool IsActive { get; set; }
-        public DateTime? CreatedDateTime { get; set; }
-    }
     public class CustomerSummeryCount : CustomerBaseEntity
     {
         public int PendingAppointments { get; set; }

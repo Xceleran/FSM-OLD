@@ -262,6 +262,7 @@
       <DependentUpon>Invoice.aspx</DependentUpon>
     </Compile>
     <Compile Include="Models\Customer\CustomerEntity.cs" />
+    <Compile Include="Models\Customer\CustomerSite.cs" />
     <Compile Include="Models\Enums\WorkOrderStatus.cs" />
     <Compile Include="Processors\CustomerProcessor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

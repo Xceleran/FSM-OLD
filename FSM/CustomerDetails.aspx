@@ -87,13 +87,13 @@
     </style>
 
     <div class="custdet-main-container">
-        <h1 class="display-6 mb-4">Site Details: <span id="siteName">Loading...</span></h1>
+        <h1 class="display-6 mb-4">Site : <span id="siteName"><asp:Label ID="lblSiteName" runat="server" /></span></h1>
 
         <!-- Basic Information Container -->
         <div class="custdet-container">
             <h2 class="h4 mb-3">Basic Information</h2>
             <asp:Label Style="display: none;" ID="lblCustomerId" runat="server" />
-            <asp:Label Style="display: none;" ID="lblCustomerGuid" runat="server" />
+            <asp:Label Style="display: none;" ID="lblSiteId" runat="server" />
             <div class="table-responsive">
                 <table class="table table-bordered table-hover">
                     <thead class="table-light">
@@ -116,19 +116,21 @@
                         <tr>
                             <td>Address</td>
                             <td id="siteAddress">
-                                <asp:Label ID="lblAddress1" runat="server" /></td>
+                                <asp:Label ID="lblAddress" runat="server" /></td>
                         </tr>
                         <tr>
                             <td>Status</td>
-                            <td id="siteStatus">Loading...</td>
-                        </tr>
-                        <tr>
-                            <td>Description</td>
-                            <td id="siteDescription">Loading...</td>
+                            <td id="siteStatus">
+                                <asp:Label ID="lblActive" runat="server" /></td>
                         </tr>
                         <tr>
                             <td>Special Instructions</td>
-                            <td id="siteInstructions">Loading...</td>
+                            <td id="siteInstructions">
+                                <asp:Label ID="lblNote" runat="server" /></td>
+                        </tr>
+                        <tr>
+                            <td>Created On</td>
+                            <td id="siteDescription"><asp:Label ID="lblCreatedOn" runat="server" /></td>
                         </tr>
                     </tbody>
                 </table>
@@ -245,7 +247,7 @@
         </div>
 
         <!-- Maintenance Agreements Container -->
-        <div class="custdet-container">
+        <div class="custdet-container d-none">
             <h2 class="h4 mb-3">Maintenance Agreements</h2>
             <div class="custdet-controls mb-3 d-flex justify-content-end flex-wrap gap-2">
                 <button id="agreeAdd" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#agreeModal">Upload Agreement</button>
@@ -264,7 +266,7 @@
         </div>
 
         <!-- Documents Container -->
-        <div class="custdet-container">
+        <div class="custdet-container d-none">
             <h2 class="h4 mb-3">Documents</h2>
             <div class="table-responsive">
                 <table class="table table-bordered table-hover">
@@ -281,7 +283,7 @@
         </div>
 
         <!-- Pictures Container -->
-        <div class="custdet-container">
+        <div class="custdet-container d-none">
             <h2 class="h4 mb-3">Pictures</h2>
             <div class="custdet-controls mb-3 d-flex align-items-center flex-wrap gap-2">
                 <div class="input-group">
@@ -381,59 +383,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const ITEMS_PER_PAGE = 5;
-
-            // Dummy Data
-            const siteData = {
-                1: {
-                    name: "Main Office",
-                    customerName: "Acme Corp",
-                    siteContact: "John Doe - (555) 123-4567",
-                    address: "123 Business St, City, ST 12345",
-                    status: "Active",
-                    description: "Primary business location",
-                    specialInstructions: "Use back entrance after 5 PM",
-                    appointments: [
-                        { requestDate: "2025-03-25", timeSlot: "09:00-11:00", serviceType: "HVAC Maintenance", status: "scheduler", resource: "Tech A", ticketStatus: "Open", customTags: ["urgent"] },
-                        { requestDate: "2025-03-20", timeSlot: "13:00-15:00", serviceType: "Electrical Check", status: "pending", resource: "Tech B", ticketStatus: "Open", customTags: [] },
-                        { requestDate: "2025-03-15", timeSlot: "10:00-12:00", serviceType: "Plumbing", status: "completed", resource: "Tech C", ticketStatus: "Closed", customTags: ["follow-up"] }
-                    ],
-                    invoices: [
-                        { type: "invoice", number: "INV-001", date: "2025-03-20", subtotal: "$500", discount: "$0", tax: "$40", total: "$540", due: "$540", status: "in-progress", customTags: [] },
-                        { type: "estimate", number: "EST-001", date: "2025-03-18", subtotal: "$1200", discount: "$100", tax: "$80", total: "$1180", due: "$1180", status: "in-progress", customTags: ["urgent"] },
-                        { type: "invoice", number: "INV-002", date: "2025-03-10", subtotal: "$300", discount: "$0", tax: "$24", total: "$324", due: "$0", status: "paid", customTags: [] }
-                    ],
-                    equipment: [
-                        { id: "1", name: "HVAC Unit", type: "hvac", installDate: "2023-06-15", warrantyExpiry: "2026-06-15" },
-                        { id: "2", name: "Generator", type: "generator", installDate: "2022-09-01", warrantyExpiry: "2027-09-01" }
-                    ],
-                    serviceAgreements: [
-                        { id: "1", file: null }
-                    ],
-                    documents: [
-                        { name: "Contract", status: "Signed", link: "#" }
-                    ]
-                }
-            };
-
             const urlParams = new URLSearchParams(window.location.search);
-            const siteId = urlParams.get('siteId');
-            const site = siteData[siteId] || {
-                name: "Unknown Site",
-                status: "N/A",
-                description: "N/A",
-                specialInstructions: "N/A",
-                appointments: [],
-                invoices: [],
-                equipment: [],
-                serviceAgreements: [],
-                documents: []
-            };
-
-            // Basic Info
-            document.getElementById('siteName').textContent = site.name;
-            document.getElementById('siteStatus').textContent = site.status;
-            document.getElementById('siteDescription').textContent = site.description;
-            document.getElementById('siteInstructions').textContent = site.specialInstructions;
 
             // Toast Notification
             function showToast(message) {
@@ -727,14 +677,14 @@
             //});
 
             // Documents
-            const docBody = document.getElementById('docTableBody');
-            docBody.innerHTML = site.documents.map(d => `
-                <tr>
-                    <td>${d.name}</td>
-                    <td>${d.status}</td>
-                    <td><a href="${d.link}" target="_blank">View</a></td>
-                </tr>
-            `).join('') || '<tr><td colspan="3">No documents</td></tr>';
+            //const docBody = document.getElementById('docTableBody');
+            //docBody.innerHTML = site.documents.map(d => `
+            //    <tr>
+            //        <td>${d.name}</td>
+            //        <td>${d.status}</td>
+            //        <td><a href="${d.link}" target="_blank">View</a></td>
+            //    </tr>
+            //`).join('') || '<tr><td colspan="3">No documents</td></tr>';
 
             // Pictures
             let pictures = { equipment: {}, service: {}, folder: {} };
