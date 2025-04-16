@@ -370,7 +370,7 @@
                 <div class="cust-modal-field">
                     <label class="cust-modal-label">Alarms</label>
                     <input type="text" name="alarms" class="cust-modal-input" />
-                </div>--%>
+                </div>
                 <div class="cust-modal-field">
                     <label class="cust-modal-label">Special Instructions</label>
                     <input type="text" name="specialInstructions" class="cust-modal-input" />
@@ -784,7 +784,6 @@
                                 <a href="CustomerDetails.aspx?siteId=${site.siteId}" class="cust-site-view-link">View Details</a>
                             </div>
                         `;
-
                         $(".cust-site-view-link").attr("href", "CustomerDetails.aspx?custId=" + data.CustomerID + "&custGuid=" + data.CustomerGuid);
                         sitesContainer.appendChild(siteCard);
                     });
