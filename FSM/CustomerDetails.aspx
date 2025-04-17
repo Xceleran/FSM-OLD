@@ -191,7 +191,7 @@
                     </select>
 
                     <select id="invFilterType" class="form-select">
-                        <option value="all">All</option>
+                        <option value="all">All Type</option>
                         <option value="invoice">Invoice</option>
                         <option value="proposal">Estimate</option>
                     </select>
@@ -767,7 +767,7 @@
             tbody.empty();
 
             if (pageData.length === 0) {
-                tbody.append('<tr><td colspan="7">No invoices found.</td></tr>');
+                tbody.append('<tr><td colspan="11">No invoices found.</td></tr>');
                 return;
             }
 
@@ -817,20 +817,21 @@
 
         function applyFiltersInv() {
             const searchTerm = $('#invSearch').val().trim().toLowerCase();
-            const statusFilter = $('#invFilter').val();
-            const typeFilter = $('#invFilterType').val();
+            const statusFilter = $('#invFilter').val().trim().toLowerCase();
+            const typeFilter = $('#invFilterType').val().trim().toLowerCase();
 
             filteredInvoiceData = invoiceData.filter(item => {
+
+                if (item.InvoiceType === "Proposal") {
+                    item.InvoiceType = "Estimate"
+                }
+
                 // Filter by status if not "all"
                 const matchesStatus = statusFilter === 'all' ||
                     (item.InvoiceStatus && item.InvoiceStatus.toLowerCase() === statusFilter);
 
                 const matchesType = typeFilter === 'all' ||
                     (item.InvoiceType && item.InvoiceType.toLowerCase() === typeFilter);
-
-                if (item.InvoiceType === "Proposal") {
-                    item.InvoiceType = "Estimate"
-                }
 
                 // Search in multiple fields
                 const combinedText = [
