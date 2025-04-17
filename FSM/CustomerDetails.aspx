@@ -822,7 +822,7 @@
 
             filteredInvoiceData = invoiceData.filter(item => {
 
-                if (item.InvoiceType === "Proposal") {
+                if (item.InvoiceType == "Proposal") {
                     item.InvoiceType = "Estimate"
                 }
 
