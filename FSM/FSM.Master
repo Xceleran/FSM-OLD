@@ -6,7 +6,7 @@
 <head runat="server">
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title><%: Page.Title %> - My ASP.NET Application</title>
+    <title><%: Page.Title %> - FSM </title>
     <asp:PlaceHolder runat="server">
         <%: Scripts.Render("~/bundles/modernizr") %>
     </asp:PlaceHolder>
@@ -41,7 +41,7 @@
         <div class="page-container">
         <aside id="sidebar" class="sidebar">
             <div class="sidebar-logo">
-                <img src="/images/LHLogo.png" alt="LHLogo Logo" class="sidebar-logo-img">
+                <img src="https://testsite.myserviceforce.com/fsm/images/lhlogo.png" alt="LHLogo Logo" class="sidebar-logo-img">
             </div>
             <nav class="sidebar-nav">
                 <ul class="sidebar-nav-list">
@@ -115,7 +115,7 @@
             </nav>
             <div class="sidebar-footer">
                 <h6 class="sidebar-footer-title">Powered by</h6>
-                <img src="/images/FMSXceleran.png" alt="FMSXceleran Logo" class="sidebar-footer-img">
+                <img src="https://testsite.myserviceforce.com/fsm/images/FMSXceleran.png" alt="FMSXceleran Logo" class="sidebar-footer-img">
             </div>
         </aside>
 
@@ -126,7 +126,7 @@
             </asp:ContentPlaceHolder>
             <hr />
             <footer class="footer">
-                <p>© <%: DateTime.Now.Year %> - My ASP.NET Application</p>
+                <p>© <%: DateTime.Now.Year %> - All rights reserved by <a href="https://xceleran.com" target="_blank">Xceleran</a></p>
             </footer>
         </div>
     </div>
