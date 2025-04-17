@@ -27,7 +27,6 @@ namespace FSM
         public static List<ItemTypes> GetItemTypes()
         {
             var items = new List<ItemTypes>();
-            string companyid = HttpContext.Current.Session["CompanyID"].ToString();
             Database db = new Database(connStrJobs);
             try
             {

@@ -189,6 +189,12 @@
                         <option value="unpaid">Unpaid</option>
                         <option value="paid">Paid</option>
                     </select>
+
+                    <select id="invFilterType" class="form-select">
+                        <option value="all">All</option>
+                        <option value="invoice">Invoice</option>
+                        <option value="proposal">Estimate</option>
+                    </select>
                 </div>
                 <button id="invExport" class="btn btn-primary d-none">Export to Excel</button>
             </div>
@@ -196,14 +202,15 @@
                 <table class="table table-bordered table-hover">
                     <thead class="table-light">
                         <tr>
-                            <th scope="col">Type</th>
                             <th scope="col">Number</th>
+                            <th scope="col">Type</th>
                             <th scope="col">Date</th>
                             <th scope="col">Subtotal</th>
                             <th scope="col">Discount</th>
                             <th scope="col">Tax</th>
                             <th scope="col">Total</th>
                             <th scope="col">Due</th>
+                            <th scope="col">Diposit</th>
                             <th scope="col">Status</th>
                             <th scope="col">Custom Tags</th>
                         </tr>
@@ -812,6 +819,7 @@
             const searchTerm = $('#invSearch').val().trim().toLowerCase();
             const statusFilter = $('#invFilter').val();
             const typeFilter = $('#invFilterType').val();
+
             filteredInvoiceData = invoiceData.filter(item => {
                 // Filter by status if not "all"
                 const matchesStatus = statusFilter === 'all' ||
@@ -1031,7 +1039,7 @@
                     error: function (error) { }
                 })
             }
-            
+
         }
 
         function validateForm() {
