@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Data;
+using System.Security.Policy;
 using System.Web;
 using System.Web.Script.Services;
 using System.Web.Services;
@@ -23,6 +24,7 @@ namespace FSM
                 var customer = GetCustomerDetails(customerId);
                 var site = GetCustomerSitebyId(customerId, Convert.ToInt32(siteId));
                 lblCustomerName.Text = customer?.FirstName + " " + customer?.LastName;
+                lblCustomerGuid.Text = customer?.CustomerGuid;
                 lblAddress.Text = site?.Address;
                 lblPhone.Text = site?.Contact;
                 lblCustomerId.Text = customerId;
@@ -51,16 +53,16 @@ namespace FSM
                 if (dt.Rows.Count > 0)
                 {
                     DataRow dataRow = dt.Rows[0];
-                    customer.BusinessID = dataRow.Field<int?>("BusinessID") ?? 0;
+                    //customer.BusinessID = dataRow.Field<int?>("BusinessID") ?? 0;
                     customer.CustomerGuid = dataRow.Field<string>("CustomerGuid") ?? "";
-                    customer.Address1 = dataRow.Field<string>("Address1") ?? "";
-                    customer.Address2 = dataRow.Field<string>("Address2") ?? "";
+                    //customer.Address1 = dataRow.Field<string>("Address1") ?? "";
+                    //customer.Address2 = dataRow.Field<string>("Address2") ?? "";
                     customer.FirstName = dataRow.Field<string>("FirstName") ?? "";
                     customer.LastName = dataRow.Field<string>("LastName") ?? "";
-                    customer.Phone = dataRow.Field<string>("Phone") ?? "";
-                    customer.Mobile = dataRow.Field<string>("Mobile") ?? "";
-                    customer.CompanyName = dataRow.Field<string>("CompanyName") ?? "";
-                    customer.Email = dataRow.Field<string>("Email") ?? "";
+                    //customer.Phone = dataRow.Field<string>("Phone") ?? "";
+                    //customer.Mobile = dataRow.Field<string>("Mobile") ?? "";
+                    //customer.CompanyName = dataRow.Field<string>("CompanyName") ?? "";
+                    //customer.Email = dataRow.Field<string>("Email") ?? "";
                 }
             }
             catch (Exception ex)
@@ -104,7 +106,6 @@ namespace FSM
             }
             return site;
         }
-
 
         public static CustomerSummeryCount GetCustomerSummery(string customerId)
         {
@@ -300,6 +301,161 @@ namespace FSM
                 db.Close();
             }
             return invoices;
+        }
+
+        [WebMethod]
+        [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
+        public static List<Equipment> GetSiteEquipmentData(int siteId, string customerId)
+        {
+            var equipments = new List<Equipment>();
+            Database db = new Database();
+            DataTable dt = new DataTable();
+            try
+            {
+                db.Open();
+                string strSQL = @"SELECT * FROM [msSchedulerV3].dbo.tbl_Equipment WHERE customerId='" + customerId + "' AND SiteId='" + siteId + "' order by EquipmentName";
+                db.Open();
+                db.Execute(strSQL, out dt);
+                db.Close();
+                if (dt.Rows.Count > 0)
+                {
+                    foreach (DataRow dr in dt.Rows)
+                    {
+                        equipments.Add(new Equipment
+                        {
+                            Id = Convert.ToInt32(dr["Id"]),
+                            SiteId = siteId,
+                            CustomerID = customerId,
+                            EquipmentName = dr["EquipmentName"].ToString() ?? "",
+                            SpecialInstruction = dr["SpecialInstruction"].ToString() ?? "",
+                            EquipmentType = dr["EquipmentType"].ToString() ?? "",
+                            CreatedDateTime = Convert.ToDateTime(dr["CreatedDateTime"]),
+                            WarrantyExpireDate = dr["WarrantyExpireDate"] != DBNull.Value && !string.IsNullOrEmpty(dr["WarrantyExpireDate"].ToString())
+                                   ? Convert.ToDateTime(dr["WarrantyExpireDate"]).ToString("yyyy-MM-dd") : string.Empty,
+                            InstallDate = dr["InstallDate"] != DBNull.Value && !string.IsNullOrEmpty(dr["InstallDate"].ToString())
+                                   ? Convert.ToDateTime(dr["InstallDate"]).ToString("yyyy-MM-dd") : string.Empty,
+                        });
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return equipments;
+            }
+            finally
+            {
+                db.Close();
+            }
+            return equipments;
+        }
+
+
+        [WebMethod]
+        [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
+        public static bool SaveEquipmentData(Equipment equipment)
+        {
+            if (equipment.Id > 0)
+            {
+                return UpdateEquipment(equipment);
+            }
+            else
+            {
+                return InsertEquipment(equipment);
+            }
+        }
+
+        public static bool InsertEquipment(Equipment equipment)
+        {
+            bool success = false;
+            string companyid = HttpContext.Current.Session["CompanyID"].ToString();
+            Database db = new Database();
+            try
+            {
+                db.Open();
+                string strSQL = @"INSERT INTO [msSchedulerV3].dbo.tbl_Equipment
+                        (CompanyID, CustomerID, CustomerGuid, SiteId, EquipmentName, SpecialInstruction, EquipmentType, InstallDate, WarrantyExpireDate) output INSERTED.ID
+                        VALUES (@CompanyID, @CustomerID, @CustomerGuid, @SiteId, @EquipmentName, @SpecialInstruction, @EquipmentType, @InstallDate, @WarrantyExpireDate)";
+                db.AddParameter("@CompanyID", companyid, SqlDbType.NVarChar);
+                db.AddParameter("@CustomerID", equipment.CustomerID, SqlDbType.NVarChar);
+                db.AddParameter("@CustomerGuid", equipment.CustomerGuid, SqlDbType.NVarChar);
+                db.AddParameter("@EquipmentName", equipment.EquipmentName, SqlDbType.NVarChar);
+                db.AddParameter("@SpecialInstruction", equipment.SpecialInstruction, SqlDbType.NVarChar);
+                db.AddParameter("@SiteId", equipment.SiteId, SqlDbType.Int);
+                db.AddParameter("@EquipmentType", equipment.EquipmentType, SqlDbType.NVarChar);
+                db.AddParameter("@WarrantyExpireDate", string.IsNullOrEmpty(equipment.WarrantyExpireDate) ? DBNull.Value : (object)equipment.WarrantyExpireDate, SqlDbType.DateTime);
+                db.AddParameter("@InstallDate", string.IsNullOrEmpty(equipment.InstallDate) ? DBNull.Value : (object)equipment.InstallDate, SqlDbType.DateTime);
+                object result = db.ExecuteScalarData(strSQL);
+                if (result != null)
+                {
+                    success = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                success = false;
+            }
+            finally
+            {
+                db.Close();
+            }
+            return success;
+        }
+
+        public static bool UpdateEquipment(Equipment equipment)
+        {
+            bool success = false;
+            Database db = new Database();
+            try
+            {
+                db.Open();
+                string strSQL = @"UPDATE [msSchedulerV3].dbo.tbl_Equipment SET 
+                                    EquipmentName = @EquipmentName,
+                                    EquipmentType = @EquipmentType,
+                                    SpecialInstruction = @SpecialInstruction,
+                                    InstallDate = @InstallDate,
+                                    WarrantyExpireDate = @WarrantyExpireDate WHERE Id=@Id and SiteId = @SiteId";
+                db.AddParameter("@EquipmentName", equipment.EquipmentName, SqlDbType.NVarChar);
+                db.AddParameter("@EquipmentType", equipment.EquipmentType, SqlDbType.NVarChar);
+                db.AddParameter("@SpecialInstruction", equipment.SpecialInstruction, SqlDbType.NVarChar);
+                db.AddParameter("@InstallDate", string.IsNullOrEmpty(equipment.InstallDate) ? DBNull.Value : (object)equipment.InstallDate, SqlDbType.NVarChar);
+                db.AddParameter("@WarrantyExpireDate", string.IsNullOrEmpty(equipment.WarrantyExpireDate) ? DBNull.Value : (object)equipment.WarrantyExpireDate, SqlDbType.NVarChar);
+                db.AddParameter("@SiteId", equipment.SiteId, SqlDbType.Int);
+                db.AddParameter("@Id", equipment.Id, SqlDbType.Int);
+                success = db.UpdateSql(strSQL);
+            }
+            catch (Exception ex)
+            {
+                success = false;
+            }
+            finally
+            {
+                db.Close();
+            }
+            return success;
+        }
+
+        [WebMethod]
+        [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
+        public static bool DeleteEquipment(int equipmentId)
+        {
+            bool success = false;
+            Database db = new Database();
+            try
+            {
+                db.Open();
+                string strSQL = @"DELETE FROM [msSchedulerV3].dbo.tbl_Equipment WHERE Id=@Id";
+                db.AddParameter("@Id", equipmentId, SqlDbType.Int);
+                success = db.UpdateSql(strSQL);
+            }
+            catch (Exception ex)
+            {
+                success = false;
+            }
+            finally
+            {
+                db.Close();
+            }
+            return success;
         }
     }
 }

@@ -21,11 +21,14 @@ namespace FSM
         string CompanyID = "";
         protected void Page_Load(object sender, EventArgs e)
          {
-            HttpContext.Current.Session["CompanyID"] = "7369";
-            //if (!IsPostBack)
-            //{
-            //    LoadCustomers();
-            //}
+            if (Session["CompanyID"] == null)
+            {
+                //Response.Redirect("Logout.aspx");
+            }
+            if (!IsPostBack)
+            {
+                CompanyID = Session["CompanyID"].ToString();
+            }
         }
 
         [WebMethod]

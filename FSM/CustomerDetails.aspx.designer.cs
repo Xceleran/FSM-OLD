@@ -42,6 +42,15 @@ namespace FSM
         protected global::System.Web.UI.WebControls.Label lblSiteId;
 
         /// <summary>
+        /// lblCustomerGuid control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblCustomerGuid;
+
+        /// <summary>
         /// lblCustomerName control.
         /// </summary>
         /// <remarks>

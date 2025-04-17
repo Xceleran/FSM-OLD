@@ -23,10 +23,11 @@ namespace FSM.Models.Customer
         public int SiteId { get; set; }
         public string SpecialInstruction { get; set; }
         public string EquipmentName { get; set; }
+        public string EquipmentType { get; set; }
         public int? EquipmentTypeId { get; set; }
         public DateTime? CreatedDateTime { get; set; }
-        public DateTime? InstallDate { get; set; }
-        public DateTime? WarrantyExpireDate { get; set; }
+        public string InstallDate { get; set; }
+        public string WarrantyExpireDate { get; set; }
     }
 
     public class EquipmentType

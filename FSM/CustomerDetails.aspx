@@ -87,13 +87,15 @@
     </style>
 
     <div class="custdet-main-container">
-        <h1 class="display-6 mb-4">Site : <span id="siteName"><asp:Label ID="lblSiteName" runat="server" /></span></h1>
+        <h1 class="display-6 mb-4">Site : <span id="siteName">
+            <asp:Label ID="lblSiteName" runat="server" /></span></h1>
 
         <!-- Basic Information Container -->
         <div class="custdet-container">
             <h2 class="h4 mb-3">Basic Information</h2>
             <asp:Label Style="display: none;" ID="lblCustomerId" runat="server" />
             <asp:Label Style="display: none;" ID="lblSiteId" runat="server" />
+            <asp:Label Style="display: none;" ID="lblCustomerGuid" runat="server" />
             <div class="table-responsive">
                 <table class="table table-bordered table-hover">
                     <thead class="table-light">
@@ -130,7 +132,8 @@
                         </tr>
                         <tr>
                             <td>Created On</td>
-                            <td id="siteDescription"><asp:Label ID="lblCreatedOn" runat="server" /></td>
+                            <td id="siteDescription">
+                                <asp:Label ID="lblCreatedOn" runat="server" /></td>
                         </tr>
                     </tbody>
                 </table>
@@ -150,7 +153,7 @@
                         <option value="closed">Closed</option>
                     </select>
                 </div>
-                <button id="apptExport" class="btn btn-primary">Export to Excel</button>
+                <button id="apptExport" class="btn btn-primary d-none">Export to Excel</button>
             </div>
             <div class="table-responsive">
                 <table class="table table-bordered table-hover">
@@ -187,7 +190,7 @@
                         <option value="paid">Paid</option>
                     </select>
                 </div>
-                <button id="invExport" class="btn btn-primary">Export to Excel</button>
+                <button id="invExport" class="btn btn-primary d-none">Export to Excel</button>
             </div>
             <div class="table-responsive">
                 <table class="table table-bordered table-hover">
@@ -223,9 +226,9 @@
                     <input type="text" id="equipSearch" class="form-control" placeholder="Search equipment...">
                     <select id="equipFilter" class="form-select">
                         <option value="all">All Types</option>
-                        <option value="hvac">HVAC</option>
-                        <option value="generator">Generator</option>
-                        <option value="plumbing">Plumbing</option>
+                        <option value="HVAC">HVAC</option>
+                        <option value="Generator">Generator</option>
+                        <option value="Plumbing">Plumbing</option>
                     </select>
                 </div>
                 <button id="equipAdd" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#equipModal">Add Equipment</button>
@@ -238,11 +241,17 @@
                             <th scope="col">Type</th>
                             <th scope="col">Install Date</th>
                             <th scope="col">Warranty Expiry</th>
+                            <th scope="col">Special Instruction</th>
                             <th scope="col">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="equipTableBody"></tbody>
                 </table>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mt-3">
+                <button id="eqpPrev" class="btn btn-outline-secondary">Previous</button>
+                <span id="eqpPageInfo" class="text-muted">Page 1 of 1</span>
+                <button id="eqpNext" class="btn btn-outline-secondary">Next</button>
             </div>
         </div>
 
@@ -314,6 +323,7 @@
                     </div>
                     <div class="modal-body">
                         <form id="equipForm">
+                            <input type="number" id="equipId" value="0" hidden="hidden">
                             <div class="mb-3">
                                 <label for="equipName" class="form-label">Equipment Name <span class="text-danger">*</span></label>
                                 <input type="text" id="equipName" class="form-control" required>
@@ -321,9 +331,9 @@
                             <div class="mb-3">
                                 <label for="equipType" class="form-label">Type <span class="text-danger">*</span></label>
                                 <select id="equipType" class="form-select" required>
-                                    <option value="hvac">HVAC</option>
-                                    <option value="generator">Generator</option>
-                                    <option value="plumbing">Plumbing</option>
+                                    <option value="HVAC">HVAC</option>
+                                    <option value="Generator">Generator</option>
+                                    <option value="Plumbing">Plumbing</option>
                                 </select>
                             </div>
                             <div class="mb-3">
@@ -334,11 +344,15 @@
                                 <label for="equipWarrantyExpiry" class="form-label">Warranty Expiry</label>
                                 <input type="date" id="equipWarrantyExpiry" class="form-control">
                             </div>
+                            <div class="mb-3">
+                                <label for="instruction" class="form-label">Special Instruction</label>
+                                <input type="text" id="instruction" class="form-control">
+                            </div>
                         </form>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="button" id="equipSave" class="btn btn-primary">Save Equipment</button>
+                        <button type="button" onclick="equipmentSave(event)" id="equipSave" class="btn btn-primary">Save</button>
                     </div>
                 </div>
             </div>
@@ -381,46 +395,24 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
 
     <script>
+
+        // Toast Notification
+        function showToast(message) {
+            const toast = new bootstrap.Toast(document.getElementById('toast'));
+            document.querySelector('#toast .toast-body').textContent = message;
+            toast.show();
+        }
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             const ITEMS_PER_PAGE = 5;
             const urlParams = new URLSearchParams(window.location.search);
-
-            // Toast Notification
-            function showToast(message) {
-                const toast = new bootstrap.Toast(document.getElementById('toast'));
-                document.querySelector('#toast .toast-body').textContent = message;
-                toast.show();
-            }
-
-            // Equipment
-            function renderEquipment() {
-                const tbody = document.getElementById('equipTableBody');
-                const filtered = site.equipment.filter(e =>
-                    document.getElementById('equipFilter').value === 'all' ||
-                    e.type === document.getElementById('equipFilter').value
-                ).filter(e =>
-                    !document.getElementById('equipSearch').value ||
-                    Object.values(e).some(v => v.toString().toLowerCase().includes(document.getElementById('equipSearch').value.toLowerCase()))
-                );
-
-                tbody.innerHTML = filtered.map(e => `
-                    <tr>
-                        <td>${e.name}</td>
-                        <td>${e.type.charAt(0).toUpperCase() + e.type.slice(1)}</td>
-                        <td>${e.installDate || 'N/A'}</td>
-                        <td>${e.warrantyExpiry || 'N/A'}</td>
-                        <td>
-                            <button class="btn btn-sm btn-outline-primary me-1" onclick="editEquipment('${e.id}')">Edit</button>
-                            <button class="btn btn-sm btn-outline-primary me-1" onclick="assignWorkOrder('${e.id}')">Assign to WO</button>
-                            <button class="btn btn-sm btn-outline-primary me-1" onclick="showPictures('equipment', '${e.id}')">View Pictures</button>
-                            <button class="btn btn-sm btn-outline-danger" onclick="deleteEquipment('${e.id}')">Delete</button>
-                        </td>
-                    </tr>
-                `).join('') || '<tr><td colspan="5">No equipment</td></tr>';
-            }
-
-            document.getElementById('equipFilter').addEventListener('change', renderEquipment);
-            document.getElementById('equipSearch').addEventListener('input', renderEquipment);
 
             // Equipment Modal
             let editingEquipId = null;
@@ -431,63 +423,10 @@
                 document.getElementById('equipForm').reset();
             });
 
-            window.editEquipment = (id) => {
-                const equip = site.equipment.find(e => e.id === id);
-                if (equip) {
-                    editingEquipId = id;
-                    document.getElementById('equipModalLabel').textContent = 'Edit Equipment';
-                    document.getElementById('equipName').value = equip.name;
-                    document.getElementById('equipType').value = equip.type;
-                    document.getElementById('equipInstallDate').value = equip.installDate || '';
-                    document.getElementById('equipWarrantyExpiry').value = equip.warrantyExpiry || '';
-                    const modal = new bootstrap.Modal(document.getElementById('equipModal'));
-                    modal.show();
-                }
-            };
-
             window.assignWorkOrder = (id) => {
                 showToast(`Assigning equipment ${id} to work order...`);
             };
 
-            window.deleteEquipment = (id) => {
-                if (confirm('Are you sure you want to delete this equipment?')) {
-                    const index = site.equipment.findIndex(e => e.id === id);
-                    if (index !== -1) {
-                        site.equipment.splice(index, 1);
-                        renderEquipment();
-                        showToast('Equipment deleted successfully');
-                    }
-                }
-            };
-
-            document.getElementById('equipSave').addEventListener('click', () => {
-                if (!document.getElementById('equipForm').checkValidity()) {
-                    document.getElementById('equipForm').reportValidity();
-                    return;
-                }
-
-                const equip = {
-                    id: editingEquipId || String(site.equipment.length + 1),
-                    name: document.getElementById('equipName').value,
-                    type: document.getElementById('equipType').value,
-                    installDate: document.getElementById('equipInstallDate').value || null,
-                    warrantyExpiry: document.getElementById('equipWarrantyExpiry').value || null
-                };
-
-                if (editingEquipId) {
-                    const index = site.equipment.findIndex(e => e.id === editingEquipId);
-                    site.equipment[index] = equip;
-                } else {
-                    site.equipment.push(equip);
-                }
-
-                renderEquipment();
-                const modal = bootstrap.Modal.getInstance(document.getElementById('equipModal'));
-                modal.hide();
-                document.body.classList.remove('modal-open');
-                document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
-                showToast(editingEquipId ? 'Equipment updated successfully' : 'Equipment added successfully');
-            });
 
             // Maintenance Agreements
             function renderAgreements() {
@@ -595,96 +534,6 @@
                 showToast(editingAgreeId ? 'Agreement updated successfully' : 'Agreement uploaded successfully');
             });
 
-            // Appointments
-            function renderAppointments(page = 1, filter = 'all', search = '') {
-                const tbody = document.getElementById('apptTableBody');
-                const filtered = site.appointments.filter(a =>
-                    (filter === 'all' || a.status === filter) &&
-                    (!search || Object.values(a).some(v => v.toString().toLowerCase().includes(search)))
-                );
-                const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
-                const start = (page - 1) * ITEMS_PER_PAGE;
-                const paginated = filtered.slice(start, start + ITEMS_PER_PAGE);
-
-                tbody.innerHTML = paginated.map(a => `
-                    <tr>
-                        <td>${a.requestDate}</td>
-                        <td>${a.timeSlot}</td>
-                        <td>${a.serviceType}</td>
-                        <td>${a.status}</td>
-                        <td>${a.resource}</td>
-                        <td>${a.ticketStatus}</td>
-                        <td>${a.customTags.join(', ')}</td>
-                    </tr>
-                `).join('') || '<tr><td colspan="7">No appointments found</td></tr>';
-
-                document.getElementById('apptPageInfo').textContent = `Page ${page} of ${totalPages}`;
-                document.getElementById('apptPrev').disabled = page === 1;
-                document.getElementById('apptNext').disabled = page === totalPages || totalPages === 0;
-                return filtered;
-            }
-
-            //let apptPage = 1;
-            //document.getElementById('apptPrev').addEventListener('click', () => { apptPage--; renderAppointments(apptPage, document.getElementById('apptFilter').value, document.getElementById('apptSearch').value.toLowerCase()); });
-            //document.getElementById('apptNext').addEventListener('click', () => { apptPage++; renderAppointments(apptPage, document.getElementById('apptFilter').value, document.getElementById('apptSearch').value.toLowerCase()); });
-            //document.getElementById('apptFilter').addEventListener('change', (e) => { apptPage = 1; renderAppointments(1, e.target.value, document.getElementById('apptSearch').value.toLowerCase()); });
-            //document.getElementById('apptSearch').addEventListener('input', (e) => { apptPage = 1; renderAppointments(1, document.getElementById('apptFilter').value, e.target.value.toLowerCase()); });
-            //document.getElementById('apptExport').addEventListener('click', () => {
-            //    const data = renderAppointments(apptPage, document.getElementById('apptFilter').value, document.getElementById('apptSearch').value.toLowerCase());
-            //    exportToExcel(data, 'appointments.xlsx', ['Request Date', 'Time Slot', 'Service Type', 'Status', 'Resource', 'Ticket Status', 'Custom Tags']);
-            //});
-
-            // Invoices
-            function renderInvoices(page = 1, filter = 'all', search = '') {
-                const tbody = document.getElementById('invTableBody');
-                const filtered = site.invoices.filter(i =>
-                    (filter === 'all' || i.status === filter) &&
-                    (!search || Object.values(i).some(v => v.toString().toLowerCase().includes(search)))
-                );
-                const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
-                const start = (page - 1) * ITEMS_PER_PAGE;
-                const paginated = filtered.slice(start, start + ITEMS_PER_PAGE);
-
-                tbody.innerHTML = paginated.map(i => `
-                    <tr>
-                        <td>${i.type}</td>
-                        <td>${i.number}</td>
-                        <td>${i.date}</td>
-                        <td>${i.subtotal}</td>
-                        <td>${i.discount}</td>
-                        <td>${i.tax}</td>
-                        <td>${i.total}</td>
-                        <td>${i.due}</td>
-                        <td>${i.status}</td>
-                        <td>${i.customTags.join(', ')}</td>
-                    </tr>
-                `).join('') || '<tr><td colspan="10">No invoices found</td></tr>';
-
-                document.getElementById('invPageInfo').textContent = `Page ${page} of ${totalPages}`;
-                document.getElementById('invPrev').disabled = page === 1;
-                document.getElementById('invNext').disabled = page === totalPages || totalPages === 0;
-                return filtered;
-            }
-
-            //let invPage = 1;
-            //document.getElementById('invPrev').addEventListener('click', () => { invPage--; renderInvoices(invPage, document.getElementById('invFilter').value, document.getElementById('invSearch').value.toLowerCase()); });
-            //document.getElementById('invNext').addEventListener('click', () => { invPage++; renderInvoices(invPage, document.getElementById('invFilter').value, document.getElementById('invSearch').value.toLowerCase()); });
-            //document.getElementById('invFilter').addEventListener('change', (e) => { invPage = 1; renderInvoices(1, e.target.value, document.getElementById('invSearch').value.toLowerCase()); });
-            //document.getElementById('invSearch').addEventListener('input', (e) => { invPage = 1; renderInvoices(1, document.getElementById('invFilter').value, e.target.value.toLowerCase()); });
-            //document.getElementById('invExport').addEventListener('click', () => {
-            //    const data = renderInvoices(invPage, document.getElementById('invFilter').value, document.getElementById('invSearch').value.toLowerCase());
-            //    exportToExcel(data, 'invoices.xlsx', ['Type', 'Number', 'Date', 'Subtotal', 'Discount', 'Tax', 'Total', 'Due', 'Status', 'Custom Tags']);
-            //});
-
-            // Documents
-            //const docBody = document.getElementById('docTableBody');
-            //docBody.innerHTML = site.documents.map(d => `
-            //    <tr>
-            //        <td>${d.name}</td>
-            //        <td>${d.status}</td>
-            //        <td><a href="${d.link}" target="_blank">View</a></td>
-            //    </tr>
-            //`).join('') || '<tr><td colspan="3">No documents</td></tr>';
 
             // Pictures
             let pictures = { equipment: {}, service: {}, folder: {} };
@@ -748,14 +597,11 @@
 
             // Initial Render
             // renderAppointments(1);
-            renderInvoices(1);
-            renderEquipment();
-            renderAgreements();
-            renderPictures('equipment');
+            //renderInvoices(1);
+            //renderEquipment();
+            //renderAgreements();
+            //renderPictures('equipment');
         });
-
-        loadData();
-
 
         let appointmentData = [];
         let filteredData = [];
@@ -767,13 +613,21 @@
         let currentPageInv = 1;
         const pageSizeInv = 10;
 
+        let equipmentData = [];
+        let filteredEquipmentData = [];
+        let currentPageEqp = 1;
+        const pageSizeEqp = 10;
+
+        var customerId = document.getElementById('<%= lblCustomerId.ClientID %>').innerText;
+        var siteId = parseInt(document.getElementById('<%= lblSiteId.ClientID %>').innerText);
+        var customerGuid = document.getElementById('<%= lblCustomerGuid.ClientID %>').innerText;
+
+        loadData();
 
         function loadData() {
-            var customerId = document.getElementById('<%= lblCustomerId.ClientID %>').innerText;
-            console.log(customerId);
-
             loadAppoinments(customerId);
             loadInvoices(customerId);
+            loadEquipment(customerId, siteId);
         }
 
         function loadAppoinments(customerId) {
@@ -784,207 +638,7 @@
                 data: JSON.stringify({ customerId: customerId }),
                 dataType: 'json',
                 success: function (rs) {
-                    console.log(appointmentData);
                     appointmentData = rs.d || [];
-                    //appointmentData = [
-                    //    {
-                    //        "__type": "FSM.Models.Customer.CustomerAppoinment",
-                    //        "CompanyID": null,
-                    //        "CustomerID": "13185",
-                    //        "CustomerGuid": null,
-                    //        "AppoinmentDate": "03/07/2025",
-                    //        "RequestDate": "03/07/2025",
-                    //        "ServiceType": "Estimate",
-                    //        "ResourceName": "Estimator",
-                    //        "TimeSlot": "Select",
-                    //        "TicketStatus": "Ready to Schedule | Measurement",
-                    //        "CustomTags": null,
-                    //        "AppoinmentStatus": "Pending"
-                    //    },
-                    //    {
-                    //        "__type": "FSM.Models.Customer.CustomerAppoinment",
-                    //        "CompanyID": null,
-                    //        "CustomerID": "13185",
-                    //        "CustomerGuid": null,
-                    //        "AppoinmentDate": "03/07/2025",
-                    //        "RequestDate": "03/07/2025",
-                    //        "ServiceType": "Estimate",
-                    //        "ResourceName": "Saif",
-                    //        "TimeSlot": "Afternoon Appointments ( 1:00PM - 4:30PM )",
-                    //        "TicketStatus": "Completed",
-                    //        "CustomTags": null,
-                    //        "AppoinmentStatus": "Closed"
-                    //    },
-                    //    {
-                    //        "__type": "FSM.Models.Customer.CustomerAppoinment",
-                    //        "CompanyID": null,
-                    //        "CustomerID": "13185",
-                    //        "CustomerGuid": null,
-                    //        "AppoinmentDate": "03/10/2025",
-                    //        "RequestDate": "03/10/2025",
-                    //        "ServiceType": "Estimate",
-                    //        "ResourceName": "Estimator",
-                    //        "TimeSlot": "Morning Appointment ( 9:00AM - 11:30AM )",
-                    //        "TicketStatus": "Ready to Schedule | Measurement",
-                    //        "CustomTags": null,
-                    //        "AppoinmentStatus": "Scheduled"
-                    //    },
-                    //    {
-                    //        "__type": "FSM.Models.Customer.CustomerAppoinment",
-                    //        "CompanyID": null,
-                    //        "CustomerID": "13185",
-                    //        "CustomerGuid": null,
-                    //        "AppoinmentDate": "03/07/2025",
-                    //        "RequestDate": "03/07/2025",
-                    //        "ServiceType": "Service Call",
-                    //        "ResourceName": "Saruf",
-                    //        "TimeSlot": "(01:00 PM - 02:30 PM )",
-                    //        "TicketStatus": "0",
-                    //        "CustomTags": null,
-                    //        "AppoinmentStatus": "Scheduled"
-                    //    },
-                    //    {
-                    //        "__type": "FSM.Models.Customer.CustomerAppoinment",
-                    //        "CompanyID": null,
-                    //        "CustomerID": "13185",
-                    //        "CustomerGuid": null,
-                    //        "AppoinmentDate": "03/07/2025",
-                    //        "RequestDate": "03/07/2025",
-                    //        "ServiceType": "Estimate",
-                    //        "ResourceName": "GAR",
-                    //        "TimeSlot": "Select",
-                    //        "TicketStatus": "0",
-                    //        "CustomTags": null,
-                    //        "AppoinmentStatus": "Pending"
-                    //    },
-                    //    {
-                    //        "__type": "FSM.Models.Customer.CustomerAppoinment",
-                    //        "CompanyID": null,
-                    //        "CustomerID": "13185",
-                    //        "CustomerGuid": null,
-                    //        "AppoinmentDate": "03/07/2025",
-                    //        "RequestDate": "03/07/2025",
-                    //        "ServiceType": "Estimate",
-                    //        "ResourceName": "Estimator",
-                    //        "TimeSlot": "Afternoon Appointments ( 1:00PM - 4:30PM )",
-                    //        "TicketStatus": "0",
-                    //        "CustomTags": null,
-                    //        "AppoinmentStatus": "Scheduled"
-                    //    },
-                    //    {
-                    //        "__type": "FSM.Models.Customer.CustomerAppoinment",
-                    //        "CompanyID": null,
-                    //        "CustomerID": "13185",
-                    //        "CustomerGuid": null,
-                    //        "AppoinmentDate": "03/10/2025",
-                    //        "RequestDate": "03/10/2025",
-                    //        "ServiceType": "Service Call",
-                    //        "ResourceName": "Estimator",
-                    //        "TimeSlot": "Morning Appointment ( 9:00AM - 11:30AM )",
-                    //        "TicketStatus": "0",
-                    //        "CustomTags": null,
-                    //        "AppoinmentStatus": "Scheduled"
-                    //    },
-                    //    {
-                    //        "__type": "FSM.Models.Customer.CustomerAppoinment",
-                    //        "CompanyID": null,
-                    //        "CustomerID": "13185",
-                    //        "CustomerGuid": null,
-                    //        "AppoinmentDate": "03/07/2025",
-                    //        "RequestDate": "03/07/2025",
-                    //        "ServiceType": "WIndow Installation",
-                    //        "ResourceName": "Estimator",
-                    //        "TimeSlot": "(01:00 PM - 02:30 PM )",
-                    //        "TicketStatus": "Ordered",
-                    //        "CustomTags": null,
-                    //        "AppoinmentStatus": "Scheduled"
-                    //    },
-                    //    {
-                    //        "__type": "FSM.Models.Customer.CustomerAppoinment",
-                    //        "CompanyID": null,
-                    //        "CustomerID": "13185",
-                    //        "CustomerGuid": null,
-                    //        "AppoinmentDate": "03/07/2025",
-                    //        "RequestDate": "03/07/2025",
-                    //        "ServiceType": "WIndow Installation",
-                    //        "ResourceName": "Estimator",
-                    //        "TimeSlot": "Select",
-                    //        "TicketStatus": "Ready to Schedule | Measurement",
-                    //        "CustomTags": null,
-                    //        "AppoinmentStatus": "Pending"
-                    //    },
-                    //    {
-                    //        "__type": "FSM.Models.Customer.CustomerAppoinment",
-                    //        "CompanyID": null,
-                    //        "CustomerID": "13185",
-                    //        "CustomerGuid": null,
-                    //        "AppoinmentDate": "03/07/2025",
-                    //        "RequestDate": "03/07/2025",
-                    //        "ServiceType": "QuickBooks Products",
-                    //        "ResourceName": "Saif",
-                    //        "TimeSlot": "Afternoon Appointments ( 1:00PM - 4:30PM )",
-                    //        "TicketStatus": "Completed",
-                    //        "CustomTags": null,
-                    //        "AppoinmentStatus": "Closed"
-                    //    },
-                    //    {
-                    //        "__type": "FSM.Models.Customer.CustomerAppoinment",
-                    //        "CompanyID": null,
-                    //        "CustomerID": "13185",
-                    //        "CustomerGuid": null,
-                    //        "AppoinmentDate": "03/11/2025",
-                    //        "RequestDate": "03/11/2025",
-                    //        "ServiceType": "Estimate",
-                    //        "ResourceName": "Saruf",
-                    //        "TimeSlot": "Morning Appointment ( 9:00AM - 11:30AM )",
-                    //        "TicketStatus": "Ordered",
-                    //        "CustomTags": null,
-                    //        "AppoinmentStatus": "Scheduled"
-                    //    },
-                    //    {
-                    //        "__type": "FSM.Models.Customer.CustomerAppoinment",
-                    //        "CompanyID": null,
-                    //        "CustomerID": "13185",
-                    //        "CustomerGuid": null,
-                    //        "AppoinmentDate": "03/08/2025",
-                    //        "RequestDate": "03/08/2025",
-                    //        "ServiceType": "QuickBooks Products",
-                    //        "ResourceName": "GAR",
-                    //        "TimeSlot": "(01:00 PM - 02:30 PM )",
-                    //        "TicketStatus": "Ordered",
-                    //        "CustomTags": null,
-                    //        "AppoinmentStatus": "Scheduled"
-                    //    },
-                    //    {
-                    //        "__type": "FSM.Models.Customer.CustomerAppoinment",
-                    //        "CompanyID": null,
-                    //        "CustomerID": "13185",
-                    //        "CustomerGuid": null,
-                    //        "AppoinmentDate": "03/10/2025",
-                    //        "RequestDate": "03/10/2025",
-                    //        "ServiceType": "Estimate",
-                    //        "ResourceName": "Estimator",
-                    //        "TimeSlot": "Morning Appointment ( 9:00AM - 11:30AM )",
-                    //        "TicketStatus": "Ready to Schedule | Measurement",
-                    //        "CustomTags": null,
-                    //        "AppoinmentStatus": "Scheduled"
-                    //    },
-                    //    {
-                    //        "__type": "FSM.Models.Customer.CustomerAppoinment",
-                    //        "CompanyID": null,
-                    //        "CustomerID": "13185",
-                    //        "CustomerGuid": null,
-                    //        "AppoinmentDate": "03/15/2025",
-                    //        "RequestDate": "03/15/2025",
-                    //        "ServiceType": "Service Call",
-                    //        "ResourceName": "Saruf",
-                    //        "TimeSlot": "(02:00 PM - 02:30 PM )",
-                    //        "TicketStatus": "0",
-                    //        "CustomTags": null,
-                    //        "AppoinmentStatus": "Scheduled"
-                    //    },
-                    //];
-                    console.log(appointmentData);
                     currentPage = 1;
                     applyFilters();
                 },
@@ -1206,5 +860,199 @@
         $('#invFilterType').on('change', function () {
             applyFiltersInv();
         });
+
+
+        function loadEquipment(customerId, siteId) {
+            $.ajax({
+                url: 'CustomerDetails.aspx/GetSiteEquipmentData',
+                type: "POST",
+                contentType: "application/json; charset=utf-8",
+                data: JSON.stringify({ siteId: siteId, customerId: customerId }),
+                dataType: 'json',
+                success: function (rs) {
+                    equipmentData = rs.d || [];
+                    console.log(rs.d);
+                    currentPage = 1;
+                    applyFiltersEqp();
+                },
+                error: function (error) { }
+            })
+        }
+
+        function renderEquipments() {
+            const startIndex = (currentPage - 1) * pageSize;
+            const pageData = filteredEquipmentData.slice(startIndex, startIndex + pageSize);
+            const tbody = $('#equipTableBody');
+            tbody.empty();
+
+            if (pageData.length === 0) {
+                tbody.append('<tr><td colspan="7">No equipment found.</td></tr>');
+                return;
+            }
+
+            pageData.forEach(item => {
+                tbody.append(`
+                <tr>
+                <td>${item.EquipmentName || ''}</td>
+                <td>${item.EquipmentType || ''}</td>
+                <td>${item.InstallDate || ''}</td>
+                <td>${item.WarrantyExpireDate || ''}</td>
+                <td>${item.SpecialInstruction || ''}</td>
+                <td>
+                <button type=button class="btn btn-primary" onclick=editEqp(event,"${item.Id}")>Edit</button>
+                <button type=button class="btn btn-danger" onclick=deleteEqp(event,"${item.Id}")>Delete</button>
+                </td>
+                </tr>`);
+            });
+        }
+
+        function applyFiltersEqp() {
+            const searchTerm = $('#equipSearch').val().trim().toLowerCase();
+            const typeFilter = $('#equipFilter').val().trim().toLowerCase();
+
+            filteredEquipmentData = equipmentData.filter(item => {
+
+                // Filter by status if not "all"
+                const matchesType = typeFilter === 'all' ||
+                    (item.EquipmentType && item.EquipmentType.toLowerCase() === typeFilter);
+
+                // Search in multiple fields
+                const combinedText = [
+                    item.EquipmentName,
+                    item.EquipmentType,
+                    item.InstallDate,
+                    item.WarrantyExpireDate,
+                    item.SpecialInstruction
+                ].join(' ').toLowerCase();
+
+                const matchesSearch = combinedText.includes(searchTerm);
+
+                return matchesType && matchesSearch;
+            });
+
+            currentPage = 1;
+            renderEquipments();
+            updatePagination();
+        }
+
+        function updatePaginationInv() {
+            const totalPages = Math.ceil(filteredEquipmentData.length / pageSizeEqp);
+            $('#eqpPageInfo').text(`Page ${currentPageEqp} of ${totalPages || 1}`);
+
+            $('#eqpPrev').prop('disabled', currentPageEqp <= 1);
+            $('#eqpNext').prop('disabled', currentPageEqp >= totalPages);
+        }
+
+        $('#equipSearch').on('input', function () {
+            applyFiltersEqp();
+        });
+
+        $('#equipFilter').on('change', function () {
+            applyFiltersEqp();
+        });
+
+
+        function equipmentSave(event) {
+            event.preventDefault();
+            if (validateForm()) {
+                const equipment = {
+                    Id: parseInt($('#equipId').val()),
+                    SiteId: siteId,
+                    CustomerID: customerId,
+                    CustomerGuid: customerGuid,
+                    SpecialInstruction: $('#instruction').val().trim(),
+                    WarrantyExpireDate: $('#equipWarrantyExpiry').val().trim(),
+                    InstallDate: $('#equipInstallDate').val().trim(),
+                    EquipmentName: $('#equipName').val().trim(),
+                    EquipmentType: $('#equipType').val().trim(),
+                };
+
+                let message = "saved";
+                if (equipment.Id > 0) {
+                    message = "updated";
+                }
+
+                $.ajax({
+                    type: "POST",
+                    url: "CustomerDetails.aspx/SaveEquipmentData",
+                    data: JSON.stringify({ equipment: equipment }),
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    success: function (response) {
+                        console.log(response);
+                        if (response.d) {
+                            closeModal('equipModal');
+                            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+                            showToast("Equipment " + message + " successfully!");
+                            loadEquipment(customerId, siteId);
+                        }
+                        else {
+                            showToast("Something went wrong!");
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error("Error updating details: ", error);
+                    }
+                });
+            }
+        }
+
+        function editEqp(event, data) {
+            event.preventDefault();
+            const equip = equipmentData.find(e => e.Id == data);
+            if (equip) {
+                document.getElementById('equipModalLabel').textContent = 'Edit Equipment';
+                document.getElementById('equipId').value = data;
+                document.getElementById('equipName').value = equip.EquipmentName;
+                document.getElementById('equipType').value = equip.EquipmentType;
+                document.getElementById('equipInstallDate').value = equip.InstallDate || '';
+                document.getElementById('equipWarrantyExpiry').value = equip.WarrantyExpireDate || '';
+                document.getElementById('instruction').value = equip.SpecialInstruction || '';
+                const modal = new bootstrap.Modal(document.getElementById('equipModal'));
+                modal.show();
+            }
+        }
+
+        function deleteEqp(e, data) {
+            e.preventDefault();
+            if (confirm('Are you sure you want to delete this equipment?')) {
+                $.ajax({
+                    url: 'CustomerDetails.aspx/DeleteEquipment',
+                    type: "POST",
+                    contentType: 'application/json',
+                    data: "{ equipmentId: '" + data + "'}",
+                    dataType: 'json',
+                    success: function (rs) {
+                        if (rs.d) {
+                            showToast('Deleted Successfully');
+                            loadEquipment(customerId, siteId)
+                        }
+                    },
+                    error: function (error) { }
+                })
+            }
+            
+        }
+
+        function validateForm() {
+            let isValid = true;
+            let errorMessage = "";
+
+            // Required field validation
+            if ($("#equipName").val().trim() === "") {
+                errorMessage += "Equipment Name is required.\n";
+                isValid = false;
+            }
+
+            if ($("#equipType").val().trim() === "") {
+                errorMessage += "Equipment type is required.\n";
+                isValid = false;
+            }
+
+            if (!isValid) {
+                showToast(errorMessage);
+            }
+            return isValid;
+        }
     </script>
 </asp:Content>
