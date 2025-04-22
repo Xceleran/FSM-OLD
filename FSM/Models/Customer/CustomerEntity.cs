@@ -99,5 +99,8 @@ namespace FSM.Models.Customer
         public string InvoiceStatus { get; set; }
 
         public string CustomTags { get; set; }
+
+        public string CustomerName { get; set; }
+        public string ID { get; set; }
     }
 }

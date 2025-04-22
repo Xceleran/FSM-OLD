@@ -186,7 +186,7 @@
                     <input type="text" id="invSearch" class="form-control" placeholder="Search invoices...">
                     <select id="invFilter" class="form-select">
                         <option value="all">All Status</option>
-                        <option value="unpaid">Unpaid</option>
+                        <option value="unpaid">Due</option>
                         <option value="paid">Paid</option>
                     </select>
 
