@@ -104,7 +104,7 @@
     padding: 12px;
     margin-bottom: 12px;
     background: #f9fafb;
-    cursor: move;
+    cursor: grab;
     transition: all 0.3s ease;
 }
 
@@ -154,7 +154,7 @@
 }
 
 .unscheduled-list {
-    max-height: 600px;
+    height: 500px;
     overflow-y: auto;
 }
 

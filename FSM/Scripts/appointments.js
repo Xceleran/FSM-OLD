@@ -1,4 +1,4 @@
-let appointments = JSON.parse(localStorage.getItem('appointments')) || [
+﻿let appointments = JSON.parse(localStorage.getItem('appointments')) || [
     {
         id: 1,
         customerName: "John Doe",
@@ -49,7 +49,7 @@ const technicianGroups = {
 const timeSlots = {
     morning: { start: "08:00", end: "12:00" },
     afternoon: { start: "12:00", end: "16:00" },
-    emergency: { start: "08:00", end: "16:00" }
+    emergency: { start: "18:00", end: "22:00" }
 };
 const allTimeSlots = [
     { value: "08:00", label: "8:00 AM" },
@@ -60,7 +60,12 @@ const allTimeSlots = [
     { value: "13:00", label: "1:00 PM" },
     { value: "14:00", label: "2:00 PM" },
     { value: "15:00", label: "3:00 PM" },
-    { value: "16:00", label: "4:00 PM" }
+    { value: "18:00", label: "6:00 PM" },
+    { value: "19:00", label: "7:00 PM" },
+    { value: "20:00", label: "8:00 PM" },
+    { value: "21:00", label: "9:00 PM" },
+    { value: "22:00", label: "10:00 PM" }
+
 ];
 
 function saveAppointments() {
@@ -660,6 +665,13 @@ function createAppointment(e) {
     updateAllViews();
     bootstrap.Modal.getInstance(document.getElementById("newModal")).hide();
 }
+
+document.querySelectorAll('[data-bs-dismiss="modal"]').forEach(button => {
+    button.addEventListener('click', function () {
+        const modal = bootstrap.Modal.getInstance(this.closest('.modal'));
+        modal.hide();
+    });
+});
 
 function openEditModal(id) {
     const a = appointments.find(x => x.id === id);

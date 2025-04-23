@@ -72,7 +72,7 @@
                             <div class="time-slot-indicators">
                                 <span class="time-block-indicator time-block-morning"></span>Morning (8AM-12PM)
                                 <span class="time-block-indicator time-block-afternoon"></span>Afternoon (12PM-4PM)
-                                <span class="time-block-indicator time-block-emergency"></span>Emergency (8AM-4PM)
+                                <span class="time-block-indicator time-block-emergency"></span>Emergency (6PM-10PM)
                             </div>
                         </div>
                         <div class="card-body">
@@ -123,7 +123,7 @@
                             <div class="time-slot-indicators">
                                 <span class="time-block-indicator time-block-morning"></span>Morning (8AM-12PM)
                                 <span class="time-block-indicator time-block-afternoon"></span>Afternoon (12PM-4PM)
-                                <span class="time-block-indicator time-block-emergency"></span>Emergency (8AM-4PM)
+                                <span class="time-block-indicator time-block-emergency"></span>Emergency (6PM-10PM)
                             </div>
                         </div>
                         <div class="card-body">
@@ -192,7 +192,7 @@
                         </div>
                     </div>
                     <div class="card-body">
-                        <div id="mapViewContainer"></div>
+                        <div id="mapViewContainer" style="height: 500px;"></div>
                     </div>
                 </div>
             </div>
