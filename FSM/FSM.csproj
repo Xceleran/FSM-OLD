@@ -118,6 +118,7 @@
   <ItemGroup>
     <Content Include="Appointments.aspx" />
     <Content Include="BillableItems.aspx" />
+    <Content Include="Content\appointments.css" />
     <Content Include="Content\bootstrap-grid.css" />
     <Content Include="Content\bootstrap-grid.min.css" />
     <Content Include="Content\bootstrap-grid.rtl.css" />
@@ -141,6 +142,7 @@
     <Content Include="Dispatch.aspx" />
     <Content Include="favicon.ico" />
     <Content Include="Global.asax" />
+    <Content Include="Scripts\appointments.js" />
     <Content Include="Scripts\bootstrap.bundle.js" />
     <Content Include="Scripts\bootstrap.bundle.min.js" />
     <Content Include="Scripts\bootstrap.esm.js" />
