@@ -16,7 +16,7 @@
     <link href="~/Content/custom.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-
+  
 </head>
 <body runat="server" id="bodyTag">
     <form runat="server">
@@ -36,10 +36,12 @@
                 <asp:ScriptReference Name="WebFormsBundle" />
             </Scripts>
         </asp:ScriptManager>
-
-
     </form>
     <div class="page-container">
+        <div class="right-logo">
+            <h6 class="right-logo-title">Powered by</h6>
+            <img src="https://testsite.myserviceforce.com/fsm/images/xceleran.png" alt="Xceleran Logo" class="right-logo-img">
+        </div>
         <aside id="sidebar" class="sidebar">
             <div class="sidebar-logo">
                 <img src="https://testsite.myserviceforce.com/fsm/images/lhlogo.png" alt="LHLogo Logo" class="sidebar-logo-img">
@@ -78,15 +80,6 @@
                             <span class="sidebar-text">Invoices/Estimates</span>
                         </a>
                     </li>
-
-                    <%--  <li id="dispatch-link" class="sidebar-nav-item">
-                        <a href="Dispatch.aspx" class="sidebar-nav-link">
-                            <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                            </svg>
-                            <span class="sidebar-text">Dispatch</span>
-                        </a>
-                    </li>--%>
                     <li id="item-link" class="sidebar-nav-item">
                         <a href="BillableItems.aspx" class="sidebar-nav-link">
                             <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -115,7 +108,6 @@
                 </ul>
             </nav>
             <div class="sidebar-footer">
-                <h6 class="sidebar-footer-title">Powered by</h6>
                 <img src="https://testsite.myserviceforce.com/fsm/images/FMSXceleran.png" alt="FMSXceleran Logo" class="sidebar-footer-img">
             </div>
         </aside>
@@ -177,11 +169,13 @@
                     if (isMobile()) {
                         sidebarTexts.forEach(text => text.style.display = 'inline');
                         toggleButton.textContent = isHidden ? '☰' : '✕';
+                        toggleButton.classList.remove('collapsed');
                     } else {
                         sidebarTexts.forEach(text => {
                             text.style.display = isCollapsed ? 'none' : 'inline';
                         });
                         toggleButton.textContent = isExpanded ? '➤' : '☰';
+                        toggleButton.classList.toggle('collapsed', isCollapsed);
                     }
                 };
 
@@ -206,6 +200,7 @@
                     sidebar.style.transform = 'translateX(-100%)';
                 } else {
                     sidebar.classList.add('sidebar-expanded');
+                    sidebar.classList.remove('sidebar-collapsed');
                 }
                 updateSidebarState();
 
@@ -217,10 +212,14 @@
                             sidebar.style.transform = 'translateX(-100%)';
                         }
                         sidebar.classList.add('sidebar-mobile');
+                        sidebar.classList.remove('sidebar-expanded', 'sidebar-collapsed');
+                        toggleButton.classList.remove('collapsed');
                     } else {
                         sidebar.classList.remove('sidebar-hidden', 'sidebar-mobile');
                         sidebar.classList.add('sidebar-expanded');
+                        sidebar.classList.remove('sidebar-collapsed');
                         sidebar.style.transform = '';
+                        toggleButton.classList.remove('collapsed');
                     }
                     updateSidebarState();
                 });

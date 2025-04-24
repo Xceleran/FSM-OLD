@@ -1,10 +1,8 @@
-﻿/* New CSS from the provided styles */
-.date-view-container {
+﻿.date-view-container {
     display: grid;
     grid-template-columns: 3fr 1fr;
     gap: 20px;
-    padding: 20px;
-    background: #f5f7fa;
+  
 }
 
 .card {
@@ -15,9 +13,9 @@
     transition: transform 0.2s ease;
 }
 
-    .card:hover {
-        transform: translateY(-2px);
-    }
+.card:hover {
+    transform: translateY(-2px);
+}
 
 .card-header {
     padding: 20px;
@@ -39,22 +37,23 @@
 
 .calendar-grid {
     display: grid;
-
 }
+
 .calendar-header-cell {
-    border-right: 1px solid  #c3c7cc;
+    border-right: 1px solid #c3c7cc;
     background: #e7f1ff;
 }
+
 .calendar-grid-month {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     gap: 1px;
 }
 
-    .calendar-grid-month > * {
-        background: #ffffff;
-        border: 1px solid #d1d5db;
-    }
+.calendar-grid-month > * {
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+}
 
 .calendar-body {
     position: relative;
@@ -109,33 +108,34 @@
     transition: all 0.3s ease;
 }
 
-    .appointment-card:hover {
-        background: #f1f5f9;
-        transform: translateY(-2px);
-    }
-.calendar-event, .appointment-card {
-    box-sizing: border-box; /* Ensure padding/borders don't affect width */
-    min-width: 120px; /* Set a minimum width to prevent shrinking */
-    max-width: 100%; /* Prevent overflow */
+.appointment-card:hover {
+    background: #f1f5f9;
+    transform: translateY(-2px);
 }
 
-/* Ensure the dragged element doesn't scale unexpectedly */
-.ui-draggable-dragging {
-    transform: none !important; /* Prevent scaling during drag */
-    transition: none !important; /* Disable transitions during drag */
+.calendar-event, .appointment-card {
+    box-sizing: border-box;
+    min-width: 120px;
+    max-width: 100%;
 }
+
+.ui-draggable-dragging {
+    transform: none !important;
+    transition: none !important;
+}
+
 .calendar-event {
-    width: 100%; /* Fill the entire spanned cell */
-    margin: 0; /* Remove default margin if needed */
+    width: 100%;
+    margin: 0;
     padding: 6px;
     box-sizing: border-box;
 }
 
-    .calendar-event:hover {
-        transform: scale(1.02);
-        opacity: 1;
-        z-index: 10;
-    }
+.calendar-event:hover {
+    transform: scale(1.02);
+    opacity: 1;
+    z-index: 10;
+}
 
 .calendar-grid-month .calendar-event {
     position: relative;
@@ -182,19 +182,19 @@
     transition: all 0.3s ease;
 }
 
-    .form-control:focus, .form-select:focus {
-        border-color: #6366f1;
-        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-    }
+.form-control:focus, .form-select:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
 
 .btn-outline-secondary {
     border-radius: 8px;
     transition: all 0.3s ease;
 }
 
-    .btn-outline-secondary:hover {
-        background: #e2e8f0;
-    }
+.btn-outline-secondary:hover {
+    background: #e2e8f0;
+}
 
 .btn-primary {
     border-radius: 8px;
@@ -361,9 +361,7 @@
     margin-top: 4px;
 }
 
-/* Additional Styles for Compatibility */
 body {
-
     background: #fff;
     margin: 0;
     padding: 0;
@@ -399,10 +397,10 @@ body {
     cursor: grab;
 }
 
-    .date-box:hover, .date-box.active {
-        background: #e8f0fe;
-        color: #1967d2;
-    }
+.date-box:hover, .date-box.active {
+    background: #e8f0fe;
+    color: #1967d2;
+}
 
 .time-slot-indicators {
     margin-top: 10px;
@@ -426,16 +424,63 @@ body {
     border-radius: 4px 4px 0 0;
 }
 
-    .nav-tabs .nav-link.active {
-        color: #1967d2;
-        background: #e8f0fe;
-        border-color: #e8f0fe;
-    }
+.nav-tabs .nav-link.active {
+    color: #1967d2;
+    background: #e8f0fe;
+    border-color: #e8f0fe;
+}
+
+.map-view-tabs .nav-link {
+    padding: 8px 16px;
+    font-size: 0.9rem;
+}
+
+.map-view-tabs .nav-link.active {
+    background: #6366f1;
+    color: #fff;
+    border-color: #6366f1;
+}
 
 #mapViewContainer {
     height: 600px;
     border-radius: 4px;
     margin-top: 10px;
+}
+
+.status-indicator.pending {
+    background-color: #f59e0b; /* Amber */
+    width: 12px;
+    height: 12px;
+    display: inline-block;
+    border-radius: 50%;
+    margin-right: 5px;
+}
+
+.status-indicator.dispatched {
+    background-color: #6b7280; /* Gray */
+    width: 12px;
+    height: 12px;
+    display: inline-block;
+    border-radius: 50%;
+    margin-right: 5px;
+}
+
+.status-indicator.in-route {
+    background-color: #3b82f6; /* Blue */
+    width: 12px;
+    height: 12px;
+    display: inline-block;
+    border-radius: 50%;
+    margin-right: 5px;
+}
+
+.status-indicator.arrived {
+    background-color: #22c55e; /* Green */
+    width: 12px;
+    height: 12px;
+    display: inline-block;
+    border-radius: 50%;
+    margin-right: 5px;
 }
 
 @media (max-width: 768px) {
@@ -450,10 +495,56 @@ body {
     #mapViewContainer {
         height: 300px;
     }
+
+    .map-view-tabs .nav-link {
+        font-size: 0.8rem;
+        padding: 6px 12px;
+    }
 }
 
 @media (max-width: 992px) {
     #mapViewContainer {
         height: 400px;
     }
+}
+
+/* New styles for calling feature */
+.call-controls {
+    position: fixed;
+    top: 60px; /* Matches container-fluid margin-top; adjust if Master Page header requires more space */
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: #ffffff;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.call-controls .call-status {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #2d3748;
+}
+
+.call-controls .call-timer {
+    font-family: monospace;
+    font-size: 1rem;
+    color: #2d3748;
+    background: #f8fafc;
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid #e2e8f0;
+}
+
+.call-controls .btn-danger {
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.875rem;
+    padding: 6px 12px;
+}
+
+.call-controls.d-none {
+    display: none !important;
 }

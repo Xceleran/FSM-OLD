@@ -1,4 +1,5 @@
-﻿<%@ Page Title="Appointments" Language="C#" MasterPageFile="~/FSM.Master" AutoEventWireup="true" CodeBehind="Appointments.aspx.cs" Inherits="FSM.Appointments" %>
+﻿
+<%@ Page Title="Appointments" Language="C#" MasterPageFile="~/FSM.Master" AutoEventWireup="true" CodeBehind="Appointments.aspx.cs" Inherits="FSM.Appointments" %>
 
 <asp:Content ID="BodyContent" ContentPlaceHolderID="MainContent" runat="server">
 
@@ -11,8 +12,6 @@
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <!-- Add Leaflet Heat plugin for heatmap feature -->
-    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
 
     <!-- Local Styles and Scripts -->
     <link rel="stylesheet" href="Content/appointments.css">
@@ -189,22 +188,30 @@
             <div class="tab-pane fade" id="mapView" role="tabpanel">
                 <div class="card calendar-container map-view-container">
                     <div class="card-header">
-                        <div class="d-flex flex-wrap gap-2 align-items-center">
-                            <label for="mapDatePicker" class="form-label mb-0">Date:</label>
-                            <input type="date" id="mapDatePicker" class="form-control w-200px">
-                            <label for="mapDispatchGroup" class="form-label mb-0 ms-3">Group:</label>
-                            <select id="mapDispatchGroup" class="form-select w-120px">
-                                <option value="all">All Technicians</option>
-                                <option value="electricians">Electricians</option>
-                                <option value="plumbers">Plumbers</option>
-                            </select>
-                            <button id="mapReloadBtn" class="btn btn-outline-secondary ms-2">Reload</button>
+                        <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
+                            <div class="d-flex flex-wrap gap-2 align-items-center">
+                                <label for="mapDatePicker" class="form-label mb-0">Date:</label>
+                                <input type="date" id="mapDatePicker" class="form-control w-200px">
+                                <label for="mapDispatchGroup" class="form-label mb-0 ms-3">Group:</label>
+                                <select id="mapDispatchGroup" class="form-select w-120px">
+                                    <option value="all">All Technicians</option>
+                                    <option value="electricians">Electricians</option>
+                                    <option value="plumbers">Plumbers</option>
+                                </select>
+                                <button id="mapReloadBtn" class="btn btn-outline-secondary ms-2">Reload</button>
+                            </div>
+                            <ul class="nav nav-tabs map-view-tabs" id="mapViewTabs" role="tablist">
+                                <li class="nav-item">
+                                    <button class="nav-link active" id="map-layer-tab" data-bs-toggle="tab" data-bs-target="#mapLayerView" type="button" role="tab">Map</button>
+                                </li>
+                                <li class="nav-item">
+                                    <button class="nav-link" id="satellite-layer-tab" data-bs-toggle="tab" data-bs-target="#mapLayerView" type="button" role="tab">Satellite</button>
+                                </li>
+                            </ul>
                         </div>
                         <div class="map-controls mt-2">
                             <button id="mapOptimizeRouteBtn" class="btn btn-primary">Optimize Route</button>
-                            <button id="mapHeatmapToggleBtn" class="btn btn-primary ms-2">Toggle Heatmap</button>
                             <button id="mapAddCustomMarkerBtn" class="btn btn-primary ms-2">Add Custom Marker</button>
-                            <button id="mapViewToggleBtn" class="btn btn-primary ms-2">Map</button>
                         </div>
                         <div class="map-status-legend mt-2">
                             <span class="status-indicator pending"></span>Pending
@@ -214,26 +221,21 @@
                         </div>
                         <div class="map-work-order-status mt-2">
                             <h5>Work Order Status</h5>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="statusPending" checked>
-                                <label class="form-check-label" for="statusPending">Pending</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="statusDispatched" checked>
-                                <label class="form-check-label" for="statusDispatched">Dispatched</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="statusInRoute" checked>
-                                <label class="form-check-label" for="statusInRoute">In Route</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="statusArrived" checked>
-                                <label class="form-check-label" for="statusArrived">Arrived</label>
-                            </div>
+                            <select id="statusFilter" class="form-select w-200px" aria-label="Filter by work order status">
+                                <option value="all">All Statuses</option>
+                                <option value="pending">Pending</option>
+                                <option value="dispatched">Dispatched</option>
+                                <option value="inRoute">In Route</option>
+                                <option value="arrived">Arrived</option>
+                            </select>
                         </div>
                     </div>
                     <div class="card-body">
-                        <div id="mapViewContainer" style="height: 500px; width: 100%;"></div>
+                        <div class="tab-content">
+                            <div class="tab-pane fade show active" id="mapLayerView" role="tabpanel">
+                                <div id="mapViewContainer" style="height: 500px; width: 100%;"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

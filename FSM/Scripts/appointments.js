@@ -7,7 +7,7 @@
         duration: 2,
         resource: "Jim",
         serviceType: "Tasks",
-        status: "confirmed",
+        status: "dispatched", // Changed from "confirmed" to "dispatched"
         location: { address: "123 Main St, New York, NY", lat: 40.7128, lng: -74.0060 },
         priority: "Low"
     },
@@ -31,7 +31,7 @@
         duration: 2,
         resource: "Bob",
         serviceType: "Tasks",
-        status: "confirmed",
+        status: "dispatched", // Changed from "confirmed" to "dispatched"
         location: { address: "789 Warehouse Ave, Chicago, IL", lat: 41.8781, lng: -87.6298 },
         priority: "High"
     }
@@ -41,10 +41,9 @@ let currentView = "date";
 let currentDate = new Date();
 let currentEditId = null;
 let mapViewInstance = null;
-let heatmapLayer = null;
 let routeLayer = null;
 let customMarkers = [];
-let isMapView = true; // Map vs Satellite toggle
+let isMapView = true; // true for Map, false for Satellite
 
 const resources = ["Jim", "Bob", "Team1", "Unassigned"];
 const technicianGroups = {
@@ -106,10 +105,10 @@ function hasConflict(appointment, newTimeSlot, newResource, newDate, excludeId =
 function getEventTimeSlotClass(appointment) {
     return appointment.timeSlot === "morning" ? "time-block-morning" :
         appointment.timeSlot === "afternoon" ? "time-block-afternoon" :
-        appointment.timeSlot === "emergency" ? "time-block-emergency" : "";
+            appointment.timeSlot === "emergency" ? "time-block-emergency" : "";
 }
 
-// Initialize the Map View with enhanced features
+// Initialize the Map View
 function initMapView(date) {
     const container = document.getElementById('mapViewContainer');
     if (mapViewInstance) {
@@ -131,7 +130,7 @@ function initMapView(date) {
         attribution: '© Esri'
     });
 
-    // Set initial layer based on toggle
+    // Set layer based on current view
     if (isMapView) {
         mapLayer.addTo(mapViewInstance);
     } else {
@@ -140,9 +139,6 @@ function initMapView(date) {
 
     // Render markers
     renderMapMarkers(date);
-
-    // Initialize heatmap
-    initHeatmap();
 
     // Ensure map renders correctly
     setTimeout(() => {
@@ -161,27 +157,22 @@ function renderMapMarkers(date) {
 
     // Filter appointments based on date, group, and status
     const selectedGroup = $("#mapDispatchGroup").val();
-    const statusFilters = {
-        pending: document.getElementById('statusPending').checked,
-        dispatched: document.getElementById('statusDispatched').checked,
-        inRoute: document.getElementById('statusInRoute').checked,
-        arrived: document.getElementById('statusArrived').checked
-    };
+    const selectedStatus = $("#statusFilter").val();
 
     let filteredAppointments = appointments.filter(a => {
         if (a.date !== date) return false;
         if (!a.location?.lat || !a.location?.lng) return false;
         if (selectedGroup !== 'all' && !technicianGroups[selectedGroup]?.includes(a.resource)) return false;
-        if (!statusFilters[a.status.toLowerCase()]) return false;
+        if (selectedStatus !== 'all' && a.status.toLowerCase() !== selectedStatus.toLowerCase()) return false;
         return true;
     });
 
     // Add markers for filtered appointments
     filteredAppointments.forEach(a => {
-        const markerColor = a.status.toLowerCase() === 'pending' ? '#d4a017' :
-                           a.status.toLowerCase() === 'dispatched' ? '#6b7280' :
-                           a.status.toLowerCase() === 'inroute' ? '#f4d03f' :
-                           '#28a745'; // Arrived
+        const markerColor = a.status.toLowerCase() === 'pending' ? '#f59e0b' : // Amber
+            a.status.toLowerCase() === 'dispatched' ? '#6b7280' : // Gray
+                a.status.toLowerCase() === 'inroute' ? '#3b82f6' : // Blue
+                    '#22c55e'; // Green for Arrived
 
         const markerIcon = L.divIcon({
             className: 'custom-div-icon',
@@ -199,28 +190,6 @@ function renderMapMarkers(date) {
     if (filteredAppointments.length > 0) {
         const bounds = L.latLngBounds(filteredAppointments.map(a => [a.location.lat, a.location.lng]));
         mapViewInstance.fitBounds(bounds);
-    }
-}
-
-// Initialize heatmap
-function initHeatmap() {
-    const heatPoints = appointments
-        .filter(a => a.location?.lat && a.location?.lng)
-        .map(a => [a.location.lat, a.location.lng, 0.5]); // [lat, lng, intensity]
-
-    heatmapLayer = L.heatLayer(heatPoints, {
-        radius: 25,
-        blur: 15,
-        maxZoom: 17
-    });
-}
-
-// Toggle heatmap
-function toggleHeatmap() {
-    if (mapViewInstance.hasLayer(heatmapLayer)) {
-        mapViewInstance.removeLayer(heatmapLayer);
-    } else {
-        mapViewInstance.addLayer(heatmapLayer);
     }
 }
 
@@ -252,9 +221,14 @@ function optimizeRoute() {
 
     const selectedDate = $("#mapDatePicker").val();
     const selectedGroup = $("#mapDispatchGroup").val();
+    const selectedStatus = $("#statusFilter").val();
+
     let filteredAppointments = appointments.filter(a => a.date === selectedDate && a.location?.lat && a.location?.lng);
     if (selectedGroup !== 'all') {
         filteredAppointments = filteredAppointments.filter(a => technicianGroups[selectedGroup]?.includes(a.resource));
+    }
+    if (selectedStatus !== 'all') {
+        filteredAppointments = filteredAppointments.filter(a => a.status.toLowerCase() === selectedStatus.toLowerCase());
     }
 
     if (filteredAppointments.length < 2) {
@@ -262,17 +236,10 @@ function optimizeRoute() {
         return;
     }
 
-    // Mock route points (in a real scenario, use a routing API like OSRM or Google Directions)
+    // Mock route points
     const routePoints = filteredAppointments.map(a => [a.location.lat, a.location.lng]);
     routeLayer = L.polyline(routePoints, { color: '#0000ff', weight: 4, dashArray: '5, 10' }).addTo(mapViewInstance);
     mapViewInstance.fitBounds(routePoints);
-}
-
-// Toggle between Map and Satellite view
-function toggleMapView() {
-    isMapView = !isMapView;
-    document.getElementById('mapViewToggleBtn').textContent = isMapView ? 'Map' : 'Satellite';
-    initMapView(document.getElementById('mapDatePicker').value);
 }
 
 // Render Map View
@@ -284,7 +251,7 @@ function renderMapView() {
 // Simulate real-time updates (mock implementation)
 function simulateRealTimeUpdates() {
     setInterval(() => {
-        // Mock status change (in a real scenario, fetch from WebSocket or API)
+        // Mock status change
         const randomAppointment = appointments[Math.floor(Math.random() * appointments.length)];
         const statuses = ['pending', 'dispatched', 'inRoute', 'arrived'];
         randomAppointment.status = statuses[Math.floor(Math.random() * statuses.length)];
@@ -632,10 +599,8 @@ function renderResourceView(date) {
                 </div>
         `;
 
-        // Track which columns are occupied by appointments
         const occupiedSlots = new Array(allTimeSlots.length).fill(false);
 
-        // Mark all slots that are occupied by appointments
         appointments
             .filter(a => a.resource === resource && a.date === dateStr && a.timeSlot)
             .forEach(a => {
@@ -649,7 +614,6 @@ function renderResourceView(date) {
                 }
             });
 
-        // Use a while loop to control rendering and spanning
         let index = 0;
         while (index < allTimeSlots.length) {
             if (occupiedSlots[index] && occupiedSlots[index].appointment) {
@@ -670,7 +634,7 @@ function renderResourceView(date) {
                         </div>
                     </div>
                 `;
-                index += colspan; // Skip the spanned columns
+                index += colspan;
             } else {
                 html += `
                     <div class="h-80px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
@@ -868,131 +832,120 @@ function openEditModal(id) {
     form.querySelector("[name='id']").value = a.id;
     form.querySelector("[name='customerName']").value = a.customerName;
     form.querySelector("[name='serviceType']").value = a.serviceType;
-    form.querySelector("[name='date']").value = a.date || "";
-    form.querySelector("[name='timeSlot']").value = a.timeSlot || "morning";
-    form.querySelector("[name='duration']").value = a.duration || 1;
+    form.querySelector("[name='date']").value = a.date || '';
     form.querySelector("[name='resource']").value = a.resource;
-    form.querySelector("[name='address']").value = a.location.address;
+    form.querySelector("[name='timeSlot']").value = a.timeSlot || 'morning';
+    form.querySelector("[name='duration']").value = a.duration || 1;
+    form.querySelector("[name='address']").value = a.location?.address || '';
     form.querySelector("[name='status']").value = a.status;
-
-    new bootstrap.Modal(document.getElementById("editModal")).show();
+    const modal = new bootstrap.Modal(document.getElementById("editModal"));
+    modal.show();
 }
 
 // Update an existing appointment
 function updateAppointment(e) {
     e.preventDefault();
     const form = new FormData(e.target);
-    const a = appointments.find(x => x.id === parseInt(form.get("id")));
-    if (a) {
-        a.customerName = form.get("customerName");
-        a.serviceType = form.get("serviceType");
-        a.date = form.get("date");
-        a.timeSlot = form.get("timeSlot");
-        a.duration = parseInt(form.get("duration")) || 1;
-        a.resource = form.get("resource");
-        a.location.address = form.get("address");
-        a.status = form.get("status");
-        if (a.date && a.timeSlot && hasConflict(a, a.timeSlot, a.resource, a.date, a.id)) {
-            alert("Scheduling conflict detected!");
-            return;
-        }
-        saveAppointments();
-        updateAllViews();
-        bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
-        currentEditId = null;
+    const id = parseInt(form.get("id"));
+    const appointment = appointments.find(a => a.id === id);
+    if (!appointment) return;
+
+    const newDate = form.get("date");
+    const newTimeSlot = form.get("timeSlot");
+    const newResource = form.get("resource");
+
+    if (newDate && newTimeSlot && hasConflict(appointment, newTimeSlot, newResource, newDate, id)) {
+        alert("Scheduling conflict detected!");
+        return;
     }
+
+    appointment.customerName = form.get("customerName");
+    appointment.serviceType = form.get("serviceType");
+    appointment.date = newDate;
+    appointment.timeSlot = newTimeSlot;
+    appointment.duration = parseInt(form.get("duration")) || 1;
+    appointment.resource = newResource;
+    appointment.status = form.get("status");
+    appointment.location.address = form.get("address");
+    saveAppointments();
+    updateAllViews();
+    bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
 }
 
 // Open modal to confirm scheduling
 function openConfirmModal(id, date, timeSlot, resource) {
     const a = appointments.find(x => x.id === id);
-    if (!a) {
-        console.error("Appointment not found for ID:", id);
-        return;
-    }
-    const modal = new bootstrap.Modal(document.getElementById("confirmModal"));
+    if (!a) return;
     const form = document.getElementById("confirmForm");
-    form.querySelector("[name='id']").value = id;
+    form.querySelector("[name='id']").value = a.id;
     form.querySelector("[name='customerName']").value = a.customerName;
-    form.querySelector("[name='date']").value = date || a.date || "";
-    form.querySelector("[name='timeSlot']").value = timeSlot || a.timeSlot || "morning";
+    form.querySelector("[name='date']").value = date || '';
+    form.querySelector("[name='timeSlot']").value = timeSlot || 'morning';
     form.querySelector("[name='duration']").value = a.duration || 1;
-    form.querySelector("[name='resource']").value = resource || a.resource || "Unassigned";
+    form.querySelector("[name='resource']").value = resource || 'Unassigned';
+    const modal = new bootstrap.Modal(document.getElementById("confirmModal"));
     modal.show();
 }
 
-// Confirm scheduling
+// Confirm scheduling from drag-and-drop
 function confirmScheduling(e) {
     e.preventDefault();
     const form = new FormData(e.target);
     const id = parseInt(form.get("id"));
     const appointment = appointments.find(a => a.id === id);
-    if (!appointment) {
-        console.error("Appointment not found for ID:", id);
-        alert("Error: Appointment not found.");
-        return;
-    }
+    if (!appointment) return;
 
     const newDate = form.get("date");
     const newTimeSlot = form.get("timeSlot");
-    const newDuration = parseInt(form.get("duration")) || 1;
     const newResource = form.get("resource");
+    const newDuration = parseInt(form.get("duration")) || 1;
 
-    if (!newDate || !newTimeSlot || !newResource) {
-        console.warn("Missing required fields:", { newDate, newTimeSlot, newResource });
-        alert("Please fill in all required fields.");
+    if (hasConflict(appointment, newTimeSlot, newResource, newDate, id)) {
+        alert("Scheduling conflict detected!");
         return;
     }
 
     appointment.date = newDate;
     appointment.timeSlot = newTimeSlot;
-    appointment.duration = newDuration;
     appointment.resource = newResource;
-
-    if (hasConflict(appointment, newTimeSlot, newResource, newDate, id)) {
-        console.warn("Scheduling conflict detected for appointment:", appointment);
-        alert("Scheduling conflict detected!");
-        return;
-    }
-
+    appointment.duration = newDuration;
     saveAppointments();
     updateAllViews();
     bootstrap.Modal.getInstance(document.getElementById("confirmModal")).hide();
 }
 
-// Unschedule an appointment
-function unscheduleAppointment() {
-    const a = appointments.find(x => x.id === currentEditId);
-    if (a) {
-        a.date = null;
-        a.timeSlot = null;
-        a.duration = 1;
-        saveAppointments();
-        updateAllViews();
-        bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
-        currentEditId = null;
-    }
-}
-
 // Delete an appointment
 function deleteAppointment() {
-    if (confirm("Are you sure you want to delete this appointment?")) {
-        appointments = appointments.filter(x => x.id !== currentEditId);
-        saveAppointments();
-        updateAllViews();
-        bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
-        currentEditId = null;
-    }
+    if (!confirm("Are you sure you want to delete this appointment?")) return;
+    appointments = appointments.filter(a => a.id !== currentEditId);
+    saveAppointments();
+    updateAllViews();
+    bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
+}
+
+// Unschedule an appointment
+function unscheduleAppointment() {
+    const appointment = appointments.find(a => a.id === currentEditId);
+    if (!appointment) return;
+    appointment.date = null;
+    appointment.timeSlot = null;
+    appointment.duration = 1;
+    saveAppointments();
+    updateAllViews();
+    bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
 }
 
 // Update all views
 function updateAllViews() {
-    renderDateView($("#dayDatePicker").val());
-    renderResourceView($("#resourceDatePicker").val());
-    renderListView();
-    renderMapView();
-    renderUnscheduledList('date');
-    renderUnscheduledList('resource');
+    if (currentView === "date") {
+        renderDateView($("#dayDatePicker").val());
+    } else if (currentView === "resource") {
+        renderResourceView($("#resourceDatePicker").val());
+    } else if (currentView === "list") {
+        renderListView();
+    } else if (currentView === "map") {
+        renderMapView();
+    }
 }
 
 // Initialize the page
@@ -1005,7 +958,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     $('#viewTabs a').on('shown.bs.tab', function (e) {
         currentView = e.target.id.replace('-tab', '');
-
         if (currentView === "map") {
             renderMapView();
             setTimeout(() => {
@@ -1027,19 +979,26 @@ document.addEventListener('DOMContentLoaded', () => {
         renderMapMarkers(document.getElementById('mapDatePicker').value);
     });
 
-    document.getElementById('statusPending').addEventListener('change', () => renderMapMarkers(document.getElementById('mapDatePicker').value));
-    document.getElementById('statusDispatched').addEventListener('change', () => renderMapMarkers(document.getElementById('mapDatePicker').value));
-    document.getElementById('statusInRoute').addEventListener('change', () => renderMapMarkers(document.getElementById('mapDatePicker').value));
-    document.getElementById('statusArrived').addEventListener('change', () => renderMapMarkers(document.getElementById('mapDatePicker').value));
+    document.getElementById('statusFilter').addEventListener('change', () => {
+        renderMapMarkers(document.getElementById('mapDatePicker').value);
+    });
 
     document.getElementById('mapReloadBtn').addEventListener('click', () => {
         renderMapMarkers(document.getElementById('mapDatePicker').value);
     });
 
     document.getElementById('mapOptimizeRouteBtn').addEventListener('click', optimizeRoute);
-    document.getElementById('mapHeatmapToggleBtn').addEventListener('click', toggleHeatmap);
     document.getElementById('mapAddCustomMarkerBtn').addEventListener('click', addCustomMarker);
-    document.getElementById('mapViewToggleBtn').addEventListener('click', toggleMapView);
+
+    document.getElementById('map-layer-tab').addEventListener('click', () => {
+        isMapView = true;
+        renderMapView();
+    });
+
+    document.getElementById('satellite-layer-tab').addEventListener('click', () => {
+        isMapView = false;
+        renderMapView();
+    });
 
     // Start real-time updates
     simulateRealTimeUpdates();
