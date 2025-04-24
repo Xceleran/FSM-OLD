@@ -39,15 +39,16 @@
 
 .calendar-grid {
     display: grid;
-    border: 1px solid #d1d5db;
-}
 
+}
+.calendar-header-cell {
+    border-right: 1px solid  #c3c7cc;
+    background: #e7f1ff;
+}
 .calendar-grid-month {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     gap: 1px;
-    padding: 16px;
-    background: #d1d5db;
 }
 
     .calendar-grid-month > * {
@@ -112,20 +113,22 @@
         background: #f1f5f9;
         transform: translateY(-2px);
     }
+.calendar-event, .appointment-card {
+    box-sizing: border-box; /* Ensure padding/borders don't affect width */
+    min-width: 120px; /* Set a minimum width to prevent shrinking */
+    max-width: 100%; /* Prevent overflow */
+}
 
+/* Ensure the dragged element doesn't scale unexpectedly */
+.ui-draggable-dragging {
+    transform: none !important; /* Prevent scaling during drag */
+    transition: none !important; /* Disable transitions during drag */
+}
 .calendar-event {
-    border-radius: 6px;
+    width: 100%; /* Fill the entire spanned cell */
+    margin: 0; /* Remove default margin if needed */
     padding: 6px;
-    margin: 2px;
-    border: 1px solid;
-    cursor: move;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     box-sizing: border-box;
-    position: relative;
-    width: calc(100% - 4px);
-    opacity: 0.9;
-    z-index: 1;
 }
 
     .calendar-event:hover {
@@ -360,7 +363,7 @@
 
 /* Additional Styles for Compatibility */
 body {
-    font-family: 'Roboto', sans-serif;
+
     background: #fff;
     margin: 0;
     padding: 0;
@@ -393,7 +396,7 @@ body {
     padding: 8px 12px;
     border-radius: 4px;
     font-size: 0.9rem;
-    cursor: pointer;
+    cursor: grab;
 }
 
     .date-box:hover, .date-box.active {
