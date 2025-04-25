@@ -42,7 +42,7 @@ namespace FSM
             var customers = new List<CustomerEntity>();
             try
             {
-                string whereCondition = "WHERE IsBusinessContact=0 and CompanyID = '" + companyid + "' ";
+                string whereCondition = "WHERE  CompanyID = '" + companyid + "' ";
                 if (!string.IsNullOrEmpty(searchValue))
                 {
                     whereCondition += "AND (FirstName LIKE '%" + searchValue + "%' OR LastName LIKE '%" + searchValue + "%' OR Email LIKE '%" + searchValue + "%') ";

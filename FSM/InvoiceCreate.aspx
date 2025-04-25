@@ -20,9 +20,6 @@
                 <div class="col-md-6">
                     <h1 class="page-title mb-3 mb-md-0">Invoices/Estimates</h1>
                 </div>
-                <div class="col-md-6 text-md-end">
-                    <button id="createBtn" class="btn btn-bluelight" title="Create New Invoice/Estimate">Create</button>
-                </div>
             </div>
         </header>
 
@@ -358,7 +355,7 @@
                                                             <input type="button" runat="server" id="_SubmitInvoice" value="Save" class="btn btn-secondary btn-transparentdark mt-3 w-100" onclick="submitInvoice()" />
                                                         </div>
                                                         <div class="col-lg-2 mt-2">
-                                                            <input type="button" runat="server" id="SendMail" value="E-Mail/Print" class="btn btn-secondary btn-transparentdark mt-3 w-100" onclick="OpenMailPopUp()" />
+                                                            <input type="button" runat="server" id="SendMail" value="E-Mail/Print" class="btn btn-secondary btn-transparentdark mt-3 w-100 d-none" onclick="OpenMailPopUp()" />
                                                         </div>
 
                                                         <%--<div class="col-lg-2 mt-2">

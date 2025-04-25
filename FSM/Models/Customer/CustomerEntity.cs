@@ -72,6 +72,7 @@ namespace FSM.Models.Customer
 
     public class CustomerAppoinment : CustomerBaseEntity
     {
+        public string AppoinmentId { get; set; }
         public string AppoinmentDate { get; set; }
         public string RequestDate { get; set; }
         public string ServiceType { get; set; }
@@ -102,5 +103,6 @@ namespace FSM.Models.Customer
 
         public string CustomerName { get; set; }
         public string ID { get; set; }
+        public string AppointmentId { get; set; }
     }
 }

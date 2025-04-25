@@ -776,7 +776,10 @@
             pageData.forEach(item => {
                 tbody.append(`
                 <tr>
-                <td>${item.InvoiceNumber || ''}</td>
+                <td><a href="#" class="invoice-link"
+                   data-id="${item.ID}" 
+                   data-type="${item.InvoiceType}" 
+                   data-appid="${item.AppointmentId}">${item.InvoiceNumber || ''}</a></td>
                 <td>${item.InvoiceType || ''}</td>
                 <td>${item.InvoiceDate || ''}</td>
                 <td>${item.Subtotal || ''}</td>
@@ -1070,5 +1073,18 @@
             var cid = customerGuid;
             window.location.href = 'InvoiceCreate.aspx?InvNum=0&cId=' + cid + '&InType=' + type +'';
         }
+
+        function redirectToInvoiceModify(InvNum, Type, apptID) {
+            var cID = customerGuid;
+            window.location.href = "InvoiceCreate.aspx?InvNum=" + InvNum + "&cId=" + cID + "&InType=" + Type + "&AppID=" + apptID + "&FromCustomer=1";
+        }
+
+        $(document).on('click', '.invoice-link', function (e) {
+            e.preventDefault(); // Prevent page reload
+            const id = $(this).data('id');
+            const type = $(this).data('type');
+            const appId = $(this).data('appid');
+            redirectToInvoiceModify(id, type, appId);
+        });
     </script>
 </asp:Content>

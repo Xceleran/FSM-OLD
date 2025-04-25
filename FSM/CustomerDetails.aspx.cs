@@ -258,7 +258,7 @@ namespace FSM
                 DataTable dt = new DataTable();
                 string sql = @"select ID, Number,Subtotal,isnull([AmountCollect],0.00) as AmountCollect,
                             isnull([DepositAmount],0.00) as DepositAmount, Discount, Tax, (Total- (isnull(AmountCollect,0.00))) as Due, 
-                            Type, CONVERT(VARCHAR(10), InvoiceDate, 101) as InvoiceDate, Total
+                            Type, CONVERT(VARCHAR(10), InvoiceDate, 101) as InvoiceDate, Total, AppointmentId
                             from tbl_Invoice as inv WHERE inv.CustomerID='" + customerId + "' and inv.CompnyID ='" + companyid + "';";
                 db.ExecuteParam(sql, out dt);
                 db.Close();
@@ -269,6 +269,8 @@ namespace FSM
                         var invoice = new CustomerInvoice();
                         invoice.CustomerID = customerId;
                         invoice.CompanyID = companyid;
+                        invoice.ID = row.Field<string>("ID") ?? "";
+                        invoice.AppointmentId = row.Field<string>("AppointmentId") ?? "";
                         invoice.InvoiceNumber = row.Field<string>("Number") ?? "";
                         invoice.InvoiceDate = row.Field<string>("InvoiceDate") ?? "";
                         invoice.InvoiceType = row.Field<string>("Type") ?? "";

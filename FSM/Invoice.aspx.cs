@@ -1,10 +1,12 @@
-﻿using FSM.Models.Customer;
+﻿using FSM.Helper;
+using FSM.Models.Customer;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Data;
 using System.Linq;
+using System.Text;
 using System.Web;
 using System.Web.Script.Services;
 using System.Web.Services;
@@ -127,6 +129,41 @@ namespace FSM
             };
 
             return JsonConvert.SerializeObject(response);
+        }
+
+        [WebMethod]
+        [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
+        public static string OpenInvoice(string InvoiceNo, string CustomerID)
+        {
+            CustomerID = Common.CleanInput(CustomerID);
+            Invoice obj = new Invoice();
+            DataTable dt;
+            DataSet dataSet = obj.PopulateBody(InvoiceNo, CustomerID);
+            string JSONString = string.Empty;
+            JSONString = JsonConvert.SerializeObject(dataSet);
+            return JSONString;
+        }
+
+        private DataSet PopulateBody(string InvoiceNo, string CustomerID)
+        {
+            CustomerID = Common.CleanInput(CustomerID);
+            StringBuilder table2 = new StringBuilder();
+            Database db = new Database();
+            DataTable dt;
+            string sSQL = @"SELECT concat (FirstName,' ',LastName)as FullName,CASE WHEN dbo.tbl_Customer.BusinessID = 0 THEN 1 ELSE 2 END as ctype,ISNULL(dbo.tbl_Customer.QboId, N'0') as qboCustID,* FROM[msSchedulerV3].[dbo].[tbl_Customer] Where CustomerId='" + CustomerID + "' and  CompanyID =@CompanyID  ;";
+
+            sSQL += @"SELECT CONVERT(VARCHAR(10), InvoiceDate, 101)as IssueDate,
+                    ISNULL(dbo.tbl_Invoice.QboId, N'0') as qboInvID,
+                    ISNULL(dbo.tbl_Invoice.QboEstimateId, 0) as qboEstID,
+                    * 
+                    FROM[msSchedulerV3].[dbo].[tbl_Invoice] Where  CustomerId='" + CustomerID + "' and id='" + InvoiceNo + "' and CompnyID =@CompanyID;";
+
+            sSQL += "SELECT inv.*, inv.ItemId AS ID, i.Name AS ItemName FROM msSchedulerV3.dbo.Items as i INNER JOIN " +
+                    "msSchedulerV3.dbo.tbl_InvoiceDetails as inv ON i.Id = inv.ItemId and i.CompanyID = inv.CompanyID Where inv.RefId='" + InvoiceNo + "' and  inv.CompanyID =@CompanyID order by  CAST(NULLIF(inv.LineNum,'') AS INT) asc;";
+
+
+            DataSet dataSet = db.Get_DataSet(sSQL, HttpContext.Current.Session["CompanyID"].ToString());
+            return dataSet;
         }
     }
 }
