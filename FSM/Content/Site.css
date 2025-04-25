@@ -3,9 +3,9 @@
     --text-gray-800: rgb(31, 41, 55);
     --text-gray-700: rgb(55, 65, 81);
     --text-gray-600: rgb(75, 85, 99);
-    --text-orange-700: rgb(194, 65, 12);
-    --bg-orange-200: rgb(254, 215, 170);
-    --text-orange-500: rgb(249, 115, 22);
+    --text-orange-700: rgb(38, 85, 152);
+    --bg-orange-200: rgb(185, 215, 244);
+    --text-orange-500: rgb(28, 29, 96);
     --bg-slate-200: rgb(226, 232, 240);
     --bg-white: rgb(255, 255, 255);
     --bg-gray-300: rgb(209, 213, 219);
@@ -41,14 +41,34 @@ body {
     flex-direction: column;
     min-height: 100vh;
     overflow-x: hidden;
+    background: #e2e8f0 !important;
 }
 
+h6.right-logo-title {
+    position: relative;
+    bottom: 1px;
+    font-weight: 400;
+    right: 5px;
+}
+
+.right-logo {
+    position: absolute;
+    right: 0px;
+    display: flex;
+    flex-direction: row;
+    align-items: baseline;
+    padding: 15px 15px;
+}
+
+img.right-logo-img {
+    width: 190px;
+}
 /* Layout */
 .page-container {
     display: flex;
     flex-direction: row;
-    flex: 1; 
-    min-height: 100%; 
+    flex: 1;
+    min-height: 100%;
     overflow: hidden;
 }
 
@@ -61,7 +81,7 @@ body {
     transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     flex-direction: column;
-    min-height: 100%; 
+    min-height: 100%;
     position: relative;
     z-index: 50;
 }
@@ -152,7 +172,6 @@ body {
         outline-offset: 2px;
     }
 
-
 .sidebar-nav-item.active {
     background-color: var(--bg-orange-200);
     font-weight: 600;
@@ -180,7 +199,7 @@ body {
 }
 
 .sidebar-collapsed .sidebar-icon {
-    margin-right: 0 !important;
+    margin-left: 10px !important;
 }
 
 .sidebar-collapsed .sidebar-text {
@@ -220,6 +239,7 @@ body {
     overflow-y: auto;
     background-color: var(--bg-slate-200);
     min-height: 0;
+    margin-top: 50px;
 }
 
 .toggle-btn {
@@ -233,15 +253,19 @@ body {
     top: 10px;
     left: calc(256px + 10px);
     z-index: 1000;
-    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+    .toggle-btn.collapsed {
+        left: calc(80px + 10px);
+    }
 
     .toggle-btn:hover {
         background-color: var(--bg-orange-200);
     }
 
 .main-content {
-    flex: 1 0 auto; 
+    flex: 1 0 auto;
     padding: 24px;
     overflow-y: auto;
     background-color: var(--bg-slate-200);
@@ -251,9 +275,8 @@ body {
 .footer {
     padding: 10px;
     text-align: center;
-    flex-shrink: 0; 
+    flex-shrink: 0;
 }
-
 
 @media (max-width: 849px) {
     .sidebar {

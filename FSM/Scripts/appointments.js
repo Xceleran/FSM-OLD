@@ -7,7 +7,7 @@
         duration: 2,
         resource: "Jim",
         serviceType: "Tasks",
-        status: "confirmed",
+        status: "dispatched", // Changed from "confirmed" to "dispatched"
         location: { address: "123 Main St, New York, NY", lat: 40.7128, lng: -74.0060 },
         priority: "Low"
     },
@@ -31,7 +31,7 @@
         duration: 2,
         resource: "Bob",
         serviceType: "Tasks",
-        status: "confirmed",
+        status: "dispatched", // Changed from "confirmed" to "dispatched"
         location: { address: "789 Warehouse Ave, Chicago, IL", lat: 41.8781, lng: -87.6298 },
         priority: "High"
     }
@@ -40,7 +40,11 @@
 let currentView = "date";
 let currentDate = new Date();
 let currentEditId = null;
-let mapViewInstance;
+let mapViewInstance = null;
+let routeLayer = null;
+let customMarkers = [];
+let isMapView = true; // true for Map, false for Satellite
+
 const resources = ["Jim", "Bob", "Team1", "Unassigned"];
 const technicianGroups = {
     "electricians": ["Jim", "Bob"],
@@ -65,9 +69,9 @@ const allTimeSlots = [
     { value: "20:00", label: "8:00 PM" },
     { value: "21:00", label: "9:00 PM" },
     { value: "22:00", label: "10:00 PM" }
-
 ];
 
+// Save appointments to localStorage
 function saveAppointments() {
     try {
         localStorage.setItem('appointments', JSON.stringify(appointments));
@@ -76,6 +80,7 @@ function saveAppointments() {
     }
 }
 
+// Check for scheduling conflicts
 function hasConflict(appointment, newTimeSlot, newResource, newDate, excludeId = null) {
     if (!newTimeSlot || !newResource || !newDate) return false;
 
@@ -96,35 +101,167 @@ function hasConflict(appointment, newTimeSlot, newResource, newDate, excludeId =
     });
 }
 
+// Get CSS class for time slot
 function getEventTimeSlotClass(appointment) {
     return appointment.timeSlot === "morning" ? "time-block-morning" :
         appointment.timeSlot === "afternoon" ? "time-block-afternoon" :
             appointment.timeSlot === "emergency" ? "time-block-emergency" : "";
 }
 
+// Initialize the Map View
 function initMapView(date) {
     const container = document.getElementById('mapViewContainer');
     if (mapViewInstance) {
         mapViewInstance.remove();
     }
-    mapViewInstance = L.map('mapViewContainer').setView([40.7128, -74.0060], 10);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapViewInstance);
 
-    const filteredAppointments = appointments.filter(a => a.date === date && a.location?.lat && a.location?.lng);
+    // Initialize the map
+    mapViewInstance = L.map('mapViewContainer', {
+        zoomControl: true,
+        dragging: true,
+        scrollWheelZoom: true
+    }).setView([40.7128, -74.0060], 10);
+
+    // Add Map/Satellite tile layers
+    const mapLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    });
+    const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        attribution: '© Esri'
+    });
+
+    // Set layer based on current view
+    if (isMapView) {
+        mapLayer.addTo(mapViewInstance);
+    } else {
+        satelliteLayer.addTo(mapViewInstance);
+    }
+
+    // Render markers
+    renderMapMarkers(date);
+
+    // Ensure map renders correctly
+    setTimeout(() => {
+        mapViewInstance.invalidateSize();
+    }, 100);
+}
+
+// Render markers on the map based on filters
+function renderMapMarkers(date) {
+    // Clear existing markers (except custom ones)
+    mapViewInstance.eachLayer(layer => {
+        if (layer instanceof L.Marker && !customMarkers.includes(layer)) {
+            mapViewInstance.removeLayer(layer);
+        }
+    });
+
+    // Filter appointments based on date, group, and status
+    const selectedGroup = $("#mapDispatchGroup").val();
+    const selectedStatus = $("#statusFilter").val();
+
+    let filteredAppointments = appointments.filter(a => {
+        if (a.date !== date) return false;
+        if (!a.location?.lat || !a.location?.lng) return false;
+        if (selectedGroup !== 'all' && !technicianGroups[selectedGroup]?.includes(a.resource)) return false;
+        if (selectedStatus !== 'all' && a.status.toLowerCase() !== selectedStatus.toLowerCase()) return false;
+        return true;
+    });
+
+    // Add markers for filtered appointments
+    filteredAppointments.forEach(a => {
+        const markerColor = a.status.toLowerCase() === 'pending' ? '#f59e0b' : // Amber
+            a.status.toLowerCase() === 'dispatched' ? '#6b7280' : // Gray
+                a.status.toLowerCase() === 'inroute' ? '#3b82f6' : // Blue
+                    '#22c55e'; // Green for Arrived
+
+        const markerIcon = L.divIcon({
+            className: 'custom-div-icon',
+            html: `<div style="background-color: ${markerColor}; width: 20px; height: 20px; border-radius: 50%; border: 2px solid #fff;"></div>`,
+            iconSize: [20, 20],
+            iconAnchor: [10, 10]
+        });
+
+        const marker = L.marker([a.location.lat, a.location.lng], { icon: markerIcon })
+            .addTo(mapViewInstance)
+            .bindPopup(`<b>${a.customerName}</b><br>${a.serviceType}<br>Status: ${a.status}`);
+    });
+
+    // Adjust map bounds if there are markers
     if (filteredAppointments.length > 0) {
         const bounds = L.latLngBounds(filteredAppointments.map(a => [a.location.lat, a.location.lng]));
         mapViewInstance.fitBounds(bounds);
     }
-
-    setTimeout(() => mapViewInstance.invalidateSize(), 0);
-
-    filteredAppointments.forEach(a => {
-        L.marker([a.location.lat, a.location.lng])
-            .addTo(mapViewInstance)
-            .bindPopup(`<b>${a.customerName}</b><br>${a.serviceType}`);
-    });
 }
 
+// Add custom marker
+function addCustomMarker() {
+    const center = mapViewInstance.getCenter();
+    const customMarkerIcon = L.divIcon({
+        className: 'custom-marker',
+        html: '<div style="background-color: #ff0000; width: 20px; height: 20px; border-radius: 50%; border: 2px solid #fff;"></div>',
+        iconSize: [20, 20],
+        iconAnchor: [10, 10]
+    });
+
+    const customMarker = L.marker([center.lat, center.lng], { icon: customMarkerIcon, draggable: true })
+        .addTo(mapViewInstance)
+        .bindPopup('Custom Marker')
+        .on('dragend', () => {
+            customMarker.openPopup();
+        });
+
+    customMarkers.push(customMarker);
+}
+
+// Simulate route optimization (mock implementation)
+function optimizeRoute() {
+    if (routeLayer) {
+        mapViewInstance.removeLayer(routeLayer);
+    }
+
+    const selectedDate = $("#mapDatePicker").val();
+    const selectedGroup = $("#mapDispatchGroup").val();
+    const selectedStatus = $("#statusFilter").val();
+
+    let filteredAppointments = appointments.filter(a => a.date === selectedDate && a.location?.lat && a.location?.lng);
+    if (selectedGroup !== 'all') {
+        filteredAppointments = filteredAppointments.filter(a => technicianGroups[selectedGroup]?.includes(a.resource));
+    }
+    if (selectedStatus !== 'all') {
+        filteredAppointments = filteredAppointments.filter(a => a.status.toLowerCase() === selectedStatus.toLowerCase());
+    }
+
+    if (filteredAppointments.length < 2) {
+        alert('Need at least two appointments to optimize a route.');
+        return;
+    }
+
+    // Mock route points
+    const routePoints = filteredAppointments.map(a => [a.location.lat, a.location.lng]);
+    routeLayer = L.polyline(routePoints, { color: '#0000ff', weight: 4, dashArray: '5, 10' }).addTo(mapViewInstance);
+    mapViewInstance.fitBounds(routePoints);
+}
+
+// Render Map View
+function renderMapView() {
+    const selectedDate = $("#mapDatePicker").val();
+    initMapView(selectedDate);
+}
+
+// Simulate real-time updates (mock implementation)
+function simulateRealTimeUpdates() {
+    setInterval(() => {
+        // Mock status change
+        const randomAppointment = appointments[Math.floor(Math.random() * appointments.length)];
+        const statuses = ['pending', 'dispatched', 'inRoute', 'arrived'];
+        randomAppointment.status = statuses[Math.floor(Math.random() * statuses.length)];
+        if (currentView === "map") {
+            renderMapMarkers(document.getElementById('mapDatePicker').value);
+        }
+    }, 10000); // Update every 10 seconds
+}
+
+// Render date navigation
 function renderDateNav(containerId, selectedDate) {
     const container = $(`#${containerId}`);
     const view = containerId === "dateNav" ? $("#viewSelect").val() : "day";
@@ -157,6 +294,7 @@ function renderDateNav(containerId, selectedDate) {
     container.html(html);
 }
 
+// Select a date
 function selectDate(date, containerId) {
     currentDate = new Date(date);
     const datePicker = containerId === "dateNav" ? "#dayDatePicker" : "#resourceDatePicker";
@@ -165,6 +303,7 @@ function selectDate(date, containerId) {
     else renderResourceView(date);
 }
 
+// Navigate to previous period
 function prevPeriod(containerId) {
     const view = containerId === "dateNav" ? $("#viewSelect").val() : "day";
     if (view === 'month') {
@@ -179,6 +318,7 @@ function prevPeriod(containerId) {
     else renderResourceView(dateStr);
 }
 
+// Navigate to next period
 function nextPeriod(containerId) {
     const view = containerId === "dateNav" ? $("#viewSelect").val() : "day";
     if (view === 'month') {
@@ -193,6 +333,7 @@ function nextPeriod(containerId) {
     else renderResourceView(dateStr);
 }
 
+// Go to today
 function gotoToday(containerId) {
     currentDate = new Date();
     const dateStr = currentDate.toISOString().split('T')[0];
@@ -202,6 +343,7 @@ function gotoToday(containerId) {
     else renderResourceView(dateStr);
 }
 
+// Render Date View
 function renderDateView(date) {
     currentDate = new Date(date);
     const container = $("#dayCalendar").addClass('date-view').removeClass('resource-view');
@@ -214,7 +356,7 @@ function renderDateView(date) {
     let filteredAppointments = filter === 'all' ? appointments : appointments.filter(a => a.serviceType === filter);
 
     let html = `
-        <div class="custom-calendar-header">
+        <div class="custom-calendar-header d-flex justify-content-center">
             <span>${view === 'month' ? currentDate.toLocaleString('default', { month: 'long', year: 'numeric' }) : currentDate.toLocaleDateString()}</span>
         </div>
     `;
@@ -426,6 +568,7 @@ function renderDateView(date) {
     renderUnscheduledList();
 }
 
+// Render Resource View
 function renderResourceView(date) {
     const container = $("#resourceViewContainer").addClass('resource-view').removeClass('date-view');
     const selectedGroup = $("#dispatchGroup").val();
@@ -456,27 +599,33 @@ function renderResourceView(date) {
                 </div>
         `;
 
-        let currentCol = 0;
-        while (currentCol < allTimeSlots.length) {
-            const timeSlot = allTimeSlots[currentCol];
-            const appointmentsAtSlot = appointments.filter(a =>
-                a.resource === resource &&
-                a.date === dateStr &&
-                a.timeSlot &&
-                timeSlots[a.timeSlot].start === timeSlot.value
-            );
+        const occupiedSlots = new Array(allTimeSlots.length).fill(false);
 
-            if (appointmentsAtSlot.length > 0) {
-                const appointment = appointmentsAtSlot[0];
+        appointments
+            .filter(a => a.resource === resource && a.date === dateStr && a.timeSlot)
+            .forEach(a => {
+                const startTime = timeSlots[a.timeSlot].start;
+                const startIndex = allTimeSlots.findIndex(slot => slot.value === startTime);
+                if (startIndex !== -1) {
+                    const duration = a.duration || 1;
+                    for (let i = startIndex; i < startIndex + duration && i < allTimeSlots.length; i++) {
+                        occupiedSlots[i] = { appointment: a };
+                    }
+                }
+            });
+
+        let index = 0;
+        while (index < allTimeSlots.length) {
+            if (occupiedSlots[index] && occupiedSlots[index].appointment) {
+                const appointment = occupiedSlots[index].appointment;
                 const duration = appointment.duration || 1;
-                const endCol = Math.min(currentCol + duration, allTimeSlots.length);
-                const colspan = endCol - currentCol;
+                const colspan = Math.min(duration, allTimeSlots.length - index);
 
                 html += `
                     <div class="h-80px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
-                         data-date="${dateStr}" data-time="${timeSlot.value}" data-resource="${resource}">
+                         style="grid-column: span ${colspan};"
+                         data-date="${dateStr}" data-time="${allTimeSlots[index].value}" data-resource="${resource}">
                         <div class="calendar-event ${getEventTimeSlotClass(appointment)} width-95 z-10 cursor-move"
-                             style="width: ${95 * colspan}%; top: ${2}px;"
                              data-id="${appointment.id}" draggable="true">
                             <div class="font-weight-medium fs-7">${appointment.customerName}</div>
                             <div class="fs-7 truncate">
@@ -485,14 +634,14 @@ function renderResourceView(date) {
                         </div>
                     </div>
                 `;
-                currentCol += colspan;
+                index += colspan;
             } else {
                 html += `
                     <div class="h-80px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
-                         data-date="${dateStr}" data-time="${timeSlot.value}" data-resource="${resource}">
+                         data-date="${dateStr}" data-time="${allTimeSlots[index].value}" data-resource="${resource}">
                     </div>
                 `;
-                currentCol++;
+                index += 1;
             }
         }
 
@@ -505,6 +654,7 @@ function renderResourceView(date) {
     renderUnscheduledList('resource');
 }
 
+// Render List View
 function renderListView() {
     const selectedDate = $("#listDatePicker").val() || new Date().toISOString().split('T')[0];
     const tbody = $("#listTableBody");
@@ -532,11 +682,7 @@ function renderListView() {
     });
 }
 
-function renderMapView() {
-    const selectedDate = $("#mapDatePicker").val();
-    initMapView(selectedDate);
-}
-
+// Render Unscheduled List
 function renderUnscheduledList(view = 'date') {
     const container = view === 'date' ? $("#unscheduledList") : $("#unscheduledListResource");
     const statusFilter = view === 'date' ? $("#statusFilter").val() : $("#statusFilterResource").val();
@@ -575,14 +721,23 @@ function renderUnscheduledList(view = 'date') {
     setupDragAndDrop();
 }
 
+// Setup drag-and-drop functionality
 function setupDragAndDrop() {
     $(".calendar-event, .appointment-card").draggable({
         revert: "invalid",
+        revertDuration: 300,
         zIndex: 1000,
         helper: "clone",
         opacity: 0.7,
-        start: function () {
+        scroll: true,
+        scrollSensitivity: 100,
+        start: function (event, ui) {
             $(this).addClass("dragging");
+            ui.helper.css({
+                width: $(this).width(),
+                transition: "none",
+                transform: "translateZ(0)"
+            });
         },
         stop: function () {
             $(this).removeClass("dragging");
@@ -627,6 +782,7 @@ function setupDragAndDrop() {
     });
 }
 
+// Open modal to create a new appointment
 function openNewModal(date = null) {
     const modal = new bootstrap.Modal(document.getElementById("newModal"));
     const form = document.getElementById("newForm");
@@ -635,6 +791,7 @@ function openNewModal(date = null) {
     modal.show();
 }
 
+// Create a new appointment
 function createAppointment(e) {
     e.preventDefault();
     const form = new FormData(e.target);
@@ -666,13 +823,7 @@ function createAppointment(e) {
     bootstrap.Modal.getInstance(document.getElementById("newModal")).hide();
 }
 
-document.querySelectorAll('[data-bs-dismiss="modal"]').forEach(button => {
-    button.addEventListener('click', function () {
-        const modal = bootstrap.Modal.getInstance(this.closest('.modal'));
-        modal.hide();
-    });
-});
-
+// Open modal to edit an appointment
 function openEditModal(id) {
     const a = appointments.find(x => x.id === id);
     if (!a) return;
@@ -681,127 +832,123 @@ function openEditModal(id) {
     form.querySelector("[name='id']").value = a.id;
     form.querySelector("[name='customerName']").value = a.customerName;
     form.querySelector("[name='serviceType']").value = a.serviceType;
-    form.querySelector("[name='date']").value = a.date || "";
-    form.querySelector("[name='timeSlot']").value = a.timeSlot || "morning";
-    form.querySelector("[name='duration']").value = a.duration || 1;
+    form.querySelector("[name='date']").value = a.date || '';
     form.querySelector("[name='resource']").value = a.resource;
-    form.querySelector("[name='address']").value = a.location.address;
-    form.querySelector("[name='status']").value = a.status;
-
-    new bootstrap.Modal(document.getElementById("editModal")).show();
-}
-
-function updateAppointment(e) {
-    e.preventDefault();
-    const form = new FormData(e.target);
-    const a = appointments.find(x => x.id === parseInt(form.get("id")));
-    if (a) {
-        a.customerName = form.get("customerName");
-        a.serviceType = form.get("serviceType");
-        a.date = form.get("date");
-        a.timeSlot = form.get("timeSlot");
-        a.duration = parseInt(form.get("duration")) || 1;
-        a.resource = form.get("resource");
-        a.location.address = form.get("address");
-        a.status = form.get("status");
-        if (a.date && a.timeSlot && hasConflict(a, a.timeSlot, a.resource, a.date, a.id)) {
-            alert("Scheduling conflict detected!");
-            return;
-        }
-        saveAppointments();
-        updateAllViews();
-        bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
-        currentEditId = null;
-    }
-}
-
-function openConfirmModal(id, date, timeSlot, resource) {
-    const a = appointments.find(x => x.id === id);
-    if (!a) {
-        console.error("Appointment not found for ID:", id);
-        return;
-    }
-    const modal = new bootstrap.Modal(document.getElementById("confirmModal"));
-    const form = document.getElementById("confirmForm");
-    form.querySelector("[name='id']").value = id;
-    form.querySelector("[name='customerName']").value = a.customerName;
-    form.querySelector("[name='date']").value = date || a.date || "";
-    form.querySelector("[name='timeSlot']").value = timeSlot || a.timeSlot || "morning";
+    form.querySelector("[name='timeSlot']").value = a.timeSlot || 'morning';
     form.querySelector("[name='duration']").value = a.duration || 1;
-    form.querySelector("[name='resource']").value = resource || a.resource || "Unassigned";
+    form.querySelector("[name='address']").value = a.location?.address || '';
+    form.querySelector("[name='status']").value = a.status;
+    const modal = new bootstrap.Modal(document.getElementById("editModal"));
     modal.show();
 }
 
+// Update an existing appointment
+function updateAppointment(e) {
+    e.preventDefault();
+    const form = new FormData(e.target);
+    const id = parseInt(form.get("id"));
+    const appointment = appointments.find(a => a.id === id);
+    if (!appointment) return;
+
+    const newDate = form.get("date");
+    const newTimeSlot = form.get("timeSlot");
+    const newResource = form.get("resource");
+
+    if (newDate && newTimeSlot && hasConflict(appointment, newTimeSlot, newResource, newDate, id)) {
+        alert("Scheduling conflict detected!");
+        return;
+    }
+
+    appointment.customerName = form.get("customerName");
+    appointment.serviceType = form.get("serviceType");
+    appointment.date = newDate;
+    appointment.timeSlot = newTimeSlot;
+    appointment.duration = parseInt(form.get("duration")) || 1;
+    appointment.resource = newResource;
+    appointment.status = form.get("status");
+    appointment.location.address = form.get("address");
+    saveAppointments();
+    updateAllViews();
+    bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
+}
+
+// Open modal to confirm scheduling
+function openConfirmModal(id, date, timeSlot, resource) {
+    const a = appointments.find(x => x.id === id);
+    if (!a) return;
+    const form = document.getElementById("confirmForm");
+    form.querySelector("[name='id']").value = a.id;
+    form.querySelector("[name='customerName']").value = a.customerName;
+    form.querySelector("[name='date']").value = date || '';
+    form.querySelector("[name='timeSlot']").value = timeSlot || 'morning';
+    form.querySelector("[name='duration']").value = a.duration || 1;
+    form.querySelector("[name='resource']").value = resource || 'Unassigned';
+    const modal = new bootstrap.Modal(document.getElementById("confirmModal"));
+    modal.show();
+}
+
+// Confirm scheduling from drag-and-drop
 function confirmScheduling(e) {
     e.preventDefault();
     const form = new FormData(e.target);
     const id = parseInt(form.get("id"));
     const appointment = appointments.find(a => a.id === id);
-    if (!appointment) {
-        console.error("Appointment not found for ID:", id);
-        alert("Error: Appointment not found.");
-        return;
-    }
+    if (!appointment) return;
 
     const newDate = form.get("date");
     const newTimeSlot = form.get("timeSlot");
-    const newDuration = parseInt(form.get("duration")) || 1;
     const newResource = form.get("resource");
+    const newDuration = parseInt(form.get("duration")) || 1;
 
-    if (!newDate || !newTimeSlot || !newResource) {
-        console.warn("Missing required fields:", { newDate, newTimeSlot, newResource });
-        alert("Please fill in all required fields.");
+    if (hasConflict(appointment, newTimeSlot, newResource, newDate, id)) {
+        alert("Scheduling conflict detected!");
         return;
     }
 
     appointment.date = newDate;
     appointment.timeSlot = newTimeSlot;
-    appointment.duration = newDuration;
     appointment.resource = newResource;
-
-    if (hasConflict(appointment, newTimeSlot, newResource, newDate, id)) {
-        console.warn("Scheduling conflict detected for appointment:", appointment);
-        alert("Scheduling conflict detected!");
-        return;
-    }
-
+    appointment.duration = newDuration;
     saveAppointments();
     updateAllViews();
     bootstrap.Modal.getInstance(document.getElementById("confirmModal")).hide();
 }
 
-function unscheduleAppointment() {
-    const a = appointments.find(x => x.id === currentEditId);
-    if (a) {
-        a.date = null;
-        a.timeSlot = null;
-        a.duration = 1;
-        saveAppointments();
-        updateAllViews();
-        bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
-        currentEditId = null;
-    }
-}
-
+// Delete an appointment
 function deleteAppointment() {
-    if (confirm("Are you sure you want to delete this appointment?")) {
-        appointments = appointments.filter(x => x.id !== currentEditId);
-        saveAppointments();
-        updateAllViews();
-        bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
-        currentEditId = null;
+    if (!confirm("Are you sure you want to delete this appointment?")) return;
+    appointments = appointments.filter(a => a.id !== currentEditId);
+    saveAppointments();
+    updateAllViews();
+    bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
+}
+
+// Unschedule an appointment
+function unscheduleAppointment() {
+    const appointment = appointments.find(a => a.id === currentEditId);
+    if (!appointment) return;
+    appointment.date = null;
+    appointment.timeSlot = null;
+    appointment.duration = 1;
+    saveAppointments();
+    updateAllViews();
+    bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
+}
+
+// Update all views
+function updateAllViews() {
+    if (currentView === "date") {
+        renderDateView($("#dayDatePicker").val());
+    } else if (currentView === "resource") {
+        renderResourceView($("#resourceDatePicker").val());
+    } else if (currentView === "list") {
+        renderListView();
+    } else if (currentView === "map") {
+        renderMapView();
     }
 }
 
-function updateAllViews() {
-    renderDateView($("#dayDatePicker").val());
-    renderResourceView($("#resourceDatePicker").val());
-    renderListView();
-    renderMapView();
-    renderUnscheduledList('date');
-    renderUnscheduledList('resource');
-}
-
+// Initialize the page
 document.addEventListener('DOMContentLoaded', () => {
     const today = new Date().toISOString().split('T')[0];
     $("#dayDatePicker").val(today);
@@ -813,13 +960,60 @@ document.addEventListener('DOMContentLoaded', () => {
         currentView = e.target.id.replace('-tab', '');
         if (currentView === "map") {
             renderMapView();
+            setTimeout(() => {
+                if (typeof mapViewInstance !== 'undefined') {
+                    mapViewInstance.invalidateSize();
+                }
+            }, 100);
         } else {
             updateAllViews();
         }
     });
 
+    // Map View event listeners
+    document.getElementById('mapDatePicker').addEventListener('change', (e) => {
+        renderMapMarkers(e.target.value);
+    });
+
+    document.getElementById('mapDispatchGroup').addEventListener('change', () => {
+        renderMapMarkers(document.getElementById('mapDatePicker').value);
+    });
+
+    document.getElementById('statusFilter').addEventListener('change', () => {
+        renderMapMarkers(document.getElementById('mapDatePicker').value);
+    });
+
+    document.getElementById('mapReloadBtn').addEventListener('click', () => {
+        renderMapMarkers(document.getElementById('mapDatePicker').value);
+    });
+
+    document.getElementById('mapOptimizeRouteBtn').addEventListener('click', optimizeRoute);
+    document.getElementById('mapAddCustomMarkerBtn').addEventListener('click', addCustomMarker);
+
+    document.getElementById('map-layer-tab').addEventListener('click', () => {
+        isMapView = true;
+        renderMapView();
+    });
+
+    document.getElementById('satellite-layer-tab').addEventListener('click', () => {
+        isMapView = false;
+        renderMapView();
+    });
+
+    // Start real-time updates
+    simulateRealTimeUpdates();
+
+    // Initial render
     renderDateView(today);
     renderResourceView(today);
     renderListView();
     renderMapView();
+});
+
+// Handle modal dismissals
+document.querySelectorAll('[data-bs-dismiss="modal"]').forEach(button => {
+    button.addEventListener('click', function () {
+        const modal = bootstrap.Modal.getInstance(this.closest('.modal'));
+        modal.hide();
+    });
 });

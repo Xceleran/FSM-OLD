@@ -1,4 +1,5 @@
-﻿<%@ Page Title="Appointments" Language="C#" MasterPageFile="~/FSM.Master" AutoEventWireup="true" CodeBehind="Appointments.aspx.cs" Inherits="FSM.Appointments" %>
+﻿
+<%@ Page Title="Appointments" Language="C#" MasterPageFile="~/FSM.Master" AutoEventWireup="true" CodeBehind="Appointments.aspx.cs" Inherits="FSM.Appointments" %>
 
 <asp:Content ID="BodyContent" ContentPlaceHolderID="MainContent" runat="server">
 
@@ -183,16 +184,58 @@
                 </div>
             </div>
 
+            <!-- Enhanced Map View Tab -->
             <div class="tab-pane fade" id="mapView" role="tabpanel">
-                <div class="card calendar-container">
+                <div class="card calendar-container map-view-container">
                     <div class="card-header">
-                        <div class="d-flex flex-wrap gap-2 align-items-center">
-                            <label for="mapDatePicker" class="form-label mb-0">Date:</label>
-                            <input type="date" id="mapDatePicker" class="form-control w-200px" onchange="renderMapView()">
+                        <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
+                            <div class="d-flex flex-wrap gap-2 align-items-center">
+                                <label for="mapDatePicker" class="form-label mb-0">Date:</label>
+                                <input type="date" id="mapDatePicker" class="form-control w-200px">
+                                <label for="mapDispatchGroup" class="form-label mb-0 ms-3">Group:</label>
+                                <select id="mapDispatchGroup" class="form-select w-120px">
+                                    <option value="all">All Technicians</option>
+                                    <option value="electricians">Electricians</option>
+                                    <option value="plumbers">Plumbers</option>
+                                </select>
+                                <button id="mapReloadBtn" class="btn btn-outline-secondary ms-2">Reload</button>
+                            </div>
+                            <ul class="nav nav-tabs map-view-tabs" id="mapViewTabs" role="tablist">
+                                <li class="nav-item">
+                                    <button class="nav-link active" id="map-layer-tab" data-bs-toggle="tab" data-bs-target="#mapLayerView" type="button" role="tab">Map</button>
+                                </li>
+                                <li class="nav-item">
+                                    <button class="nav-link" id="satellite-layer-tab" data-bs-toggle="tab" data-bs-target="#mapLayerView" type="button" role="tab">Satellite</button>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="map-controls mt-2">
+                            <button id="mapOptimizeRouteBtn" class="btn btn-primary">Optimize Route</button>
+                            <button id="mapAddCustomMarkerBtn" class="btn btn-primary ms-2">Add Custom Marker</button>
+                        </div>
+                        <div class="map-status-legend mt-2">
+                            <span class="status-indicator pending"></span>Pending
+                            <span class="status-indicator dispatched"></span>Dispatched
+                            <span class="status-indicator in-route"></span>In Route
+                            <span class="status-indicator arrived"></span>Arrived
+                        </div>
+                        <div class="map-work-order-status mt-2">
+                            <h5>Work Order Status</h5>
+                            <select id="statusFilter" class="form-select w-200px" aria-label="Filter by work order status">
+                                <option value="all">All Statuses</option>
+                                <option value="pending">Pending</option>
+                                <option value="dispatched">Dispatched</option>
+                                <option value="inRoute">In Route</option>
+                                <option value="arrived">Arrived</option>
+                            </select>
                         </div>
                     </div>
                     <div class="card-body">
-                        <div id="mapViewContainer" style="height: 500px;"></div>
+                        <div class="tab-content">
+                            <div class="tab-pane fade show active" id="mapLayerView" role="tabpanel">
+                                <div id="mapViewContainer" style="height: 500px; width: 100%;"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
