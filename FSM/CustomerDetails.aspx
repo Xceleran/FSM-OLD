@@ -1067,7 +1067,6 @@
         }
 
         function redirectToInvoice(type) {
-            alert(type);
             var cid = customerGuid;
             window.location.href = 'InvoiceCreate.aspx?InvNum=0&cId=' + cid + '&InType=' + type +'';
         }
