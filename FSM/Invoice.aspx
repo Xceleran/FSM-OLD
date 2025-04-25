@@ -112,28 +112,10 @@
                 <div class="col-md-6">
                     <h1 class="page-title mb-3 mb-md-0">Invoices/Estimates</h1>
                 </div>
-                <div class="col-md-6 text-md-end">
-                    <button id="createBtn" class="btn btn-bluelight" title="Create New Invoice/Estimate">Create</button>
-                </div>
             </div>
         </header>
         <div class="card card-custom">
             <div class="row filter-section">
-                <%--  <div class="col-md-2 mb-3">
-                    <label class="form-label mb-0">Search By</label>
-                    <select id="searchBy" class="form-select">
-                        <option value="All">All</option>
-                        <option value="CustomerName">Customer Name</option>
-                        <option value="City">City</option>
-                        <option value="InvoiceNumber">Invoice Number</option>
-                        <option value="Invoice">Invoice</option>
-                        <option value="Estimate">Estimate</option>
-                    </select>
-                </div>
-                <div class="col-md-2 mb-3">
-                    <label class="form-label mb-0">Search Value</label>
-                    <input type="text" id="searchValue" class="form-control" placeholder="Enter value" />
-                </div>--%>
                 <div class="col-md-2 mb-3">
                     <label class="form-label mb-0">Search by Status</label>
                     <select id="searchByPaymentStatus" class="form-select">
@@ -151,7 +133,7 @@
                     <input type="date" id="toDate" class="form-control" value="" />
                 </div>
                 <div class="col-md-2 mb-3 d-flex align-items-end">
-                    <button id="searchBtn" class="btn btn-bluelight w-100">Search Date</button>
+                    <button type="button" id="searchBtn" class="btn btn-bluelight w-100">Search Date</button>
                 </div>
                 <div class="col-md-2 mb-3 d-flex align-items-end">
                     <button id="clearBtn" class="btn btn-secondary w-100">Clear All</button>
@@ -161,9 +143,7 @@
             <div class="row mb-3">
                 <div class="col-12">
                     <button id="sendBtn" class="btn btn-bluelight" title="Send Selected">Send</button>
-                    <button id="addBillableBtn" class="btn btn-bluelight" title="Add Billable Items (QBO Sync)">Add Billable</button>
-                    <button id="viewTaxRatesBtn" class="btn btn-bluelight" title="View Tax Rates (QBO Sync - View Only)">View Tax Rates</button>
-                    <button id="syncQuickBookBtn" class="btn btn-bluelight" title="QuickBooks Online Sync">QuickBooks Sync</button>
+                    <button id="viewBtn" class="btn btn-bluelight" title="View Details">View</button>
                     <span id="progressGIF" style="display: none; margin-left: 10px;">
                         <img src="images/Rolling.gif" alt="Loading" />
                         Sync in progress...
@@ -199,92 +179,13 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // Sample invoice data
-            const invoices = [
-                { id: 1, name: "John Doe", type: "Invoice", number: "INV001", date: "2025-03-15", subtotal: 1000, discount: 50, tax: 80, total: 1030, paid: 500, due: 530, status: "Due", city: "New York" },
-                { id: 2, name: "Jane Smith", type: "Estimate", number: "EST002", date: "2025-03-20", subtotal: 2000, discount: 0, tax: 160, total: 2160, paid: 0, due: 2160, status: "Due", city: "Los Angeles" },
-                { id: 3, name: "Alice Johnson", type: "Invoice", number: "INV003", date: "2025-04-01", subtotal: 1500, discount: 100, tax: 120, total: 1520, paid: 1520, due: 0, status: "Paid", city: "Chicago" },
-                { id: 4, name: "Bob Brown", type: "Invoice", number: "INV004", date: "2025-04-10", subtotal: 800, discount: 20, tax: 64, total: 844, paid: 400, due: 444, status: "Due", city: "Houston" },
-                { id: 5, name: "Eve White", type: "Estimate", number: "EST005", date: "2025-04-15", subtotal: 1200, discount: 30, tax: 96, total: 1266, paid: 0, due: 1266, status: "Due", city: "Seattle" }
-            ];
-
-            //const fromDate = document.getElementById('fromDate');
-            //const toDate = document.getElementById('toDate');
-            //const searchBtn = document.getElementById('searchBtn');
-            const createBtn = document.getElementById('createBtn');
-            const sendBtn = document.getElementById('sendBtn');
-            const addBillableBtn = document.getElementById('addBillableBtn');
-            const viewTaxRatesBtn = document.getElementById('viewTaxRatesBtn');
-            const syncQuickBookBtn = document.getElementById('syncQuickBookBtn');
-            const progressGIF = document.getElementById('progressGIF');
-            const selectAll = document.getElementById('selectAll');
-
-            // Helper functions for new features
-            function createInvoice() {
-                alert('Create new Invoice/Estimate functionality (Primary Functionality) - To be implemented');
-                // Add logic to create new invoice/estimate
-            }
-
-            function sendInvoices() {
-                const selected = getSelectedIds();
-                if (selected.length === 0) {
-                    alert('Please select at least one invoice/estimate to send');
-                    return;
-                }
-                progressGIF.style.display = 'inline';
-                setTimeout(() => {
-                    progressGIF.style.display = 'none';
-                    alert(`Sending ${selected.length} selected items (simulated)`);
-                }, 2000);
-            }
-
-            function addBillableItems() {
-                const selected = getSelectedIds();
-                if (selected.length === 0) {
-                    alert('Please select at least one invoice/estimate to add billable items');
-                    return;
-                }
-                progressGIF.style.display = 'inline';
-                setTimeout(() => {
-                    progressGIF.style.display = 'none';
-                    alert(`Adding billable items to ${selected.length} selected items (QBO Sync simulated)`);
-                }, 2000);
-            }
-
-            function viewTaxRates() {
-                alert('Viewing Tax Rates (View Only - Synced from QBO)');
-                // Add logic to show tax rates in read-only mode
-            }
-
-            function syncQuickBook() {
-                progressGIF.style.display = 'inline';
-                setTimeout(() => {
-                    progressGIF.style.display = 'none';
-                    alert('QuickBooks Sync completed (simulated)');
-                }, 2000);
-            }
-
-            function getSelectedIds() {
-                const checkboxes = document.querySelectorAll('.row-select:checked');
-                return Array.from(checkboxes).map(cb => parseInt(cb.value));
-            }
-
-          
-            createBtn.addEventListener('click', createInvoice);
-            sendBtn.addEventListener('click', sendInvoices);
-            addBillableBtn.addEventListener('click', addBillableItems);
-            viewTaxRatesBtn.addEventListener('click', viewTaxRates);
-            syncQuickBookBtn.addEventListener('click', syncQuickBook);
-            
-            selectAll.addEventListener('change', (e) => {
-                document.querySelectorAll('.row-select').forEach(cb => {
-                    cb.checked = e.target.checked;
-                });
-            });
-        });
-
+        const sendBtn = document.getElementById('sendBtn');
+        const viewBtn = document.getElementById('viewBtn');
+        const progressGIF = document.getElementById('progressGIF');
+        const selectAll = document.getElementById('selectAll');
         const searchByPaymentStatus = document.getElementById('searchByPaymentStatus');
+        sendBtn.addEventListener('click', sendInvoices);
+        viewBtn.addEventListener('click', viewInvoice);
         let table = null;
         loadData();
         function loadData() {
@@ -351,7 +252,8 @@
             table.draw(); // refresh data with new filters
         });
 
-        $('#searchBtn').on('click', function () {
+        $('#searchBtn').on('click', function (e) {
+            e.preventDefault();
             let fromDate = $('#fromDate').val();
             let toDate = $('#toDate').val();
 
@@ -367,11 +269,46 @@
             table.draw();
         });
 
-        $('#clearBtn').on('click', function () {
+        $('#clearBtn').on('click', function (e) {
+            e.preventDefault();
             $('#fromDate').val('');
             $('#toDate').val('');
             $('#searchByPaymentStatus').val(''); 
             table.draw();
         });
+
+        function sendInvoices(e) {
+            e.preventDefault();
+            const selected = getSelectedIds();
+            if (selected.length === 0) {
+                alert('Please select at least one invoice/estimate to send');
+                return;
+            }
+            progressGIF.style.display = 'inline';
+            setTimeout(() => {
+                progressGIF.style.display = 'none';
+                alert(`Sending ${selected.length} selected items (simulated)`);
+            }, 2000);
+        }
+
+        function viewInvoice(e) {
+            e.preventDefault();
+            const selected = getSelectedIds();
+            if (selected.length === 0 || selected.length > 1) {
+                alert('Please select one invoice/estimate to view');
+                return;
+            }
+        }
+
+        selectAll.addEventListener('change', (e) => {
+            document.querySelectorAll('.row-select').forEach(cb => {
+                cb.checked = e.target.checked;
+            });
+        });
+
+        function getSelectedIds() {
+            const checkboxes = document.querySelectorAll('.row-select:checked');
+            return Array.from(checkboxes).map(cb => parseInt(cb.value));
+        }
     </script>
 </asp:Content>

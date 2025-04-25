@@ -142,6 +142,7 @@
     <Content Include="Dispatch.aspx" />
     <Content Include="favicon.ico" />
     <Content Include="Global.asax" />
+    <Content Include="InvoiceCreate.aspx" />
     <Content Include="Scripts\appointments.js" />
     <Content Include="Scripts\bootstrap.bundle.js" />
     <Content Include="Scripts\bootstrap.bundle.min.js" />
@@ -256,6 +257,7 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="Helper\Common.cs" />
     <Compile Include="Invoice.aspx.cs">
       <DependentUpon>Invoice.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
@@ -263,10 +265,21 @@
     <Compile Include="Invoice.aspx.designer.cs">
       <DependentUpon>Invoice.aspx</DependentUpon>
     </Compile>
+    <Compile Include="InvoiceCreate.aspx.cs">
+      <DependentUpon>InvoiceCreate.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="InvoiceCreate.aspx.designer.cs">
+      <DependentUpon>InvoiceCreate.aspx</DependentUpon>
+    </Compile>
     <Compile Include="Models\Customer\CustomerEntity.cs" />
     <Compile Include="Models\Customer\CustomerSite.cs" />
     <Compile Include="Models\Enums\WorkOrderStatus.cs" />
+    <Compile Include="Processors\BusinessContactProcessor.cs" />
     <Compile Include="Processors\CustomerProcessor.cs" />
+    <Compile Include="Processors\LoginProcessor.cs" />
+    <Compile Include="Processors\QBOManager.cs" />
+    <Compile Include="Processors\UserLogProcessor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="FSM.Master.cs">
       <DependentUpon>FSM.Master</DependentUpon>

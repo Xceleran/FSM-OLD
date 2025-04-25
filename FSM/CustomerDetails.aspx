@@ -196,6 +196,8 @@
                         <option value="proposal">Estimate</option>
                     </select>
                 </div>
+                <a class="btn btn-primary"  onclick="redirectToInvoice('Invoice')">Create Invoice</a>
+                <a class="btn btn-primary"  onclick="redirectToInvoice('Proposal')">Create Estimate</a>
                 <button id="invExport" class="btn btn-primary d-none">Export to Excel</button>
             </div>
             <div class="table-responsive">
@@ -1062,6 +1064,12 @@
                 showToast(errorMessage);
             }
             return isValid;
+        }
+
+        function redirectToInvoice(type) {
+            alert(type);
+            var cid = customerGuid;
+            window.location.href = 'InvoiceCreate.aspx?InvNum=0&cId=' + cid + '&InType=' + type +'';
         }
     </script>
 </asp:Content>

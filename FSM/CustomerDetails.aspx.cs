@@ -457,5 +457,20 @@ namespace FSM
             }
             return success;
         }
+
+
+        //protected void invoiceCreate_Click(object sender, EventArgs e)
+        //{
+        //    string cid = lblCustomerGuid.Text.ToString();
+        //    string InType = "Invoice";
+        //    Response.Redirect($"InvoiceCreate.aspx?InvNum=0&cId={cid}&InType={InType}");
+        //}
+
+        //protected void estimateCreate_Click(object sender, EventArgs e)
+        //{
+        //    string cid = lblCustomerGuid.Text.ToString();
+        //    string InType = "Proposal";
+        //    Response.Redirect($"InvoiceCreate.aspx?InvNum=0&cId={cid}&InType={InType}");
+        //}
     }
 }

@@ -831,6 +831,29 @@ public class Database
         }
     }
 
+
+    public Int32 ExecuteExecuteScalar()
+    {
+        Int32 result = 0;
+        try
+        {
+            this.Connection = new SqlConnection(this.ConnectionString);
+            this.Connection.Open();
+            this.Command.Connection = this.Connection;
+            result = (Int32)this.Command.ExecuteScalar();
+            this.Close();
+        }
+        catch (Exception ex)
+        {
+            return 0;
+        }
+        finally
+        {
+            this.Close();
+        }
+        return result;
+    }
+
     public bool UpdateSql(string sql)
     {
         bool result = false;
