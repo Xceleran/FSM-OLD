@@ -1,5 +1,4 @@
 ﻿<%@ Master Language="C#" AutoEventWireup="true" CodeBehind="FSM.master.cs" Inherits="FSM.FSMMaster" %>
-
 <%@ Register Assembly="System.Web.Optimization" Namespace="System.Web.Optimization" TagPrefix="webopt" %>
 
 <!DOCTYPE html>
@@ -15,8 +14,8 @@
     <link href="~/favicon.ico" rel="shortcut icon" type="image/x-icon" />
     <link href="~/Content/custom.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="~/Content/styles.css" />
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-
 </head>
 <body runat="server" id="bodyTag">
     <form runat="server">
@@ -38,12 +37,11 @@
         </asp:ScriptManager>
         <div class="page-container">
             <div class="right-logo">
-                <h6 class="right-logo-title">Powered by</h6>
-                <img src="https://testsite.myserviceforce.com/fsm/images/xceleran.png" alt="Xceleran Logo" class="right-logo-img">
+                <img src="https://testsite.myserviceforce.com/fsm/images/FMSXceleran.png" alt="Xceleran Logo" class="right-logo-img">
             </div>
             <aside id="sidebar" class="sidebar">
                 <div class="sidebar-logo">
-                    <img src="https://testsite.myserviceforce.com/fsm/images/lhlogo.png" alt="LHLogo Logo" class="sidebar-logo-img">
+                    <img id="sidebar-logo-img" src="images/LHLogowhite.png" alt="LHLogo Logo" class="sidebar-logo-img">
                 </div>
                 <nav class="sidebar-nav">
                     <ul class="sidebar-nav-list">
@@ -58,7 +56,7 @@
                         <li id="appointments-link" class="sidebar-nav-item">
                             <a href="Appointments.aspx" class="sidebar-nav-link">
                                 <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 2v4M16 2v4M3 10h18M5 6h14a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2zM9 14h6M11 18h2" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 2v4M16 2v4M3 10h18M5 6h14a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2zM9 14h6M11 18h2"></path>
                                 </svg>
                                 <span class="sidebar-text">Scheduling</span>
                             </a>
@@ -104,10 +102,21 @@
                                 <span class="sidebar-text">Logout</span>
                             </a>
                         </li>
+                        <li class="theme-toggle" id="theme-toggle">
+                            <label class="switch">
+                                <input type="checkbox" id="theme-switch-input">
+                                <div class="slider">
+                                    <div class="light-ball"></div>
+                                    <div class="moon"></div>
+                                </div>
+                            </label>
+                            <span class="theme-toggle-text">Theme</span>
+                        </li>
                     </ul>
                 </nav>
                 <div class="sidebar-footer">
-                    <img src="https://testsite.myserviceforce.com/fsm/images/FMSXceleran.png" alt="FMSXceleran Logo" class="sidebar-footer-img">
+                    <h6 class="logo-title">Powered by</h6>
+                    <img id="sidebar-footer-img" src="https://testsite.myserviceforce.com/fsm/images/xceleranwhite.png" alt="FMSXceleran Logo" class="sidebar-footer-img">
                 </div>
             </aside>
 
@@ -125,120 +134,209 @@
     </form>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Sidebar toggle functionality
-            const sidebar = document.getElementById('sidebar');
-            const toggleButton = document.getElementById('toggleSidebar');
-            const sidebarTexts = document.querySelectorAll('.sidebar-text');
-            const body = document.body;
+            try {
+                // Sidebar toggle functionality
+                const sidebar = document.getElementById('sidebar');
+                const toggleButton = document.getElementById('toggleSidebar');
+                const sidebarTexts = document.querySelectorAll('.sidebar-text');
+                const sidebarIcons = document.querySelectorAll('.sidebar-icon');
 
-            // Active menu detection
-            const currentPath = window.location.pathname.toLowerCase();
-            const pageName = currentPath.split('/').pop().replace('.aspx', '') || 'dashboard';
-            const navItems = {
-                'dashboard': 'dashboard-link',
-                'appointments': 'appointments-link',
-                'customer': 'customers-link',
-                'invoice': 'invoices-link',
-                'dispatch': 'dispatch-link',
-                'billableitems': 'item-link',
-                'settings': 'settings-link'
-            };
+                // Theme toggle functionality
+                const themeSwitchInput = document.getElementById('theme-switch-input');
+                const themeToggleText = document.querySelector('.theme-toggle-text');
+                const sidebarLogoImg = document.getElementById('sidebar-logo-img');
+                const sidebarFooterImg = document.getElementById('sidebar-footer-img');
 
-            // Remove existing active classes
-            document.querySelectorAll('.sidebar-nav-item').forEach(item => {
-                item.classList.remove('active');
-            });
-
-            // Set active class based on current page
-            const activeItemId = navItems[pageName] || 'dashboard-link';
-            const activeItem = document.getElementById(activeItemId);
-            if (activeItem) {
-                activeItem.classList.add('active');
-                console.log(`Active menu item: ${activeItemId}`);
-            }
-
-            // Sidebar toggle functionality
-            if (toggleButton && sidebar) {
-                const isMobile = () => window.matchMedia('(max-width: 849px)').matches;
-
-                const updateSidebarState = () => {
-                    const isExpanded = sidebar.classList.contains('sidebar-expanded');
-                    const isCollapsed = sidebar.classList.contains('sidebar-collapsed');
-                    const isHidden = sidebar.classList.contains('sidebar-hidden');
-
-                    if (isMobile()) {
-                        sidebarTexts.forEach(text => text.style.display = 'inline');
-                        toggleButton.textContent = isHidden ? '☰' : '✕';
-                        toggleButton.classList.remove('collapsed');
-                    } else {
-                        sidebarTexts.forEach(text => {
-                            text.style.display = isCollapsed ? 'none' : 'inline';
-                        });
-                        toggleButton.textContent = isExpanded ? '➤' : '☰';
-                        toggleButton.classList.toggle('collapsed', isCollapsed);
-                    }
-                };
-
-                const toggleSidebar = () => {
-                    if (isMobile()) {
-                        const isHidden = sidebar.classList.contains('sidebar-hidden');
-                        sidebar.classList.toggle('sidebar-hidden', !isHidden);
-                        sidebar.style.transform = isHidden ? 'translateX(0)' : 'translateX(-100%)';
-                    } else {
-                        const isExpanded = sidebar.classList.contains('sidebar-expanded');
-                        sidebar.classList.toggle('sidebar-expanded', !isExpanded);
-                        sidebar.classList.toggle('sidebar-collapsed', isExpanded);
-                    }
-                    updateSidebarState();
-                };
-
-                toggleButton.addEventListener('click', toggleSidebar);
-
-                // Initial state setup
-                if (isMobile()) {
-                    sidebar.classList.add('sidebar-hidden', 'sidebar-mobile');
-                    sidebar.style.transform = 'translateX(-100%)';
-                } else {
-                    sidebar.classList.add('sidebar-expanded');
-                    sidebar.classList.remove('sidebar-collapsed');
+                if (!themeSwitchInput || !themeToggleText || !sidebarLogoImg || !sidebarFooterImg) {
+                    console.error('Theme toggle or logo elements not found:', {
+                        themeSwitchInput,
+                        themeToggleText,
+                        sidebarLogoImg,
+                        sidebarFooterImg
+                    });
+                    return;
                 }
-                updateSidebarState();
 
-                // Window resize handler
-                window.addEventListener('resize', () => {
-                    if (isMobile()) {
-                        if (!sidebar.classList.contains('sidebar-hidden')) {
-                            sidebar.classList.add('sidebar-hidden');
-                            sidebar.style.transform = 'translateX(-100%)';
+                // Load saved theme from localStorage or default to dark
+                const savedTheme = localStorage.getItem('theme') || 'dark';
+                document.documentElement.setAttribute('data-theme', savedTheme);
+                themeSwitchInput.checked = savedTheme === 'dark';
+                console.log('Initial theme set:', savedTheme);
+                updateThemeUI(savedTheme);
+
+                function updateThemeUI(theme) {
+                    try {
+                        // Fixed text display: show opposite mode as the option
+                        themeToggleText.textContent = theme === 'dark' ? 'Dark Mode' : 'Light Mode';
+                        sidebarLogoImg.src = theme === 'dark'
+                            ? 'https://testsite.myserviceforce.com/fsm/images/LHLogowhite.png'
+                            : 'https://testsite.myserviceforce.com/fsm/images/lhlogo.png';
+                        sidebarFooterImg.src = theme === 'dark'
+                            ? 'https://testsite.myserviceforce.com/fsm/images/xceleranwhite.png'
+                            : 'https://testsite.myserviceforce.com/fsm/images/xceleran.png';
+                        console.log('Theme updated to:', theme);
+                        console.log('Logo sources:', {
+                            sidebarLogo: sidebarLogoImg.src,
+                            footerLogo: sidebarFooterImg.src
+                        });
+                    } catch (error) {
+                        console.error('Error updating theme UI:', error);
+                    }
+                }
+
+                themeSwitchInput.addEventListener('change', () => {
+                    try {
+                        const newTheme = themeSwitchInput.checked ? 'dark' : 'light';
+                        document.documentElement.setAttribute('data-theme', newTheme);
+                        localStorage.setItem('theme', newTheme);
+                        updateThemeUI(newTheme);
+                        console.log('Theme toggled to:', newTheme);
+                    } catch (error) {
+                        console.error('Error toggling theme:', error);
+                    }
+                });
+
+                // Active menu detection
+                const currentPath = window.location.pathname.toLowerCase();
+                const pageName = currentPath.split('/').pop().replace('.aspx', '') || 'dashboard';
+                const navItems = {
+                    'dashboard': 'dashboard-link',
+                    'appointments': 'appointments-link',
+                    'customer': 'customers-link',
+                    'invoice': 'invoices-link',
+                    'dispatch': 'dispatch-link',
+                    'billableitems': 'item-link',
+                    'settings': 'settings-link'
+                };
+
+                // Remove existing active classes
+                document.querySelectorAll('.sidebar-nav-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+
+                // Set active class based on current page
+                const activeItemId = navItems[pageName] || 'dashboard-link';
+                const activeItem = document.getElementById(activeItemId);
+                if (activeItem) {
+                    activeItem.classList.add('active');
+                    console.log(`Active menu item set: ${activeItemId}`);
+                } else {
+                    console.warn(`No active menu item found for page: ${pageName}`);
+                }
+
+                // Sidebar toggle functionality
+                if (toggleButton && sidebar) {
+                    const isMobile = () => window.matchMedia('(max-width: 849px)').matches;
+
+                    const updateSidebarState = () => {
+                        const isExpanded = sidebar.classList.contains('sidebar-expanded');
+                        const isCollapsed = sidebar.classList.contains('sidebar-collapsed');
+                        const isHidden = sidebar.classList.contains('sidebar-hidden');
+
+                        if (isMobile()) {
+                            sidebarTexts.forEach(text => text.style.display = 'inline');
+                            sidebarIcons.forEach(icon => icon.style.display = 'inline');
+                            toggleButton.textContent = isHidden ? '☰' : '✕';
+                            toggleButton.classList.remove('collapsed');
+                        } else {
+                            sidebarTexts.forEach(text => {
+                                text.style.display = isCollapsed ? 'none' : 'inline';
+                            });
+                            sidebarIcons.forEach(icon => {
+                                icon.style.display = 'inline';
+                            });
+                            toggleButton.textContent = isExpanded ? '➤' : '☰';
+                            toggleButton.classList.toggle('collapsed', isCollapsed);
                         }
-                        sidebar.classList.add('sidebar-mobile');
-                        sidebar.classList.remove('sidebar-expanded', 'sidebar-collapsed');
-                        toggleButton.classList.remove('collapsed');
+                    };
+
+                    const toggleSidebar = () => {
+                        if (isMobile()) {
+                            const isHidden = sidebar.classList.contains('sidebar-hidden');
+                            sidebar.classList.toggle('sidebar-hidden', !isHidden);
+                            sidebar.style.transform = isHidden ? 'translateX(0)' : 'translateX(-100%)';
+                        } else {
+                            const isExpanded = sidebar.classList.contains('sidebar-expanded');
+                            sidebar.classList.toggle('sidebar-expanded', !isExpanded);
+                            sidebar.classList.toggle('sidebar-collapsed', isExpanded);
+                        }
+                        updateSidebarState();
+                    };
+
+                    toggleButton.addEventListener('click', toggleSidebar);
+
+                    // Initial state setup
+                    if (isMobile()) {
+                        sidebar.classList.add('sidebar-hidden', 'sidebar-mobile');
+                        sidebar.style.transform = 'translateX(-100%)';
                     } else {
-                        sidebar.classList.remove('sidebar-hidden', 'sidebar-mobile');
                         sidebar.classList.add('sidebar-expanded');
                         sidebar.classList.remove('sidebar-collapsed');
-                        sidebar.style.transform = '';
-                        toggleButton.classList.remove('collapsed');
                     }
                     updateSidebarState();
-                });
-            }
 
-            // Add click animation to menu items
-            document.querySelectorAll('.sidebar-nav-item').forEach(item => {
-                item.addEventListener('click', function (e) {
-                    if (!e.target.closest('a')) return;
-
-                    // Remove active class from all items
-                    document.querySelectorAll('.sidebar-nav-item').forEach(i => {
-                        i.classList.remove('active');
+                    // Window resize handler
+                    window.addEventListener('resize', () => {
+                        if (isMobile()) {
+                            if (!sidebar.classList.contains('sidebar-hidden')) {
+                                sidebar.classList.add('sidebar-hidden');
+                                sidebar.style.transform = 'translateX(-100%)';
+                            }
+                            sidebar.classList.add('sidebar-mobile');
+                            sidebar.classList.remove('sidebar-expanded', 'sidebar-collapsed');
+                            toggleButton.classList.remove('collapsed');
+                        } else {
+                            sidebar.classList.remove('sidebar-hidden', 'sidebar-mobile');
+                            sidebar.classList.add('sidebar-expanded');
+                            sidebar.classList.remove('sidebar-collapsed');
+                            sidebar.style.transform = '';
+                            toggleButton.classList.remove('collapsed');
+                        }
+                        updateSidebarState();
                     });
 
-                    // Add active class to clicked item
-                    this.classList.add('active');
+                    // Debug icon visibility and styles
+                    sidebarIcons.forEach((icon, index) => {
+                        const computedStyle = window.getComputedStyle(icon);
+                        console.log(`Icon ${index} (Billable Items is #4):`, {
+                            display: computedStyle.display,
+                            visibility: computedStyle.visibility,
+                            width: computedStyle.width,
+                            stroke: computedStyle.stroke
+                        });
+                    });
+                } else {
+                    console.error('Sidebar or toggle button not found:', { sidebar, toggleButton });
+                }
+
+                // Add click animation and active state to menu items
+                document.querySelectorAll('.sidebar-nav-item').forEach(item => {
+                    item.addEventListener('click', function (e) {
+                        if (!e.target.closest('a')) return;
+
+                        // Remove active class from all items
+                        document.querySelectorAll('.sidebar-nav-item').forEach(i => {
+                            i.classList.remove('active');
+                        });
+
+                        // Add active class to clicked item
+                        this.classList.add('active');
+                        console.log(`Clicked item set to active: ${this.id}`);
+                    });
                 });
-            });
+
+                // Debug hover state
+                document.querySelectorAll('.sidebar-nav-item').forEach(item => {
+                    item.addEventListener('mouseenter', () => {
+                        console.log(`Hovering over: ${item.id}`);
+                    });
+                    item.addEventListener('mouseleave', () => {
+                        console.log(`Stopped hovering: ${item.id}`);
+                    });
+                });
+            } catch (error) {
+                console.error('Error in DOMContentLoaded handler:', error);
+            }
         });
     </script>
 </body>
