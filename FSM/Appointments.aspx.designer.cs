@@ -13,5 +13,32 @@ namespace FSM
 
     public partial class Appointments
     {
+
+        /// <summary>
+        /// ServiceTypeFilter control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.HtmlControls.HtmlSelect ServiceTypeFilter;
+
+        /// <summary>
+        /// StatusTypeFilter control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.HtmlControls.HtmlSelect StatusTypeFilter;
+
+        /// <summary>
+        /// ServiceTypeFilter_2 control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.HtmlControls.HtmlSelect ServiceTypeFilter_2;
     }
 }

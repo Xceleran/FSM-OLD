@@ -23,6 +23,7 @@ namespace FSM
          {
             if (Session["CompanyID"] == null)
             {
+                HttpContext.Current.Session["CompanyID"] = "14388";
                 //Response.Redirect("Logout.aspx");
             }
             if (!IsPostBack)

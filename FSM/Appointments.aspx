@@ -1,5 +1,4 @@
-﻿
-<%@ Page Title="Appointments" Language="C#" MasterPageFile="~/FSM.Master" AutoEventWireup="true" CodeBehind="Appointments.aspx.cs" Inherits="FSM.Appointments" %>
+﻿<%@ Page Title="Appointments" Language="C#" MasterPageFile="~/FSM.Master" AutoEventWireup="true" CodeBehind="Appointments.aspx.cs" Inherits="FSM.Appointments" %>
 
 <asp:Content ID="BodyContent" ContentPlaceHolderID="MainContent" runat="server">
 
@@ -59,14 +58,18 @@
                                     <option value="threeDay">Three-Day</option>
                                     <option value="month">Month</option>
                                 </select>
-                                <label for="filterSelect" class="form-label mb-0 ms-3">Filter:</label>
-                                <select id="filterSelect" class="form-select w-120px" onchange="renderDateView($('#dayDatePicker').val())">
+                                <label for="ServiceTypeFilter" class="form-label mb-0 ms-3">Filter:</label>
+                                <select name="ServiceTypeFilter" id="ServiceTypeFilter" class="form-select  w-120px" runat="server" onchange="renderDateView($('#dayDatePicker').val())">
+                                    <option value="select">Select</option>
+                                    <option value="0">Company Use</option>
+                                </select>
+                                <%--<select id="filterSelect" class="form-select w-120px" onchange="renderDateView($('#dayDatePicker').val())">
                                     <option value="all">All</option>
                                     <option value="Tasks">Tasks</option>
                                     <option value="Visits">Visits</option>
                                     <option value="Maintenance">Maintenance</option>
                                     <option value="Installation">Installation</option>
-                                </select>
+                                </select>--%>
                                 <label for="dayDatePicker" class="form-label mb-0 ms-3">Date:</label>
                                 <input type="date" id="dayDatePicker" class="form-control w-200px" onchange="renderDateView(this.value)">
                             </div>
@@ -86,17 +89,11 @@
                         </div>
                         <div class="card-body">
                             <div class="unscheduled-filters">
-                                <select id="statusFilter" class="form-select mb-3" onchange="renderUnscheduledList()">
+                                <select runat="server" id="StatusTypeFilter" class="form-select mb-3" onchange="renderUnscheduledList()">
                                     <option value="all">All Statuses</option>
-                                    <option value="pending">Pending</option>
-                                    <option value="confirmed">Confirmed</option>
                                 </select>
-                                <select id="serviceTypeFilter" class="form-select mb-3" onchange="renderUnscheduledList()">
+                                <select runat="server" id="ServiceTypeFilter_2" class="form-select mb-3" onchange="renderUnscheduledList()">
                                     <option value="all">All Service Types</option>
-                                    <option value="Tasks">Tasks</option>
-                                    <option value="Visits">Visits</option>
-                                    <option value="Maintenance">Maintenance</option>
-                                    <option value="Installation">Installation</option>
                                 </select>
                                 <input type="text" id="searchFilter" class="form-control mb-3" placeholder="Search by customer..." oninput="renderUnscheduledList()">
                             </div>

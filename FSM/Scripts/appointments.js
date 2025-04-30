@@ -1,41 +1,43 @@
-﻿let appointments = JSON.parse(localStorage.getItem('appointments')) || [
-    {
-        id: 1,
-        customerName: "John Doe",
-        date: "2025-04-23",
-        timeSlot: "morning",
-        duration: 2,
-        resource: "Jim",
-        serviceType: "Tasks",
-        status: "dispatched", // Changed from "confirmed" to "dispatched"
-        location: { address: "123 Main St, New York, NY", lat: 40.7128, lng: -74.0060 },
-        priority: "Low"
-    },
-    {
-        id: 2,
-        customerName: "Jane Smith",
-        date: null,
-        timeSlot: null,
-        duration: 2,
-        resource: "Unassigned",
-        serviceType: "Visits",
-        status: "pending",
-        location: { address: "456 Branch Rd, Los Angeles, CA", lat: 34.0522, lng: -118.2437 },
-        priority: "Medium"
-    },
-    {
-        id: 3,
-        customerName: "Alice Johnson",
-        date: "2025-04-23",
-        timeSlot: "morning",
-        duration: 2,
-        resource: "Bob",
-        serviceType: "Tasks",
-        status: "dispatched", // Changed from "confirmed" to "dispatched"
-        location: { address: "789 Warehouse Ave, Chicago, IL", lat: 41.8781, lng: -87.6298 },
-        priority: "High"
-    }
-];
+﻿//let appointments = JSON.parse(localStorage.getItem('appointments')) || [
+//    {
+//        id: 1,
+//        customerName: "John Doe",
+//        date: "2025-04-23",
+//        timeSlot: "morning",
+//        duration: 2,
+//        resource: "Jim",
+//        serviceType: "Tasks",
+//        status: "dispatched", // Changed from "confirmed" to "dispatched"
+//        location: { address: "123 Main St, New York, NY", lat: 40.7128, lng: -74.0060 },
+//        priority: "Low"
+//    },
+//    {
+//        id: 2,
+//        customerName: "Jane Smith",
+//        date: null,
+//        timeSlot: null,
+//        duration: 2,
+//        resource: "Unassigned",
+//        serviceType: "Visits",
+//        status: "pending",
+//        location: { address: "456 Branch Rd, Los Angeles, CA", lat: 34.0522, lng: -118.2437 },
+//        priority: "Medium"
+//    },
+//    {
+//        id: 3,
+//        customerName: "Alice Johnson",
+//        date: "2025-04-23",
+//        timeSlot: "morning",
+//        duration: 2,
+//        resource: "Bob",
+//        serviceType: "Tasks",
+//        status: "dispatched", // Changed from "confirmed" to "dispatched"
+//        location: { address: "789 Warehouse Ave, Chicago, IL", lat: 41.8781, lng: -87.6298 },
+//        priority: "High"
+//    }
+//];
+
+let appointments = [];
 
 let currentView = "date";
 let currentDate = new Date();
@@ -55,21 +57,53 @@ const timeSlots = {
     afternoon: { start: "12:00", end: "16:00" },
     emergency: { start: "18:00", end: "22:00" }
 };
-const allTimeSlots = [
-    { value: "08:00", label: "8:00 AM" },
-    { value: "09:00", label: "9:00 AM" },
-    { value: "10:00", label: "10:00 AM" },
-    { value: "11:00", label: "11:00 AM" },
-    { value: "12:00", label: "12:00 PM" },
-    { value: "13:00", label: "1:00 PM" },
-    { value: "14:00", label: "2:00 PM" },
-    { value: "15:00", label: "3:00 PM" },
-    { value: "18:00", label: "6:00 PM" },
-    { value: "19:00", label: "7:00 PM" },
-    { value: "20:00", label: "8:00 PM" },
-    { value: "21:00", label: "9:00 PM" },
-    { value: "22:00", label: "10:00 PM" }
-];
+//const allTimeSlots = [
+//    { value: "08:00", label: "8:00 AM" },
+//    { value: "09:00", label: "9:00 AM" },
+//    { value: "10:00", label: "10:00 AM" },
+//    { value: "11:00", label: "11:00 AM" },
+//    { value: "12:00", label: "12:00 PM" },
+//    { value: "13:00", label: "1:00 PM" },
+//    { value: "14:00", label: "2:00 PM" },
+//    { value: "15:00", label: "3:00 PM" },
+//    { value: "18:00", label: "6:00 PM" },
+//    { value: "19:00", label: "7:00 PM" },
+//    { value: "20:00", label: "8:00 PM" },
+//    { value: "21:00", label: "9:00 PM" },
+//    { value: "22:00", label: "10:00 PM" }
+//];
+
+var allTimeSlots = [];
+function getAppoinments(searchValue, fromDate, toDate, today, callback) {
+    searchValue = searchValue;
+    fromDate = fromDate;
+    toDate = toDate;
+    today = today;
+    console.log(today);
+    $.ajax({
+        type: "POST",
+        url: "Appointments.aspx/LoadAppoinments",
+        data: JSON.stringify({
+            searchValue: searchValue,
+            fromDate: fromDate,
+            toDate: toDate,
+            today: today
+        }),
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        success: function (response) {
+            appointments = response.d;
+            callback(appointments);
+        },
+        error: function (xhr, status, error) {
+            console.error("Error updating details: ", error);
+            callback([]);
+        }
+    });
+
+    return appointments;
+}
+
 
 // Save appointments to localStorage
 function saveAppointments() {
@@ -348,68 +382,103 @@ function renderDateView(date) {
     currentDate = new Date(date);
     const container = $("#dayCalendar").addClass('date-view').removeClass('resource-view');
     const view = $("#viewSelect").val();
-    const filter = $("#filterSelect").val();
+    const filter = $("#MainContent_ServiceTypeFilter").val();
     const dateStr = currentDate.toISOString().split('T')[0];
-
+    console.log(filter);
     renderDateNav("dateNav", dateStr);
+    let fromDate, toDate, today;
+    let fromStr, toStr;
+    switch (view) {
+        case 'month':
+            fromDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+            toDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
+            fromStr = fromDate.toISOString().split('T')[0];
+            toStr = toDate.toISOString().split('T')[0]; 
+            today = "";
+            break;
+        case 'week':
+            fromDate = new Date(currentDate);
+            fromDate.setDate(currentDate.getDate() - currentDate.getDay()); 
+            toDate = new Date(fromDate);
+            toDate.setDate(fromDate.getDate() + 6);
+            fromStr = fromDate.toISOString().split('T')[0];
+            toStr = toDate.toISOString().split('T')[0]; 
+            today = "";
+            break;
+        case 'threeDay':
+            fromDate = new Date(currentDate);
+            fromDate.setDate(currentDate.getDate() - 1); // Set to start from the day before
+            toDate = new Date(currentDate);
+            toDate.setDate(currentDate.getDate() + 1);
+            fromStr = fromDate.toISOString().split('T')[0];
+            toStr = toDate.toISOString().split('T')[0]; 
+            today = "";
+            break;
+        default:
+            fromStr = "";
+            toStr = "";
+            today = date;
+            break;
+    }
+    getAppoinments(filter, fromStr, toStr, today, function (appointments) {
+        var filteredAppointments = filter === ''
+            ? appointments
+            : appointments.filter(a => a.ServiceType === filter);
 
-    let filteredAppointments = filter === 'all' ? appointments : appointments.filter(a => a.serviceType === filter);
-
-    let html = `
+        let html = `
         <div class="custom-calendar-header d-flex justify-content-center">
             <span>${view === 'month' ? currentDate.toLocaleString('default', { month: 'long', year: 'numeric' }) : currentDate.toLocaleDateString()}</span>
-        </div>
-    `;
+        </div>`;
 
-    if (view === 'month') {
-        const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-        const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
-        const startWeek = firstDay.getDay();
-        const totalDays = lastDay.getDate();
-        let calendarDays = [];
-        for (let i = 0; i < startWeek; i++) calendarDays.push(null);
-        for (let i = 1; i <= totalDays; i++) calendarDays.push(i);
-        while (calendarDays.length % 7 !== 0) calendarDays.push(null);
+        if (view === 'month') {
+            const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+            const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+            const startWeek = firstDay.getDay();
+            const totalDays = lastDay.getDate();
+            let calendarDays = [];
+            for (let i = 0; i < startWeek; i++) calendarDays.push(null);
+            for (let i = 1; i <= totalDays; i++) calendarDays.push(i);
+            while (calendarDays.length % 7 !== 0) calendarDays.push(null);
 
-        html += `
+            html += `
             <div class="calendar-grid-month">
                 ${['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => `
                     <div class="text-center font-weight-medium p-2 calendar-header-cell">${day}</div>
                 `).join('')}
         `;
-        calendarDays.forEach(day => {
-            const dayDate = day ? `${currentDate.getFullYear()}-${(currentDate.getMonth() + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}` : '';
-            html += `
+            calendarDays.forEach(day => {
+                const dayDate = day ? `${currentDate.getFullYear()}-${(currentDate.getMonth() + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}` : '';
+                html += `
                 <div class="min-h-100px border p-1 drop-target calendar-cell ${dayDate === dateStr ? 'bg-blue-50 border-blue-200' : ''}" 
                      data-date="${dayDate}">
                     ${day ? `
                         <div class="text-right fs-7 mb-1">${day}</div>
                         <div class="space-y-1">
-                            ${filteredAppointments.filter(a => a.date === dayDate).map(a => `
+                            ${filteredAppointments.filter(a => a.RequestDate === dayDate).map(a => `
                                 <div class="calendar-event ${getEventTimeSlotClass(a)} fs-7 p-1 cursor-move" 
-                                     data-id="${a.id}" draggable="true">
-                                    ${a.customerName} (${a.serviceType})
+                                     data-id="${a.AppoinmentId}" draggable="true">
+                                    ${a.Customer.CustomerName} (${a.ServiceType})
                                 </div>
                             `).join('')}
                         </div>
                     ` : ''}
                 </div>
             `;
-        });
-        html += `</div>`;
-    } else if (view === 'week' || view === 'threeDay') {
-        const days = view === 'week' ? 7 : 3;
-        const startDate = new Date(currentDate);
-        startDate.setDate(currentDate.getDate() - currentDate.getDay());
-        if (view === 'threeDay') startDate.setDate(currentDate.getDate() - 1);
+            });
+            html += `</div>`;
+        } else if (view === 'week' || view === 'threeDay') {
+            const days = view === 'week' ? 7 : 3;
+            const startDate = new Date(currentDate);
+            startDate.setDate(currentDate.getDate() - currentDate.getDay());
+            if (view === 'threeDay') startDate.setDate(currentDate.getDate() - 1);
 
-        const dayDates = Array.from({ length: days }, (_, i) => {
-            const d = new Date(startDate);
-            d.setDate(startDate.getDate() + i);
-            return d.toISOString().split('T')[0];
-        });
+            const dayDates = Array.from({ length: days }, (_, i) => {
+                const d = new Date(startDate);
+                d.setDate(startDate.getDate() + i);
+                return d.toISOString().split('T')[0];
+            });
 
-        html += `
+            html += `
             <div class="border rounded overflow-hidden">
                 <div class="calendar-grid" style="grid-template-columns: 60px repeat(${dayDates.length}, 1fr);">
                     <div class="p-2 border-right bg-gray-50 calendar-header-cell"></div>
@@ -423,72 +492,75 @@ function renderDateView(date) {
                 <div class="calendar-body">
         `;
 
-        const renderedAppointments = {};
-        const spannedSlots = {};
-        dayDates.forEach(d => {
-            renderedAppointments[d] = new Set();
-            spannedSlots[d] = new Array(allTimeSlots.length).fill(false);
-        });
+            const renderedAppointments = {};
+            const spannedSlots = {};
+            dayDates.forEach(d => {
+                renderedAppointments[d] = new Set();
+                spannedSlots[d] = new Array(allTimeSlots.length).fill(false);
+            });
 
-        allTimeSlots.forEach((time, index) => {
-            html += `
+            allTimeSlots.forEach((time, index) => {
+                html += `
                 <div class="calendar-grid" style="grid-template-columns: 60px repeat(${dayDates.length}, 1fr);">
                     <div class="h-80px border-bottom last-border-bottom-none p-1 fs-7 text-right pr-2 bg-gray-50 calendar-time-cell">
-                        ${time.label}
+                        ${time.TimeBlock}
                     </div>
             `;
-            dayDates.forEach(dStr => {
-                if (spannedSlots[dStr][index]) {
-                    html += '<div class="h-80px border-bottom last-border-bottom-none border-right last-border-right-none p-1 calendar-cell"></div>';
-                    return;
-                }
+                dayDates.forEach(dStr => {
+                    if (spannedSlots[dStr][index]) {
+                        html += '<div class="h-80px border-bottom last-border-bottom-none border-right last-border-right-none p-1 calendar-cell"></div>';
+                        return;
+                    }
 
-                const events = filteredAppointments.filter(a =>
-                    a.date === dStr &&
-                    a.timeSlot &&
-                    timeSlots[a.timeSlot].start === time.value &&
-                    !renderedAppointments[dStr].has(a.id)
-                );
+                    const events = filteredAppointments.filter(a =>
+                        a.RequestDate === dStr &&
+                        a.TimeSlot === time.TimeBlockSchedule &&
+                        !renderedAppointments[dStr].has(a.AppoinmentId)
+                    );
 
-                let cellContent = '';
-                let rowspan = 1;
+                    let cellContent = '';
+                    let rowspan = 1;
 
-                if (events.length > 0) {
-                    events.forEach(a => {
-                        const duration = a.duration || 1;
-                        rowspan = Math.min(duration, allTimeSlots.length - index);
-                        renderedAppointments[dStr].add(a.id);
+                    if (events.length > 0) {
+                        events.forEach(a => {
+                            let duration = 1;
+                            if (a.TimeSlot == time.TimeBlockSchedule) {
+                                duration = time.Duration;
+                            }
+                            console.log(duration);
+                            rowspan = Math.min(duration, allTimeSlots.length - index);
+                            renderedAppointments[dStr].add(a.AppoinmentId);
 
-                        for (let i = index + 1; i < index + rowspan && i < allTimeSlots.length; i++) {
-                            spannedSlots[dStr][i] = true;
-                        }
+                            for (let i = index + 1; i < index + rowspan && i < allTimeSlots.length; i++) {
+                                spannedSlots[dStr][i] = true;
+                            }
 
-                        cellContent += `
+                            cellContent += `
                             <div class="calendar-event ${getEventTimeSlotClass(a)} width-95 z-10 cursor-move"
                                  style="height: ${80 * rowspan - 10}px; top: ${2}px;" 
                                  data-id="${a.id}" draggable="true">
-                                <div class="font-weight-medium fs-7">${a.customerName}</div>
+                                <div class="font-weight-medium fs-7">${a.Customer.CustomerName}</div>
                                 <div class="fs-7 truncate">
-                                    ${a.serviceType} (${a.duration}h)
+                                    ${a.ServiceType} (${duration}m)
                                 </div>
                             </div>
                         `;
-                    });
-                }
+                        });
+                    }
 
-                html += `
+                    html += `
                     <div class="h-80px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
-                         data-date="${dStr}" data-time="${time.value}">
+                         data-date="${dStr}" data-time="${time.TimeBlock}">
                         ${cellContent}
                     </div>
                 `;
+                });
+                html += `</div>`;
             });
-            html += `</div>`;
-        });
 
-        html += `</div></div>`;
-    } else {
-        html += `
+            html += `</div></div>`;
+        } else {
+            html += `
             <div class="border rounded overflow-hidden">
                 <div class="calendar-grid" style="grid-template-columns: 60px 1fr;">
                     <div class="p-2 border-right bg-gray-50 calendar-header-cell"></div>
@@ -499,73 +571,77 @@ function renderDateView(date) {
                 <div class="calendar-body">
         `;
 
-        const spannedSlots = new Array(allTimeSlots.length).fill(false);
-        const renderedAppointments = new Set();
+            const spannedSlots = new Array(allTimeSlots.length).fill(false);
+            const renderedAppointments = new Set();
 
-        allTimeSlots.forEach((time, index) => {
-            html += `
+            allTimeSlots.forEach((time, index) => {
+                html += `
                 <div class="calendar-grid" style="grid-template-columns: 60px 1fr;">
                     <div class="h-80px border-bottom last-border-bottom-none p-1 fs-7 text-right pr-2 bg-gray-50 calendar-time-cell">
-                        ${time.label}
+                        ${time.TimeBlock}
                     </div>
             `;
 
-            if (spannedSlots[index]) {
-                html += `
+                if (spannedSlots[index]) {
+                    html += `
                     <div class="h-80px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
-                         data-date="${dateStr}" data-time="${time.value}">
+                         data-date="${dateStr}" data-time="${time.TimeBlockSchedule}">
                     </div>
                 `;
-            } else {
-                const events = filteredAppointments.filter(a =>
-                    a.date === dateStr &&
-                    a.timeSlot &&
-                    timeSlots[a.timeSlot].start === time.value &&
-                    !renderedAppointments.has(a.id)
-                );
+                } else {
+                    const events = filteredAppointments.filter(a =>
+                        a.RequestDate === dateStr &&
+                        a.TimeSlot == time.TimeBlockSchedule &&
+                        !renderedAppointments.has(a.AppoinmentId)
+                    );
 
-                let cellContent = '';
-                let rowspan = 1;
+                    let cellContent = '';
+                    let rowspan = 1;
 
-                if (events.length > 0) {
-                    events.forEach(a => {
-                        const duration = a.duration || 1;
-                        rowspan = Math.min(duration, allTimeSlots.length - index);
-                        renderedAppointments.add(a.id);
+                    if (events.length > 0) {
+                        events.forEach(a => {
+                            let duration = 1;
+                            if (a.TimeSlot == time.TimeBlockSchedule) {
+                                duration = time.Duration;
+                            }
+                            console.log(duration);
+                            rowspan = Math.min(duration, allTimeSlots.length - index);
+                            renderedAppointments.add(a.AppoinmentId);
 
-                        for (let i = index + 1; i < index + rowspan && i < allTimeSlots.length; i++) {
-                            spannedSlots[i] = true;
-                        }
+                            for (let i = index + 1; i < index + rowspan && i < allTimeSlots.length; i++) {
+                                spannedSlots[i] = true;
+                            }
 
-                        cellContent += `
+                            cellContent += `
                             <div class="calendar-event ${getEventTimeSlotClass(a)} width-95 z-10 cursor-move"
                                  style="height: ${80 * rowspan - 10}px; top: ${2}px;" 
-                                 data-id="${a.id}" draggable="true">
-                                <div class="font-weight-medium fs-7">${a.customerName}</div>
+                                 data-id="${a.AppoinmentId}" draggable="true">
+                                <div class="font-weight-medium fs-7">${a.Customer.CustomerName}</div>
                                 <div class="fs-7 truncate">
-                                    ${a.serviceType} (${a.duration}h)
+                                    ${a.ServiceType} (${duration}m)
                                 </div>
                             </div>
                         `;
-                    });
-                }
+                        });
+                    }
 
-                html += `
+                    html += `
                     <div class="h-80px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
-                         data-date="${dateStr}" data-time="${time.value}">
+                         data-date="${dateStr}" data-time="${time.TimeBlock}">
                         ${cellContent}
                     </div>
                 `;
-            }
-            html += `</div>`;
-        });
+                }
+                html += `</div>`;
+            });
 
-        html += `</div></div>`;
-    }
+            html += `</div></div>`;
+        }
 
-    container.html(html);
-    setupDragAndDrop();
-    renderUnscheduledList();
+        container.html(html);
+        setupDragAndDrop();
+        renderUnscheduledList();
+    });
 }
 
 // Render Resource View
@@ -685,34 +761,34 @@ function renderListView() {
 // Render Unscheduled List
 function renderUnscheduledList(view = 'date') {
     const container = view === 'date' ? $("#unscheduledList") : $("#unscheduledListResource");
-    const statusFilter = view === 'date' ? $("#statusFilter").val() : $("#statusFilterResource").val();
-    const serviceTypeFilter = view === 'date' ? $("#serviceTypeFilter").val() : $("#serviceTypeFilterResource").val();
+    const statusFilter = view === 'date' ? $("#MainContent_StatusTypeFilter").val() : $("#statusFilterResource").val();
+    const serviceTypeFilter = view === 'date' ? $("#MainContent_ServiceTypeFilter_2").val() : $("#serviceTypeFilterResource").val();
     const searchFilter = view === 'date' ? $("#searchFilter").val().toLowerCase() : $("#searchFilterResource").val().toLowerCase();
 
-    let unscheduled = appointments.filter(a => !a.date || !a.timeSlot);
+    // let unscheduled = appointments.filter(a => !a.RequestDate || !a.TimeSlot);
+    let unscheduled = appointments;
 
-    if (statusFilter !== 'all') {
-        unscheduled = unscheduled.filter(a => a.status === statusFilter);
+    if (statusFilter !== '') {
+        unscheduled = unscheduled.filter(a => a.AppoinmentStatus === statusFilter);
     }
-    if (serviceTypeFilter !== 'all') {
-        unscheduled = unscheduled.filter(a => a.serviceType === serviceTypeFilter);
+    if (serviceTypeFilter !== '') {
+        unscheduled = unscheduled.filter(a => a.ServiceType === serviceTypeFilter);
     }
     if (searchFilter) {
-        unscheduled = unscheduled.filter(a => a.customerName.toLowerCase().includes(searchFilter));
+        unscheduled = unscheduled.filter(a => a.Customer.CustomerName.toLowerCase().includes(searchFilter));
     }
 
     container.html(unscheduled.length === 0 ? '<div class="text-center py-4 text-muted">No unscheduled appointments.</div>' :
         unscheduled.map(a => `
-            <div class="appointment-card card mb-3 shadow-sm" data-id="${a.id}" draggable="true">
+            <div class="appointment-card card mb-3 shadow-sm" data-id="${a.AppoinmentId}" draggable="true">
                 <div class="card-body p-3">
                     <div class="d-flex justify-content-between align-items-start">
-                        <h3 class="font-weight-medium fs-6 mb-0">${a.customerName}</h3>
-                        <span class="badge ${a.priority === 'High' ? 'bg-danger' : a.priority === 'Medium' ? 'bg-warning' : 'bg-success'}">${a.priority}</span>
+                        <h3 class="font-weight-medium fs-6 mb-0">${a.Customer.CustomerName}</h3>
                     </div>
-                    <div class="fs-7 text-muted mt-1 line-clamp-2">${a.location.address}</div>
+                    <div class="fs-7 text-muted mt-1 line-clamp-2">${a.Customer.Address1}</div>
                     <div class="d-flex justify-content-between align-items-center mt-2">
-                        <span class="fs-7">${a.serviceType}</span>
-                        <button class="btn btn-outline-secondary btn-sm" onclick="openEditModal(${a.id})">Schedule</button>
+                        <span class="fs-7">${a.ServiceType}</span>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="openEditModal(${a.AppoinmentId})">Schedule</button>
                     </div>
                 </div>
             </div>
@@ -720,6 +796,10 @@ function renderUnscheduledList(view = 'date') {
 
     setupDragAndDrop();
 }
+
+//  <span class="badge ${a.priority === 'High' ? 'bg-danger' : a.priority === 'Medium' ? 'bg-warning' : 'bg-success'}">${a.priority}</span>
+
+
 
 // Setup drag-and-drop functionality
 function setupDragAndDrop() {
@@ -786,7 +866,7 @@ function setupDragAndDrop() {
 function openNewModal(date = null) {
     const modal = new bootstrap.Modal(document.getElementById("newModal"));
     const form = document.getElementById("newForm");
-    form.reset();
+    //form.reset();
     if (date) form.querySelector("[name='date']").value = date;
     modal.show();
 }
@@ -948,9 +1028,12 @@ function updateAllViews() {
     }
 }
 
+var today = new Date().toISOString().split('T')[0];
 // Initialize the page
 document.addEventListener('DOMContentLoaded', () => {
-    const today = new Date().toISOString().split('T')[0];
+
+    getTimeSlots();
+
     $("#dayDatePicker").val(today);
     $("#resourceDatePicker").val(today);
     $("#listDatePicker").val(today);
@@ -1002,8 +1085,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Start real-time updates
     simulateRealTimeUpdates();
-
-    // Initial render
     renderDateView(today);
     renderResourceView(today);
     renderListView();
@@ -1017,3 +1098,35 @@ document.querySelectorAll('[data-bs-dismiss="modal"]').forEach(button => {
         modal.hide();
     });
 });
+
+
+function calculateDurationInMinutes(startTime, endTime) {
+    const parseTime = timeStr => {
+        const [time, modifier] = timeStr.split(' ');
+        let [hours, minutes] = time.split(':').map(Number);
+        if (modifier === 'PM' && hours !== 12) hours += 12;
+        if (modifier === 'AM' && hours === 12) hours = 0;
+        return hours * 60 + minutes;
+    };
+
+    const startMinutes = parseTime(startTime);
+    const endMinutes = parseTime(endTime);
+    return endMinutes - startMinutes;
+}
+
+function getTimeSlots() {
+    $.ajax({
+        type: "POST",
+        url: "Appointments.aspx/GetTimeSlots",
+        data: {},
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        success: function (response) {
+            console.log(response.d);
+            allTimeSlots = response.d;
+        },
+        error: function (xhr, status, error) {
+            console.error("Error updating details: ", error);
+        }
+    });
+}

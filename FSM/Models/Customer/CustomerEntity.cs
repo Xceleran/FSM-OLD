@@ -55,6 +55,8 @@ namespace FSM.Models.Customer
         public string CurrentProjectId { get; set; } = "";
         public string CreatedCompanyID { get; set; } = "";
 
+
+        public string CustomerName {  get; set; }   
         public Dictionary<string, string> CustomFields { get; set; }
 
     }
@@ -70,8 +72,12 @@ namespace FSM.Models.Customer
         public int PaidInvoices { get; set; }
     }
 
-    public class CustomerAppoinment : CustomerBaseEntity
+    public class CustomerAppoinment
     {
+        public CustomerAppoinment()
+        {
+            Customer = new CustomerEntity();
+        }
         public string AppoinmentId { get; set; }
         public string AppoinmentDate { get; set; }
         public string RequestDate { get; set; }
@@ -82,10 +88,12 @@ namespace FSM.Models.Customer
         public string TicketStatus { get; set; }
         public string CustomTags { get; set; }
         public string AppoinmentStatus { get; set; }
+
+        public CustomerEntity Customer { get; set; }
     }
 
     public class CustomerInvoice : CustomerBaseEntity
-    { 
+    {
         public string InvoiceDate { get; set; }
         public string InvoiceNumber { get; set; }
         public string InvoiceType { get; set; }

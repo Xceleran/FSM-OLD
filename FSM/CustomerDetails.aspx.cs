@@ -219,8 +219,8 @@ namespace FSM
                     foreach (DataRow row in dt.Rows)
                     {
                         var appoinment = new CustomerAppoinment();
-                        appoinment.CustomerID = customerId;
-                        appoinment.CompanyID = companyid;
+                        appoinment.Customer.CustomerID = customerId;
+                        appoinment.Customer.CompanyID = companyid;
                         appoinment.AppoinmentStatus = row.Field<string>("AppStatus") ?? "";
                         appoinment.TicketStatus = row.Field<string>("AppTicketStatus") ?? "";
                         appoinment.ResourceName = row.Field<string>("ResourceName") ?? "";
@@ -228,7 +228,6 @@ namespace FSM
                         appoinment.RequestDate = row.Field<string>("ApptDateTimeConverted") ?? "";
                         appoinment.TimeSlot = row.Field<string>("TimeSlot") ?? "";
                         appoinment.AppoinmentDate = row.Field<string>("ApptDateTimeConverted") ?? "";
-
                         appoinments.Add(appoinment);
                     }
                 }
