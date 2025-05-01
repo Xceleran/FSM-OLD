@@ -47,7 +47,10 @@ table#invoiceTable {
     border-radius: 8px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
-
+[data-theme="dark"] .dropdown-option:hover {
+    background: #0d6efd;
+    color: white;
+}
 [data-theme="dark"] .invoice-table {
     background: rgba(255, 255, 255, 0.12);
     backdrop-filter: blur(8px);
@@ -224,7 +227,7 @@ table#invoiceTable {
 }
 
 .dropdown-selected {
-    padding: 10px;
+    padding: 6px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -259,7 +262,7 @@ table#invoiceTable {
     background: rgb(255, 255, 255);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgb(67 65 65 / 87%);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
@@ -269,7 +272,7 @@ table#invoiceTable {
 }
 
 [data-theme="dark"] .dropdown-option {
-    color: rgb(90, 90, 90);
+    color: rgb(34 34 34);
 }
 
 .dropdown-option:hover {
@@ -590,7 +593,9 @@ table#invoiceTable {
     margin-top: 20px;
     text-align: right;
 }
-
+#itemBody tr{
+        background: #ffffff;
+}
 .totals-section div {
     display: flex;
     justify-content: flex-end;
@@ -598,6 +603,7 @@ table#invoiceTable {
     font-size: 14px;
     color: #4b5563;
     margin-bottom: 5px;
+    margin-right: 5px;
 }
 
 .totals-section div strong {
@@ -840,6 +846,10 @@ table#invoiceTable {
         padding: 10px;
     }
 }
+select.form-select.form-select-sm {
+    color: black !important;
+    background: white !important;
+}
    </style>
 
     <!-- Ensure DataTables CSS/JS are included -->
@@ -1061,7 +1071,7 @@ table#invoiceTable {
                                     </table>
                                 </div>
                             </div>
-                            <div class="col-12 mt-5">
+                          <%--  <div class="col-12 mt-5">
                                 <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
                                     <div class="col d-flex justify-content-start align-items-center">
                                         <input type="button" class="btn btn-secondary w-100" value="Email" onclick="sendMailDivToggole()" />
@@ -1075,10 +1085,10 @@ table#invoiceTable {
                                             <option value="">Select Payment Option</option>
                                             <option value="gpi">XinatorCC Payment Processor</option>
                                             <%-- <option value="wisetack" runat="server">WiseTack- Consumer Financing</option>--%>
-                                        </select>
+                             <%--           </select>
                                     </div>
                                 </div>
-                            </div>
+                            </div>--%>
                         </div>
                         <br />
                         <br />
@@ -1390,15 +1400,26 @@ table#invoiceTable {
                 data: "{InvoiceNo: '" + invoiceNumber + "',CustomerID:'" + customerId + "'}",
                 dataType: 'json',
                 success: function (sR) {
-                    console.log(sR)
+                    console.log('OpenInvoice response:', sR);
                     const jsonData = JSON.parse(sR.d);
-                    console.log(jsonData.Table)
-                    console.log(jsonData.Table1)
-                    console.log(jsonData.Table2)
+                    console.log('Table:', jsonData.Table);
+                    console.log('Table1:', jsonData.Table1);
+                    console.log('Table2:', jsonData.Table2);
+
+                    if (!jsonData.Table1 || !jsonData.Table1[0]) {
+                        console.error('Invoice data not found');
+                        alert('Failed to load invoice details.');
+                        return;
+                    }
 
                     var CustomerData = jsonData.Table[0];
                     var InvoiceData = jsonData.Table1[0];
                     var invDetailsData = jsonData.Table2;
+
+                    // Set Subtotal with fallback
+                    $("#MainContent_bottom_Subtotal").text("$" + (InvoiceData.Subtotal || '0.00'));
+
+                    // Rest of the existing code (CustomerName, Address, etc.)
                     if (CustomerData.ctype.toString() == '2') {
                         $("#InvoiceDesclimer").hide();
                         $("#IsSendWisetackPaymentLinkDIV").hide();
@@ -1406,64 +1427,66 @@ table#invoiceTable {
                         $("#InvoiceDesclimer").show();
                         $("#IsSendWisetackPaymentLinkDIV").show();
                     }
-                    if (InvoiceData != null) {
-                        console.log("IsConverted", InvoiceData.IsConverted)
-                        if (InvoiceData.IsConverted == '1') {
-                            $("#div_Converted").show();
-                            var convertHtmlText = "<a href=Invoice.aspx?InvNum=" + InvoiceData.ConvertedInvocieID.toString() + "&cId=" + CustomerData.CustomerGuid.toString() + "&InType=Invoice&AppID=" + InvoiceData.AppointmentId.toString() + ">" +
-                                "<span class='badge badge-success' style='color: #fff;background-color: #28a745;font-size: 14px !important;font-weight: 400 !important;'><i class='fa fa-check-circle' style='font-size:14px;color: #fff !important;margin-right: 8px;'></i>" +
-                                "Converted To Invoice # " + InvoiceData.ConvertedInvocieNumber.toString() + "</span></a>";
-                            $("#div_Converted").html(convertHtmlText);
-                        }
-                        $("#qboCustID").text(CustomerData.qboCustID.toString().replace("0", ""));
-                        $("#qboInvID").text(InvoiceData.qboInvID.toString().replace("0", ""));
-                        $("#InvPrimaryID").val(invoiceNumber);
-                        $("#qboEstID").text(InvoiceData.qboEstID.toString().replace("0", ""));
-                        $("#ctype").val(InvoiceData.ctype);
-                        $("#lblCustomerID").text(CustomerData.CustomerID);
-                        $("#lblCustomerName").text(CustomerData.FullName);
-                        $("#lblAddress").text(CustomerData.Address1);
-                        $("#lblCity").text(CustomerData.City);
-                        $("#lblState").text(CustomerData.State);
-                        $("#lblZip").text(CustomerData.ZipCode);
-                        $("#lblPhone").text(CustomerData.Phone);
-                        $("#lblEmail").text(CustomerData.Email);
-                        $("#lblInvoiceNo").text(InvoiceData.Number);
-                        var link = "Invoice.aspx?InvNum=" + invoiceNumber + "&cId=" + CustomerData.CustomerGuid.toString() + "&InType=" + InvoiceData.Type.toString() + "&AppID=" + InvoiceData.AppointmentId.toString();
-                        $("#lblInvoiceNo").html("<a href=Invoice.aspx?InvNum=" + invoiceNumber + "&cId=" + CustomerData.CustomerGuid.toString() + "&InType=" + InvoiceData.Type.toString() + "&AppID=" + InvoiceData.AppointmentId.toString() + ">" + InvoiceData.Number + "</a>");
-                        $("#lblInvoiceDisplayNo").text(InvoiceData.DisplayNumber);
-                        $("#lblIssueDate").text(InvoiceData.IssueDate);
-                        $("#lblInvoiceTotal").text(InvoiceData.Total);
-                        $("#bottom_Subtotal").text("$" + InvoiceData.Subtotal);
-                        $("#discount").text("$" + InvoiceData.Discount);
-                        $("#tax").text("$" + InvoiceData.Tax);
-                        $("#bottom_Total").text("$" + InvoiceData.Total);
-                        $("#_InvoiceNo").val(invoiceNumber);
-                        $('#table tbody > tr').remove();
-                        for (var i = 0; i < invDetailsData.length; i++) {
-                            var itemDetails = "<tr>" +
-                                "<td>" + invDetailsData[i].ItemName + "<br>" + invDetailsData[i].Description + "</td>" +
-                                "<td>$ " + invDetailsData[i].uPrice + "</td>" +
-                                "<td>" + invDetailsData[i].Quantity + "</td>" +
-                                "<td>$ " + invDetailsData[i].TotalPrice + "</td>" +
-                                "</tr>";
-                            $('#itemBody').append(itemDetails);
-                        }
-                        if (InvoiceData.Type.toString() == "Invoice") {
-                            $('#btn_Collect_Payment').show();
-                            $('#h_Type').html("Invoice " + InvoiceData.Number);
-                            $('#IsSendPaymentLinkDIV').show();
-                            $('#PaymentProcessSelect').show();
-                        }
-                        else {
-                            $('#h_Type').html("Estimate " + InvoiceData.Number);
-                        }
-                        ShowPopup();
+
+                    if (InvoiceData.IsConverted == '1') {
+                        $("#div_Converted").show();
+                        var convertHtmlText = "<a href=Invoice.aspx?InvNum=" + InvoiceData.ConvertedInvocieID.toString() + "&cId=" + CustomerData.CustomerGuid.toString() + "&InType=Invoice&AppID=" + InvoiceData.AppointmentId.toString() + ">" +
+                            "<span class='badge badge-success' style='color: #fff;background-color: #28a745;font-size: 14px !important;font-weight: 400 !important;'><i class='fa fa-check-circle' style='font-size:14px;color: #fff !important;margin-right: 8px;'></i>" +
+                            "Converted To Invoice # " + InvoiceData.ConvertedInvocieNumber.toString() + "</span></a>";
+                        $("#div_Converted").html(convertHtmlText);
                     }
+
+                    $("#qboCustID").text(CustomerData.qboCustID.toString().replace("0", ""));
+                    $("#qboInvID").text(InvoiceData.qboInvID.toString().replace("0", ""));
+                    $("#InvPrimaryID").val(invoiceNumber);
+                    $("#qboEstID").text(InvoiceData.qboEstID.toString().replace("0", ""));
+                    $("#ctype").val(InvoiceData.ctype);
+                    $("#lblCustomerID").text(CustomerData.CustomerID);
+                    $("#lblCustomerName").text(CustomerData.FullName);
+                    $("#lblAddress").text(CustomerData.Address1);
+                    $("#lblCity").text(CustomerData.City);
+                    $("#lblState").text(CustomerData.State);
+                    $("#lblZip").text(CustomerData.ZipCode);
+                    $("#lblPhone").text(CustomerData.Phone);
+                    $("#lblEmail").text(CustomerData.Email);
+                    $("#lblInvoiceNo").text(InvoiceData.Number);
+                    $("#lblInvoiceNo").html("<a href=Invoice.aspx?InvNum=" + invoiceNumber + "&cId=" + CustomerData.CustomerGuid.toString() + "&InType=" + InvoiceData.Type.toString() + "&AppID=" + InvoiceData.AppointmentId.toString() + ">" + InvoiceData.Number + "</a>");
+                    $("#lblInvoiceDisplayNo").text(InvoiceData.DisplayNumber);
+                    $("#lblIssueDate").text(InvoiceData.IssueDate);
+                    $("#lblInvoiceTotal").text(InvoiceData.Total);
+                    $("#bottom_Subtotal").text("$" + (InvoiceData.Subtotal || '0.00'));
+                    $("#MainContent_discount").text("$" + (InvoiceData.Discount || '0.00'));
+                    $("#MainContent_tax").text("$" + (InvoiceData.Tax || '0.00'));
+                    $("#MainContent_bottom_Total").text("$" + (InvoiceData.Total || '0.00'));
+                    $("#_InvoiceNo").val(invoiceNumber);
+
+                    $('#table tbody > tr').remove();
+                    for (var i = 0; i < invDetailsData.length; i++) {
+                        var itemDetails = "<tr>" +
+                            "<td>" + invDetailsData[i].ItemName + "<br>" + invDetailsData[i].Description + "</td>" +
+                            "<td>$ " + invDetailsData[i].uPrice + "</td>" +
+                            "<td>" + invDetailsData[i].Quantity + "</td>" +
+                            "<td>$ " + invDetailsData[i].TotalPrice + "</td>" +
+                            "</tr>";
+                        $('#itemBody').append(itemDetails);
+                    }
+
+                    if (InvoiceData.Type.toString() == "Invoice") {
+                        $('#btn_Collect_Payment').show();
+                        $('#h_Type').html("Invoice " + InvoiceData.Number);
+                        $('#IsSendPaymentLinkDIV').show();
+                        $('#PaymentProcessSelect').show();
+                    } else {
+                        $('#h_Type').html("Estimate " + InvoiceData.Number);
+                    }
+
+                    ShowPopup();
                 },
                 error: function (error) {
+                    console.error('AJAX error:', error);
+                    alert('Error loading invoice data.');
                 }
-            })
+            });
         }
 
         function ShowPopup() {
