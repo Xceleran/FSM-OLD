@@ -135,6 +135,7 @@
     <Content Include="Content\bootstrap.min.css" />
     <Content Include="Content\bootstrap.rtl.css" />
     <Content Include="Content\bootstrap.rtl.min.css" />
+    <Content Include="Content\invoice.css" />
     <Content Include="Content\Site.css" />
     <Content Include="Customer.aspx" />
     <Content Include="CustomerDetails.aspx" />
