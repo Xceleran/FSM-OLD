@@ -1,4 +1,5 @@
 ﻿using FSM.Helper;
+using FSM.Models.Appoinments;
 using FSM.Models.Customer;
 using System;
 using System.Collections.Generic;
@@ -44,7 +45,9 @@ namespace FSM
                 string whereCondition = "WHERE  apt.CompanyID = '" + companyid + "' ";
                 if (!string.IsNullOrEmpty(searchValue))
                 {
-                    whereCondition += "AND (FirstName LIKE '%" + searchValue + "%' OR LastName LIKE '%" + searchValue + "%'  OR ServiceName LIKE '%" + searchValue + "%') ";
+                    whereCondition += "AND (BusinessName LIKE '%" + searchValue + "%' OR FirstName LIKE '%" + searchValue + "%' " +
+                        "OR LastName LIKE '%" + searchValue + "%'  OR ServiceName LIKE '%" + searchValue + "%' OR rs.Name LIKE '%" + searchValue + "%' " +
+                        "OR cus.Mobile LIKE '%" + searchValue + "%' OR cus.Phone LIKE '%" + searchValue + "%' OR Address1 LIKE '%" + searchValue + "%') ";
                 }
                 if (!string.IsNullOrEmpty(today))
                 {
@@ -152,6 +155,27 @@ namespace FSM
                     ServiceTypeFilter_2.DataValueField = "ServiceName";
                     ServiceTypeFilter_2.DataBind();
                     ServiceTypeFilter_2.Items.Insert(0, listItem);
+
+                    ServiceTypeFilter_Edit.DataSource = _ServiceType;
+                    ServiceTypeFilter_Edit.DataBind();
+                    ServiceTypeFilter_Edit.DataTextField = "ServiceName";
+                    ServiceTypeFilter_Edit.DataValueField = "ServiceName";
+                    ServiceTypeFilter_Edit.DataBind();
+                    ServiceTypeFilter_Edit.Items.Insert(0, listItem);
+
+                    ServiceTypeFilterResource.DataSource = _ServiceType;
+                    ServiceTypeFilterResource.DataBind();
+                    ServiceTypeFilterResource.DataTextField = "ServiceName";
+                    ServiceTypeFilterResource.DataValueField = "ServiceName";
+                    ServiceTypeFilterResource.DataBind();
+                    ServiceTypeFilterResource.Items.Insert(0, listItem);
+
+                    ServiceTypeFilter_List.DataSource = _ServiceType;
+                    ServiceTypeFilter_List.DataBind();
+                    ServiceTypeFilter_List.DataTextField = "ServiceName";
+                    ServiceTypeFilter_List.DataValueField = "ServiceName";
+                    ServiceTypeFilter_List.DataBind();
+                    ServiceTypeFilter_List.Items.Insert(0, listItem);
                 }
                 if(_Status.Rows.Count > 0)
                 {
@@ -161,6 +185,13 @@ namespace FSM
                     StatusTypeFilter.DataValueField = "StatusName";
                     StatusTypeFilter.DataBind();
                     StatusTypeFilter.Items.Insert(0, new ListItem("All Status", ""));
+
+                    StatusTypeFilter_List.DataSource = _Status;
+                    StatusTypeFilter_List.DataBind();
+                    StatusTypeFilter_List.DataTextField = "StatusName";
+                    StatusTypeFilter_List.DataValueField = "StatusName";
+                    StatusTypeFilter_List.DataBind();
+                    StatusTypeFilter_List.Items.Insert(0, new ListItem("All Status", ""));
                 }
             }
 
@@ -215,6 +246,44 @@ namespace FSM
             return timeSlots;
         }
 
+        [WebMethod]
+        [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
+        public static List<Resource> GetResourcess()
+        {
+            string CompanyID = HttpContext.Current.Session["CompanyID"].ToString();
+            var resources = new List<Resource>();
+            Database db = new Database();
+            try
+            {
+                db.Open();
+                DataTable dt = new DataTable();
+                string sql = @"SELECT  [Id], [Name] FROM[msSchedulerV3].[dbo].[tbl_Resources] where companyid = '" + CompanyID + "' Order By Name;";
+
+                db.Execute(sql, out dt);
+                db.Close();
+                if (dt.Rows.Count > 0)
+                {
+                    foreach (DataRow row in dt.Rows)
+                    {
+                        var resource = new Resource();
+                        resource.Id = row.Field<int?>("Id") ?? 0;
+                        resource.ResourceName = row.Field<string>("Name") ?? "";
+                        resources.Add(resource);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                db.Close();
+                return resources;
+            }
+            finally
+            {
+                db.Close();
+            }
+            return resources;
+        }
+
 
         public static int CalculateDurationInMinutes(string startTime, string endTime)
         {
@@ -231,18 +300,4 @@ namespace FSM
         }
 
     }
-
-    public class TimeSlot
-    {
-        public int ID { get; set; }
-        public string CompanyID { get; set; }
-        public string TimeBlock { get; set; }
-        public string StartTime { get; set; }
-        public string EndTime { get; set; }
-        public string TimeBlockSchedule { get; set; }
-        public bool? IsFromCalender { get; set; }
-
-        public int? Duration { get; set; }
-    }
-
 }

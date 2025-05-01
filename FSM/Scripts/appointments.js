@@ -79,7 +79,6 @@ function getAppoinments(searchValue, fromDate, toDate, today, callback) {
     fromDate = fromDate;
     toDate = toDate;
     today = today;
-    console.log(today);
     $.ajax({
         type: "POST",
         url: "Appointments.aspx/LoadAppoinments",
@@ -369,6 +368,7 @@ function nextPeriod(containerId) {
 
 // Go to today
 function gotoToday(containerId) {
+    alert(containerId);
     currentDate = new Date();
     const dateStr = currentDate.toISOString().split('T')[0];
     const datePicker = containerId === "dateNav" ? "#dayDatePicker" : "#resourceDatePicker";
@@ -384,7 +384,6 @@ function renderDateView(date) {
     const view = $("#viewSelect").val();
     const filter = $("#MainContent_ServiceTypeFilter").val();
     const dateStr = currentDate.toISOString().split('T')[0];
-    console.log(filter);
     renderDateNav("dateNav", dateStr);
     let fromDate, toDate, today;
     let fromStr, toStr;
@@ -503,7 +502,7 @@ function renderDateView(date) {
                 html += `
                 <div class="calendar-grid" style="grid-template-columns: 60px repeat(${dayDates.length}, 1fr);">
                     <div class="h-80px border-bottom last-border-bottom-none p-1 fs-7 text-right pr-2 bg-gray-50 calendar-time-cell">
-                        ${time.TimeBlock}
+                        ${time.TimeBlockSchedule}
                     </div>
             `;
                 dayDates.forEach(dStr => {
@@ -527,7 +526,7 @@ function renderDateView(date) {
                             if (a.TimeSlot == time.TimeBlockSchedule) {
                                 duration = time.Duration;
                             }
-                            console.log(duration);
+                            
                             rowspan = Math.min(duration, allTimeSlots.length - index);
                             renderedAppointments[dStr].add(a.AppoinmentId);
 
@@ -550,7 +549,7 @@ function renderDateView(date) {
 
                     html += `
                     <div class="h-80px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
-                         data-date="${dStr}" data-time="${time.TimeBlock}">
+                         data-date="${dStr}" data-time="${time.TimeBlockSchedule}">
                         ${cellContent}
                     </div>
                 `;
@@ -578,7 +577,7 @@ function renderDateView(date) {
                 html += `
                 <div class="calendar-grid" style="grid-template-columns: 60px 1fr;">
                     <div class="h-80px border-bottom last-border-bottom-none p-1 fs-7 text-right pr-2 bg-gray-50 calendar-time-cell">
-                        ${time.TimeBlock}
+                        ${time.TimeBlockSchedule}
                     </div>
             `;
 
@@ -604,7 +603,6 @@ function renderDateView(date) {
                             if (a.TimeSlot == time.TimeBlockSchedule) {
                                 duration = time.Duration;
                             }
-                            console.log(duration);
                             rowspan = Math.min(duration, allTimeSlots.length - index);
                             renderedAppointments.add(a.AppoinmentId);
 
@@ -731,30 +729,92 @@ function renderResourceView(date) {
 }
 
 // Render List View
-function renderListView() {
-    const selectedDate = $("#listDatePicker").val() || new Date().toISOString().split('T')[0];
-    const tbody = $("#listTableBody");
-    const filteredAppointments = appointments.filter(a => a.date === selectedDate);
 
-    tbody.html(filteredAppointments.length === 0 ? '<tr><td colspan="7" class="text-center">No appointments for this date.</td></tr>' :
-        filteredAppointments.map(a => {
-            const timeSlot = a.timeSlot ? a.timeSlot.charAt(0).toUpperCase() + a.timeSlot.slice(1) : 'N/A';
-            const duration = a.duration || 1;
-            return `
-                <tr data-id="${a.id}">
-                    <td>${a.customerName}</td>
-                    <td>${a.serviceType}</td>
-                    <td>${a.date || 'N/A'}</td>
+
+function searchListView(e) {
+    e.preventDefault();
+    const selectedDateFrom = $("#listDatePickerFrom").val();
+    const selectedDateTo = $("#listDatePickerTo").val();
+    if (!selectedDateFrom || !selectedDateTo) {
+        alert("Select from date and to date");
+        return;
+    }
+    renderListView();
+}
+
+function clearFilterListView(e) {
+    e.preventDefault();
+    const selectedDateFrom = $("#listDatePickerFrom").val();
+    const selectedDateTo = $("#listDatePickerTo").val();
+    const statusFilter = $("#MainContent_StatusTypeFilter_List").val();
+    const typeFilter = $("#MainContent_ServiceTypeFilter_List").val();
+    const searchTerm = $("#search_term").val().trim().toLowerCase();
+
+    if (selectedDateFrom == "" && selectedDateTo == "" && statusFilter == "" && typeFilter == "" && searchTerm == "") {
+        return;
+    }
+
+    $("#listDatePickerFrom").val("");
+    $("#listDatePickerTo").val("");
+    $("#MainContent_StatusTypeFilter_List").val("");
+    $("#MainContent_ServiceTypeFilter_List").val("");
+    $("#search_term").val("");
+    renderListView();
+}
+function renderListView() {
+    const selectedDateFrom = $("#listDatePickerFrom").val() || "";
+    const selectedDateTo = $("#listDatePickerTo").val() || "";
+    const statusFilter = $("#MainContent_StatusTypeFilter_List").val();
+    const typeFilter = $("#MainContent_ServiceTypeFilter_List").val();
+    const searchTerm = $("#search_term").val().trim().toLowerCase() || "";
+
+    const tbody = $("#listTableBody");
+    getAppoinments(searchTerm, selectedDateFrom, selectedDateTo, "", function (appointments) {
+
+        var filteredAppointments = appointments.filter(item => {
+            const matchesType = typeFilter === '' ||
+                (item.ServiceType === typeFilter);
+
+            const matchesStatus = statusFilter === '' ||
+                (item.AppoinmentStatus === statusFilter);
+
+            const combinedText = [
+                item.Customer.CustomerName,
+                item.Customer.BusinessName,
+                item.ResourceName,
+                item.Customer.Mobile,
+                item.Customer.Phone,
+                item.Customer.Address1
+            ].join(' ').toLowerCase();
+
+            const matchesSearch = combinedText.includes(searchTerm);
+            return matchesType && matchesStatus && matchesSearch;
+        });
+
+        tbody.html(filteredAppointments.length === 0 ? '<tr><td colspan="7" class="text-center">No appointments for this date.</td></tr>' :
+            filteredAppointments.map(a => {
+                const timeSlot = a.TimeSlot ? a.TimeSlot.charAt(0).toUpperCase() + a.TimeSlot.slice(1) : 'N/A';
+                const duration = a.Duration || 1;
+                return `
+                <tr data-id="${a.AppoinmentId}">
+                    <td>${a.Customer.CustomerName}</td>
+                    <td>${a.Customer.BusinessName}</td>
+                    <td>${a.Customer.Address1 || 'N/A'}</td>
+                    <td>${a.RequestDate || 'N/A'}</td>
                     <td>${timeSlot}</td>
-                    <td>${duration}h</td>
-                    <td>${a.resource}</td>
-                    <td>${a.location?.address || 'N/A'}</td>
+                    <td>${a.ServiceType}</td>
+                    <td>${a.Customer.Mobile}</td>
+                    <td>${a.Customer.Phone}</td>
+                    <td>${a.AppoinmentStatus}</td>
+                    <td>${a.ResourceName}</td>
+                    <td>${a.TicketStatus}</td>
                 </tr>
             `;
-        }).join(''));
+            }).join(''));
 
-    $(document).off('click', '#listTableBody tr').on('click', '#listTableBody tr', function () {
-        openEditModal($(this).data("id"));
+        $(document).off('click', '#listTableBody tr').on('click', '#listTableBody tr', function () {
+            openEditModal($(this).data("id"));
+        });
     });
 }
 
@@ -786,6 +846,7 @@ function renderUnscheduledList(view = 'date') {
                         <h3 class="font-weight-medium fs-6 mb-0">${a.Customer.CustomerName}</h3>
                     </div>
                     <div class="fs-7 text-muted mt-1 line-clamp-2">${a.Customer.Address1}</div>
+                    <div class="fs-7 text-muted mt-1 line-clamp-2">${a.TimeSlot}</div>
                     <div class="d-flex justify-content-between align-items-center mt-2">
                         <span class="fs-7">${a.ServiceType}</span>
                         <button class="btn btn-outline-secondary btn-sm" onclick="openEditModal(${a.AppoinmentId})">Schedule</button>
@@ -905,19 +966,20 @@ function createAppointment(e) {
 
 // Open modal to edit an appointment
 function openEditModal(id) {
-    const a = appointments.find(x => x.id === id);
+    const a = appointments.find(x => x.AppoinmentId === id.toString());
+    console.log(a);
     if (!a) return;
     currentEditId = id;
     const form = document.getElementById("editForm");
-    form.querySelector("[name='id']").value = a.id;
-    form.querySelector("[name='customerName']").value = a.customerName;
-    form.querySelector("[name='serviceType']").value = a.serviceType;
-    form.querySelector("[name='date']").value = a.date || '';
-    form.querySelector("[name='resource']").value = a.resource;
-    form.querySelector("[name='timeSlot']").value = a.timeSlot || 'morning';
-    form.querySelector("[name='duration']").value = a.duration || 1;
-    form.querySelector("[name='address']").value = a.location?.address || '';
-    form.querySelector("[name='status']").value = a.status;
+    form.querySelector("[name='id']").value = parseInt(a.AppoinmentId);
+    form.querySelector("[name='customerName']").value = a.Customer.CustomerName;
+    form.querySelector("[id='MainContent_ServiceTypeFilter_Edit']").value = a.ServiceType;
+    form.querySelector("[name='date']").value = a.RequestDate || '';
+    form.querySelector("[name='resource']").value = a.ResourceName;
+    form.querySelector("[name='timeSlot']").value = a.TimeSlot || 'morning';
+    form.querySelector("[name='duration']").value = a.Duration || 1;
+    form.querySelector("[name='address']").value = a.Customer?.Address1 || '';
+    form.querySelector("[name='status']").value = a.AppoinmentStatus;
     const modal = new bootstrap.Modal(document.getElementById("editModal"));
     modal.show();
 }
@@ -1039,18 +1101,53 @@ document.addEventListener('DOMContentLoaded', () => {
     $("#listDatePicker").val(today);
     $("#mapDatePicker").val(today);
 
-    $('#viewTabs a').on('shown.bs.tab', function (e) {
-        currentView = e.target.id.replace('-tab', '');
-        if (currentView === "map") {
-            renderMapView();
-            setTimeout(() => {
-                if (typeof mapViewInstance !== 'undefined') {
-                    mapViewInstance.invalidateSize();
-                }
-            }, 100);
-        } else {
-            updateAllViews();
-        }
+    //$('#viewTabs a').on('shown.bs.tab', function (e) {
+    //    currentView = e.target.id.replace('-tab', '');
+    //    alert(currentView);
+    //    switch (currentView) {
+    //        case 'date':
+    //            renderDateView(today);
+    //            break;
+    //        case 'resource':
+    //            renderResourceView(today);
+    //            break;
+    //        case 'list':
+    //            renderListView();
+    //            break;
+    //        case 'map':
+    //            renderMapView();
+    //            setTimeout(() => {
+    //                if (typeof mapViewInstance !== 'undefined') {
+    //                    mapViewInstance.invalidateSize();
+    //                }
+    //            }, 100);
+    //            break;
+    //    }
+    //});
+
+    const tabs = document.querySelectorAll('#viewTabs button[data-bs-toggle="tab"]');
+    tabs.forEach(tab => {
+        tab.addEventListener('shown.bs.tab', function (event) {
+            switch (event.target.id) {
+                case 'date-tab':
+                    renderDateView(today);
+                    break;
+                case 'resource-tab':
+                    renderResourceView(today);
+                    break;
+                case 'list-tab':
+                    renderListView();
+                    break;
+                case 'map-tab':
+                    renderMapView();
+                    setTimeout(() => {
+                        if (typeof mapViewInstance !== 'undefined') {
+                            mapViewInstance.invalidateSize();
+                        }
+                    }, 100);
+                    break;
+            }
+        });
     });
 
     // Map View event listeners
@@ -1086,9 +1183,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Start real-time updates
     simulateRealTimeUpdates();
     renderDateView(today);
-    renderResourceView(today);
-    renderListView();
-    renderMapView();
+    //renderResourceView(today);
+    //renderListView();
+    //renderMapView();
 });
 
 // Handle modal dismissals
@@ -1124,6 +1221,24 @@ function getTimeSlots() {
         success: function (response) {
             console.log(response.d);
             allTimeSlots = response.d;
+        },
+        error: function (xhr, status, error) {
+            console.error("Error updating details: ", error);
+        }
+    });
+}
+
+
+function getResources() {
+    $.ajax({
+        type: "POST",
+        url: "Appointments.aspx/GetResourcess",
+        data: {},
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        success: function (response) {
+            console.log(response.d);
+            resources = response.d;
         },
         error: function (xhr, status, error) {
             console.error("Error updating details: ", error);

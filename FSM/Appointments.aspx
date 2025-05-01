@@ -23,9 +23,9 @@
                 <div class="col-md-6 col-12">
                     <h1 class="page-title">Dispatch Calendar</h1>
                 </div>
-                <div class="col-md-6 col-12 text-md-end text-center mt-2 mt-md-0">
+                <%--<div class="col-md-6 col-12 text-md-end text-center mt-2 mt-md-0">
                     <button class="btn btn-primary" onclick="openNewModal()">+ Create Appointment</button>
-                </div>
+                </div>--%>
             </div>
         </header>
 
@@ -139,12 +139,8 @@
                                     <option value="pending">Pending</option>
                                     <option value="confirmed">Confirmed</option>
                                 </select>
-                                <select id="serviceTypeFilterResource" class="form-select mb-3" onchange="renderUnscheduledList('resource')">
+                                <select runat="server" id="ServiceTypeFilterResource" class="form-select mb-3" onchange="renderUnscheduledList('resource')">
                                     <option value="all">All Service Types</option>
-                                    <option value="Tasks">Tasks</option>
-                                    <option value="Visits">Visits</option>
-                                    <option value="Maintenance">Maintenance</option>
-                                    <option value="Installation">Installation</option>
                                 </select>
                                 <input type="text" id="searchFilterResource" class="form-control mb-3" placeholder="Search by customer..." oninput="renderUnscheduledList('resource')">
                             </div>
@@ -157,22 +153,57 @@
             <div class="tab-pane fade" id="listView" role="tabpanel">
                 <div class="card calendar-container">
                     <div class="card-header">
-                        <div class="d-flex flex-wrap gap-2 align-items-center">
-                            <label for="listDatePicker" class="form-label mb-0">Date:</label>
-                            <input type="date" id="listDatePicker" class="form-control w-200px" onchange="renderListView()">
+                        <div class="d-flex flex-wrap gap-2 align-items-end">
+                            <div>
+                                <label for="search_term" class="form-label mb-0">Search</label>
+                                <input placeholder="Search anything" type="text" id="search_term" class="form-control w-200px" oninput="renderListView()">
+                            </div>
+                            <div>
+                                <label for="listDatePickerFrom" class="form-label mb-0">From Date:</label>
+                                <input type="date" id="listDatePickerFrom" class="form-control w-200px">
+                            </div>
+                            <div>
+                                <label for="listDatePickerTo" class="form-label mb-0">To Date:</label>
+                                <input type="date" id="listDatePickerTo" class="form-control w-200px">
+                            </div>
+                            <div>
+                                <label></label>
+                                <button type="button" class="btn btn-primary ms-2" onclick="searchListView(event)">Search By Date</button>
+                            </div>
+                            <div>
+                                <label for="ServiceTypeFilter_List" class="form-label mb-0 ms-3">Service type:</label>
+                                <select name="ServiceTypeFilter_List" id="ServiceTypeFilter_List" class="form-select" runat="server" onchange="renderListView()">
+                                    <option value="select">Select</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="StatusTypeFilter_List" class="form-label mb-0 ms-3">Status:</label>
+                                <select runat="server" id="StatusTypeFilter_List" class="form-select" onchange="renderListView()">
+                                    <option value="all">Select</option>
+                                </select>
+                            </div>
+                            <div>
+                                <button type="button" class="btn btn-secondary ms-2" onclick="clearFilterListView(event)">Clear</button>
+                            </div>
                         </div>
+
+
                     </div>
                     <div class="card-body">
                         <table class="table list-view-table" id="listTable">
                             <thead>
                                 <tr>
                                     <th>Customer</th>
-                                    <th>Service Type</th>
-                                    <th>Date</th>
-                                    <th>Time Slot</th>
-                                    <th>Duration</th>
-                                    <th>Resource</th>
+                                    <th>Business Name</th>
                                     <th>Address</th>
+                                    <th>Request Date</th>
+                                    <th>Time Slot</th>
+                                    <th>Service Type</th>
+                                    <th>Mobile</th>
+                                    <th>Phone</th>
+                                    <th>Status</th>
+                                    <th>Resource</th>
+                                    <th>Ticket Status</th>
                                 </tr>
                             </thead>
                             <tbody id="listTableBody"></tbody>
@@ -256,7 +287,7 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Service Type</label>
-                                <select name="serviceType" class="form-select" required>
+                                <select name="serviceTypeNew" class="form-select" required>
                                     <option value="Tasks">Tasks</option>
                                     <option value="Visits">Visits</option>
                                     <option value="Maintenance">Maintenance</option>
@@ -336,11 +367,8 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Service Type</label>
-                                <select name="serviceType" class="form-select" required>
-                                    <option value="Tasks">Tasks</option>
-                                    <option value="Visits">Visits</option>
-                                    <option value="Maintenance">Maintenance</option>
-                                    <option value="Installation">Installation</option>
+                                <select runat="server" id="ServiceTypeFilter_Edit" name="serviceTypeEdit" class="form-select" required>
+                                    <option value="all">All Service Types</option>
                                 </select>
                             </div>
                             <div class="col-md-6">
