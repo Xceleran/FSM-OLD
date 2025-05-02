@@ -310,7 +310,7 @@
         }
 
         /* Button styling to match Invoice.aspx */
-        ./*btn-primary {
+        . /*btn-primary {
             background-color: var(--text-orange-500);
             color: var(--bg-white);
             border-radius: 6px;
@@ -336,34 +336,33 @@
                 color: var(--text-gray-700);
             }*/
         .buttons {
-    margin: 10%;
-    text-align: center;
-}
+            margin: 10%;
+            text-align: center;
+        }
 
-.edit-btn {
+        .edit-btn {
+            font-size: 16px !important;
+            color: #fff !important;
+            cursor: pointer;
+            border: none !important;
+            background-size: 300% 100% !important;
+            border-radius: 5px !important;
+            transition: all .4s ease-in-out !important;
+            background-image: linear-gradient(to right, #617dfc, #406fff, #3d6dd6, #0e407d);
+            padding: 7px 15px;
+        }
 
-    font-size: 16px !important;
+            /* Hover state */
+            .edit-btn:hover {
+                background-position: 100% 0 !important;
+                transition: all .4s ease-in-out !important;
+            }
 
-    color: #fff !important;
-    cursor: pointer;
-    border: none !important;
-    background-size: 300% 100% !important;
-    border-radius: 5px !important;
-    transition: all .4s ease-in-out !important;
-    background-image: linear-gradient(to right, #617dfc, #406fff, #3d6dd6, #0e407d);
-    padding: 10px 15px;
-}
+            /* Focus state */
+            .edit-btn:focus {
+                outline: none !important;
+            }
 
-/* Hover state */
-.edit-btn:hover {
-    background-position: 100% 0 !important;
-    transition: all .4s ease-in-out !important;
-}
-
-/* Focus state */
-.edit-btn:focus {
-    outline: none !important;
-}
         .btn-secondary {
             background: #6b7280;
             border: none;
@@ -376,14 +375,15 @@
             .btn-secondary:hover {
                 background: #4b5563;
             }
-                        .btn-primary {
-    background: #5e7cfd;
 
-}
+        .btn-primary {
+            background: #5e7cfd;
+        }
 
-    .btn-primary:hover {
-        background: #3d53b4;
-    }
+            .btn-primary:hover {
+                background: #3d53b4;
+            }
+
         .btn-outline-secondary {
             color: var(--text-gray-800);
             border-color: var(--bg-gray-300);
@@ -796,7 +796,7 @@
                 <td>${item.Price || ''}</td>
                 <td>${item.Taxable || ''}</td>
                 <td>
-                    <button onclick="editItem('${item.Id}')" class="btn btn-sm btn-primary edit-btn">Edit</button>
+                    <button onclick="editItem('${item.Id}')" class="btn btn-sm edit-btn">Edit</button>
                 </td>
                 </tr>`
                 );

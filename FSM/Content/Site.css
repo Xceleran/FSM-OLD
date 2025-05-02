@@ -61,9 +61,10 @@ body {
 }
 
 [data-theme="dark"] body {
-    background: url('../images/backgrounddark.jpg') no-repeat center center;
+    /* background: url('../images/backgrounddark.jpg') no-repeat center center;*/
     background-size: cover;
     background-attachment: fixed;
+    background-image: radial-gradient(circle 815px at 23.4% -21.8%, rgba(9, 29, 85, 1) 0.2%, rgb(10 25 42) 100.2%);
 }
 
 h6.right-logo-title {
