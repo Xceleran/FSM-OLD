@@ -1,5 +1,6 @@
 ﻿using FSM.Entity.Customer;
 using FSM.Entity.Enums;
+using FSM.Models.AppoinmentModel;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
@@ -194,9 +195,9 @@ namespace FSM
 
         [WebMethod]
         [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
-        public static List<CustomerAppoinment> GetCustomerAppoinmets(string customerId)
+        public static List<AppoinmentModel> GetCustomerAppoinmets(string customerId)
         {
-            var appoinments = new List<CustomerAppoinment>();
+            var appoinments = new List<AppoinmentModel>();
             string companyid = HttpContext.Current.Session["CompanyID"].ToString();
             Database db = new Database();
             //customerId = "302"; // for testing purpose
@@ -218,9 +219,9 @@ namespace FSM
                 {
                     foreach (DataRow row in dt.Rows)
                     {
-                        var appoinment = new CustomerAppoinment();
-                        appoinment.Customer.CustomerID = customerId;
-                        appoinment.Customer.CompanyID = companyid;
+                        var appoinment = new AppoinmentModel();
+                        appoinment.CustomerID = customerId;
+                        appoinment.CompanyID = companyid;
                         appoinment.AppoinmentStatus = row.Field<string>("AppStatus") ?? "";
                         appoinment.TicketStatus = row.Field<string>("AppTicketStatus") ?? "";
                         appoinment.ResourceName = row.Field<string>("ResourceName") ?? "";

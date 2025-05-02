@@ -457,7 +457,7 @@ function renderDateView(date) {
                             ${filteredAppointments.filter(a => a.RequestDate === dayDate).map(a => `
                                 <div class="calendar-event ${getEventTimeSlotClass(a)} fs-7 p-1 cursor-move" 
                                      data-id="${a.AppoinmentId}" draggable="true">
-                                    ${a.Customer.CustomerName} (${a.ServiceType})
+                                    ${a.CustomerName} (${a.ServiceType})
                                 </div>
                             `).join('')}
                         </div>
@@ -507,7 +507,7 @@ function renderDateView(date) {
                 html += `
                 <div class="calendar-grid" style="grid-template-columns: 60px repeat(${dayDates.length}, 1fr);">
                     <div class="h-80px border-bottom last-border-bottom-none p-1 fs-7 text-right pr-2 bg-gray-50 calendar-time-cell">
-                        ${time.TimeBlockSchedule}
+                        ${formatTimeRange(time.TimeBlockSchedule)}
                     </div>
             `;
                 dayDates.forEach(dStr => {
@@ -543,7 +543,7 @@ function renderDateView(date) {
                             <div class="calendar-event ${getEventTimeSlotClass(a)} width-95 z-10 cursor-move"
                                  style="height: ${80 * rowspan - 10}px; top: ${2}px;" 
                                  data-id="${a.AppoinmentId}" draggable="true">
-                                <div class="font-weight-medium fs-7">${a.Customer.CustomerName}</div>
+                                <div class="font-weight-medium fs-7">${a.CustomerName}</div>
                                 <div class="fs-7 truncate">
                                     ${a.ServiceType} (${duration}m)
                                 </div>
@@ -554,7 +554,7 @@ function renderDateView(date) {
 
                     html += `
                     <div class="h-80px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
-                         data-date="${dStr}" data-time="${time.TimeBlockSchedule}">
+                         data-date="${dStr}" data-time="${formatTimeRange(time.TimeBlockSchedule)}">
                         ${cellContent}
                     </div>
                 `;
@@ -582,14 +582,14 @@ function renderDateView(date) {
                 html += `
                 <div class="calendar-grid" style="grid-template-columns: 60px 1fr;">
                     <div class="h-80px border-bottom last-border-bottom-none p-1 fs-7 text-right pr-2 bg-gray-50 calendar-time-cell">
-                        ${time.TimeBlockSchedule}
+                        ${formatTimeRange(time.TimeBlockSchedule)}
                     </div>
             `;
 
                 if (spannedSlots[index]) {
                     html += `
                     <div class="h-80px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
-                         data-date="${dateStr}" data-time="${time.TimeBlockSchedule}">
+                         data-date="${dateStr}" data-time="${formatTimeRange(time.TimeBlockSchedule)}">
                     </div>
                 `;
                 } else {
@@ -619,7 +619,7 @@ function renderDateView(date) {
                             <div class="calendar-event ${getEventTimeSlotClass(a)} width-95 z-10 cursor-move"
                                  style="height: ${80 * rowspan - 10}px; top: ${2}px;" 
                                  data-id="${a.AppoinmentId}" draggable="true">
-                                <div class="font-weight-medium fs-7">${a.Customer.CustomerName}</div>
+                                <div class="font-weight-medium fs-7">${a.CustomerName}</div>
                                 <div class="fs-7 truncate">
                                     ${a.ServiceType} (${duration}m)
                                 </div>
@@ -658,8 +658,6 @@ function renderResourceView_OLD(date) {
     const filteredResources = resources;
 
     const appointments = getAppoinments("", "", "", date);
-    console.log(filteredResources);
-    console.log(appointments);
 
     let html = `
         <div class="border rounded overflow-hidden">
@@ -711,7 +709,7 @@ function renderResourceView_OLD(date) {
                          data-date="${dateStr}" data-time="${allTimeSlots[index].value}" data-resource="${resource.ResourceName}">
                         <div class="calendar-event ${getEventTimeSlotClass(appointment)} width-95 z-10 cursor-move"
                              data-id="${appointment.AppoinmentId}" draggable="true">
-                            <div class="font-weight-medium fs-7">${appointment.Customer.CustomerName}</div>
+                            <div class="font-weight-medium fs-7">${appointment.CustomerName}</div>
                             <div class="fs-7 truncate">
                                 ${appointment.ServiceType} (${appointment.Duration}m)
                             </div>
@@ -789,12 +787,12 @@ function renderListView() {
                 (item.AppoinmentStatus === statusFilter);
 
             const combinedText = [
-                item.Customer.CustomerName,
-                item.Customer.BusinessName,
+                item.CustomerName,
+                item.BusinessName,
                 item.ResourceName,
-                item.Customer.Mobile,
-                item.Customer.Phone,
-                item.Customer.Address1
+                item.Mobile,
+                item.Phone,
+                item.Address1
             ].join(' ').toLowerCase();
 
             const matchesSearch = combinedText.includes(searchTerm);
@@ -804,17 +802,16 @@ function renderListView() {
         tbody.html(filteredAppointments.length === 0 ? '<tr><td colspan="7" class="text-center">No appointments for this date.</td></tr>' :
             filteredAppointments.map(a => {
                 const timeSlot = a.TimeSlot ? a.TimeSlot.charAt(0).toUpperCase() + a.TimeSlot.slice(1) : 'N/A';
-                const duration = a.Duration || 1;
                 return `
                 <tr data-id="${a.AppoinmentId}">
-                    <td>${a.Customer.CustomerName}</td>
-                    <td>${a.Customer.BusinessName}</td>
-                    <td>${a.Customer.Address1 || 'N/A'}</td>
+                    <td>${a.CustomerName}</td>
+                    <td>${a.BusinessName}</td>
+                    <td>${a.Address1 || 'N/A'}</td>
                     <td>${a.RequestDate || 'N/A'}</td>
-                    <td>${timeSlot}</td>
+                    <td>${formatTimeRange(timeSlot)}</td>
                     <td>${a.ServiceType}</td>
-                    <td>${a.Customer.Mobile}</td>
-                    <td>${a.Customer.Phone}</td>
+                    <td>${a.Mobile}</td>
+                    <td>${a.Phone}</td>
                     <td>${a.AppoinmentStatus}</td>
                     <td>${a.ResourceName}</td>
                     <td>${a.TicketStatus}</td>
@@ -845,7 +842,7 @@ function renderUnscheduledList(view = 'date') {
         unscheduled = unscheduled.filter(a => a.ServiceType === serviceTypeFilter);
     }
     if (searchFilter) {
-        unscheduled = unscheduled.filter(a => a.Customer.CustomerName.toLowerCase().includes(searchFilter));
+        unscheduled = unscheduled.filter(a => a.CustomerName.toLowerCase().includes(searchFilter));
     }
 
     container.html(unscheduled.length === 0 ? '<div class="text-center py-4 text-muted">No unscheduled appointments.</div>' :
@@ -853,11 +850,11 @@ function renderUnscheduledList(view = 'date') {
             <div class="appointment-card card mb-3 shadow-sm" data-id="${a.AppoinmentId}" draggable="true">
                 <div class="card-body p-3">
                     <div class="d-flex justify-content-between align-items-start">
-                        <h3 class="font-weight-medium fs-6 mb-0">${a.Customer.CustomerName}</h3>
+                        <h3 class="font-weight-medium fs-6 mb-0">${a.CustomerName}</h3>
                     </div>
-                    <div class="fs-7 text-muted mt-1 line-clamp-2">${a.Customer.Address1}</div>
+                    <div class="fs-7 text-muted mt-1 line-clamp-2">${a.Address1}</div>
                     <div class="fs-7 text-muted mt-1 line-clamp-2">${a.RequestDate}</div>
-                    <div class="fs-7 text-muted mt-1 line-clamp-2">${a.TimeSlot}</div>
+                    <div class="fs-7 text-muted mt-1 line-clamp-2">${formatTimeRange(a.TimeSlot)}</div>
                     <div class="d-flex justify-content-between align-items-center mt-2">
                         <span class="fs-7">${a.ServiceType}</span>
                         <button class="btn btn-outline-secondary btn-sm" onclick="openEditModal(${a.AppoinmentId})">Schedule</button>
@@ -983,13 +980,13 @@ function openEditModal(id) {
     currentEditId = id;
     const form = document.getElementById("editForm");
     form.querySelector("[name='id']").value = parseInt(a.AppoinmentId);
-    form.querySelector("[name='customerName']").value = a.Customer.CustomerName;
+    form.querySelector("[name='customerName']").value = a.CustomerName;
     form.querySelector("[id='MainContent_ServiceTypeFilter_Edit']").value = a.ServiceType;
     form.querySelector("[name='date']").value = a.RequestDate || '';
     form.querySelector("[name='resource']").value = a.ResourceName;
     form.querySelector("[name='timeSlot']").value = a.TimeSlot || 'morning';
     form.querySelector("[name='duration']").value = a.Duration || 1;
-    form.querySelector("[name='address']").value = a.Customer?.Address1 || '';
+    form.querySelector("[name='address']").value = a.Address1 || '';
     form.querySelector("[name='status']").value = a.AppoinmentStatus;
     const modal = new bootstrap.Modal(document.getElementById("editModal"));
     modal.show();
@@ -1279,7 +1276,7 @@ function renderResourceView(date) {
                     <div class="p-2 border-right bg-gray-50 calendar-header-cell"></div>
                     ${allTimeSlots.map(time => `
                         <div class="p-2 text-center font-weight-medium border-right last-border-right-none bg-gray-50 calendar-header-cell">
-                            ${time.TimeBlockSchedule}
+                            ${formatTimeRange(time.TimeBlockSchedule)}
                         </div>
                     `).join('')}
                 </div>
@@ -1300,9 +1297,13 @@ function renderResourceView(date) {
                 .filter(a => a.ResourceName === resource.ResourceName && a.RequestDate === dateStr && a.TimeSlot)
                 .forEach(a => {
                     const startTime = a.StartTime;
-                    const startIndex = allTimeSlots.findIndex(slot => slot.value === startTime);
+                    const startIndex = allTimeSlots.findIndex(slot => slot.TimeBlockSchedule === a.TimeSlot);
                     if (startIndex !== -1) {
-                        const duration = a.Duration || 1;
+                        let duration = 1;
+                        if (a.TimeSlot == allTimeSlots[startIndex].TimeBlockSchedule) {
+                            duration = allTimeSlots[startIndex].Duration;
+                            a.Duration = duration;
+                        }
                         for (let i = startIndex; i < startIndex + duration && i < allTimeSlots.length; i++) {
                             occupiedSlots[i] = { appointment: a };
                         }
@@ -1322,7 +1323,7 @@ function renderResourceView(date) {
                              data-date="${dateStr}" data-time="${allTimeSlots[index].value}" data-resource="${resource.ResourceName}">
                             <div class="calendar-event ${getEventTimeSlotClass(appointment)} width-95 z-10 cursor-move"
                                  data-id="${appointment.AppoinmentId}" draggable="true">
-                                <div class="font-weight-medium fs-7">${appointment.Customer.CustomerName}</div>
+                                <div class="font-weight-medium fs-7">${appointment.CustomerName}</div>
                                 <div class="fs-7 truncate">
                                     ${appointment.ServiceType} (${appointment.Duration}m)
                                 </div>
@@ -1348,4 +1349,11 @@ function renderResourceView(date) {
         setupDragAndDrop();
         renderUnscheduledList('resource');
     });
+}
+
+function formatTimeRange(str) {
+    return str.replace(/[()]/g, '') 
+        .trim()             
+        .replace(/\s{2,}/g, ' ') 
+        .trim();
 }

@@ -752,7 +752,6 @@
                 data: JSON.stringify({ customerId: customerId }),
                 dataType: 'json',
                 success: function (rs) {
-                    console.log(invoiceData);
                     invoiceData = rs.d || [];
                     console.log(invoiceData);
                     currentPage = 1;

@@ -12,6 +12,7 @@ using System.Web.Script.Services;
 using System.Web.Services;
 using System.Web.UI;
 using System.Web.UI.WebControls;
+using FSM.Models.AppoinmentModel;
 
 namespace FSM
 {
@@ -33,11 +34,11 @@ namespace FSM
 
         [WebMethod]
         [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
-        public static List<CustomerAppoinment> LoadAppoinments(string searchValue,
+        public static List<AppoinmentModel> LoadAppoinments(string searchValue,
             string fromDate,
             string toDate, string today)
         {
-            var appoinments = new List<CustomerAppoinment>();
+            var appoinments = new List<AppoinmentModel>();
             string companyid = HttpContext.Current.Session["CompanyID"].ToString();
             Database db = new Database();
             try
@@ -79,23 +80,23 @@ namespace FSM
                 {
                     foreach (DataRow row in dt.Rows)
                     {
-                        var appoinment = new CustomerAppoinment();
-                        appoinment.Customer.CompanyID = companyid;
-                        appoinment.Customer.CustomerGuid = row.Field<string>("CustomerGuid") ?? "";
-                        appoinment.Customer.CustomerID = row["CustomerID"].ToString();
-                        appoinment.Customer.FirstName = row.Field<string>("FirstName") ?? "";
-                        appoinment.Customer.LastName = row.Field<string>("LastName") ?? "";
-                        appoinment.Customer.BusinessID = row.Field<int?>("BusinessID") ?? 0;
-                        appoinment.Customer.BusinessName = row.Field<string>("BusinessName") ?? "";
-                        appoinment.Customer.IsBusinessContact = row.Field<bool?>("IsBusinessContact") ?? false;
-                        appoinment.Customer.Phone = row.Field<string>("Phone") ?? "";
-                        appoinment.Customer.Mobile = row.Field<string>("Mobile") ?? "";
-                        appoinment.Customer.ZipCode = row.Field<string>("ZipCode") ?? "";
-                        appoinment.Customer.State = row.Field<string>("State") ?? "";
-                        appoinment.Customer.City = row.Field<string>("City") ?? "";
-                        appoinment.Customer.Address1 = row.Field<string>("Address1") ?? "";
+                        var appoinment = new AppoinmentModel();
+                        appoinment.CompanyID = companyid;
+                        appoinment.CustomerGuid = row.Field<string>("CustomerGuid") ?? "";
+                        appoinment.CustomerID = row["CustomerID"].ToString();
+                        appoinment.FirstName = row.Field<string>("FirstName") ?? "";
+                        appoinment.LastName = row.Field<string>("LastName") ?? "";
+                        appoinment.BusinessID = row.Field<int?>("BusinessID") ?? 0;
+                        appoinment.BusinessName = row.Field<string>("BusinessName") ?? "";
+                        appoinment.IsBusinessContact = row.Field<bool?>("IsBusinessContact") ?? false;
+                        appoinment.Phone = row.Field<string>("Phone") ?? "";
+                        appoinment.Mobile = row.Field<string>("Mobile") ?? "";
+                        appoinment.ZipCode = row.Field<string>("ZipCode") ?? "";
+                        appoinment.State = row.Field<string>("State") ?? "";
+                        appoinment.City = row.Field<string>("City") ?? "";
+                        appoinment.Address1 = row.Field<string>("Address1") ?? "";
 
-                        appoinment.Customer.CustomerName = row.Field<string>("FirstName") + " " + row.Field<string>("LastName");
+                        appoinment.CustomerName = row.Field<string>("FirstName") + " " + row.Field<string>("LastName");
 
                         appoinment.AppoinmentId = row["ApptID"].ToString();
                         appoinment.AppoinmentStatus = row.Field<string>("AppStatus") ?? "";

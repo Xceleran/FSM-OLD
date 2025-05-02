@@ -72,26 +72,6 @@ namespace FSM.Entity.Customer
         public int PaidInvoices { get; set; }
     }
 
-    public class CustomerAppoinment
-    {
-        public CustomerAppoinment()
-        {
-            Customer = new CustomerEntity();
-        }
-        public string AppoinmentId { get; set; }
-        public string AppoinmentDate { get; set; }
-        public string RequestDate { get; set; }
-        public string ServiceType { get; set; }
-        public string ResourceName { get; set; }
-        public string TimeSlot { get; set; }
-
-        public string TicketStatus { get; set; }
-        public string CustomTags { get; set; }
-        public string AppoinmentStatus { get; set; }
-
-        public CustomerEntity Customer { get; set; }
-    }
-
     public class CustomerInvoice : CustomerBaseEntity
     {
         public string InvoiceDate { get; set; }
