@@ -176,6 +176,7 @@
     <None Include="Scripts\jquery-3.3.1.intellisense.js" />
     <Content Include="Invoice.aspx" />
     <Content Include="Scripts\customer.js" />
+    <Content Include="Scripts\invoice.js" />
     <Content Include="Scripts\jquery-3.3.1.js" />
     <Content Include="Scripts\jquery-3.3.1.min.js" />
     <Content Include="Scripts\jquery-3.3.1.slim.js" />
