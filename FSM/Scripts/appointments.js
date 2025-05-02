@@ -39,6 +39,7 @@
 
 let appointments = [];
 
+
 let currentView = "date";
 let currentDate = new Date();
 let currentEditId = null;
@@ -115,7 +116,7 @@ function saveAppointments() {
 }
 
 // Check for scheduling conflicts
-function hasConflict(appointment, newTimeSlot, newResource, newDate, excludeId = null) {
+function hasConflict_Old(appointment, newTimeSlot, newResource, newDate, excludeId = null) {
     if (!newTimeSlot || !newResource || !newDate) return false;
 
     const slot = timeSlots[newTimeSlot];
@@ -124,15 +125,26 @@ function hasConflict(appointment, newTimeSlot, newResource, newDate, excludeId =
     const endHour = startHour + duration;
 
     return appointments.some(a => {
-        if (a.id === excludeId || a.resource !== newResource || a.date !== newDate || !a.timeSlot) return false;
+        if (a.AppoinmentId === excludeId || a.ResourceName !== newResource || a.RequestDate !== newDate || !a.TimeSlot) return false;
 
         const aSlot = timeSlots[a.timeSlot];
         const aStart = parseInt(aSlot.start.split(':')[0]);
         const aDuration = a.duration || 1;
         const aEnd = aStart + aDuration;
 
-        return (startHour < aEnd) && (endHour > aStart);
+       return (startHour < aEnd) && (endHour > aStart);
     });
+}
+
+function hasConflict(appointment, newTimeSlot, newResource, newDate, excludeId = null) {
+    if (!newTimeSlot || !newResource || !newDate) return false;
+
+    return appointments.some(a =>
+        a.AppoinmentId !== excludeId &&
+        a.ResourceName === newResource &&
+        a.RequestDate === newDate &&
+        a.TimeSlot === newTimeSlot
+    );
 }
 
 // Get CSS class for time slot
@@ -828,11 +840,10 @@ function renderListView() {
 // Render Unscheduled List
 function renderUnscheduledList(view = 'date') {
     const container = view === 'date' ? $("#unscheduledList") : $("#unscheduledListResource");
-    const statusFilter = view === 'date' ? $("#MainContent_StatusTypeFilter").val() : $("#statusFilterResource").val();
-    const serviceTypeFilter = view === 'date' ? $("#MainContent_ServiceTypeFilter_2").val() : $("#serviceTypeFilterResource").val();
+    const statusFilter = view === 'date' ? $("#MainContent_StatusTypeFilter").val() : $("#MainContent_StatusTypeFilter_Resource").val();
+    const serviceTypeFilter = view === 'date' ? $("#MainContent_ServiceTypeFilter_2").val() : $("#MainContent_ServiceTypeFilter_Resource").val();
     const searchFilter = view === 'date' ? $("#searchFilter").val().toLowerCase() : $("#searchFilterResource").val().toLowerCase();
 
-    // let unscheduled = appointments.filter(a => !a.RequestDate || !a.TimeSlot);
     let unscheduled = appointments;
 
     if (statusFilter !== '') {
@@ -979,15 +990,21 @@ function openEditModal(id) {
     if (!a) return;
     currentEditId = id;
     const form = document.getElementById("editForm");
-    form.querySelector("[name='id']").value = parseInt(a.AppoinmentId);
+    form.querySelector("[id='AppoinmentId']").value = parseInt(a.AppoinmentId);
+    form.querySelector("[id='CustomerID']").value = parseInt(a.CustomerID);
     form.querySelector("[name='customerName']").value = a.CustomerName;
-    form.querySelector("[id='MainContent_ServiceTypeFilter_Edit']").value = a.ServiceType;
+    /*form.querySelector("[id='MainContent_ServiceTypeFilter_Edit']").value = a.ServiceType;*/
+    const service_select = form.querySelector("[id='MainContent_ServiceTypeFilter_Edit']");
+    getSelectedId(service_select, a.ServiceType || "");  
     form.querySelector("[name='date']").value = a.RequestDate || '';
-    form.querySelector("[name='resource']").value = a.ResourceName;
-    form.querySelector("[name='timeSlot']").value = a.TimeSlot || 'morning';
-    form.querySelector("[name='duration']").value = a.Duration || 1;
+    const select = form.querySelector("[name='resource']");
+    getSelectedId(select, a.ResourceName || "");  
+    form.querySelector("[name='timeSlot']").value = a.TimeSlot;
+    form.querySelector("[name='duration']").value = getDuration(a.TimeSlot) || 0;
     form.querySelector("[name='address']").value = a.Address1 || '';
-    form.querySelector("[name='status']").value = a.AppoinmentStatus;
+    const status_select = form.querySelector("[id='MainContent_StatusTypeFilter_Edit']");
+    getSelectedId(status_select, a.AppoinmentStatus || "");  
+    //form.querySelector("[name='status']").value = a.AppoinmentStatus;
     const modal = new bootstrap.Modal(document.getElementById("editModal"));
     modal.show();
 }
@@ -996,30 +1013,24 @@ function openEditModal(id) {
 function updateAppointment(e) {
     e.preventDefault();
     const form = new FormData(e.target);
-    const id = parseInt(form.get("id"));
-    const appointment = appointments.find(a => a.id === id);
+    const id = form.get("AppoinmentId");
+    const appointment = appointments.find(a => a.AppoinmentId === id);
     if (!appointment) return;
 
     const newDate = form.get("date");
     const newTimeSlot = form.get("timeSlot");
-    const newResource = form.get("resource");
+   
+    const formData = document.getElementById("editForm");
+
+    const select_rs = formData.querySelector("[name='resource']");
+    const newResource = select_rs.options[select_rs.selectedIndex].text;
 
     if (newDate && newTimeSlot && hasConflict(appointment, newTimeSlot, newResource, newDate, id)) {
         alert("Scheduling conflict detected!");
         return;
     }
 
-    appointment.customerName = form.get("customerName");
-    appointment.serviceType = form.get("serviceType");
-    appointment.date = newDate;
-    appointment.timeSlot = newTimeSlot;
-    appointment.duration = parseInt(form.get("duration")) || 1;
-    appointment.resource = newResource;
-    appointment.status = form.get("status");
-    appointment.location.address = form.get("address");
-    saveAppointments();
-    updateAllViews();
-    bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
+    saveAppoinmentData(e);
 }
 
 // Open modal to confirm scheduling
@@ -1139,15 +1150,19 @@ document.addEventListener('DOMContentLoaded', () => {
         tab.addEventListener('shown.bs.tab', function (event) {
             switch (event.target.id) {
                 case 'date-tab':
+                    currentView = "date";
                     renderDateView(today);
                     break;
                 case 'resource-tab':
+                    currentView = "resource";
                     renderResourceView(today);
                     break;
                 case 'list-tab':
+                    currentView = "list";
                     renderListView();
                     break;
                 case 'map-tab':
+                    currentView = "map";
                     renderMapView();
                     setTimeout(() => {
                         if (typeof mapViewInstance !== 'undefined') {
@@ -1230,6 +1245,7 @@ function getTimeSlots() {
         success: function (response) {
             console.log(response.d);
             allTimeSlots = response.d;
+            populateTimeSlotDropdown(response.d);
         },
         error: function (xhr, status, error) {
             console.error("Error updating details: ", error);
@@ -1248,6 +1264,7 @@ function getResources() {
         success: function (response) {
             console.log(response.d);
             resources = response.d;
+            populateResourceDropdown(response.d);
         },
         error: function (xhr, status, error) {
             console.error("Error updating details: ", error);
@@ -1267,8 +1284,6 @@ function renderResourceView(date) {
 
     // Call getAppoinments and pass a callback
     getAppoinments("", "", "", dateStr, function (appointments) {
-        console.log(filteredResources);
-        console.log(appointments);
 
         let html = `
             <div class="border rounded overflow-hidden">
@@ -1357,3 +1372,91 @@ function formatTimeRange(str) {
         .replace(/\s{2,}/g, ' ') 
         .trim();
 }
+
+function populateResourceDropdown(resources) {
+    const $dropdown = $("#resource_list");
+    $dropdown.empty(); // clear existing options
+
+    // Add default option (like Unassigned)
+    $dropdown.append(`<option value="0">Unassigned</option>`);
+
+    // Add options from resources
+    resources.forEach(resource => {
+        $dropdown.append(`<option value="${resource.Id}">${resource.ResourceName}</option>`);
+    });
+}
+
+function getSelectedId(select, targetName) {
+    let matched = false;
+
+    for (const option of select.options) {
+        if (option.text.trim() === targetName.trim()) {
+            select.value = option.value;
+            matched = true;
+            break;
+        }
+    }
+
+    // If no match, select the first option
+    if (!matched && select.options.length > 0) {
+        select.selectedIndex = 0;
+    }
+}
+
+function populateTimeSlotDropdown(slots) {
+    const $dropdown = $("#time_slot");
+    $dropdown.empty(); // clear existing options
+
+    // Add default option (like Unassigned)
+    $dropdown.append(`<option value="0">Select</option>`);
+
+    // Add options from resources
+    slots.forEach(slot => {
+        $dropdown.append(`<option value="${slot.TimeBlockSchedule}">${slot.TimeBlockSchedule}</option>`);
+    });
+}
+
+function getDuration(timeSlot) {
+    let duration = 0;
+    const index = allTimeSlots.findIndex(slot => slot.TimeBlockSchedule === timeSlot);
+    if (index !== -1) {
+        duration = allTimeSlots[index].Duration;
+    }
+    return duration;
+}
+
+function saveAppoinmentData(e) {
+    e.preventDefault();
+    const form = new FormData(e.target);
+    const id = form.get("AppoinmentId");
+    const appointment = {};
+    appointment.AppoinmentId = parseInt(id);
+    appointment.CustomerID = parseInt(form.get("CustomerID"));
+    appointment.ServiceType = form.get("ctl00$MainContent$ServiceTypeFilter_Edit");
+    appointment.RequestDate = form.get("date");
+    appointment.TimeSlot = form.get("timeSlot");
+    appointment.ResourceID = parseInt(form.get("resource"));
+    appointment.Status = form.get("ctl00$MainContent$StatusTypeFilter_Edit");
+    $.ajax({
+        type: "POST",
+        url: "Appointments.aspx/UpdateAppointment",
+        data: JSON.stringify({ appointment: appointment }),
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        success: function (response) {
+            if (response.d) {
+                alert("Updated successfully!");
+            }
+            else {
+                alert("Something went wrong!");
+            }
+        },
+        error: function (xhr, status, error) {
+            console.error("Error updating details: ", error);
+        }
+    });
+
+    updateAllViews();
+    bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
+}
+

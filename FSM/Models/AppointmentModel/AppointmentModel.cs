@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace FSM.Models.AppoinmentModel
 {
-    public class AppoinmentModel
+    public class AppointmentModel
     {
         public string AppoinmentId { get; set; }
         public string AppoinmentDate { get; set; }

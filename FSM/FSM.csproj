@@ -255,7 +255,7 @@
     <Compile Include="Dispatch.aspx.designer.cs">
       <DependentUpon>Dispatch.aspx</DependentUpon>
     </Compile>
-    <Compile Include="Entity\Appoinments\Appoinment.cs" />
+    <Compile Include="Entity\Appointments\Appointment.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
@@ -274,12 +274,12 @@
     <Compile Include="InvoiceCreate.aspx.designer.cs">
       <DependentUpon>InvoiceCreate.aspx</DependentUpon>
     </Compile>
-    <Compile Include="Entity\Appoinments\Resource.cs" />
-    <Compile Include="Entity\Appoinments\TimeSlot.cs" />
+    <Compile Include="Entity\Appointments\Resource.cs" />
+    <Compile Include="Entity\Appointments\TimeSlot.cs" />
     <Compile Include="Entity\Customer\CustomerEntity.cs" />
     <Compile Include="Entity\Customer\CustomerSite.cs" />
     <Compile Include="Entity\Enums\WorkOrderStatus.cs" />
-    <Compile Include="Models\AppoinmentModel\AppoinmentModel.cs" />
+    <Compile Include="Models\AppointmentModel\AppointmentModel.cs" />
     <Compile Include="Processors\BusinessContactProcessor.cs" />
     <Compile Include="Processors\CustomerProcessor.cs" />
     <Compile Include="Processors\LoginProcessor.cs" />

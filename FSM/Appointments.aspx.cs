@@ -34,11 +34,11 @@ namespace FSM
 
         [WebMethod]
         [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
-        public static List<AppoinmentModel> LoadAppoinments(string searchValue,
+        public static List<AppointmentModel> LoadAppoinments(string searchValue,
             string fromDate,
             string toDate, string today)
         {
-            var appoinments = new List<AppoinmentModel>();
+            var appoinments = new List<AppointmentModel>();
             string companyid = HttpContext.Current.Session["CompanyID"].ToString();
             Database db = new Database();
             try
@@ -80,7 +80,7 @@ namespace FSM
                 {
                     foreach (DataRow row in dt.Rows)
                     {
-                        var appoinment = new AppoinmentModel();
+                        var appoinment = new AppointmentModel();
                         appoinment.CompanyID = companyid;
                         appoinment.CustomerGuid = row.Field<string>("CustomerGuid") ?? "";
                         appoinment.CustomerID = row["CustomerID"].ToString();
@@ -160,16 +160,9 @@ namespace FSM
                     ServiceTypeFilter_Edit.DataSource = _ServiceType;
                     ServiceTypeFilter_Edit.DataBind();
                     ServiceTypeFilter_Edit.DataTextField = "ServiceName";
-                    ServiceTypeFilter_Edit.DataValueField = "ServiceName";
+                    ServiceTypeFilter_Edit.DataValueField = "ServiceTypeID";
                     ServiceTypeFilter_Edit.DataBind();
                     ServiceTypeFilter_Edit.Items.Insert(0, listItem);
-
-                    ServiceTypeFilterResource.DataSource = _ServiceType;
-                    ServiceTypeFilterResource.DataBind();
-                    ServiceTypeFilterResource.DataTextField = "ServiceName";
-                    ServiceTypeFilterResource.DataValueField = "ServiceName";
-                    ServiceTypeFilterResource.DataBind();
-                    ServiceTypeFilterResource.Items.Insert(0, listItem);
 
                     ServiceTypeFilter_List.DataSource = _ServiceType;
                     ServiceTypeFilter_List.DataBind();
@@ -177,6 +170,13 @@ namespace FSM
                     ServiceTypeFilter_List.DataValueField = "ServiceName";
                     ServiceTypeFilter_List.DataBind();
                     ServiceTypeFilter_List.Items.Insert(0, listItem);
+
+                    ServiceTypeFilter_Resource.DataSource = _ServiceType;
+                    ServiceTypeFilter_Resource.DataBind();
+                    ServiceTypeFilter_Resource.DataTextField = "ServiceName";
+                    ServiceTypeFilter_Resource.DataValueField = "ServiceName";
+                    ServiceTypeFilter_Resource.DataBind();
+                    ServiceTypeFilter_Resource.Items.Insert(0, listItem);
                 }
                 if(_Status.Rows.Count > 0)
                 {
@@ -193,6 +193,20 @@ namespace FSM
                     StatusTypeFilter_List.DataValueField = "StatusName";
                     StatusTypeFilter_List.DataBind();
                     StatusTypeFilter_List.Items.Insert(0, new ListItem("All Status", ""));
+
+                    StatusTypeFilter_Resource.DataSource = _Status;
+                    StatusTypeFilter_Resource.DataBind();
+                    StatusTypeFilter_Resource.DataTextField = "StatusName";
+                    StatusTypeFilter_Resource.DataValueField = "StatusName";
+                    StatusTypeFilter_Resource.DataBind();
+                    StatusTypeFilter_Resource.Items.Insert(0, new ListItem("All Status", ""));
+
+                    StatusTypeFilter_Edit.DataSource = _Status;
+                    StatusTypeFilter_Edit.DataBind();
+                    StatusTypeFilter_Edit.DataTextField = "StatusName";
+                    StatusTypeFilter_Edit.DataValueField = "StatusID";
+                    StatusTypeFilter_Edit.DataBind();
+                    StatusTypeFilter_Edit.Items.Insert(0, new ListItem("All Status", ""));
                 }
             }
 
@@ -285,6 +299,50 @@ namespace FSM
             return resources;
         }
 
+        [WebMethod]
+        [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
+        public static Boolean UpdateAppointment(Appointment appointment)
+        {
+            bool success = false;
+            string CompanyID = HttpContext.Current.Session["CompanyID"].ToString();
+            Database db = new Database();
+
+            try
+            {
+                string strSQL = @"UPDATE [msSchedulerV3].[dbo].[tbl_Appointment]
+                            SET
+                                [ServiceType] = @ServiceType,
+                                [TimeSlot] = @TimeSlot,
+                                [ApptDateTime] = @ApptDateTime,
+                                [Status] = @Status,
+                                [ResourceID] = @ResourceID 
+
+                            WHERE [ApptID] = @ApptID and
+                                  [CustomerID] = @CustomerID and
+                                  [CompanyID] = @CompanyID;";
+
+                db.Command.Parameters.Clear();
+                db.Command.Parameters.AddWithValue("@CompanyID", CompanyID);
+                db.Command.Parameters.AddWithValue("@CustomerID", appointment.CustomerID);
+                db.Command.Parameters.AddWithValue("@ApptID", appointment.AppoinmentId);
+                db.Command.Parameters.AddWithValue("@ServiceType", appointment.ServiceType);
+                db.Command.Parameters.AddWithValue("@ApptDateTime", appointment.RequestDate);
+                db.Command.Parameters.AddWithValue("@TimeSlot", appointment.TimeSlot);
+                db.Command.Parameters.AddWithValue("@Status", appointment.Status);
+                db.Command.Parameters.AddWithValue("@ResourceID", appointment.ResourceID);
+                success = db.UpdateSql(strSQL);
+            }
+            
+            catch(Exception ex)
+            {
+                return success;
+            }
+            finally
+            {
+                db.Close();
+            }
+            return success;
+        }
 
         public static int CalculateDurationInMinutes(string startTime, string endTime)
         {

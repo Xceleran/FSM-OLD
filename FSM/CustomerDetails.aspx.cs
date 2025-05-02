@@ -195,9 +195,9 @@ namespace FSM
 
         [WebMethod]
         [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
-        public static List<AppoinmentModel> GetCustomerAppoinmets(string customerId)
+        public static List<AppointmentModel> GetCustomerAppoinmets(string customerId)
         {
-            var appoinments = new List<AppoinmentModel>();
+            var appoinments = new List<AppointmentModel>();
             string companyid = HttpContext.Current.Session["CompanyID"].ToString();
             Database db = new Database();
             //customerId = "302"; // for testing purpose
@@ -219,7 +219,7 @@ namespace FSM
                 {
                     foreach (DataRow row in dt.Rows)
                     {
-                        var appoinment = new AppoinmentModel();
+                        var appoinment = new AppointmentModel();
                         appoinment.CustomerID = customerId;
                         appoinment.CompanyID = companyid;
                         appoinment.AppoinmentStatus = row.Field<string>("AppStatus") ?? "";

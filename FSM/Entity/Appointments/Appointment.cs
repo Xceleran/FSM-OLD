@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace FSM.Entity.Appoinments
 {
-    public class Appoinment
+    public class Appointment
     {
         public string CompanyID { get; set; }
         public string CustomerID { get; set; }
@@ -15,6 +15,7 @@ namespace FSM.Entity.Appoinments
         public string RequestDate { get; set; }
         public string ServiceType { get; set; }
         public string ResourceName { get; set; }
+        public int ResourceID { get; set; }
         public string TimeSlot { get; set; }
 
         public string TicketStatus { get; set; }

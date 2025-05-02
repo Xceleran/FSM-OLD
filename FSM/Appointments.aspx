@@ -134,12 +134,10 @@
                         </div>
                         <div class="card-body">
                             <div class="unscheduled-filters">
-                                <select id="statusFilterResource" class="form-select mb-3" onchange="renderUnscheduledList('resource')">
+                                <select runat="server" id="StatusTypeFilter_Resource" class="form-select mb-3" onchange="renderUnscheduledList('resource')">
                                     <option value="all">All Statuses</option>
-                                    <option value="pending">Pending</option>
-                                    <option value="confirmed">Confirmed</option>
                                 </select>
-                                <select runat="server" id="ServiceTypeFilterResource" class="form-select mb-3" onchange="renderUnscheduledList('resource')">
+                                <select runat="server" id="ServiceTypeFilter_Resource" class="form-select mb-3" onchange="renderUnscheduledList('resource')">
                                     <option value="all">All Service Types</option>
                                 </select>
                                 <input type="text" id="searchFilterResource" class="form-control mb-3" placeholder="Search by customer..." oninput="renderUnscheduledList('resource')">
@@ -355,15 +353,16 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="editModalLabel">Edit Appointment</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close edit_close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form id="editForm" onsubmit="updateAppointment(event)">
                     <div class="modal-body">
-                        <input type="hidden" name="id">
+                        <input type="hidden" id="AppoinmentId" name="AppoinmentId">
+                        <input type="hidden" id="CustomerID" name="CustomerID">
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label">Customer Name</label>
-                                <input type="text" name="customerName" class="form-control" required>
+                                <input type="text" name="customerName" class="form-control" readonly="readonly">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Service Type</label>
@@ -377,16 +376,13 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Resource</label>
-                                <select name="resource" class="form-select">
-                                    <option value="Unassigned">Unassigned</option>
-                                    <option value="Jim">Jim</option>
-                                    <option value="Bob">Bob</option>
-                                    <option value="Team1">Team 1</option>
+                                <select id="resource_list" name="resource" class="form-select">
+                                    <option value="0">Unassigned</option>
                                 </select>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Time Slot</label>
-                                <select name="timeSlot" class="form-select" required>
+                                <select id="time_slot" name="timeSlot" class="form-select" required>
                                     <option value="morning">Morning</option>
                                     <option value="afternoon">Afternoon</option>
                                     <option value="emergency">Emergency</option>
@@ -394,7 +390,8 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Duration (hours)</label>
-                                <select name="duration" class="form-select" required>
+                                <input type="text" name="duration" class="form-control" readonly="readonly"/>
+                               <%-- <select name="duration" class="form-select" required>
                                     <option value="1">1 Hour Package</option>
                                     <option value="2">2 Hour Package</option>
                                     <option value="3">3 Hour Package</option>
@@ -403,26 +400,25 @@
                                     <option value="6">6 Hour Package</option>
                                     <option value="7">7 Hour Package</option>
                                     <option value="8">8 Hour Package</option>
-                                </select>
+                                </select>--%>
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Address</label>
-                                <input type="text" name="address" class="form-control" required>
+                                <input type="text" name="address" class="form-control" readonly="readonly">
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Status</label>
-                                <select name="status" class="form-select" required>
-                                    <option value="pending">Pending</option>
-                                    <option value="confirmed">Confirmed</option>
+                                <select runat="server" id="StatusTypeFilter_Edit" name="status" class="form-select" required>
+                                   <option value="all">Select</option>
                                 </select>
                             </div>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-danger" onclick="deleteAppointment()">Delete</button>
-                        <button type="button" class="btn btn-secondary" onclick="unscheduleAppointment()">Unschedule</button>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Save</button>
+                        <button type="button" class="btn btn-danger d-none" onclick="deleteAppointment()">Delete</button>
+                        <button type="button" class="btn btn-secondary d-none" onclick="unscheduleAppointment()">Unschedule</button>
+                        <button type="button" class="btn btn-secondary edit_close" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Update</button>
                     </div>
                 </form>
             </div>

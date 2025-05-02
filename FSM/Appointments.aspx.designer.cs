@@ -42,13 +42,22 @@ namespace FSM
         protected global::System.Web.UI.HtmlControls.HtmlSelect ServiceTypeFilter_2;
 
         /// <summary>
-        /// ServiceTypeFilterResource control.
+        /// StatusTypeFilter_Resource control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.HtmlControls.HtmlSelect ServiceTypeFilterResource;
+        protected global::System.Web.UI.HtmlControls.HtmlSelect StatusTypeFilter_Resource;
+
+        /// <summary>
+        /// ServiceTypeFilter_Resource control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.HtmlControls.HtmlSelect ServiceTypeFilter_Resource;
 
         /// <summary>
         /// ServiceTypeFilter_List control.
@@ -76,5 +85,14 @@ namespace FSM
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.HtmlControls.HtmlSelect ServiceTypeFilter_Edit;
+
+        /// <summary>
+        /// StatusTypeFilter_Edit control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.HtmlControls.HtmlSelect StatusTypeFilter_Edit;
     }
 }
