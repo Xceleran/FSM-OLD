@@ -468,8 +468,12 @@ function renderDateView(date) {
         } else if (view === 'week' || view === 'threeDay') {
             const days = view === 'week' ? 7 : 3;
             const startDate = new Date(currentDate);
-            startDate.setDate(currentDate.getDate() - currentDate.getDay());
-            if (view === 'threeDay') startDate.setDate(currentDate.getDate() - 1);
+
+            if (view === 'week') {
+                startDate.setDate(startDate.getDate() - startDate.getDay()); // Sunday
+            } else if (view === 'threeDay') {
+                startDate.setDate(startDate.getDate() - 1); // Yesterday
+            }
 
             const dayDates = Array.from({ length: days }, (_, i) => {
                 const d = new Date(startDate);
@@ -537,7 +541,7 @@ function renderDateView(date) {
                             cellContent += `
                             <div class="calendar-event ${getEventTimeSlotClass(a)} width-95 z-10 cursor-move"
                                  style="height: ${80 * rowspan - 10}px; top: ${2}px;" 
-                                 data-id="${a.id}" draggable="true">
+                                 data-id="${a.AppoinmentId}" draggable="true">
                                 <div class="font-weight-medium fs-7">${a.Customer.CustomerName}</div>
                                 <div class="fs-7 truncate">
                                     ${a.ServiceType} (${duration}m)
@@ -846,6 +850,7 @@ function renderUnscheduledList(view = 'date') {
                         <h3 class="font-weight-medium fs-6 mb-0">${a.Customer.CustomerName}</h3>
                     </div>
                     <div class="fs-7 text-muted mt-1 line-clamp-2">${a.Customer.Address1}</div>
+                    <div class="fs-7 text-muted mt-1 line-clamp-2">${a.RequestDate}</div>
                     <div class="fs-7 text-muted mt-1 line-clamp-2">${a.TimeSlot}</div>
                     <div class="d-flex justify-content-between align-items-center mt-2">
                         <span class="fs-7">${a.ServiceType}</span>
