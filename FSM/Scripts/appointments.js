@@ -47,7 +47,7 @@ let routeLayer = null;
 let customMarkers = [];
 let isMapView = true; // true for Map, false for Satellite
 
-const resources = ["Jim", "Bob", "Team1", "Unassigned"];
+//const resources = ["Jim", "Bob", "Team1", "Unassigned"];
 const technicianGroups = {
     "electricians": ["Jim", "Bob"],
     "plumbers": ["Team1"]
@@ -74,6 +74,7 @@ const timeSlots = {
 //];
 
 var allTimeSlots = [];
+var resources = [];
 function getAppoinments(searchValue, fromDate, toDate, today, callback) {
     searchValue = searchValue;
     fromDate = fromDate;
@@ -647,14 +648,18 @@ function renderDateView(date) {
 }
 
 // Render Resource View
-function renderResourceView(date) {
+function renderResourceView_OLD(date) {
     const container = $("#resourceViewContainer").addClass('resource-view').removeClass('date-view');
     const selectedGroup = $("#dispatchGroup").val();
     const dateStr = new Date(date).toISOString().split('T')[0];
 
     renderDateNav("resourceDateNav", dateStr);
 
-    const filteredResources = selectedGroup === "all" ? resources : technicianGroups[selectedGroup] || [];
+    const filteredResources = resources;
+
+    const appointments = getAppoinments("", "", "", date);
+    console.log(filteredResources);
+    console.log(appointments);
 
     let html = `
         <div class="border rounded overflow-hidden">
@@ -662,7 +667,7 @@ function renderResourceView(date) {
                 <div class="p-2 border-right bg-gray-50 calendar-header-cell"></div>
                 ${allTimeSlots.map(time => `
                     <div class="p-2 text-center font-weight-medium border-right last-border-right-none bg-gray-50 calendar-header-cell">
-                        ${time.label}
+                        ${time.TimeBlockSchedule}
                     </div>
                 `).join('')}
             </div>
@@ -673,19 +678,19 @@ function renderResourceView(date) {
         html += `
             <div class="calendar-grid" style="grid-template-columns: 120px repeat(${allTimeSlots.length}, 1fr);">
                 <div class="h-80px border-bottom last-border-bottom-none p-1 fs-7 text-center bg-gray-50 calendar-time-cell">
-                    ${resource}
+                    ${resource.ResourceName}
                 </div>
         `;
 
         const occupiedSlots = new Array(allTimeSlots.length).fill(false);
 
         appointments
-            .filter(a => a.resource === resource && a.date === dateStr && a.timeSlot)
+            .filter(a => a.ResourceName === resource.ResourceName && a.RequestDate === dateStr && a.TimeSlot)
             .forEach(a => {
-                const startTime = timeSlots[a.timeSlot].start;
+                const startTime = a.StartTime;
                 const startIndex = allTimeSlots.findIndex(slot => slot.value === startTime);
                 if (startIndex !== -1) {
-                    const duration = a.duration || 1;
+                    const duration = a.Duration || 1;
                     for (let i = startIndex; i < startIndex + duration && i < allTimeSlots.length; i++) {
                         occupiedSlots[i] = { appointment: a };
                     }
@@ -695,19 +700,20 @@ function renderResourceView(date) {
         let index = 0;
         while (index < allTimeSlots.length) {
             if (occupiedSlots[index] && occupiedSlots[index].appointment) {
+                console.log(appointment);
                 const appointment = occupiedSlots[index].appointment;
-                const duration = appointment.duration || 1;
+                const duration = appointment.Duration || 1;
                 const colspan = Math.min(duration, allTimeSlots.length - index);
 
                 html += `
                     <div class="h-80px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
                          style="grid-column: span ${colspan};"
-                         data-date="${dateStr}" data-time="${allTimeSlots[index].value}" data-resource="${resource}">
+                         data-date="${dateStr}" data-time="${allTimeSlots[index].value}" data-resource="${resource.ResourceName}">
                         <div class="calendar-event ${getEventTimeSlotClass(appointment)} width-95 z-10 cursor-move"
-                             data-id="${appointment.id}" draggable="true">
-                            <div class="font-weight-medium fs-7">${appointment.customerName}</div>
+                             data-id="${appointment.AppoinmentId}" draggable="true">
+                            <div class="font-weight-medium fs-7">${appointment.Customer.CustomerName}</div>
                             <div class="fs-7 truncate">
-                                ${appointment.serviceType} (${appointment.duration}h)
+                                ${appointment.ServiceType} (${appointment.Duration}m)
                             </div>
                         </div>
                     </div>
@@ -716,7 +722,7 @@ function renderResourceView(date) {
             } else {
                 html += `
                     <div class="h-80px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
-                         data-date="${dateStr}" data-time="${allTimeSlots[index].value}" data-resource="${resource}">
+                         data-date="${dateStr}" data-time="${allTimeSlots[index].value}" data-resource="${resource.ResourceName}">
                     </div>
                 `;
                 index += 1;
@@ -1100,6 +1106,7 @@ var today = new Date().toISOString().split('T')[0];
 document.addEventListener('DOMContentLoaded', () => {
 
     getTimeSlots();
+    getResources();
 
     $("#dayDatePicker").val(today);
     $("#resourceDatePicker").val(today);
@@ -1248,5 +1255,97 @@ function getResources() {
         error: function (xhr, status, error) {
             console.error("Error updating details: ", error);
         }
+    });
+}
+
+
+function renderResourceView(date) {
+    const container = $("#resourceViewContainer").addClass('resource-view').removeClass('date-view');
+    const selectedGroup = $("#dispatchGroup").val();
+    const dateStr = new Date(date).toISOString().split('T')[0];
+
+    renderDateNav("resourceDateNav", dateStr);
+
+    const filteredResources = resources;
+
+    // Call getAppoinments and pass a callback
+    getAppoinments("", "", "", dateStr, function (appointments) {
+        console.log(filteredResources);
+        console.log(appointments);
+
+        let html = `
+            <div class="border rounded overflow-hidden">
+                <div class="calendar-grid" style="grid-template-columns: 120px repeat(${allTimeSlots.length}, 1fr);">
+                    <div class="p-2 border-right bg-gray-50 calendar-header-cell"></div>
+                    ${allTimeSlots.map(time => `
+                        <div class="p-2 text-center font-weight-medium border-right last-border-right-none bg-gray-50 calendar-header-cell">
+                            ${time.TimeBlockSchedule}
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="calendar-body">
+        `;
+
+        filteredResources.forEach(resource => {
+            html += `
+                <div class="calendar-grid" style="grid-template-columns: 120px repeat(${allTimeSlots.length}, 1fr);">
+                    <div class="h-80px border-bottom last-border-bottom-none p-1 fs-7 text-center bg-gray-50 calendar-time-cell">
+                        ${resource.ResourceName}
+                    </div>
+            `;
+
+            const occupiedSlots = new Array(allTimeSlots.length).fill(false);
+
+            appointments
+                .filter(a => a.ResourceName === resource.ResourceName && a.RequestDate === dateStr && a.TimeSlot)
+                .forEach(a => {
+                    const startTime = a.StartTime;
+                    const startIndex = allTimeSlots.findIndex(slot => slot.value === startTime);
+                    if (startIndex !== -1) {
+                        const duration = a.Duration || 1;
+                        for (let i = startIndex; i < startIndex + duration && i < allTimeSlots.length; i++) {
+                            occupiedSlots[i] = { appointment: a };
+                        }
+                    }
+                });
+
+            let index = 0;
+            while (index < allTimeSlots.length) {
+                if (occupiedSlots[index] && occupiedSlots[index].appointment) {
+                    const appointment = occupiedSlots[index].appointment;
+                    const duration = appointment.Duration || 1;
+                    const colspan = Math.min(duration, allTimeSlots.length - index);
+
+                    html += `
+                        <div class="h-80px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
+                             style="grid-column: span ${colspan};"
+                             data-date="${dateStr}" data-time="${allTimeSlots[index].value}" data-resource="${resource.ResourceName}">
+                            <div class="calendar-event ${getEventTimeSlotClass(appointment)} width-95 z-10 cursor-move"
+                                 data-id="${appointment.AppoinmentId}" draggable="true">
+                                <div class="font-weight-medium fs-7">${appointment.Customer.CustomerName}</div>
+                                <div class="fs-7 truncate">
+                                    ${appointment.ServiceType} (${appointment.Duration}m)
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    index += colspan;
+                } else {
+                    html += `
+                        <div class="h-80px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
+                             data-date="${dateStr}" data-time="${allTimeSlots[index].value}" data-resource="${resource.ResourceName}">
+                        </div>
+                    `;
+                    index += 1;
+                }
+            }
+
+            html += `</div>`;
+        });
+
+        html += `</div></div>`;
+        container.html(html);
+        setupDragAndDrop();
+        renderUnscheduledList('resource');
     });
 }

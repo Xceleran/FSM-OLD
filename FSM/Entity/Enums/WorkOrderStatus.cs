@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FSM.Models.Enums
+namespace FSM.Entity.Enums
 {
     public enum WorkOrderStatus
     {

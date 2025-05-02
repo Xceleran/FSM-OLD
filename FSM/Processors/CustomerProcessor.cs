@@ -1,4 +1,4 @@
-﻿using FSM.Models.Customer;
+﻿using FSM.Entity.Customer;
 using System;
 using System.Collections.Generic;
 using System.Configuration;

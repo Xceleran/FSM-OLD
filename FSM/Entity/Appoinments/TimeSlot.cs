@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FSM.Models.Appoinments
+namespace FSM.Entity.Appoinments
 {
     public class TimeSlot
     {

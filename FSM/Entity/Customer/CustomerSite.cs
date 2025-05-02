@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FSM.Models.Customer
+namespace FSM.Entity.Customer
 {
     public class CustomerSite : CustomerBaseEntity
     {

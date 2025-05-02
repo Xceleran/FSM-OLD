@@ -1,6 +1,6 @@
 ﻿using FSM.Helper;
-using FSM.Models.Appoinments;
-using FSM.Models.Customer;
+using FSM.Entity.Appoinments;
+using FSM.Entity.Customer;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Design;

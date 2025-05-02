@@ -273,11 +273,11 @@
     <Compile Include="InvoiceCreate.aspx.designer.cs">
       <DependentUpon>InvoiceCreate.aspx</DependentUpon>
     </Compile>
-    <Compile Include="Models\Appoinments\Resource.cs" />
-    <Compile Include="Models\Appoinments\TimeSlot.cs" />
-    <Compile Include="Models\Customer\CustomerEntity.cs" />
-    <Compile Include="Models\Customer\CustomerSite.cs" />
-    <Compile Include="Models\Enums\WorkOrderStatus.cs" />
+    <Compile Include="Entity\Appoinments\Resource.cs" />
+    <Compile Include="Entity\Appoinments\TimeSlot.cs" />
+    <Compile Include="Entity\Customer\CustomerEntity.cs" />
+    <Compile Include="Entity\Customer\CustomerSite.cs" />
+    <Compile Include="Entity\Enums\WorkOrderStatus.cs" />
     <Compile Include="Processors\BusinessContactProcessor.cs" />
     <Compile Include="Processors\CustomerProcessor.cs" />
     <Compile Include="Processors\LoginProcessor.cs" />

@@ -1,5 +1,5 @@
-﻿using FSM.Models.Customer;
-using FSM.Models.Enums;
+﻿using FSM.Entity.Customer;
+using FSM.Entity.Enums;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
