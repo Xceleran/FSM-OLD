@@ -19,7 +19,10 @@ namespace FSM
         static string connStrJobs = ConfigurationManager.AppSettings["ConnStrJobs"].ToString();
         protected void Page_Load(object sender, EventArgs e)
         {
-
+            if (Session["CompanyID"] == null)
+            {
+                Response.Redirect("Dashboard.aspx");
+            }
         }
 
         [WebMethod]

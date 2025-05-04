@@ -1,4 +1,7 @@
-﻿using System;
+﻿using FSM.Models;
+using FSM.Models.LoginModels;
+using FSM.Models.UserModels;
+using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
@@ -61,7 +64,7 @@ namespace FSM.Processors
                     HttpContext.Current.Session["CompanyIdInt"] = dr["CompanyIdInt"].ToString();
                     HttpContext.Current.Session["hf_IsShowQBOMsg"] = "false";
 
-                    //SetDefaultData(CompanyID);
+                    SetDefaultData(CompanyID);
                     UserLogProcessor userLogProcessor = new UserLogProcessor();
                     userLogProcessor.AddLog(new UserLog
                     {
@@ -80,14 +83,16 @@ namespace FSM.Processors
             try
             {
                 DataSet _dataSet = new DataSet();
-                Database db = new Database(ConfigurationManager.AppSettings["ConnStrSch"].ToString());
+                Database db = new Database(ConfigurationManager.AppSettings["ConnString"].ToString());
 
                 db.Init("SetDefaultValues");
                 db.AddParameter("@CompanyID", CompanyID, SqlDbType.NVarChar);
                 db.Execute(out _dataSet);
-                //Session["Status"] = _dataSet.Tables[0];
+                HttpContext.Current.Session["Status"] = _dataSet.Tables[0];
             }
-            catch { }
+            catch(Exception ex) {
+
+            }
 
         }
 
@@ -125,54 +130,10 @@ namespace FSM.Processors
             userPrivilege.CanAccessUserInfo = Priveleges.Where(x => x.text == "CanAccessUserInfo").ToList().Count() > 0 ? true : false;
             userPrivilege.CanAccessInvoice = Priveleges.Where(x => x.text == "CanAccessInvoice").ToList().Count() > 0 ? true : false;
 
-            //HttpContext.Current.Session["userPrivilege"] = userPrivilege;
+            HttpContext.Current.Session["userPrivilege"] = userPrivilege;
             //HttpContext.Current.Session["CanAccessQuickBooks"] = userPrivilege.CanAccessQuickBooks;
             //HttpContext.Current.Session["CanAccessUserInfo"] = userPrivilege.CanAccessUserInfo;
             HttpContext.Current.Session["CanAccessInvoice"] = userPrivilege.CanAccessInvoice;
         }
-    }
-
-
-    public class LoginObject
-    {
-        public string CompanyID { get; set; }
-        public string ParentID { get; set; } = "0";
-        public bool IsParent { get; set; } = false;
-        public string LoginUser { get; set; }
-        public string CompanyName { get; set; }
-        public AddressType Addresstype { get; set; }
-        public string CompanyTag { get; set; }
-        public string UserFirstName { get; set; }
-        public string TimeZone { get; set; }
-        public string DealerName { get; set; }
-        public string DealerAddress { get; set; }
-
-    }
-
-    public enum AddressType
-    {
-        USA,
-        Canada
-    }
-
-    public class UserPrivilege
-    {
-        public bool CanAccessQuickBooks { get; set; }
-        public bool CanEditPayment { get; set; }
-        public bool CanAccessVtPayment { get; set; }
-        public bool CanEditBooking { get; set; }
-        public bool CanAccessUserInfo { get; set; }
-        public bool CanAccessInvoice { get; set; }
-        public bool CanEditCustomer { get; set; }
-        public bool CanDeleteCustomer { get; set; }
-        public bool CanAddCustomerBooking { get; set; }
-        public bool CanAccessSetting { get; set; }
-    }
-
-    public class Privelege
-    {
-        public string id { get; set; }
-        public string text { get; set; }
-        public string IsChecked { get; set; }
     }
 }

@@ -1,5 +1,8 @@
 ﻿using FSM.Processors;
 using System;
+using System.ComponentModel.Design;
+using System.Configuration;
+using System.Security.Policy;
 using System.Web;
 
 namespace FSM
@@ -8,33 +11,12 @@ namespace FSM
     {
         protected void Page_Load(object sender, EventArgs e)
         {
-            string userID = "";
-            string companyID = "";
+            string AccountsUrl = ConfigurationManager.AppSettings["Accounts_Xinator_Url"].ToString();
+            string sUrl = "UnAuthorize.aspx";
 
-            if (Request.QueryString["companyID"] != null)
+            if (Session["CompanyID"] == null)
             {
-                companyID = Request.QueryString["companyID"].ToString();
-                HttpContext.Current.Session["CompanyID"] = companyID;
-            }
-            if (Request.QueryString["userID"] != null)
-            {
-                userID = Request.QueryString["userID"].ToString();
-            }
-            else
-            {
-                HttpContext.Current.Session["CompanyID"] = "14388";
-                companyID = HttpContext.Current.Session["CompanyID"].ToString();
-                userID = "location1@airmaster.com";
-            }
-
-            LoginProcessor loginProcessor = new LoginProcessor();
-            if (!string.IsNullOrEmpty(companyID) && !string.IsNullOrEmpty(userID))
-            {
-                var isVarified = loginProcessor.VerifyUser(userID, companyID);
-                if (isVarified)
-                {
-                    loginProcessor.LoadPrivilege(userID);
-                }
+                Response.Redirect(sUrl);
             }
         }
     }

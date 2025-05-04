@@ -18,6 +18,11 @@ namespace FSM
     {
         protected void Page_Load(object sender, EventArgs e)
         {
+            if (Session["CompanyID"] == null)
+            {
+                Response.Redirect("Dashboard.aspx");
+            }
+
             string customerId = Request.QueryString["custId"];
             string siteId = Request.QueryString["siteId"];
             if (!IsPostBack)
@@ -200,7 +205,6 @@ namespace FSM
             var appoinments = new List<AppointmentModel>();
             string companyid = HttpContext.Current.Session["CompanyID"].ToString();
             Database db = new Database();
-            //customerId = "302"; // for testing purpose
             try
             {
                 db.Open();

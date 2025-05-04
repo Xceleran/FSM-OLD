@@ -139,6 +139,7 @@
     <Content Include="Content\Site.css" />
     <Content Include="Customer.aspx" />
     <Content Include="CustomerDetails.aspx" />
+    <Content Include="AuthVerify.aspx" />
     <Content Include="Dashboard.aspx" />
     <Content Include="Dispatch.aspx" />
     <Content Include="favicon.ico" />
@@ -240,6 +241,13 @@
     <Compile Include="CustomerDetails.aspx.designer.cs">
       <DependentUpon>CustomerDetails.aspx</DependentUpon>
     </Compile>
+    <Compile Include="AuthVerify.aspx.cs">
+      <DependentUpon>AuthVerify.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="AuthVerify.aspx.designer.cs">
+      <DependentUpon>AuthVerify.aspx</DependentUpon>
+    </Compile>
     <Compile Include="Dashboard.aspx.cs">
       <DependentUpon>Dashboard.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
@@ -256,6 +264,7 @@
       <DependentUpon>Dispatch.aspx</DependentUpon>
     </Compile>
     <Compile Include="Entity\Appointments\Appointment.cs" />
+    <Compile Include="Entity\Enums\AddressType.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
@@ -280,6 +289,9 @@
     <Compile Include="Entity\Customer\CustomerSite.cs" />
     <Compile Include="Entity\Enums\WorkOrderStatus.cs" />
     <Compile Include="Models\AppointmentModel\AppointmentModel.cs" />
+    <Compile Include="Models\LoginModels\LoginObject.cs" />
+    <Compile Include="Models\UserModels\Privelege.cs" />
+    <Compile Include="Models\UserModels\UserPrivilege.cs" />
     <Compile Include="Processors\BusinessContactProcessor.cs" />
     <Compile Include="Processors\CustomerProcessor.cs" />
     <Compile Include="Processors\LoginProcessor.cs" />
