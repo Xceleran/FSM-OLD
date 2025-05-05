@@ -1,16 +1,291 @@
 ﻿<%@ Page Title="Invoices" Language="C#" MasterPageFile="~/FSM.Master" AutoEventWireup="true" CodeBehind="InvoiceCreate.aspx.cs" Inherits="FSM.InvoiceCreate" %>
 
 <asp:Content ID="BodyContent" ContentPlaceHolderID="MainContent" runat="server">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
+        :root {
+            --bg-gray-100: rgb(243, 244, 246);
+            --text-gray-800: rgb(31, 41, 55);
+            --text-gray-700: rgb(55, 65, 81);
+            --text-gray-600: rgb(75, 85, 99);
+            --text-orange-700: rgb(38, 85, 152);
+            --bg-orange-200: rgb(185, 215, 244);
+            --text-orange-500: rgb(28, 29, 96);
+            --bg-slate-200: rgb(226, 232, 240);
+            --bg-white: rgb(255, 255, 255);
+            --bg-gray-300: rgb(209, 213, 219);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+            --bg-card: rgb(255, 255, 255);
+            --text-primary: rgb(31, 41, 55);
+            --input-bg: rgb(255, 255, 255);
+            --input-border: rgb(209, 213, 219);
+            --input-text: rgb(31, 41, 55);
+            --table-bg: rgb(255, 255, 255);
+            --table-border: rgb(209, 213, 219);
+            --table-text: rgb(0, 0, 0);
+        }
+
+        /* Dark Mode Variables */
+        [data-theme="dark"] {
+            --bg-gray-100: rgb(28, 29, 96);
+            --text-gray-800: rgb(198, 200, 204);
+            --text-gray-700: rgb(239, 242, 247);
+            --text-gray-600: rgb(75, 85, 99);
+            --text-orange-700: rgb(38, 85, 152);
+            --bg-orange-200: rgb(185, 215, 244);
+            --text-orange-500: rgb(28, 29, 96);
+            --bg-slate-200: rgb(226, 232, 240);
+            --bg-white: rgb(255, 255, 255);
+            --bg-gray-300: rgb(209, 213, 219);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -4px rgba(0, 0, 0, 0.2);
+            --bg-card: #091935;
+            --text-primary: rgb(239, 242, 247);
+            --input-bg: rgba(255, 255, 255, 0.12);
+            --input-border: rgba(255, 255, 255, 0.1);
+            --input-text: rgb(239, 242, 247);
+            --table-bg: rgba(255, 255, 255, 0.12);
+            --table-border: rgba(255, 255, 255, 0.1);
+            --table-text: rgb(239, 242, 247);
+        }
+
+        /* Main Invoice Container */
         .invoice-container {
             padding: 20px;
             margin-top: 50px;
+
         }
 
+
+        /* Card Container */
+        .card.card-custom {
+            overflow: hidden;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            background: var(--bg-card);
+            box-shadow: var(--shadow-lg);
+        }
+
+        [data-theme="dark"] .card.card-custom {
+            background: var(--bg-card);
+            box-shadow: rgb(0 0 0) 3px 3px 6px 0px inset, rgb(7 44 77 / 50%) -3px -3px 6px 1px inset;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Row containing buttons */
+        .save-button-row {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 15px;
+            margin-top: 20px;
+            padding: 0 10px;
+        }
+
+        /* Save button container */
+        .save-button-container {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            padding: 0;
+            margin: 0;
+        }
+
+        /* Save button styling */
+        #MainContent__SubmitInvoice {
+            width: 100%;
+            max-width: 120px;
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+            background-color: rgb(94 124 253);
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin: 0 !important;
+        }
+
+            #MainContent__SubmitInvoice:hover {
+                background-color: #4c62c4;
+                border: none;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            }
+
+            #MainContent__SubmitInvoice:active {
+                background-color: #cc3300;
+                transform: translateY(1px);
+            }
+
+        /* Table container adjustments */
+        .table-responsive {
+            margin-bottom: 20px;
+            overflow-x: auto;
+        }
+
+        /* Ensure content stays within card */
+        .d-flex.flex-column-fluid.home-1stsec .container {
+            max-width: 100%;
+            padding: 0 15px;
+            width: 100%;
+        }
+
+        /* Fix for potential overflow from parent styles */
+        .col-12.bgtopin, .col-12.bgbotin {
+            position: absolute;
+            width: 100%;
+            z-index: 0;
+        }
+
+        .col-12.cnttop {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Page Title */
         .page-title {
-            font-size: 24px;
+            font-size: 32px;
             font-weight: bold;
             color: #f84700;
+            padding-left: 18px;
+        }
+
+        [data-theme="dark"] .page-title {
+            color: rgb(255, 255, 255);
+        }
+
+        /* Delete Icon */
+        .delete-icon {
+            color: #dc3545;
+            font-size: 18px;
+            text-decoration: none;
+            transition: color 0.2s ease;
+            display: inline-block;
+        }
+
+            .delete-icon:hover {
+                color: #a71d2a;
+            }
+
+        [data-theme="dark"] .delete-icon {
+            color: #ff6666;
+        }
+
+            [data-theme="dark"] .delete-icon:hover {
+                color: #ff9999;
+            }
+
+        /* General Text Colors */
+        .poppinsbold, .poppinsmed, label, h5, h6 {
+            color: var(--text-primary);
+        }
+
+        /* Form Controls (Inputs, Selects, Textareas) */
+        .form-control, .form-select, textarea {
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            color: var(--input-text);
+            border-radius: 6px;
+            padding: 8px;
+        }
+
+        [data-theme="dark"] .form-control,
+        [data-theme="dark"] .form-select,
+        [data-theme="dark"] textarea {
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            color: var(--input-text);
+        }
+
+        /* Adjust Select Dropdown Arrow for Dark Mode */
+        .form-select {
+            appearance: none;
+            background-image: url('data:image/svg+xml;utf8,<svg fill="gray" height="20" viewBox="0 0 24 24" width="20" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>') !important;
+            background-repeat: no-repeat !important;
+            background-position: right 0.5rem center !important;
+            background-size: 1rem !important;
+        }
+
+        [data-theme="dark"] .form-select {
+            background-image: url('data:image/svg+xml;utf8,<svg fill="rgb(239,242,247)" height="20" viewBox="0 0 24 24" width="20" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>') !important;
+            background: #414e64;
+            }
+       [data-theme="dark"]  h6.poppinsmed.m-0 {
+    color: #cacaca !important;
+}
+
+
+        /* Table Styling */
+        .table {
+            background: var(--table-bg);
+            color: var(--table-text);
+        }
+
+        .table-bordered th,
+        .table-bordered td {
+            border: 1px solid var(--table-border);
+        }
+
+        .table thead th {
+            color: var(--table-text);
+        }
+
+        /* Labels and Messages */
+        .text-warning {
+            color: #ffc107 !important;
+        }
+
+        [data-theme="dark"] .text-warning {
+            color: #ffdb58 !important;
+        }
+
+        /* Modal Styling */
+        .modal-content {
+            background: var(--bg-white);
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .modal-content {
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-gray-700);
+        }
+
+        /* Buttons in Modal */
+        .btn-secondary {
+            background: var(--bg-gray-300);
+            color: var(--text-gray-800);
+        }
+
+        [data-theme="dark"] .btn-secondary {
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-gray-700);
+        }
+
+        [data-theme="dark"] .aie {
+            color: #b3b3b3 !important;
+            font-weight: 500;
+        }
+        /* Specific Elements */
+        #MainContent_lblmessage {
+            color: #339966;
+        }
+
+        [data-theme="dark"] #MainContent_lblmessage {
+            color: #66cc99;
+        }
+
+        #MainContent_txtFirstName,
+        #MainContent_PageTitle {
+            color: #566A98;
+        }
+
+        [data-theme="dark"] #MainContent_txtFirstName,
+        [data-theme="dark"] #MainContent_PageTitle {
+            color: var(--text-gray-700) !important;
         }
     </style>
 
@@ -199,7 +474,7 @@
                                 <asp:HiddenField ID="HdQboId" runat="server" />
                                 <asp:HiddenField ID="hf_QboEstimateId" runat="server" />
                                 <div class="row">
-                                    <div class="col-12">
+                                    <div class="col-12 px-4 py-2">
                                         <div class="row">
                                             <div class="col-12 mt-0">
                                                 <asp:Label ID="lblmessage" runat="server" Visible="False" ForeColor="#339966"></asp:Label>
@@ -235,7 +510,7 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="col-12 mt-4">
+                                            <div class="col-12 mt-4 aie">
                                                 <h5 class="poppinsbold">
                                                     <asp:Label ForeColor="#566A98" ID="txtFirstName" runat="server"></asp:Label></h5>
                                                 <asp:Label ID="Address" runat="server" Style="font-size: 15px;"></asp:Label>
@@ -344,17 +619,15 @@
                                                     <asp:TextBox ID="Note" TextMode="MultiLine" runat="server" class="form-control mb-5" Rows="4"></asp:TextBox>
                                                 </div>
 
-                                                <div class="col-12 mt-5">
+                                                <div class="col-12">
                                                     <div id="invPermission" runat="server" class="row">
                                                         <div class="col-lg-12 mt-2 text-warning text-lg-start ">
                                                             <h4>You do not have permission to Add/Edit Invoice.</h4>
                                                         </div>
                                                     </div>
-                                                    <div class="row">
-                                                        <div class="col-lg-2 mt-2">
-                                                            <input type="button" runat="server" id="_SubmitInvoice" value="Save" class="btn btn-secondary btn-transparentdark mt-3 w-100" onclick="submitInvoice()" />
-                                                        </div>
-                                                        <div class="col-lg-2 mt-2">
+                                                    <div class="row justify-content-start save-button-row">
+
+                                                        <div class="col-lg-4 mt-2">
                                                             <input type="button" runat="server" id="SendMail" value="E-Mail/Print" class="btn btn-secondary btn-transparentdark mt-3 w-100 d-none" onclick="OpenMailPopUp()" />
                                                         </div>
 
@@ -362,7 +635,7 @@
                                                             <asp:Button ID="btnBack" runat="server" Text="Back" OnClick="btnBack_Click" class="btn btn-secondary btn-transparentdark mt-3 w-100" />
                                                         </div>--%>
 
-                                                        <div class="col-lg-2 mt-2">
+                                                        <div class="col-lg-4 mt-2">
                                                             <p style="display: none" id="ProgressGIF">
                                                                 <img id="imgProcess" src="./images/Rolling.gif" />
                                                             </p>
@@ -370,6 +643,9 @@
                                                         <%--<div class="col-lg-2 mt-2" id="CreateOf">
                                                             <asp:Button ID="btn_ConvertToInvocie" runat="server" Text="Convert to Invoice" OnClick="btnSave_Click_ConvertToInvoice" class="btn btn-secondary btn-transparentdark mt-3 w-100" />
                                                         </div>--%>
+                                                        <div class="col-lg-3 mt-2 save-button-container">
+                                                            <input type="button" runat="server" id="_SubmitInvoice" value="Save" class="btn btn-secondary btn-transparentdark mt-3 w-100" onclick="submitInvoice()" />
+                                                        </div>
                                                     </div>
                                                 </div>
                                                 <br />
@@ -519,7 +795,7 @@
                 + "<td><input id='id_Rate" + Sl + "' type='number' onclick='removeZero(this)' onfocusout='FormatDecimal(this)'  class='idInput form-control itmRate numbers-only' onchange='CalLineTotal(this)' /></td>"
                 + "<td><input id='id_Amount" + Sl + "' type='number' class='idInput form-control itmAmount' readonly /></td>"
                 + "<td><input id='id_Tax" + Sl + "' type='checkbox' class='idInput itmTax' onchange='TaxRecal()' /></td>"
-                + "<td><a href='javascript: void(0);' onclick='removeThis(this)' title='Del'>Del</a></td>"
+                + "<td><a href='javascript: void(0);' onclick='removeThis(this)' title='Delete' class='delete-icon'><i class='fa fa-trash'></i></a></td>"
                 + "</tr>");
         }
 

@@ -203,6 +203,7 @@
                     'dashboard': 'dashboard-link',
                     'appointments': 'appointments-link',
                     'customer': 'customers-link',
+                    'customerdetails': 'customers-link', 
                     'invoice': 'invoices-link',
                     'dispatch': 'dispatch-link',
                     'billableitems': 'item-link',

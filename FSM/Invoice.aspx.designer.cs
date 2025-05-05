@@ -60,24 +60,6 @@ namespace FSM
         protected global::System.Web.UI.HtmlControls.HtmlGenericControl bottom_Total;
 
         /// <summary>
-        /// btn_Collect_Payment control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.HtmlControls.HtmlInputButton btn_Collect_Payment;
-
-        /// <summary>
-        /// PaymentProcessSelect control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.HtmlControls.HtmlSelect PaymentProcessSelect;
-
-        /// <summary>
         /// InvoiceDesclimer control.
         /// </summary>
         /// <remarks>
