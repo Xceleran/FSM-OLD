@@ -373,7 +373,7 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Date</label>
-                                <input type="date" name="date" class="form-control" required>
+                                <input type="date" name="date" class="form-control" id="dateInput" required>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Resource</label>

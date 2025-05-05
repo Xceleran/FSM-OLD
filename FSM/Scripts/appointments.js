@@ -902,7 +902,7 @@ function setupDragAndDrop() {
         },
         stop: function () {
             $(this).removeClass("dragging");
-            updateAllViews();
+           // updateAllViews();
         }
     });
 
@@ -942,6 +942,7 @@ function setupDragAndDrop() {
         openEditModal($(this).data("id"));
     });
 }
+
 
 // Open modal to create a new appointment
 function openNewModal(date = null) {
@@ -1018,7 +1019,13 @@ function openEditModal(id, date, time, resource, confirm) {
         form.querySelector("[name='timeSlot']").value = a.TimeSlot;
     }
     if (date) {
-        form.querySelector("[name='date']").value = date;
+        if (date < today) {
+            alert("The selected date cannot be in the past.");
+            return;
+        }
+        else {
+            form.querySelector("[name='date']").value = date;
+        }
     }
     else {
         form.querySelector("[name='date']").value = a.RequestDate || '';
@@ -1139,6 +1146,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     getTimeSlots();
     getResources();
+    document.getElementById('dateInput').min = today;
 
     $("#dayDatePicker").val(today);
     $("#resourceDatePicker").val(today);
@@ -1472,14 +1480,17 @@ function saveAppoinmentData(e) {
             else {
                 alert("Something went wrong!");
             }
+
+            updateAllViews();
+            bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
         },
         error: function (xhr, status, error) {
             console.error("Error updating details: ", error);
+            bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
         }
     });
 
-    updateAllViews();
-    bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
+    
 }
 
 function calculateTimeRequired(e) {
