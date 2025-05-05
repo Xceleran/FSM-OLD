@@ -94,6 +94,7 @@ function getAppoinments(searchValue, fromDate, toDate, today, callback) {
         dataType: "json",
         success: function (response) {
             appointments = response.d;
+            console.log(response.d)
             callback(appointments);
         },
         error: function (xhr, status, error) {
@@ -557,7 +558,7 @@ function renderDateView(date) {
                                  data-id="${a.AppoinmentId}" draggable="true">
                                 <div class="font-weight-medium fs-7">${a.CustomerName}</div>
                                 <div class="fs-7 truncate">
-                                    ${a.ServiceType} (${duration}m)
+                                    ${a.ServiceType} (${a.Duration})
                                 </div>
                             </div>
                         `;
@@ -633,7 +634,7 @@ function renderDateView(date) {
                                  data-id="${a.AppoinmentId}" draggable="true">
                                 <div class="font-weight-medium fs-7">${a.CustomerName}</div>
                                 <div class="fs-7 truncate">
-                                    ${a.ServiceType} (${duration}m)
+                                    ${a.ServiceType} (${a.Duration})
                                 </div>
                             </div>
                         `;
@@ -1000,7 +1001,7 @@ function openEditModal(id) {
     const select = form.querySelector("[name='resource']");
     getSelectedId(select, a.ResourceName || "");  
     form.querySelector("[name='timeSlot']").value = a.TimeSlot;
-    form.querySelector("[name='duration']").value = getDuration(a.TimeSlot) || 0;
+    form.querySelector("[name='duration']").value = a.Duration || 0;
     form.querySelector("[name='address']").value = a.Address1 || '';
     const status_select = form.querySelector("[id='MainContent_StatusTypeFilter_Edit']");
     getSelectedId(status_select, a.AppoinmentStatus || "");  
@@ -1179,9 +1180,9 @@ document.addEventListener('DOMContentLoaded', () => {
         renderMapMarkers(e.target.value);
     });
 
-    document.getElementById('mapDispatchGroup').addEventListener('change', () => {
-        renderMapMarkers(document.getElementById('mapDatePicker').value);
-    });
+    //document.getElementById('mapDispatchGroup').addEventListener('change', () => {
+    //    renderMapMarkers(document.getElementById('mapDatePicker').value);
+    //});
 
     document.getElementById('statusFilter').addEventListener('change', () => {
         renderMapMarkers(document.getElementById('mapDatePicker').value);
@@ -1220,7 +1221,6 @@ document.querySelectorAll('[data-bs-dismiss="modal"]').forEach(button => {
     });
 });
 
-
 function calculateDurationInMinutes(startTime, endTime) {
     const parseTime = timeStr => {
         const [time, modifier] = timeStr.split(' ');
@@ -1245,6 +1245,7 @@ function getTimeSlots() {
         success: function (response) {
             console.log(response.d);
             allTimeSlots = response.d;
+            renderTimeSlots(response.d);
             populateTimeSlotDropdown(response.d);
         },
         error: function (xhr, status, error) {
@@ -1253,6 +1254,22 @@ function getTimeSlots() {
     });
 }
 
+function renderTimeSlots(timeSlots) {
+    const container = $(".time-slot-indicators");
+    container.empty(); 
+    timeSlots.forEach(slot => {
+        const fullLabel = slot.TimeBlock; // e.g., "Morning ( 9:00AM )"
+
+        // Extract the first word before "(" for the class
+        const match = fullLabel.match(/^(\w+)/);
+        const timeBlockClass = match ? match[1].toLowerCase() : "default";
+
+        const className = `time-block-${timeBlockClass}`;
+        const html = `<span class="time-block-indicator ${className}"></span>${slot.TimeBlockSchedule} `;
+
+        container.append(html);
+    });
+}
 
 function getResources() {
     $.ajax({
@@ -1271,7 +1288,6 @@ function getResources() {
         }
     });
 }
-
 
 function renderResourceView(date) {
     const container = $("#resourceViewContainer").addClass('resource-view').removeClass('date-view');
@@ -1311,15 +1327,9 @@ function renderResourceView(date) {
             appointments
                 .filter(a => a.ResourceName === resource.ResourceName && a.RequestDate === dateStr && a.TimeSlot)
                 .forEach(a => {
-                    const startTime = a.StartTime;
                     const startIndex = allTimeSlots.findIndex(slot => slot.TimeBlockSchedule === a.TimeSlot);
                     if (startIndex !== -1) {
-                        let duration = 1;
-                        if (a.TimeSlot == allTimeSlots[startIndex].TimeBlockSchedule) {
-                            duration = allTimeSlots[startIndex].Duration;
-                            a.Duration = duration;
-                        }
-                        for (let i = startIndex; i < startIndex + duration && i < allTimeSlots.length; i++) {
+                        for (let i = startIndex; i < allTimeSlots.length; i++) {
                             occupiedSlots[i] = { appointment: a };
                         }
                     }
@@ -1416,15 +1426,6 @@ function populateTimeSlotDropdown(slots) {
     });
 }
 
-function getDuration(timeSlot) {
-    let duration = 0;
-    const index = allTimeSlots.findIndex(slot => slot.TimeBlockSchedule === timeSlot);
-    if (index !== -1) {
-        duration = allTimeSlots[index].Duration;
-    }
-    return duration;
-}
-
 function saveAppoinmentData(e) {
     e.preventDefault();
     const form = new FormData(e.target);
@@ -1460,3 +1461,24 @@ function saveAppoinmentData(e) {
     bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
 }
 
+function calculateTimeRequired(e) {
+    e.preventDefault();
+    const selectedValue = e.target.value;
+    if (selectedValue) {
+        $.ajax({
+            type: "POST",
+            url: "Appointments.aspx/GetDuration",
+            data: JSON.stringify({ serviceTypeID: selectedValue }),
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            success: function (response) {
+                console.log(response.d);
+                const form = document.getElementById("editForm");
+                form.querySelector("[name='duration']").value = response.d || 0;
+            },
+            error: function (xhr, status, error) {
+                console.error("Error updating details: ", error);
+            }
+        });
+    }
+}

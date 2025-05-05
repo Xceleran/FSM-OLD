@@ -111,12 +111,12 @@
                             <div class="d-flex flex-wrap gap-2 align-items-center">
                                 <label for="resourceDatePicker" class="form-label mb-0">Date:</label>
                                 <input type="date" id="resourceDatePicker" class="form-control w-200px" onchange="renderResourceView(this.value)">
-                                <label for="dispatchGroup" class="form-label mb-0 ms-3">Group:</label>
+                               <%-- <label for="dispatchGroup" class="form-label mb-0 ms-3">Group:</label>
                                 <select id="dispatchGroup" class="form-select w-120px" onchange="renderResourceView($('#resourceDatePicker').val())">
                                     <option value="all">All Resources</option>
                                     <option value="electricians">Electricians</option>
                                     <option value="plumbers">Plumbers</option>
-                                </select>
+                                </select>--%>
                             </div>
                             <div class="time-slot-indicators">
                                 <span class="time-block-indicator time-block-morning"></span>Morning (8AM-12PM)
@@ -366,7 +366,7 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Service Type</label>
-                                <select runat="server" id="ServiceTypeFilter_Edit" name="serviceTypeEdit" class="form-select" required>
+                                <select runat="server" id="ServiceTypeFilter_Edit" name="serviceTypeEdit" class="form-select" onchange="calculateTimeRequired(event)" required>
                                     <option value="all">All Service Types</option>
                                 </select>
                             </div>

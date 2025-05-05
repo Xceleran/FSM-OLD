@@ -107,6 +107,10 @@ namespace FSM
                         appoinment.TimeSlot = row.Field<string>("TimeSlot") ?? "";
                         appoinment.AppoinmentDate = row.Field<string>("RequestDate") ?? "";
 
+                        int serviceTypeID = Convert.ToInt32(row.Field<string>("ServiceType"));
+
+                        appoinment.Duration = CalculateDuration(serviceTypeID);
+
                         appoinments.Add(appoinment);
                     }
                 }
@@ -178,7 +182,7 @@ namespace FSM
                     ServiceTypeFilter_Resource.DataBind();
                     ServiceTypeFilter_Resource.Items.Insert(0, listItem);
                 }
-                if(_Status.Rows.Count > 0)
+                if (_Status.Rows.Count > 0)
                 {
                     StatusTypeFilter.DataSource = _Status;
                     StatusTypeFilter.DataBind();
@@ -210,7 +214,7 @@ namespace FSM
                 }
             }
 
-            catch(Exception ex){}
+            catch (Exception ex) { }
         }
 
 
@@ -235,7 +239,8 @@ namespace FSM
                 db.Close();
                 if (dt.Rows.Count > 0)
                 {
-                    foreach (DataRow row in dt.Rows) {
+                    foreach (DataRow row in dt.Rows)
+                    {
                         var timeSlot = new TimeSlot();
                         timeSlot.ID = row.Field<int?>("ID") ?? 0;
                         timeSlot.StartTime = row.Field<string>("StartTime") ?? "";
@@ -243,7 +248,6 @@ namespace FSM
                         timeSlot.TimeBlockSchedule = row.Field<string>("TimeBlockSchedule") ?? "";
                         timeSlot.TimeBlock = row.Field<string>("TimeBlock") ?? "";
                         timeSlot.CompanyID = CompanyID;
-                        timeSlot.Duration = CalculateDurationInMinutes(timeSlot.StartTime, timeSlot.EndTime);
                         timeSlots.Add(timeSlot);
                     }
                 }
@@ -332,8 +336,8 @@ namespace FSM
                 db.Command.Parameters.AddWithValue("@ResourceID", appointment.ResourceID);
                 success = db.UpdateSql(strSQL);
             }
-            
-            catch(Exception ex)
+
+            catch (Exception ex)
             {
                 return success;
             }
@@ -344,19 +348,52 @@ namespace FSM
             return success;
         }
 
-        public static int CalculateDurationInMinutes(string startTime, string endTime)
+
+        [WebMethod]
+        [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
+        public static string GetDuration(int serviceTypeID)
         {
-            startTime = startTime?.Trim();
-            endTime = endTime?.Trim();
-
-            if (DateTime.TryParse(startTime, out DateTime start) &&
-                DateTime.TryParse(endTime, out DateTime end))
+            var duration = "0";
+            if (serviceTypeID > 0)
             {
-                return (int)(end - start).TotalMinutes;
+                duration =  CalculateDuration(serviceTypeID);
             }
-
-            throw new ArgumentException("Invalid start or end time format.");
+            return duration;
         }
 
+
+        public static string CalculateDuration(int serviceTypeID)
+        {
+            string CompanyID = HttpContext.Current.Session["CompanyID"].ToString();
+            var duration = "0";
+            Database db = new Database();
+            try
+            {
+                db.Open();
+                DataTable dt = new DataTable();
+                string sql = @"select Hour, Minute from [msSchedulerV3].[dbo].[tbl_ServiceType] where CompanyID = '" + CompanyID + "' and  ServiceTypeID ='" + serviceTypeID + "';";
+
+                db.Execute(sql, out dt);
+                db.Close();
+                if (dt.Rows.Count > 0)
+                {
+                    DataRow row = dt.Rows[0];
+                    int hr = row.Field<int?>("Hour") ?? 0;
+                    int min = row.Field<int?>("Minute") ?? 0;
+                    duration = $"{hr} Hr : {min} Min";
+                }
+            }
+
+            catch (Exception ex)
+            {
+                db.Close();
+                return duration;
+            }
+            finally
+            {
+                db.Close();
+            }
+            return duration;
+        }
     }
 }
