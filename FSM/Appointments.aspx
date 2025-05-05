@@ -352,7 +352,8 @@
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="editModalLabel">Edit Appointment</h5>
+                    <h5 class="modal-title edit-title" id="editModalLabel">Edit Appointment</h5>
+                    <h5 class="modal-title confirm-title d-none" id="confirmlLabel">Confirm Appointment Scheduling</h5>
                     <button type="button" class="btn-close edit_close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form id="editForm" onsubmit="updateAppointment(event)">
@@ -416,7 +417,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-danger d-none" onclick="deleteAppointment()">Delete</button>
-                        <button type="button" class="btn btn-secondary d-none" onclick="unscheduleAppointment()">Unschedule</button>
+                        <button type="button" class="btn btn-secondary d-none" onclick="unscheduleAppointment()">openEditModalUnschedule</button>
                         <button type="button" class="btn btn-secondary edit_close" data-bs-dismiss="modal">Cancel</button>
                         <button type="submit" class="btn btn-primary">Update</button>
                     </div>

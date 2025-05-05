@@ -567,7 +567,7 @@ function renderDateView(date) {
 
                     html += `
                     <div class="h-80px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
-                         data-date="${dStr}" data-time="${formatTimeRange(time.TimeBlockSchedule)}">
+                         data-date="${dStr}" data-time="${time.TimeBlockSchedule}">
                         ${cellContent}
                     </div>
                 `;
@@ -643,7 +643,7 @@ function renderDateView(date) {
 
                     html += `
                     <div class="h-80px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
-                         data-date="${dateStr}" data-time="${time.TimeBlock}">
+                         data-date="${dateStr}" data-time="${time.TimeBlockSchedule}">
                         ${cellContent}
                     </div>
                 `;
@@ -719,7 +719,7 @@ function renderResourceView_OLD(date) {
                 html += `
                     <div class="h-80px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
                          style="grid-column: span ${colspan};"
-                         data-date="${dateStr}" data-time="${allTimeSlots[index].value}" data-resource="${resource.ResourceName}">
+                         data-date="${dateStr}" data-time="${allTimeSlots[index].TimeBlockSchedule}" data-resource="${resource.ResourceName}">
                         <div class="calendar-event ${getEventTimeSlotClass(appointment)} width-95 z-10 cursor-move"
                              data-id="${appointment.AppoinmentId}" draggable="true">
                             <div class="font-weight-medium fs-7">${appointment.CustomerName}</div>
@@ -733,7 +733,7 @@ function renderResourceView_OLD(date) {
             } else {
                 html += `
                     <div class="h-80px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
-                         data-date="${dateStr}" data-time="${allTimeSlots[index].value}" data-resource="${resource.ResourceName}">
+                         data-date="${dateStr}" data-time="${allTimeSlots[index].TimeBlockSchedule}" data-resource="${resource.ResourceName}">
                     </div>
                 `;
                 index += 1;
@@ -914,13 +914,13 @@ function setupDragAndDrop() {
             const date = $(this).data("date");
             const time = $(this).data("time");
             const resource = $(this).data("resource") ||
-                appointments.find(a => a.id === appointmentId)?.resource ||
+                appointments.find(a => a.id === appointmentId)?.ResourceName ||
                 "Unassigned";
-            const timeSlot = time ? Object.keys(timeSlots).find(slot => timeSlots[slot].start === time) : "morning";
+            //const timeSlot = time ? Object.keys(timeSlots).find(slot => timeSlots[slot].start === time) : "morning";
 
-            openConfirmModal(appointmentId, date, timeSlot, resource);
+            openEditModal(appointmentId, date, time, resource, true);
         }
-    });
+    })
 
     $("#unscheduledList, #unscheduledListResource").droppable({
         accept: ".calendar-event",
@@ -985,22 +985,45 @@ function createAppointment(e) {
 }
 
 // Open modal to edit an appointment
-function openEditModal(id) {
+function openEditModal(id, date, time, resource, confirm) {
     const a = appointments.find(x => x.AppoinmentId === id.toString());
-    console.log(a);
     if (!a) return;
     currentEditId = id;
     const form = document.getElementById("editForm");
     form.querySelector("[id='AppoinmentId']").value = parseInt(a.AppoinmentId);
     form.querySelector("[id='CustomerID']").value = parseInt(a.CustomerID);
     form.querySelector("[name='customerName']").value = a.CustomerName;
-    /*form.querySelector("[id='MainContent_ServiceTypeFilter_Edit']").value = a.ServiceType;*/
     const service_select = form.querySelector("[id='MainContent_ServiceTypeFilter_Edit']");
     getSelectedId(service_select, a.ServiceType || "");  
-    form.querySelector("[name='date']").value = a.RequestDate || '';
     const select = form.querySelector("[name='resource']");
-    getSelectedId(select, a.ResourceName || "");  
-    form.querySelector("[name='timeSlot']").value = a.TimeSlot;
+
+    if (confirm) {
+        $('.confirm-title').removeClass('d-none');
+        $('.edit-title').addClass('d-none');
+    }
+    else {
+        $('.edit-title').removeClass('d-none');
+        $('.confirm-title').addClass('d-none');
+    }
+
+    if (resource) {
+        getSelectedId(select, resource || "");
+    }
+    else {
+        getSelectedId(select, a.ResourceName || "");
+    }
+    if (time) {
+        form.querySelector("[name='timeSlot']").value = time;
+    } else {
+        form.querySelector("[name='timeSlot']").value = a.TimeSlot;
+    }
+    if (date) {
+        form.querySelector("[name='date']").value = date;
+    }
+    else {
+        form.querySelector("[name='date']").value = a.RequestDate || '';
+    }
+
     form.querySelector("[name='duration']").value = a.Duration || 0;
     form.querySelector("[name='address']").value = a.Address1 || '';
     const status_select = form.querySelector("[id='MainContent_StatusTypeFilter_Edit']");
@@ -1036,7 +1059,7 @@ function updateAppointment(e) {
 
 // Open modal to confirm scheduling
 function openConfirmModal(id, date, timeSlot, resource) {
-    const a = appointments.find(x => x.id === id);
+    const a = appointments.find(x => x.AppoinmentId === id);
     if (!a) return;
     const form = document.getElementById("confirmForm");
     form.querySelector("[name='id']").value = a.id;
@@ -1345,7 +1368,7 @@ function renderResourceView(date) {
                     html += `
                         <div class="h-80px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
                              style="grid-column: span ${colspan};"
-                             data-date="${dateStr}" data-time="${allTimeSlots[index].value}" data-resource="${resource.ResourceName}">
+                             data-date="${dateStr}" data-time="${allTimeSlots[index].TimeBlockSchedule}" data-resource="${resource.ResourceName}">
                             <div class="calendar-event ${getEventTimeSlotClass(appointment)} width-95 z-10 cursor-move"
                                  data-id="${appointment.AppoinmentId}" draggable="true">
                                 <div class="font-weight-medium fs-7">${appointment.CustomerName}</div>
@@ -1359,7 +1382,7 @@ function renderResourceView(date) {
                 } else {
                     html += `
                         <div class="h-80px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
-                             data-date="${dateStr}" data-time="${allTimeSlots[index].value}" data-resource="${resource.ResourceName}">
+                             data-date="${dateStr}" data-time="${allTimeSlots[index].TimeBlockSchedule}" data-resource="${resource.ResourceName}">
                         </div>
                     `;
                     index += 1;
