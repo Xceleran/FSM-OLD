@@ -1352,9 +1352,7 @@ function renderResourceView(date) {
                 .forEach(a => {
                     const startIndex = allTimeSlots.findIndex(slot => slot.TimeBlockSchedule === a.TimeSlot);
                     if (startIndex !== -1) {
-                        for (let i = startIndex; i < allTimeSlots.length; i++) {
-                            occupiedSlots[i] = { appointment: a };
-                        }
+                        occupiedSlots[startIndex] = { appointment: a };
                     }
                 });
 
@@ -1363,7 +1361,7 @@ function renderResourceView(date) {
                 if (occupiedSlots[index] && occupiedSlots[index].appointment) {
                     const appointment = occupiedSlots[index].appointment;
                     const duration = appointment.Duration || 1;
-                    const colspan = Math.min(duration, allTimeSlots.length - index);
+                    const colspan = 1;
 
                     html += `
                         <div class="h-80px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
