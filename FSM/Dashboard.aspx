@@ -378,19 +378,19 @@
 
         <!-- Job Summary -->
         <section class="job-summary">
-            <div class="summary-card" data-status="completed">
+            <div class="summary-card"><!--data-status="completed"id="completedJobs-->
                 <h3>Completed Jobs</h3>
-                <p class="metric" id="completedJobs">12</p>
+                <p class="metric" ">12</p>
                 <span class="trend up">+2 today</span>
             </div>
-            <div class="summary-card" data-status="in-progress">
+            <div class="summary-card"> <!--data-status="in-progress" id="inProgressJobs"-->
                 <h3>In Progress</h3>
-                <p class="metric" id="inProgressJobs">8</p>
+                <p class="metric" >8</p>
                 <span class="trend down">-1 today</span>
             </div>
-            <div class="summary-card" data-status="pending">
+            <div class="summary-card"> <!--data-status="pending" id="pendingJobs"-->
                 <h3>Pending Jobs</h3>
-                <p class="metric" id="pendingJobs">5</p>
+                <p class="metric" >5</p>
                 <span class="trend neutral">No change</span>
             </div>
         </section>

@@ -148,7 +148,7 @@
         .page-title {
             font-size: 32px;
             font-weight: bold;
-            color: #f84700;
+            color: #265598;
             padding-left: 18px;
         }
 

@@ -133,7 +133,7 @@ function hasConflict_Old(appointment, newTimeSlot, newResource, newDate, exclude
         const aDuration = a.duration || 1;
         const aEnd = aStart + aDuration;
 
-       return (startHour < aEnd) && (endHour > aStart);
+        return (startHour < aEnd) && (endHour > aStart);
     });
 }
 
@@ -410,16 +410,16 @@ function renderDateView(date) {
             fromDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
             toDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
             fromStr = fromDate.toISOString().split('T')[0];
-            toStr = toDate.toISOString().split('T')[0]; 
+            toStr = toDate.toISOString().split('T')[0];
             today = "";
             break;
         case 'week':
             fromDate = new Date(currentDate);
-            fromDate.setDate(currentDate.getDate() - currentDate.getDay()); 
+            fromDate.setDate(currentDate.getDate() - currentDate.getDay());
             toDate = new Date(fromDate);
             toDate.setDate(fromDate.getDate() + 6);
             fromStr = fromDate.toISOString().split('T')[0];
-            toStr = toDate.toISOString().split('T')[0]; 
+            toStr = toDate.toISOString().split('T')[0];
             today = "";
             break;
         case 'threeDay':
@@ -428,7 +428,7 @@ function renderDateView(date) {
             toDate = new Date(currentDate);
             toDate.setDate(currentDate.getDate() + 1);
             fromStr = fromDate.toISOString().split('T')[0];
-            toStr = toDate.toISOString().split('T')[0]; 
+            toStr = toDate.toISOString().split('T')[0];
             today = "";
             break;
         default:
@@ -548,7 +548,7 @@ function renderDateView(date) {
                             if (a.TimeSlot == time.TimeBlockSchedule) {
                                 duration = time.Duration;
                             }
-                            
+
                             rowspan = Math.min(duration, allTimeSlots.length - index);
                             renderedAppointments[dStr].add(a.AppoinmentId);
 
@@ -583,7 +583,7 @@ function renderDateView(date) {
         } else {
             html += `
             <div class="border rounded overflow-hidden">
-                <div class="calendar-grid" style="grid-template-columns: 60px 1fr;">
+                <div class="calendar-grid" style="grid-template-columns: 70px 1fr;">
                     <div class="p-2 border-right bg-gray-50 calendar-header-cell"></div>
                     <div class="p-2 text-center font-weight-medium bg-gray-50 calendar-header-cell">
                         ${currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
@@ -597,7 +597,7 @@ function renderDateView(date) {
 
             allTimeSlots.forEach((time, index) => {
                 html += `
-                <div class="calendar-grid" style="grid-template-columns: 60px 1fr;">
+                <div class="calendar-grid" style="grid-template-columns: 70px 1fr;">
                     <div class="h-80px border-bottom last-border-bottom-none p-1 fs-7 text-right pr-2 bg-gray-50 calendar-time-cell">
                         ${formatTimeRange(time.TimeBlockSchedule)}
                     </div>
@@ -906,7 +906,7 @@ function setupDragAndDrop() {
         },
         stop: function () {
             $(this).removeClass("dragging");
-           // updateAllViews();
+            // updateAllViews();
         }
     });
 
@@ -950,11 +950,10 @@ function setupDragAndDrop() {
 
 // Open modal to create a new appointment
 function openNewModal(date = null) {
-    const modal = new bootstrap.Modal(document.getElementById("newModal"));
     const form = document.getElementById("newForm");
     //form.reset();
     if (date) form.querySelector("[name='date']").value = date;
-    modal.show();
+    window.newModalInstance.show();
 }
 
 // Create a new appointment
@@ -986,7 +985,7 @@ function createAppointment(e) {
     appointments.push(newAppointment);
     saveAppointments();
     updateAllViews();
-    bootstrap.Modal.getInstance(document.getElementById("newModal")).hide();
+    window.newModalInstance.hide();
 }
 
 // Open modal to edit an appointment
@@ -999,7 +998,7 @@ function openEditModal(id, date, time, resource, confirm) {
     form.querySelector("[id='CustomerID']").value = parseInt(a.CustomerID);
     form.querySelector("[name='customerName']").value = a.CustomerName;
     const service_select = form.querySelector("[id='MainContent_ServiceTypeFilter_Edit']");
-    getSelectedId(service_select, a.ServiceType || "");  
+    getSelectedId(service_select, a.ServiceType || "");
     const select = form.querySelector("[name='resource']");
 
     if (confirm) {
@@ -1038,10 +1037,9 @@ function openEditModal(id, date, time, resource, confirm) {
     form.querySelector("[name='duration']").value = a.Duration || 0;
     form.querySelector("[name='address']").value = a.Address1 || '';
     const status_select = form.querySelector("[id='MainContent_StatusTypeFilter_Edit']");
-    getSelectedId(status_select, a.AppoinmentStatus || "");  
+    getSelectedId(status_select, a.AppoinmentStatus || "");
     //form.querySelector("[name='status']").value = a.AppoinmentStatus;
-    const modal = new bootstrap.Modal(document.getElementById("editModal"));
-    modal.show();
+    window.editModalInstance.show();
 }
 
 // Update an existing appointment
@@ -1054,7 +1052,7 @@ function updateAppointment(e) {
 
     const newDate = form.get("date");
     const newTimeSlot = form.get("timeSlot");
-   
+
     const formData = document.getElementById("editForm");
 
     const select_rs = formData.querySelector("[name='resource']");
@@ -1079,8 +1077,7 @@ function openConfirmModal(id, date, timeSlot, resource) {
     form.querySelector("[name='timeSlot']").value = timeSlot || 'morning';
     form.querySelector("[name='duration']").value = a.duration || 1;
     form.querySelector("[name='resource']").value = resource || 'Unassigned';
-    const modal = new bootstrap.Modal(document.getElementById("confirmModal"));
-    modal.show();
+    window.confirmModalInstance.show();
 }
 
 // Confirm scheduling from drag-and-drop
@@ -1107,7 +1104,7 @@ function confirmScheduling(e) {
     appointment.duration = newDuration;
     saveAppointments();
     updateAllViews();
-    bootstrap.Modal.getInstance(document.getElementById("confirmModal")).hide();
+    window.confirmModalInstance.hide();
 }
 
 // Delete an appointment
@@ -1116,7 +1113,7 @@ function deleteAppointment() {
     appointments = appointments.filter(a => a.id !== currentEditId);
     saveAppointments();
     updateAllViews();
-    bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
+    window.editModalInstance.hide();
 }
 
 // Unschedule an appointment
@@ -1128,7 +1125,7 @@ function unscheduleAppointment() {
     appointment.duration = 1;
     saveAppointments();
     updateAllViews();
-    bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
+    window.editModalInstance.hide();
 }
 
 // Update all views
@@ -1147,6 +1144,14 @@ function updateAllViews() {
 var today = new Date().toISOString().split('T')[0];
 // Initialize the page
 document.addEventListener('DOMContentLoaded', () => {
+    // Initialize modal instances
+    const newModalInstance = new bootstrap.Modal(document.getElementById("newModal"));
+    const editModalInstance = new bootstrap.Modal(document.getElementById("editModal"));
+    const confirmModalInstance = new bootstrap.Modal(document.getElementById("confirmModal"));
+
+    window.newModalInstance = newModalInstance;
+    window.editModalInstance = editModalInstance;
+    window.confirmModalInstance = confirmModalInstance;
 
     getTimeSlots();
     getResources();
@@ -1291,7 +1296,7 @@ function getTimeSlots() {
 
 function renderTimeSlots(timeSlots) {
     const container = $(".time-slot-indicators");
-    container.empty(); 
+    container.empty();
     timeSlots.forEach(slot => {
         const fullLabel = slot.TimeBlock; // e.g., "Morning ( 9:00AM )"
 
@@ -1410,9 +1415,9 @@ function renderResourceView(date) {
 }
 
 function formatTimeRange(str) {
-    return str.replace(/[()]/g, '') 
-        .trim()             
-        .replace(/\s{2,}/g, ' ') 
+    return str.replace(/[()]/g, '')
+        .trim()
+        .replace(/\s{2,}/g, ' ')
         .trim();
 }
 
@@ -1486,15 +1491,13 @@ function saveAppoinmentData(e) {
             }
 
             updateAllViews();
-            bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
+            window.editModalInstance.hide();
         },
         error: function (xhr, status, error) {
             console.error("Error updating details: ", error);
-            bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
+            window.editModalInstance.hide();
         }
     });
-
-    
 }
 
 function calculateTimeRequired(e) {
