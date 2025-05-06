@@ -651,7 +651,7 @@ body {
 .page-title {
     font-size: 32px;
     font-weight: 700;
-    color: #202124;
+    color: var(--text-orange-700);
 }
 
 [data-theme="dark"] .page-title {
@@ -928,4 +928,7 @@ body {
 }
 [data-theme="dark"] input#search_term::placeholder {
     color: #bfbfbf;
+}
+button.btn.btn-primary.ms-2 {
+    padding: 8px;
 }

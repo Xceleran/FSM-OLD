@@ -14,11 +14,15 @@
         }
 
             .dashboard-header h1 {
-                font-size: 28px;
-                font-weight: 700;
-                color: #f84700;
+                font-size: 32px;
+                font-weight: 600;
+                color: var(--text-orange-700);
             }
+                  [data-theme="dark"] .dashboard-header h1{
 
+  font-weight: 700;
+  color: #ffffff;
+      }
         .header-actions {
             display: flex;
             gap: 12px;
@@ -361,10 +365,11 @@
                 grid-template-columns: repeat(2, 1fr);
             }
         }
+
     </style>
     <main class="main-content">
         <header class="dashboard-header mt-3">
-            <h1>Dashboard</h1>
+            <h1>Dashboard (Under Development)</h1>
             <div class="header-actions">
                 <input type="text" placeholder="Search..." class="search-bar" id="searchBar">
                 <button type="button" class="primary-btn" id="newWorkOrderBtn">+ New Work Order</button>

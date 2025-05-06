@@ -3,9 +3,9 @@
 <asp:Content ID="Content1" ContentPlaceHolderID="MainContent" runat="server">
     <style>
         .page-title {
-            font-size: 28px;
+            font-size: 32px;
             font-weight: 700;
-            color: #f84700;
+            color:var(--text-orange-700);
             margin-bottom: 20px;
         }
 
@@ -132,10 +132,11 @@
                 text-align: left;
             }
         }
+  
     </style>
 
     <div class="row mx-0 my-3 g-3 px-3 py-5">
-        <h1 class="page-title">Settings</h1>
+        <h1 class="page-title">Settings (Under Development)</h1>
 
         <div class="tab-container">
             <div class="tab-nav">
