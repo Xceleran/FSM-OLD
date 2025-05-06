@@ -646,7 +646,9 @@ body {
 [data-theme="dark"] .container-fluid {
     background: transparent;
 }
-
+[data-theme="dark"] button.btn-close.edit_close {
+    filter: invert(100%);
+}
 /* Page Title */
 .page-title {
     font-size: 32px;
