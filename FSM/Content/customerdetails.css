@@ -360,6 +360,7 @@
 [data-theme="dark"] .custdet-controls .input-group .form-select option {
     color: #000000;
 }
+
 /* Modal */
 .modal-content {
     background: var(--bg-white);

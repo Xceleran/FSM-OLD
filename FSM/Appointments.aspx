@@ -29,7 +29,7 @@
             </div>
         </header>
 
-        <ul class="nav nav-tabs mb-4" id="viewTabs" role="tablist">
+        <ul class="nav nav-tabs mb-4 gap-1" id="viewTabs" role="tablist">
             <li class="nav-item">
                 <button class="nav-link active" id="date-tab" data-bs-toggle="tab" data-bs-target="#dateView" type="button" role="tab">Date View</button>
             </li>
@@ -111,12 +111,12 @@
                             <div class="d-flex flex-wrap gap-2 align-items-center">
                                 <label for="resourceDatePicker" class="form-label mb-0">Date:</label>
                                 <input type="date" id="resourceDatePicker" class="form-control w-200px" onchange="renderResourceView(this.value)">
-                                <label for="dispatchGroup" class="form-label mb-0 ms-3">Group:</label>
+                               <%-- <label for="dispatchGroup" class="form-label mb-0 ms-3">Group:</label>
                                 <select id="dispatchGroup" class="form-select w-120px" onchange="renderResourceView($('#resourceDatePicker').val())">
                                     <option value="all">All Resources</option>
                                     <option value="electricians">Electricians</option>
                                     <option value="plumbers">Plumbers</option>
-                                </select>
+                                </select>--%>
                             </div>
                             <div class="time-slot-indicators">
                                 <span class="time-block-indicator time-block-morning"></span>Morning (8AM-12PM)
@@ -156,10 +156,17 @@
                                 <label for="search_term" class="form-label mb-0">Search</label>
                                 <input placeholder="Search anything" type="text" id="search_term" class="form-control w-200px" oninput="renderListView()">
                             </div>
+                             <div>
+     <label for="ServiceTypeFilter_List" class="form-label mb-0 ms-3">Service type:</label>
+     <select name="ServiceTypeFilter_List" id="ServiceTypeFilter_List" class="form-select" runat="server" onchange="renderListView()">
+         <option value="select">Select</option>
+     </select>
+ </div>
                             <div>
                                 <label for="listDatePickerFrom" class="form-label mb-0">From Date:</label>
                                 <input type="date" id="listDatePickerFrom" class="form-control w-200px">
                             </div>
+
                             <div>
                                 <label for="listDatePickerTo" class="form-label mb-0">To Date:</label>
                                 <input type="date" id="listDatePickerTo" class="form-control w-200px">
@@ -168,12 +175,7 @@
                                 <label></label>
                                 <button type="button" class="btn btn-primary ms-2" onclick="searchListView(event)">Search By Date</button>
                             </div>
-                            <div>
-                                <label for="ServiceTypeFilter_List" class="form-label mb-0 ms-3">Service type:</label>
-                                <select name="ServiceTypeFilter_List" id="ServiceTypeFilter_List" class="form-select" runat="server" onchange="renderListView()">
-                                    <option value="select">Select</option>
-                                </select>
-                            </div>
+                           
                             <div>
                                 <label for="StatusTypeFilter_List" class="form-label mb-0 ms-3">Status:</label>
                                 <select runat="server" id="StatusTypeFilter_List" class="form-select" onchange="renderListView()">
@@ -352,7 +354,8 @@
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="editModalLabel">Edit Appointment</h5>
+                    <h5 class="modal-title edit-title" id="editModalLabel">Edit Appointment</h5>
+                    <h5 class="modal-title confirm-title d-none" id="confirmlLabel">Confirm Appointment Scheduling</h5>
                     <button type="button" class="btn-close edit_close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form id="editForm" onsubmit="updateAppointment(event)">
@@ -366,13 +369,13 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Service Type</label>
-                                <select runat="server" id="ServiceTypeFilter_Edit" name="serviceTypeEdit" class="form-select" required>
+                                <select runat="server" id="ServiceTypeFilter_Edit" name="serviceTypeEdit" class="form-select" onchange="calculateTimeRequired(event)" required>
                                     <option value="all">All Service Types</option>
                                 </select>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Date</label>
-                                <input type="date" name="date" class="form-control" required>
+                                <input type="date" name="date" class="form-control" id="dateInput" required>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Resource</label>
@@ -416,7 +419,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-danger d-none" onclick="deleteAppointment()">Delete</button>
-                        <button type="button" class="btn btn-secondary d-none" onclick="unscheduleAppointment()">Unschedule</button>
+                        <button type="button" class="btn btn-secondary d-none" onclick="unscheduleAppointment()">openEditModalUnschedule</button>
                         <button type="button" class="btn btn-secondary edit_close" data-bs-dismiss="modal">Cancel</button>
                         <button type="submit" class="btn btn-primary">Update</button>
                     </div>

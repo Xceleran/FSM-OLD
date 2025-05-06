@@ -94,6 +94,7 @@ function getAppoinments(searchValue, fromDate, toDate, today, callback) {
         dataType: "json",
         success: function (response) {
             appointments = response.d;
+            console.log(response.d)
             callback(appointments);
         },
         error: function (xhr, status, error) {
@@ -149,9 +150,13 @@ function hasConflict(appointment, newTimeSlot, newResource, newDate, excludeId =
 
 // Get CSS class for time slot
 function getEventTimeSlotClass(appointment) {
-    return appointment.timeSlot === "morning" ? "time-block-morning" :
-        appointment.timeSlot === "afternoon" ? "time-block-afternoon" :
-            appointment.timeSlot === "emergency" ? "time-block-emergency" : "";
+    const timeSlot = (appointment.TimeSlot || '')
+        .toLowerCase()
+        .replace(/\s*\(.*\)/, '') // Remove "( 9:00AM - 12:00AM )"
+        .trim();
+    return timeSlot === "morning" ? "time-block-morning" :
+        timeSlot === "afternoon" ? "time-block-afternoon" :
+            timeSlot === "emergency" ? "time-block-emergency" : "";
 }
 
 // Initialize the Map View
@@ -557,7 +562,7 @@ function renderDateView(date) {
                                  data-id="${a.AppoinmentId}" draggable="true">
                                 <div class="font-weight-medium fs-7">${a.CustomerName}</div>
                                 <div class="fs-7 truncate">
-                                    ${a.ServiceType} (${duration}m)
+                                    ${a.ServiceType} (${a.Duration})
                                 </div>
                             </div>
                         `;
@@ -566,7 +571,7 @@ function renderDateView(date) {
 
                     html += `
                     <div class="h-80px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
-                         data-date="${dStr}" data-time="${formatTimeRange(time.TimeBlockSchedule)}">
+                         data-date="${dStr}" data-time="${time.TimeBlockSchedule}">
                         ${cellContent}
                     </div>
                 `;
@@ -633,7 +638,7 @@ function renderDateView(date) {
                                  data-id="${a.AppoinmentId}" draggable="true">
                                 <div class="font-weight-medium fs-7">${a.CustomerName}</div>
                                 <div class="fs-7 truncate">
-                                    ${a.ServiceType} (${duration}m)
+                                    ${a.ServiceType} (${a.Duration})
                                 </div>
                             </div>
                         `;
@@ -642,7 +647,7 @@ function renderDateView(date) {
 
                     html += `
                     <div class="h-80px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
-                         data-date="${dateStr}" data-time="${time.TimeBlock}">
+                         data-date="${dateStr}" data-time="${time.TimeBlockSchedule}">
                         ${cellContent}
                     </div>
                 `;
@@ -718,7 +723,7 @@ function renderResourceView_OLD(date) {
                 html += `
                     <div class="h-80px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
                          style="grid-column: span ${colspan};"
-                         data-date="${dateStr}" data-time="${allTimeSlots[index].value}" data-resource="${resource.ResourceName}">
+                         data-date="${dateStr}" data-time="${allTimeSlots[index].TimeBlockSchedule}" data-resource="${resource.ResourceName}">
                         <div class="calendar-event ${getEventTimeSlotClass(appointment)} width-95 z-10 cursor-move"
                              data-id="${appointment.AppoinmentId}" draggable="true">
                             <div class="font-weight-medium fs-7">${appointment.CustomerName}</div>
@@ -732,7 +737,7 @@ function renderResourceView_OLD(date) {
             } else {
                 html += `
                     <div class="h-80px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
-                         data-date="${dateStr}" data-time="${allTimeSlots[index].value}" data-resource="${resource.ResourceName}">
+                         data-date="${dateStr}" data-time="${allTimeSlots[index].TimeBlockSchedule}" data-resource="${resource.ResourceName}">
                     </div>
                 `;
                 index += 1;
@@ -858,7 +863,7 @@ function renderUnscheduledList(view = 'date') {
 
     container.html(unscheduled.length === 0 ? '<div class="text-center py-4 text-muted">No unscheduled appointments.</div>' :
         unscheduled.map(a => `
-            <div class="appointment-card card mb-3 shadow-sm" data-id="${a.AppoinmentId}" draggable="true">
+           <div class="appointment-card card mb-3 shadow-sm ${getEventTimeSlotClass(a)}" data-id="${a.AppoinmentId}" draggable="true">
                 <div class="card-body p-3">
                     <div class="d-flex justify-content-between align-items-start">
                         <h3 class="font-weight-medium fs-6 mb-0">${a.CustomerName}</h3>
@@ -901,7 +906,7 @@ function setupDragAndDrop() {
         },
         stop: function () {
             $(this).removeClass("dragging");
-            updateAllViews();
+           // updateAllViews();
         }
     });
 
@@ -913,13 +918,13 @@ function setupDragAndDrop() {
             const date = $(this).data("date");
             const time = $(this).data("time");
             const resource = $(this).data("resource") ||
-                appointments.find(a => a.id === appointmentId)?.resource ||
+                appointments.find(a => a.id === appointmentId)?.ResourceName ||
                 "Unassigned";
-            const timeSlot = time ? Object.keys(timeSlots).find(slot => timeSlots[slot].start === time) : "morning";
+            //const timeSlot = time ? Object.keys(timeSlots).find(slot => timeSlots[slot].start === time) : "morning";
 
-            openConfirmModal(appointmentId, date, timeSlot, resource);
+            openEditModal(appointmentId, date, time, resource, true);
         }
-    });
+    })
 
     $("#unscheduledList, #unscheduledListResource").droppable({
         accept: ".calendar-event",
@@ -941,6 +946,7 @@ function setupDragAndDrop() {
         openEditModal($(this).data("id"));
     });
 }
+
 
 // Open modal to create a new appointment
 function openNewModal(date = null) {
@@ -984,23 +990,52 @@ function createAppointment(e) {
 }
 
 // Open modal to edit an appointment
-function openEditModal(id) {
+function openEditModal(id, date, time, resource, confirm) {
     const a = appointments.find(x => x.AppoinmentId === id.toString());
-    console.log(a);
     if (!a) return;
     currentEditId = id;
     const form = document.getElementById("editForm");
     form.querySelector("[id='AppoinmentId']").value = parseInt(a.AppoinmentId);
     form.querySelector("[id='CustomerID']").value = parseInt(a.CustomerID);
     form.querySelector("[name='customerName']").value = a.CustomerName;
-    /*form.querySelector("[id='MainContent_ServiceTypeFilter_Edit']").value = a.ServiceType;*/
     const service_select = form.querySelector("[id='MainContent_ServiceTypeFilter_Edit']");
     getSelectedId(service_select, a.ServiceType || "");  
-    form.querySelector("[name='date']").value = a.RequestDate || '';
     const select = form.querySelector("[name='resource']");
-    getSelectedId(select, a.ResourceName || "");  
-    form.querySelector("[name='timeSlot']").value = a.TimeSlot;
-    form.querySelector("[name='duration']").value = getDuration(a.TimeSlot) || 0;
+
+    if (confirm) {
+        $('.confirm-title').removeClass('d-none');
+        $('.edit-title').addClass('d-none');
+    }
+    else {
+        $('.edit-title').removeClass('d-none');
+        $('.confirm-title').addClass('d-none');
+    }
+
+    if (resource) {
+        getSelectedId(select, resource || "");
+    }
+    else {
+        getSelectedId(select, a.ResourceName || "");
+    }
+    if (time) {
+        form.querySelector("[name='timeSlot']").value = time;
+    } else {
+        form.querySelector("[name='timeSlot']").value = a.TimeSlot;
+    }
+    if (date) {
+        if (date < today) {
+            alert("The selected date cannot be in the past.");
+            return;
+        }
+        else {
+            form.querySelector("[name='date']").value = date;
+        }
+    }
+    else {
+        form.querySelector("[name='date']").value = a.RequestDate || '';
+    }
+
+    form.querySelector("[name='duration']").value = a.Duration || 0;
     form.querySelector("[name='address']").value = a.Address1 || '';
     const status_select = form.querySelector("[id='MainContent_StatusTypeFilter_Edit']");
     getSelectedId(status_select, a.AppoinmentStatus || "");  
@@ -1035,7 +1070,7 @@ function updateAppointment(e) {
 
 // Open modal to confirm scheduling
 function openConfirmModal(id, date, timeSlot, resource) {
-    const a = appointments.find(x => x.id === id);
+    const a = appointments.find(x => x.AppoinmentId === id);
     if (!a) return;
     const form = document.getElementById("confirmForm");
     form.querySelector("[name='id']").value = a.id;
@@ -1115,6 +1150,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     getTimeSlots();
     getResources();
+    document.getElementById('dateInput').min = today;
 
     $("#dayDatePicker").val(today);
     $("#resourceDatePicker").val(today);
@@ -1179,9 +1215,9 @@ document.addEventListener('DOMContentLoaded', () => {
         renderMapMarkers(e.target.value);
     });
 
-    document.getElementById('mapDispatchGroup').addEventListener('change', () => {
-        renderMapMarkers(document.getElementById('mapDatePicker').value);
-    });
+    //document.getElementById('mapDispatchGroup').addEventListener('change', () => {
+    //    renderMapMarkers(document.getElementById('mapDatePicker').value);
+    //});
 
     document.getElementById('statusFilter').addEventListener('change', () => {
         renderMapMarkers(document.getElementById('mapDatePicker').value);
@@ -1220,7 +1256,6 @@ document.querySelectorAll('[data-bs-dismiss="modal"]').forEach(button => {
     });
 });
 
-
 function calculateDurationInMinutes(startTime, endTime) {
     const parseTime = timeStr => {
         const [time, modifier] = timeStr.split(' ');
@@ -1245,6 +1280,7 @@ function getTimeSlots() {
         success: function (response) {
             console.log(response.d);
             allTimeSlots = response.d;
+            renderTimeSlots(response.d);
             populateTimeSlotDropdown(response.d);
         },
         error: function (xhr, status, error) {
@@ -1253,6 +1289,22 @@ function getTimeSlots() {
     });
 }
 
+function renderTimeSlots(timeSlots) {
+    const container = $(".time-slot-indicators");
+    container.empty(); 
+    timeSlots.forEach(slot => {
+        const fullLabel = slot.TimeBlock; // e.g., "Morning ( 9:00AM )"
+
+        // Extract the first word before "(" for the class
+        const match = fullLabel.match(/^(\w+)/);
+        const timeBlockClass = match ? match[1].toLowerCase() : "default";
+
+        const className = `time-block-${timeBlockClass}`;
+        const html = `<span class="time-block-indicator ${className}"></span>${slot.TimeBlockSchedule} `;
+
+        container.append(html);
+    });
+}
 
 function getResources() {
     $.ajax({
@@ -1271,7 +1323,6 @@ function getResources() {
         }
     });
 }
-
 
 function renderResourceView(date) {
     const container = $("#resourceViewContainer").addClass('resource-view').removeClass('date-view');
@@ -1311,17 +1362,9 @@ function renderResourceView(date) {
             appointments
                 .filter(a => a.ResourceName === resource.ResourceName && a.RequestDate === dateStr && a.TimeSlot)
                 .forEach(a => {
-                    const startTime = a.StartTime;
                     const startIndex = allTimeSlots.findIndex(slot => slot.TimeBlockSchedule === a.TimeSlot);
                     if (startIndex !== -1) {
-                        let duration = 1;
-                        if (a.TimeSlot == allTimeSlots[startIndex].TimeBlockSchedule) {
-                            duration = allTimeSlots[startIndex].Duration;
-                            a.Duration = duration;
-                        }
-                        for (let i = startIndex; i < startIndex + duration && i < allTimeSlots.length; i++) {
-                            occupiedSlots[i] = { appointment: a };
-                        }
+                        occupiedSlots[startIndex] = { appointment: a };
                     }
                 });
 
@@ -1330,12 +1373,12 @@ function renderResourceView(date) {
                 if (occupiedSlots[index] && occupiedSlots[index].appointment) {
                     const appointment = occupiedSlots[index].appointment;
                     const duration = appointment.Duration || 1;
-                    const colspan = Math.min(duration, allTimeSlots.length - index);
+                    const colspan = 1;
 
                     html += `
                         <div class="h-80px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
                              style="grid-column: span ${colspan};"
-                             data-date="${dateStr}" data-time="${allTimeSlots[index].value}" data-resource="${resource.ResourceName}">
+                             data-date="${dateStr}" data-time="${allTimeSlots[index].TimeBlockSchedule}" data-resource="${resource.ResourceName}">
                             <div class="calendar-event ${getEventTimeSlotClass(appointment)} width-95 z-10 cursor-move"
                                  data-id="${appointment.AppoinmentId}" draggable="true">
                                 <div class="font-weight-medium fs-7">${appointment.CustomerName}</div>
@@ -1349,7 +1392,7 @@ function renderResourceView(date) {
                 } else {
                     html += `
                         <div class="h-80px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
-                             data-date="${dateStr}" data-time="${allTimeSlots[index].value}" data-resource="${resource.ResourceName}">
+                             data-date="${dateStr}" data-time="${allTimeSlots[index].TimeBlockSchedule}" data-resource="${resource.ResourceName}">
                         </div>
                     `;
                     index += 1;
@@ -1416,15 +1459,6 @@ function populateTimeSlotDropdown(slots) {
     });
 }
 
-function getDuration(timeSlot) {
-    let duration = 0;
-    const index = allTimeSlots.findIndex(slot => slot.TimeBlockSchedule === timeSlot);
-    if (index !== -1) {
-        duration = allTimeSlots[index].Duration;
-    }
-    return duration;
-}
-
 function saveAppoinmentData(e) {
     e.preventDefault();
     const form = new FormData(e.target);
@@ -1450,13 +1484,37 @@ function saveAppoinmentData(e) {
             else {
                 alert("Something went wrong!");
             }
+
+            updateAllViews();
+            bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
         },
         error: function (xhr, status, error) {
             console.error("Error updating details: ", error);
+            bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
         }
     });
 
-    updateAllViews();
-    bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
+    
 }
 
+function calculateTimeRequired(e) {
+    e.preventDefault();
+    const selectedValue = e.target.value;
+    if (selectedValue) {
+        $.ajax({
+            type: "POST",
+            url: "Appointments.aspx/GetDuration",
+            data: JSON.stringify({ serviceTypeID: selectedValue }),
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            success: function (response) {
+                console.log(response.d);
+                const form = document.getElementById("editForm");
+                form.querySelector("[name='duration']").value = response.d || 0;
+            },
+            error: function (xhr, status, error) {
+                console.error("Error updating details: ", error);
+            }
+        });
+    }
+}
