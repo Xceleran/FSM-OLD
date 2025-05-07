@@ -88,11 +88,32 @@
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
 }
-
+.calendar-container {
+    height: calc(100vh - 200px); /* Adjust based on your header height */
+    min-height: 600px;
+    overflow: auto;
+}
 .calendar-body {
+   
+    display: block !important; /* Override potential hidden states */
     position: relative;
 }
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
 
+[data-theme="dark"] .loading-overlay {
+    background: rgba(0, 0, 0, 0.8);
+}
 .calendar-header-cell {
     border-bottom: 1px solid #d1d5db;
     border-right: 1px solid #d1d5db;
@@ -125,15 +146,24 @@
 .calendar-cell {
     border-bottom: 1px solid #d1d5db;
     border-right: 1px solid #d1d5db;
+    display: flex;
+    gap: 10px;
+    min-height: 100px;
 }
-
+[data-theme="dark"] table#listTable thead {
+    background: #0000006e;
+}
 [data-theme="dark"] .calendar-cell {
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     border-right: 1px solid rgba(255, 255, 255, 0.1);
 }
-
-/* Time Slot Indicators */
-.time-block-indicator {
+table#listTable thead {
+    background: #0000006e;
+    text-align: start;
+    vertical-align: top;
+}
+    /* Time Slot Indicators */
+    .time-block-indicator {
     display: inline-block;
     width: 16px;
     height: 16px;
@@ -202,7 +232,7 @@
 
 /* Calendar Event (Scheduled Appointments) */
 .calendar-event {
-    width: 100%;
+    width: 35%;
     margin: 0;
     padding: 6px;
     box-sizing: border-box;
@@ -657,26 +687,73 @@ ul#viewTabs {
 }
 
 /* Date Navigation */
+.datepicker {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Replace or add these styles */
 .date-nav {
     display: flex;
     align-items: center;
     gap: 10px;
-    flex-wrap: wrap;
     margin-bottom: 10px;
 }
 
+.date-boxes {
+    display: flex;
+    gap: 10px;
+}
+
 .date-box {
-    background: #f1f3f4;
-    color: #3c4043;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     padding: 8px 12px;
+    border: 1px solid #ddd;
     border-radius: 4px;
+    cursor: pointer;
+    background-color: #f8f9fa;
+    transition: background-color 0.2s;
+    width: 60px;
+    text-align: center;
+}
+
+    .date-box:hover {
+        background-color: #e9ecef;
+    }
+
+    .date-box.active {
+        background-color: #007bff;
+        color: white;
+        border-color: #007bff;
+    }
+
+        .date-box.active .date-weekday,
+        .date-box.active .date-number {
+            color: white;
+        }
+
+.date-weekday {
     font-size: 0.9rem;
-    cursor: grab;
+    font-weight: 500;
+}
+
+.date-number {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-top: 4px;
+}
+
+.date-nav .btn-primary {
+    padding: 6px 12px;
 }
 
 [data-theme="dark"] .date-box {
     background: rgb(255 255 255 / 14%);
-    color: var(--text-gray-700);
+    color: #ffffff;
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
 }

@@ -14,7 +14,7 @@
 
     <!-- Local Styles and Scripts -->
     <link rel="stylesheet" href="Content/appointments.css">
-    <script src="Scripts/appointments.js"></script>
+
 
     <!-- Page Content -->
     <div class="container-fluid">
@@ -49,7 +49,7 @@
                 <div class="date-view-container">
                     <div class="card calendar-container date-view">
                         <div class="card-header">
-                            <div class="date-nav" id="dateNav"></div>
+                         
                             <div class="d-flex flex-wrap gap-2 align-items-center">
                                 <label for="viewSelect" class="form-label mb-0">View:</label>
                                 <select id="viewSelect" class="form-select w-120px" onchange="renderDateView($('#dayDatePicker').val())">
@@ -80,14 +80,16 @@
                             </div>
                         </div>
                         <div class="card-body">
+                               <div class="datepicker"><div class="date-nav" id="dateNav"></div></div>
                             <div id="dayCalendar"></div>
                         </div>
                     </div>
                     <div class="card unscheduled-panel">
                         <div class="card-header">
-                            <h3 class="card-title">Unscheduled Appointments</h3>
+                            <h3 class="card-title">Unassigned Appointments</h3>
                         </div>
                         <div class="card-body">
+
                             <div class="unscheduled-filters">
                                 <select runat="server" id="StatusTypeFilter" class="form-select mb-3" onchange="renderUnscheduledList()">
                                     <option value="all">All Statuses</option>
@@ -107,7 +109,7 @@
                 <div class="date-view-container">
                     <div class="card calendar-container resource-view">
                         <div class="card-header">
-                            <div class="date-nav" id="resourceDateNav"></div>
+                            
                             <div class="d-flex flex-wrap gap-2 align-items-center">
                                 <label for="resourceDatePicker" class="form-label mb-0">Date:</label>
                                 <input type="date" id="resourceDatePicker" class="form-control w-200px" onchange="renderResourceView(this.value)">
@@ -125,6 +127,7 @@
                             </div>
                         </div>
                         <div class="card-body">
+                            <div class="datepicker"><div class="date-nav" id="resourceDateNav"></div></div>
                             <div id="resourceViewContainer"></div>
                         </div>
                     </div>
@@ -487,4 +490,6 @@
             </div>
         </div>
     </div>
+
+        <script src="Scripts/appointments.js" defer></script>
 </asp:Content>

@@ -8,7 +8,10 @@
             color:var(--text-orange-700);
             margin-bottom: 20px;
         }
-
+        [data-theme="dark"] .page-title
+        {
+            color: white;
+        }
         .tab-container {
             background: #fff;
             border-radius: 8px;

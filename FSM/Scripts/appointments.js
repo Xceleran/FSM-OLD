@@ -39,7 +39,6 @@
 
 let appointments = [];
 
-
 let currentView = "date";
 let currentDate = new Date();
 let currentEditId = null;
@@ -76,6 +75,7 @@ const timeSlots = {
 
 var allTimeSlots = [];
 var resources = [];
+
 function getAppoinments(searchValue, fromDate, toDate, today, callback) {
     searchValue = searchValue;
     fromDate = fromDate;
@@ -94,7 +94,7 @@ function getAppoinments(searchValue, fromDate, toDate, today, callback) {
         dataType: "json",
         success: function (response) {
             appointments = response.d;
-            console.log(response.d)
+            console.log(response.d);
             callback(appointments);
         },
         error: function (xhr, status, error) {
@@ -105,7 +105,6 @@ function getAppoinments(searchValue, fromDate, toDate, today, callback) {
 
     return appointments;
 }
-
 
 // Save appointments to localStorage
 function saveAppointments() {
@@ -313,19 +312,24 @@ function simulateRealTimeUpdates() {
 }
 
 // Render date navigation
+// Replace the renderDateNav function
 function renderDateNav(containerId, selectedDate) {
     const container = $(`#${containerId}`);
     const view = containerId === "dateNav" ? $("#viewSelect").val() : "day";
-    let daysToShow = view === "week" ? 7 : view === "threeDay" ? 3 : 1;
+    let daysToShow = view === "week" ? 7 : view === "threeDay" ? 3 : 3; // Show 3 days for day view
     if (view === "month") daysToShow = 0;
 
     let html = `
         <button class="btn btn-primary" onclick="prevPeriod('${containerId}')"><i class="fas fa-chevron-left"></i></button>
     `;
+
     if (daysToShow > 0) {
-        const startDate = new Date(selectedDate);
-        if (view === "week") startDate.setDate(startDate.getDate() - startDate.getDay());
-        if (view === "threeDay") startDate.setDate(startDate.getDate() - 1);
+        const selected = new Date(selectedDate);
+        const startOffset = Math.floor(daysToShow / 2);
+        const startDate = new Date(selected);
+        startDate.setDate(selected.getDate() - startOffset);
+
+        html += `<div class="date-boxes">`;
         for (let i = 0; i < daysToShow; i++) {
             const d = new Date(startDate);
             d.setDate(startDate.getDate() + i);
@@ -333,11 +337,14 @@ function renderDateNav(containerId, selectedDate) {
             const isActive = dateStr === selectedDate ? " active" : "";
             html += `
                 <div class="date-box${isActive}" data-date="${dateStr}" onclick="selectDate('${dateStr}', '${containerId}')">
-                    ${d.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' })}
+                    <div class="date-weekday">${d.toLocaleDateString('en-US', { weekday: 'short' })}</div>
+                    <div class="date-number">${d.getDate()}</div>
                 </div>
             `;
         }
+        html += `</div>`;
     }
+
     html += `
         <button class="btn btn-primary" onclick="nextPeriod('${containerId}')"><i class="fas fa-chevron-right"></i></button>
         <button class="btn btn-primary ms-2" onclick="gotoToday('${containerId}')">Today</button>
@@ -360,7 +367,8 @@ function prevPeriod(containerId) {
     if (view === 'month') {
         currentDate.setMonth(currentDate.getMonth() - 1);
     } else {
-        currentDate.setDate(currentDate.getDate() - (view === 'week' ? 7 : view === 'threeDay' ? 3 : 1));
+        // Move one day back for day/threeDay/week view
+        currentDate.setDate(currentDate.getDate() - 1);
     }
     const dateStr = currentDate.toISOString().split('T')[0];
     const datePicker = containerId === "dateNav" ? "#dayDatePicker" : "#resourceDatePicker";
@@ -375,7 +383,8 @@ function nextPeriod(containerId) {
     if (view === 'month') {
         currentDate.setMonth(currentDate.getMonth() + 1);
     } else {
-        currentDate.setDate(currentDate.getDate() + (view === 'week' ? 7 : view === 'threeDay' ? 3 : 1));
+        // Move one day forward for day/threeDay/week view
+        currentDate.setDate(currentDate.getDate() + 1);
     }
     const dateStr = currentDate.toISOString().split('T')[0];
     const datePicker = containerId === "dateNav" ? "#dayDatePicker" : "#resourceDatePicker";
@@ -386,7 +395,6 @@ function nextPeriod(containerId) {
 
 // Go to today
 function gotoToday(containerId) {
-    alert(containerId);
     currentDate = new Date();
     const dateStr = currentDate.toISOString().split('T')[0];
     const datePicker = containerId === "dateNav" ? "#dayDatePicker" : "#resourceDatePicker";
@@ -462,7 +470,7 @@ function renderDateView(date) {
                 ${['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => `
                     <div class="text-center font-weight-medium p-2 calendar-header-cell">${day}</div>
                 `).join('')}
-        `;
+            `;
             calendarDays.forEach(day => {
                 const dayDate = day ? `${currentDate.getFullYear()}-${(currentDate.getMonth() + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}` : '';
                 html += `
@@ -480,7 +488,7 @@ function renderDateView(date) {
                         </div>
                     ` : ''}
                 </div>
-            `;
+                `;
             });
             html += `</div>`;
         } else if (view === 'week' || view === 'threeDay') {
@@ -511,73 +519,81 @@ function renderDateView(date) {
                     `).join('')}
                 </div>
                 <div class="calendar-body">
-        `;
-
-            const renderedAppointments = {};
-            const spannedSlots = {};
-            dayDates.forEach(d => {
-                renderedAppointments[d] = new Set();
-                spannedSlots[d] = new Array(allTimeSlots.length).fill(false);
-            });
-
-            allTimeSlots.forEach((time, index) => {
-                html += `
-                <div class="calendar-grid" style="grid-template-columns: 60px repeat(${dayDates.length}, 1fr);">
-                    <div class="h-80px border-bottom last-border-bottom-none p-1 fs-7 text-right pr-2 bg-gray-50 calendar-time-cell">
-                        ${formatTimeRange(time.TimeBlockSchedule)}
-                    </div>
             `;
-                dayDates.forEach(dStr => {
-                    if (spannedSlots[dStr][index]) {
-                        html += '<div class="h-80px border-bottom last-border-bottom-none border-right last-border-right-none p-1 calendar-cell"></div>';
-                        return;
-                    }
 
-                    const events = filteredAppointments.filter(a =>
-                        a.RequestDate === dStr &&
-                        a.TimeSlot === time.TimeBlockSchedule &&
-                        !renderedAppointments[dStr].has(a.AppoinmentId)
-                    );
-
-                    let cellContent = '';
-                    let rowspan = 1;
-
-                    if (events.length > 0) {
-                        events.forEach(a => {
-                            let duration = 1;
-                            if (a.TimeSlot == time.TimeBlockSchedule) {
-                                duration = time.Duration;
-                            }
-
-                            rowspan = Math.min(duration, allTimeSlots.length - index);
-                            renderedAppointments[dStr].add(a.AppoinmentId);
-
-                            for (let i = index + 1; i < index + rowspan && i < allTimeSlots.length; i++) {
-                                spannedSlots[dStr][i] = true;
-                            }
-
-                            cellContent += `
-                            <div class="calendar-event ${getEventTimeSlotClass(a)} width-95 z-10 cursor-move"
-                                 style="height: ${80 * rowspan - 10}px; top: ${2}px;" 
-                                 data-id="${a.AppoinmentId}" draggable="true">
-                                <div class="font-weight-medium fs-7">${a.CustomerName}</div>
-                                <div class="fs-7 truncate">
-                                    ${a.ServiceType} (${a.Duration})
-                                </div>
-                            </div>
-                        `;
-                        });
-                    }
-
-                    html += `
-                    <div class="h-80px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
-                         data-date="${dStr}" data-time="${time.TimeBlockSchedule}">
-                        ${cellContent}
-                    </div>
+            if (!allTimeSlots || allTimeSlots.length === 0) {
+                html += `
+                <div class="text-center py-4 text-muted">
+                    No time slots available. Please try refreshing the page.
+                </div>
                 `;
+            } else {
+                const renderedAppointments = {};
+                const spannedSlots = {};
+                dayDates.forEach(d => {
+                    renderedAppointments[d] = new Set();
+                    spannedSlots[d] = new Array(allTimeSlots.length).fill(false);
                 });
-                html += `</div>`;
-            });
+
+                allTimeSlots.forEach((time, index) => {
+                    html += `
+                    <div class="calendar-grid" style="grid-template-columns: 60px repeat(${dayDates.length}, 1fr);">
+                        <div class="h-120px border-bottom last-border-bottom-none p-1 fs-7 text-right pr-2 bg-gray-50 calendar-time-cell">
+                            ${formatTimeRange(time.TimeBlockSchedule)}
+                        </div>
+                    `;
+                    dayDates.forEach(dStr => {
+                        if (spannedSlots[dStr][index]) {
+                            html += '<div class="h-120px border-bottom last-border-bottom-none border-right last-border-right-none p-1 calendar-cell"></div>';
+                            return;
+                        }
+
+                        const events = filteredAppointments.filter(a =>
+                            a.RequestDate === dStr &&
+                            a.TimeSlot === time.TimeBlockSchedule &&
+                            !renderedAppointments[dStr].has(a.AppoinmentId)
+                        );
+
+                        let cellContent = '';
+                        let rowspan = 1;
+
+                        if (events.length > 0) {
+                            events.forEach(a => {
+                                let duration = 1;
+                                if (a.TimeSlot == time.TimeBlockSchedule) {
+                                    duration = time.Duration;
+                                }
+
+                                rowspan = Math.min(duration, allTimeSlots.length - index);
+                                renderedAppointments[dStr].add(a.AppoinmentId);
+
+                                for (let i = index + 1; i < index + rowspan && i < allTimeSlots.length; i++) {
+                                    spannedSlots[dStr][i] = true;
+                                }
+
+                                cellContent += `
+                                <div class="calendar-event ${getEventTimeSlotClass(a)} width-95 z-10 cursor-move"
+                                     style="height: ${80 * rowspan - 10}px; top: ${2}px;" 
+                                     data-id="${a.AppoinmentId}" draggable="true">
+                                    <div class="font-weight-medium fs-7">${a.CustomerName}</div>
+                                    <div class="fs-7 truncate">
+                                        ${a.ServiceType} (${a.Duration})
+                                    </div>
+                                </div>
+                                `;
+                            });
+                        }
+
+                        html += `
+                        <div class="h-120px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
+                             data-date="${dStr}" data-time="${time.TimeBlockSchedule}">
+                            ${cellContent}
+                        </div>
+                        `;
+                    });
+                    html += `</div>`;
+                });
+            }
 
             html += `</div></div>`;
         } else {
@@ -590,70 +606,78 @@ function renderDateView(date) {
                     </div>
                 </div>
                 <div class="calendar-body">
-        `;
-
-            const spannedSlots = new Array(allTimeSlots.length).fill(false);
-            const renderedAppointments = new Set();
-
-            allTimeSlots.forEach((time, index) => {
-                html += `
-                <div class="calendar-grid" style="grid-template-columns: 70px 1fr;">
-                    <div class="h-80px border-bottom last-border-bottom-none p-1 fs-7 text-right pr-2 bg-gray-50 calendar-time-cell">
-                        ${formatTimeRange(time.TimeBlockSchedule)}
-                    </div>
             `;
 
-                if (spannedSlots[index]) {
-                    html += `
-                    <div class="h-80px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
-                         data-date="${dateStr}" data-time="${formatTimeRange(time.TimeBlockSchedule)}">
-                    </div>
+            if (!allTimeSlots || allTimeSlots.length === 0) {
+                html += `
+                <div class="text-center py-4 text-muted">
+                    No time slots available. Please try refreshing the page.
+                </div>
                 `;
-                } else {
-                    const events = filteredAppointments.filter(a =>
-                        a.RequestDate === dateStr &&
-                        a.TimeSlot == time.TimeBlockSchedule &&
-                        !renderedAppointments.has(a.AppoinmentId)
-                    );
+            } else {
+                const spannedSlots = new Array(allTimeSlots.length).fill(false);
+                const renderedAppointments = new Set();
 
-                    let cellContent = '';
-                    let rowspan = 1;
+                allTimeSlots.forEach((time, index) => {
+                    html += `
+                    <div class="calendar-grid" style="grid-template-columns: 70px 1fr;">
+                        <div class="h-120px border-bottom last-border-bottom-none p-1 fs-7 text-right pr-2 bg-gray-50 calendar-time-cell">
+                            ${formatTimeRange(time.TimeBlockSchedule)}
+                        </div>
+                    `;
 
-                    if (events.length > 0) {
-                        events.forEach(a => {
-                            let duration = 1;
-                            if (a.TimeSlot == time.TimeBlockSchedule) {
-                                duration = time.Duration;
-                            }
-                            rowspan = Math.min(duration, allTimeSlots.length - index);
-                            renderedAppointments.add(a.AppoinmentId);
-
-                            for (let i = index + 1; i < index + rowspan && i < allTimeSlots.length; i++) {
-                                spannedSlots[i] = true;
-                            }
-
-                            cellContent += `
-                            <div class="calendar-event ${getEventTimeSlotClass(a)} width-95 z-10 cursor-move"
-                                 style="height: ${80 * rowspan - 10}px; top: ${2}px;" 
-                                 data-id="${a.AppoinmentId}" draggable="true">
-                                <div class="font-weight-medium fs-7">${a.CustomerName}</div>
-                                <div class="fs-7 truncate">
-                                    ${a.ServiceType} (${a.Duration})
-                                </div>
-                            </div>
+                    if (spannedSlots[index]) {
+                        html += `
+                        <div class="h-120px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
+                             data-date="${dateStr}" data-time="${formatTimeRange(time.TimeBlockSchedule)}">
+                        </div>
                         `;
-                        });
-                    }
+                    } else {
+                        const events = filteredAppointments.filter(a =>
+                            a.RequestDate === dateStr &&
+                            a.TimeSlot == time.TimeBlockSchedule &&
+                            !renderedAppointments.has(a.AppoinmentId)
+                        );
 
-                    html += `
-                    <div class="h-80px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
-                         data-date="${dateStr}" data-time="${time.TimeBlockSchedule}">
-                        ${cellContent}
-                    </div>
-                `;
-                }
-                html += `</div>`;
-            });
+                        let cellContent = '';
+                        let rowspan = 1;
+
+                        if (events.length > 0) {
+                            events.forEach(a => {
+                                let duration = 1;
+                                if (a.TimeSlot == time.TimeBlockSchedule) {
+                                    duration = time.Duration;
+                                }
+                                rowspan = Math.min(duration, allTimeSlots.length - index);
+                                renderedAppointments.add(a.AppoinmentId);
+
+                                for (let i = index + 1; i < index + rowspan && i < allTimeSlots.length; i++) {
+                                    spannedSlots[i] = true;
+                                }
+
+                                cellContent += `
+                                <div class="calendar-event ${getEventTimeSlotClass(a)} width-95 z-10 cursor-move"
+                                     style="height: ${80 * rowspan - 10}px; top: ${2}px;" 
+                                     data-id="${a.AppoinmentId}" draggable="true">
+                                    <div class="font-weight-medium fs-7">${a.CustomerName}</div>
+                                    <div class="fs-7 truncate">
+                                        ${a.ServiceType} (${a.Duration})
+                                    </div>
+                                </div>
+                                `;
+                            });
+                        }
+
+                        html += `
+                        <div class="h-120px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
+                             data-date="${dateStr}" data-time="${time.TimeBlockSchedule}">
+                            ${cellContent}
+                        </div>
+                        `;
+                    }
+                    html += `</div>`;
+                });
+            }
 
             html += `</div></div>`;
         }
@@ -692,7 +716,7 @@ function renderResourceView_OLD(date) {
     filteredResources.forEach(resource => {
         html += `
             <div class="calendar-grid" style="grid-template-columns: 120px repeat(${allTimeSlots.length}, 1fr);">
-                <div class="h-80px border-bottom last-border-bottom-none p-1 fs-7 text-center bg-gray-50 calendar-time-cell">
+                <div class="h-120px border-bottom last-border-bottom-none p-1 fs-7 text-center bg-gray-50 calendar-time-cell">
                     ${resource.ResourceName}
                 </div>
         `;
@@ -721,7 +745,7 @@ function renderResourceView_OLD(date) {
                 const colspan = Math.min(duration, allTimeSlots.length - index);
 
                 html += `
-                    <div class="h-80px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
+                    <div class="h-120px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
                          style="grid-column: span ${colspan};"
                          data-date="${dateStr}" data-time="${allTimeSlots[index].TimeBlockSchedule}" data-resource="${resource.ResourceName}">
                         <div class="calendar-event ${getEventTimeSlotClass(appointment)} width-95 z-10 cursor-move"
@@ -736,7 +760,7 @@ function renderResourceView_OLD(date) {
                 index += colspan;
             } else {
                 html += `
-                    <div class="h-80px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
+                    <div class="h-120px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
                          data-date="${dateStr}" data-time="${allTimeSlots[index].TimeBlockSchedule}" data-resource="${resource.ResourceName}">
                     </div>
                 `;
@@ -754,8 +778,6 @@ function renderResourceView_OLD(date) {
 }
 
 // Render List View
-
-
 function searchListView(e) {
     e.preventDefault();
     const selectedDateFrom = $("#listDatePickerFrom").val();
@@ -786,6 +808,7 @@ function clearFilterListView(e) {
     $("#search_term").val("");
     renderListView();
 }
+
 function renderListView() {
     const selectedDateFrom = $("#listDatePickerFrom").val() || "";
     const selectedDateTo = $("#listDatePickerTo").val() || "";
@@ -795,7 +818,6 @@ function renderListView() {
 
     const tbody = $("#listTableBody");
     getAppoinments(searchTerm, selectedDateFrom, selectedDateTo, "", function (appointments) {
-
         var filteredAppointments = appointments.filter(item => {
             const matchesType = typeFilter === '' ||
                 (item.ServiceType === typeFilter);
@@ -833,7 +855,7 @@ function renderListView() {
                     <td>${a.ResourceName}</td>
                     <td>${a.TicketStatus}</td>
                 </tr>
-            `;
+                `;
             }).join(''));
 
         $(document).off('click', '#listTableBody tr').on('click', '#listTableBody tr', function () {
@@ -884,8 +906,6 @@ function renderUnscheduledList(view = 'date') {
 
 //  <span class="badge ${a.priority === 'High' ? 'bg-danger' : a.priority === 'Medium' ? 'bg-warning' : 'bg-success'}">${a.priority}</span>
 
-
-
 // Setup drag-and-drop functionality
 function setupDragAndDrop() {
     $(".calendar-event, .appointment-card").draggable({
@@ -924,7 +944,7 @@ function setupDragAndDrop() {
 
             openEditModal(appointmentId, date, time, resource, true);
         }
-    })
+    });
 
     $("#unscheduledList, #unscheduledListResource").droppable({
         accept: ".calendar-event",
@@ -946,7 +966,6 @@ function setupDragAndDrop() {
         openEditModal($(this).data("id"));
     });
 }
-
 
 // Open modal to create a new appointment
 function openNewModal(date = null) {
@@ -1004,16 +1023,14 @@ function openEditModal(id, date, time, resource, confirm) {
     if (confirm) {
         $('.confirm-title').removeClass('d-none');
         $('.edit-title').addClass('d-none');
-    }
-    else {
+    } else {
         $('.edit-title').removeClass('d-none');
         $('.confirm-title').addClass('d-none');
     }
 
     if (resource) {
         getSelectedId(select, resource || "");
-    }
-    else {
+    } else {
         getSelectedId(select, a.ResourceName || "");
     }
     if (time) {
@@ -1025,12 +1042,10 @@ function openEditModal(id, date, time, resource, confirm) {
         if (date < today) {
             alert("The selected date cannot be in the past.");
             return;
-        }
-        else {
+        } else {
             form.querySelector("[name='date']").value = date;
         }
-    }
-    else {
+    } else {
         form.querySelector("[name='date']").value = a.RequestDate || '';
     }
 
@@ -1058,10 +1073,10 @@ function updateAppointment(e) {
     const select_rs = formData.querySelector("[name='resource']");
     const newResource = select_rs.options[select_rs.selectedIndex].text;
 
-    if (newDate && newTimeSlot && hasConflict(appointment, newTimeSlot, newResource, newDate, id)) {
-        alert("Scheduling conflict detected!");
-        return;
-    }
+    //if (newDate && newTimeSlot && hasConflict(appointment, newTimeSlot, newResource, newDate, id)) {
+    //    alert("Scheduling conflict detected!");
+    //    return;
+    //}
 
     saveAppoinmentData(e);
 }
@@ -1142,6 +1157,7 @@ function updateAllViews() {
 }
 
 var today = new Date().toISOString().split('T')[0];
+
 // Initialize the page
 document.addEventListener('DOMContentLoaded', () => {
     // Initialize modal instances
@@ -1153,14 +1169,85 @@ document.addEventListener('DOMContentLoaded', () => {
     window.editModalInstance = editModalInstance;
     window.confirmModalInstance = confirmModalInstance;
 
-    getTimeSlots();
-    getResources();
-    document.getElementById('dateInput').min = today;
+    // Show loading indicator
+    $("#dayCalendar").html('<div class="text-center py-4">Loading...</div>');
 
-    $("#dayDatePicker").val(today);
-    $("#resourceDatePicker").val(today);
-    $("#listDatePicker").val(today);
-    $("#mapDatePicker").val(today);
+    // Wait for both time slots and resources to load before rendering
+    Promise.all([getTimeSlots(), getResources()])
+        .then(() => {
+            document.getElementById('dateInput').min = today;
+
+            $("#dayDatePicker").val(today);
+            $("#resourceDatePicker").val(today);
+            $("#listDatePicker").val(today);
+            $("#mapDatePicker").val(today);
+
+            // Initial render after data is loaded
+            renderDateView(today);
+
+            // Set up tab event listeners
+            const tabs = document.querySelectorAll('#viewTabs button[data-bs-toggle="tab"]');
+            tabs.forEach(tab => {
+                tab.addEventListener('shown.bs.tab', function (event) {
+                    switch (event.target.id) {
+                        case 'date-tab':
+                            currentView = "date";
+                            renderDateView(today);
+                            break;
+                        case 'resource-tab':
+                            currentView = "resource";
+                            renderResourceView(today);
+                            break;
+                        case 'list-tab':
+                            currentView = "list";
+                            renderListView();
+                            break;
+                        case 'map-tab':
+                            currentView = "map";
+                            renderMapView();
+                            setTimeout(() => {
+                                if (typeof mapViewInstance !== 'undefined') {
+                                    mapViewInstance.invalidateSize();
+                                }
+                            }, 100);
+                            break;
+                    }
+                });
+            });
+
+            // Map View event listeners
+            document.getElementById('mapDatePicker').addEventListener('change', (e) => {
+                renderMapMarkers(e.target.value);
+            });
+
+            document.getElementById('statusFilter').addEventListener('change', () => {
+                renderMapMarkers(document.getElementById('mapDatePicker').value);
+            });
+
+            document.getElementById('mapReloadBtn').addEventListener('click', () => {
+                renderMapMarkers(document.getElementById('mapDatePicker').value);
+            });
+
+            document.getElementById('mapOptimizeRouteBtn').addEventListener('click', optimizeRoute);
+            document.getElementById('mapAddCustomMarkerBtn').addEventListener('click', addCustomMarker);
+
+            document.getElementById('map-layer-tab').addEventListener('click', () => {
+                isMapView = true;
+                renderMapView();
+            });
+
+            document.getElementById('satellite-layer-tab').addEventListener('click', () => {
+                isMapView = false;
+                renderMapView();
+            });
+
+            // Start real-time updates
+            simulateRealTimeUpdates();
+        })
+        .catch((error) => {
+            console.error("Failed to load initial data:", error);
+            $("#dayCalendar").html('<div class="text-center py-4 text-muted">Failed to load data. Please try refreshing the page.</div>');
+        });
 
     //$('#viewTabs a').on('shown.bs.tab', function (e) {
     //    currentView = e.target.id.replace('-tab', '');
@@ -1185,72 +1272,6 @@ document.addEventListener('DOMContentLoaded', () => {
     //            break;
     //    }
     //});
-
-    const tabs = document.querySelectorAll('#viewTabs button[data-bs-toggle="tab"]');
-    tabs.forEach(tab => {
-        tab.addEventListener('shown.bs.tab', function (event) {
-            switch (event.target.id) {
-                case 'date-tab':
-                    currentView = "date";
-                    renderDateView(today);
-                    break;
-                case 'resource-tab':
-                    currentView = "resource";
-                    renderResourceView(today);
-                    break;
-                case 'list-tab':
-                    currentView = "list";
-                    renderListView();
-                    break;
-                case 'map-tab':
-                    currentView = "map";
-                    renderMapView();
-                    setTimeout(() => {
-                        if (typeof mapViewInstance !== 'undefined') {
-                            mapViewInstance.invalidateSize();
-                        }
-                    }, 100);
-                    break;
-            }
-        });
-    });
-
-    // Map View event listeners
-    document.getElementById('mapDatePicker').addEventListener('change', (e) => {
-        renderMapMarkers(e.target.value);
-    });
-
-    //document.getElementById('mapDispatchGroup').addEventListener('change', () => {
-    //    renderMapMarkers(document.getElementById('mapDatePicker').value);
-    //});
-
-    document.getElementById('statusFilter').addEventListener('change', () => {
-        renderMapMarkers(document.getElementById('mapDatePicker').value);
-    });
-
-    document.getElementById('mapReloadBtn').addEventListener('click', () => {
-        renderMapMarkers(document.getElementById('mapDatePicker').value);
-    });
-
-    document.getElementById('mapOptimizeRouteBtn').addEventListener('click', optimizeRoute);
-    document.getElementById('mapAddCustomMarkerBtn').addEventListener('click', addCustomMarker);
-
-    document.getElementById('map-layer-tab').addEventListener('click', () => {
-        isMapView = true;
-        renderMapView();
-    });
-
-    document.getElementById('satellite-layer-tab').addEventListener('click', () => {
-        isMapView = false;
-        renderMapView();
-    });
-
-    // Start real-time updates
-    simulateRealTimeUpdates();
-    renderDateView(today);
-    //renderResourceView(today);
-    //renderListView();
-    //renderMapView();
 });
 
 // Handle modal dismissals
@@ -1276,21 +1297,20 @@ function calculateDurationInMinutes(startTime, endTime) {
 }
 
 function getTimeSlots() {
-    $.ajax({
+    return $.ajax({
         type: "POST",
         url: "Appointments.aspx/GetTimeSlots",
         data: {},
         contentType: "application/json; charset=utf-8",
-        dataType: "json",
-        success: function (response) {
-            console.log(response.d);
-            allTimeSlots = response.d;
-            renderTimeSlots(response.d);
-            populateTimeSlotDropdown(response.d);
-        },
-        error: function (xhr, status, error) {
-            console.error("Error updating details: ", error);
-        }
+        dataType: "json"
+    }).then(function (response) {
+        console.log(response.d);
+        allTimeSlots = response.d;
+        renderTimeSlots(response.d);
+        populateTimeSlotDropdown(response.d);
+    }).catch(function (xhr, status, error) {
+        console.error("Error updating details: ", error);
+        throw error;
     });
 }
 
@@ -1312,20 +1332,19 @@ function renderTimeSlots(timeSlots) {
 }
 
 function getResources() {
-    $.ajax({
+    return $.ajax({
         type: "POST",
         url: "Appointments.aspx/GetResourcess",
         data: {},
         contentType: "application/json; charset=utf-8",
-        dataType: "json",
-        success: function (response) {
-            console.log(response.d);
-            resources = response.d;
-            populateResourceDropdown(response.d);
-        },
-        error: function (xhr, status, error) {
-            console.error("Error updating details: ", error);
-        }
+        dataType: "json"
+    }).then(function (response) {
+        console.log(response.d);
+        resources = response.d;
+        populateResourceDropdown(response.d);
+    }).catch(function (xhr, status, error) {
+        console.error("Error updating details: ", error);
+        throw error;
     });
 }
 
@@ -1340,7 +1359,6 @@ function renderResourceView(date) {
 
     // Call getAppoinments and pass a callback
     getAppoinments("", "", "", dateStr, function (appointments) {
-
         let html = `
             <div class="border rounded overflow-hidden">
                 <div class="calendar-grid" style="grid-template-columns: 120px repeat(${allTimeSlots.length}, 1fr);">
@@ -1354,58 +1372,66 @@ function renderResourceView(date) {
                 <div class="calendar-body">
         `;
 
-        filteredResources.forEach(resource => {
+        if (!allTimeSlots || allTimeSlots.length === 0 || !resources || resources.length === 0) {
             html += `
-                <div class="calendar-grid" style="grid-template-columns: 120px repeat(${allTimeSlots.length}, 1fr);">
-                    <div class="h-80px border-bottom last-border-bottom-none p-1 fs-7 text-center bg-gray-50 calendar-time-cell">
-                        ${resource.ResourceName}
-                    </div>
+            <div class="text-center py-4 text-muted">
+                No resources or time slots available. Please try refreshing the page.
+            </div>
             `;
+        } else {
+            filteredResources.forEach(resource => {
+                html += `
+                    <div class="calendar-grid" style="grid-template-columns: 120px repeat(${allTimeSlots.length}, 1fr);">
+                        <div class="h-120px border-bottom last-border-bottom-none p-1 fs-7 text-center bg-gray-50 calendar-time-cell">
+                            ${resource.ResourceName}
+                        </div>
+                `;
 
-            const occupiedSlots = new Array(allTimeSlots.length).fill(false);
+                const occupiedSlots = new Array(allTimeSlots.length).fill(false);
 
-            appointments
-                .filter(a => a.ResourceName === resource.ResourceName && a.RequestDate === dateStr && a.TimeSlot)
-                .forEach(a => {
-                    const startIndex = allTimeSlots.findIndex(slot => slot.TimeBlockSchedule === a.TimeSlot);
-                    if (startIndex !== -1) {
-                        occupiedSlots[startIndex] = { appointment: a };
-                    }
-                });
+                appointments
+                    .filter(a => a.ResourceName === resource.ResourceName && a.RequestDate === dateStr && a.TimeSlot)
+                    .forEach(a => {
+                        const startIndex = allTimeSlots.findIndex(slot => slot.TimeBlockSchedule === a.TimeSlot);
+                        if (startIndex !== -1) {
+                            occupiedSlots[startIndex] = { appointment: a };
+                        }
+                    });
 
-            let index = 0;
-            while (index < allTimeSlots.length) {
-                if (occupiedSlots[index] && occupiedSlots[index].appointment) {
-                    const appointment = occupiedSlots[index].appointment;
-                    const duration = appointment.Duration || 1;
-                    const colspan = 1;
+                let index = 0;
+                while (index < allTimeSlots.length) {
+                    if (occupiedSlots[index] && occupiedSlots[index].appointment) {
+                        const appointment = occupiedSlots[index].appointment;
+                        const duration = appointment.Duration || 1;
+                        const colspan = 1;
 
-                    html += `
-                        <div class="h-80px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
-                             style="grid-column: span ${colspan};"
-                             data-date="${dateStr}" data-time="${allTimeSlots[index].TimeBlockSchedule}" data-resource="${resource.ResourceName}">
-                            <div class="calendar-event ${getEventTimeSlotClass(appointment)} width-95 z-10 cursor-move"
-                                 data-id="${appointment.AppoinmentId}" draggable="true">
-                                <div class="font-weight-medium fs-7">${appointment.CustomerName}</div>
-                                <div class="fs-7 truncate">
-                                    ${appointment.ServiceType} (${appointment.Duration}m)
+                        html += `
+                            <div class="h-120px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
+                                 style="grid-column: span ${colspan};"
+                                 data-date="${dateStr}" data-time="${allTimeSlots[index].TimeBlockSchedule}" data-resource="${resource.ResourceName}">
+                                <div class="calendar-event ${getEventTimeSlotClass(appointment)} width-95 z-10 cursor-move"
+                                     data-id="${appointment.AppoinmentId}" draggable="true">
+                                    <div class="font-weight-medium fs-7">${appointment.CustomerName}</div>
+                                    <div class="fs-7 truncate">
+                                        ${appointment.ServiceType} (${appointment.Duration}m)
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    `;
-                    index += colspan;
-                } else {
-                    html += `
-                        <div class="h-80px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
-                             data-date="${dateStr}" data-time="${allTimeSlots[index].TimeBlockSchedule}" data-resource="${resource.ResourceName}">
-                        </div>
-                    `;
-                    index += 1;
+                        `;
+                        index += colspan;
+                    } else {
+                        html += `
+                            <div class="h-120px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
+                                 data-date="${dateStr}" data-time="${allTimeSlots[index].TimeBlockSchedule}" data-resource="${resource.ResourceName}">
+                            </div>
+                        `;
+                        index += 1;
+                    }
                 }
-            }
 
-            html += `</div>`;
-        });
+                html += `</div>`;
+            });
+        }
 
         html += `</div></div>`;
         container.html(html);
@@ -1485,8 +1511,7 @@ function saveAppoinmentData(e) {
         success: function (response) {
             if (response.d) {
                 alert("Updated successfully!");
-            }
-            else {
+            } else {
                 alert("Something went wrong!");
             }
 
