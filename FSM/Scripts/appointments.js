@@ -1,43 +1,4 @@
-﻿//let appointments = JSON.parse(localStorage.getItem('appointments')) || [
-//    {
-//        id: 1,
-//        customerName: "John Doe",
-//        date: "2025-04-23",
-//        timeSlot: "morning",
-//        duration: 2,
-//        resource: "Jim",
-//        serviceType: "Tasks",
-//        status: "dispatched", // Changed from "confirmed" to "dispatched"
-//        location: { address: "123 Main St, New York, NY", lat: 40.7128, lng: -74.0060 },
-//        priority: "Low"
-//    },
-//    {
-//        id: 2,
-//        customerName: "Jane Smith",
-//        date: null,
-//        timeSlot: null,
-//        duration: 2,
-//        resource: "Unassigned",
-//        serviceType: "Visits",
-//        status: "pending",
-//        location: { address: "456 Branch Rd, Los Angeles, CA", lat: 34.0522, lng: -118.2437 },
-//        priority: "Medium"
-//    },
-//    {
-//        id: 3,
-//        customerName: "Alice Johnson",
-//        date: "2025-04-23",
-//        timeSlot: "morning",
-//        duration: 2,
-//        resource: "Bob",
-//        serviceType: "Tasks",
-//        status: "dispatched", // Changed from "confirmed" to "dispatched"
-//        location: { address: "789 Warehouse Ave, Chicago, IL", lat: 41.8781, lng: -87.6298 },
-//        priority: "High"
-//    }
-//];
-
-let appointments = [];
+﻿let appointments = [];
 
 let currentView = "date";
 let currentDate = new Date();
@@ -75,6 +36,20 @@ const timeSlots = {
 
 var allTimeSlots = [];
 var resources = [];
+
+// Fallback function for SweetAlert2
+const showAlert = (options) => {
+    if (typeof Swal !== 'undefined') {
+        return Swal.fire(options); // Return promise for confirmation dialogs
+    } else {
+        console.warn('SweetAlert2 not loaded, falling back to native alert');
+        if (options.showCancelButton) {
+            return Promise.resolve({ isConfirmed: confirm(options.text) });
+        }
+        alert(options.text);
+        return Promise.resolve();
+    }
+};
 
 function getAppoinments(searchValue, fromDate, toDate, today, callback) {
     searchValue = searchValue;
@@ -282,7 +257,18 @@ function optimizeRoute() {
     }
 
     if (filteredAppointments.length < 2) {
-        alert('Need at least two appointments to optimize a route.');
+        showAlert({
+            icon: 'warning',
+            title: 'Insufficient Appointments',
+            text: 'Need at least two appointments to optimize a route.',
+            confirmButtonText: 'OK',
+            customClass: {
+                popup: 'swal-custom-popup',
+                title: 'swal-custom-title',
+                content: 'swal-custom-content',
+                confirmButton: 'swal-custom-button'
+            }
+        });
         return;
     }
 
@@ -312,7 +298,6 @@ function simulateRealTimeUpdates() {
 }
 
 // Render date navigation
-// Replace the renderDateNav function
 function renderDateNav(containerId, selectedDate) {
     const container = $(`#${containerId}`);
     const view = containerId === "dateNav" ? $("#viewSelect").val() : "day";
@@ -482,8 +467,11 @@ function renderDateView(date) {
                             ${filteredAppointments.filter(a => a.RequestDate === dayDate).map(a => `
                                 <div class="calendar-event ${getEventTimeSlotClass(a)} fs-7 p-1 cursor-move" 
                                      data-id="${a.AppoinmentId}" draggable="true">
-                                    ${a.CustomerName} (${a.ServiceType})
+                                    ${a.CustomerName} 
+                                      <div class="fs-7 truncate">${a.ServiceType} (${a.Duration}m)</div>                                
+                                    <div class="fs-7 truncate status">${a.AppoinmentStatus}</div>
                                 </div>
+                                  
                             `).join('')}
                         </div>
                     ` : ''}
@@ -576,9 +564,8 @@ function renderDateView(date) {
                                      style="height: ${80 * rowspan - 10}px; top: ${2}px;" 
                                      data-id="${a.AppoinmentId}" draggable="true">
                                     <div class="font-weight-medium fs-7">${a.CustomerName}</div>
-                                    <div class="fs-7 truncate">
-                                        ${a.ServiceType} (${a.Duration})
-                                    </div>
+                                    <div class="fs-7 truncate">${a.ServiceType} (${a.Duration}m)</div>                                
+                                    <div class="fs-7 truncate status">${a.AppoinmentStatus}</div>
                                 </div>
                                 `;
                             });
@@ -660,9 +647,8 @@ function renderDateView(date) {
                                      style="height: ${80 * rowspan - 10}px; top: ${2}px;" 
                                      data-id="${a.AppoinmentId}" draggable="true">
                                     <div class="font-weight-medium fs-7">${a.CustomerName}</div>
-                                    <div class="fs-7 truncate">
-                                        ${a.ServiceType} (${a.Duration})
-                                    </div>
+                                    <div class="fs-7 truncate">${a.ServiceType} (${a.Duration}m)</div>
+                                    <div class="fs-7 truncate status">${a.AppoinmentStatus}</div>
                                 </div>
                                 `;
                             });
@@ -750,10 +736,9 @@ function renderResourceView_OLD(date) {
                          data-date="${dateStr}" data-time="${allTimeSlots[index].TimeBlockSchedule}" data-resource="${resource.ResourceName}">
                         <div class="calendar-event ${getEventTimeSlotClass(appointment)} width-95 z-10 cursor-move"
                              data-id="${appointment.AppoinmentId}" draggable="true">
-                            <div class="font-weight-medium fs-7">${appointment.CustomerName}</div>
-                            <div class="fs-7 truncate">
-                                ${appointment.ServiceType} (${appointment.Duration}m)
-                            </div>
+                                 <div class="font-weight-medium fs-7">${a.CustomerName}</div>
+                                    <div class="fs-7 truncate">${a.ServiceType} (${a.Duration}m)</div>                                
+                                    <div class="fs-7 truncate status">${a.AppoinmentStatus}</div>
                         </div>
                     </div>
                 `;
@@ -783,7 +768,18 @@ function searchListView(e) {
     const selectedDateFrom = $("#listDatePickerFrom").val();
     const selectedDateTo = $("#listDatePickerTo").val();
     if (!selectedDateFrom || !selectedDateTo) {
-        alert("Select from date and to date");
+        showAlert({
+            icon: 'warning',
+            title: 'Missing Dates',
+            text: 'Please select both from date and to date.',
+            confirmButtonText: 'OK',
+            customClass: {
+                popup: 'swal-custom-popup',
+                title: 'swal-custom-title',
+                content: 'swal-custom-content',
+                confirmButton: 'swal-custom-button'
+            }
+        });
         return;
     }
     renderListView();
@@ -904,8 +900,6 @@ function renderUnscheduledList(view = 'date') {
     setupDragAndDrop();
 }
 
-//  <span class="badge ${a.priority === 'High' ? 'bg-danger' : a.priority === 'Medium' ? 'bg-warning' : 'bg-success'}">${a.priority}</span>
-
 // Setup drag-and-drop functionality
 function setupDragAndDrop() {
     $(".calendar-event, .appointment-card").draggable({
@@ -997,7 +991,18 @@ function createAppointment(e) {
     };
 
     if (newAppointment.date && newAppointment.timeSlot && hasConflict(newAppointment, newAppointment.timeSlot, newAppointment.resource, newAppointment.date)) {
-        alert("Scheduling conflict detected!");
+        showAlert({
+            icon: 'error',
+            title: 'Scheduling Conflict',
+            text: 'A scheduling conflict was detected!',
+            confirmButtonText: 'OK',
+            customClass: {
+                popup: 'swal-custom-popup',
+                title: 'swal-custom-title',
+                content: 'swal-custom-content',
+                confirmButton: 'swal-custom-button'
+            }
+        });
         return;
     }
 
@@ -1040,7 +1045,18 @@ function openEditModal(id, date, time, resource, confirm) {
     }
     if (date) {
         if (date < today) {
-            alert("The selected date cannot be in the past.");
+            showAlert({
+                icon: 'error',
+                title: 'Invalid Date',
+                text: 'The selected date cannot be in the past.',
+                confirmButtonText: 'OK',
+                customClass: {
+                    popup: 'swal-custom-popup',
+                    title: 'swal-custom-title',
+                    content: 'swal-custom-content',
+                    confirmButton: 'swal-custom-button'
+                }
+            });
             return;
         } else {
             form.querySelector("[name='date']").value = date;
@@ -1053,7 +1069,12 @@ function openEditModal(id, date, time, resource, confirm) {
     form.querySelector("[name='address']").value = a.Address1 || '';
     const status_select = form.querySelector("[id='MainContent_StatusTypeFilter_Edit']");
     getSelectedId(status_select, a.AppoinmentStatus || "");
-    //form.querySelector("[name='status']").value = a.AppoinmentStatus;
+
+    // Disable dropdowns if status is "Closed"
+    const isClosed = a.AppoinmentStatus.toLowerCase() === "closed";
+    service_select.disabled = isClosed;
+    status_select.disabled = isClosed;
+
     window.editModalInstance.show();
 }
 
@@ -1074,7 +1095,18 @@ function updateAppointment(e) {
     const newResource = select_rs.options[select_rs.selectedIndex].text;
 
     //if (newDate && newTimeSlot && hasConflict(appointment, newTimeSlot, newResource, newDate, id)) {
-    //    alert("Scheduling conflict detected!");
+    //    showAlert({
+    //        icon: 'error',
+    //        title: 'Scheduling Conflict',
+    //        text: 'A scheduling conflict was detected!',
+    //        confirmButtonText: 'OK',
+    //        customClass: {
+    //            popup: 'swal-custom-popup',
+    //            title: 'swal-custom-title',
+    //            content: 'swal-custom-content',
+    //            confirmButton: 'swal-custom-button'
+    //        }
+    //    });
     //    return;
     //}
 
@@ -1109,7 +1141,18 @@ function confirmScheduling(e) {
     const newDuration = parseInt(form.get("duration")) || 1;
 
     if (hasConflict(appointment, newTimeSlot, newResource, newDate, id)) {
-        alert("Scheduling conflict detected!");
+        showAlert({
+            icon: 'error',
+            title: 'Scheduling Conflict',
+            text: 'A scheduling conflict was detected!',
+            confirmButtonText: 'OK',
+            customClass: {
+                popup: 'swal-custom-popup',
+                title: 'swal-custom-title',
+                content: 'swal-custom-content',
+                confirmButton: 'swal-custom-button'
+            }
+        });
         return;
     }
 
@@ -1124,11 +1167,28 @@ function confirmScheduling(e) {
 
 // Delete an appointment
 function deleteAppointment() {
-    if (!confirm("Are you sure you want to delete this appointment?")) return;
-    appointments = appointments.filter(a => a.id !== currentEditId);
-    saveAppointments();
-    updateAllViews();
-    window.editModalInstance.hide();
+    showAlert({
+        icon: 'warning',
+        title: 'Confirm Delete',
+        text: 'Are you sure you want to delete this appointment?',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, Delete',
+        cancelButtonText: 'Cancel',
+        customClass: {
+            popup: 'swal-custom-popup',
+            title: 'swal-custom-title',
+            content: 'swal-custom-content',
+            confirmButton: 'swal-custom-button',
+            cancelButton: 'swal-custom-cancel-button'
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            appointments = appointments.filter(a => a.id !== currentEditId);
+            saveAppointments();
+            updateAllViews();
+            window.editModalInstance.hide();
+        }
+    });
 }
 
 // Unschedule an appointment
@@ -1248,30 +1308,6 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error("Failed to load initial data:", error);
             $("#dayCalendar").html('<div class="text-center py-4 text-muted">Failed to load data. Please try refreshing the page.</div>');
         });
-
-    //$('#viewTabs a').on('shown.bs.tab', function (e) {
-    //    currentView = e.target.id.replace('-tab', '');
-    //    alert(currentView);
-    //    switch (currentView) {
-    //        case 'date':
-    //            renderDateView(today);
-    //            break;
-    //        case 'resource':
-    //            renderResourceView(today);
-    //            break;
-    //        case 'list':
-    //            renderListView();
-    //            break;
-    //        case 'map':
-    //            renderMapView();
-    //            setTimeout(() => {
-    //                if (typeof mapViewInstance !== 'undefined') {
-    //                    mapViewInstance.invalidateSize();
-    //                }
-    //            }, 100);
-    //            break;
-    //    }
-    //});
 });
 
 // Handle modal dismissals
@@ -1412,9 +1448,9 @@ function renderResourceView(date) {
                                 <div class="calendar-event ${getEventTimeSlotClass(appointment)} width-95 z-10 cursor-move"
                                      data-id="${appointment.AppoinmentId}" draggable="true">
                                     <div class="font-weight-medium fs-7">${appointment.CustomerName}</div>
-                                    <div class="fs-7 truncate">
-                                        ${appointment.ServiceType} (${appointment.Duration}m)
-                                    </div>
+                                    <div class="fs-7 truncate">${appointment.ServiceType} (${appointment.Duration}m)</div>
+                                    <div class="fs-7 truncate">${formatTimeRange(appointment.TimeSlot)}</div>
+                                    <div class="fs-7 truncate status">${appointment.AppoinmentStatus}</div>
                                 </div>
                             </div>
                         `;
@@ -1510,9 +1546,32 @@ function saveAppoinmentData(e) {
         dataType: "json",
         success: function (response) {
             if (response.d) {
-                alert("Updated successfully!");
+                showAlert({
+                    icon: 'success',
+                    title: 'Success',
+                    text: 'Appointment updated successfully!',
+                    confirmButtonText: 'OK',
+                    timer: 3000,
+                    customClass: {
+                        popup: 'swal-custom-popup',
+                        title: 'swal-custom-title',
+                        content: 'swal-custom-content',
+                        confirmButton: 'swal-custom-button'
+                    }
+                });
             } else {
-                alert("Something went wrong!");
+                showAlert({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Something went wrong while updating the appointment.',
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        popup: 'swal-custom-popup',
+                        title: 'swal-custom-title',
+                        content: 'swal-custom-content',
+                        confirmButton: 'swal-custom-button'
+                    }
+                });
             }
 
             updateAllViews();

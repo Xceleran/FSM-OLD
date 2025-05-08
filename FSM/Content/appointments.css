@@ -59,7 +59,7 @@
 }
 
 [data-theme="dark"] .card-title {
-    color: var(--text-gray-700);
+    color: #ffffff;
 }
 
 .card-body {
@@ -759,8 +759,8 @@ ul#viewTabs {
 }
 
 .date-box:hover, .date-box.active {
-    background: #e8f0fe;
-    color: #1967d2;
+    background: #0d6efd;
+    color: #ffffff;
 }
 
 [data-theme="dark"] .date-box:hover, [data-theme="dark"] .date-box.active {
@@ -808,8 +808,8 @@ ul#viewTabs {
 }
 
 .nav-tabs .nav-link.active {
-    color: #1967d2;
-    background: #e8f0fe;
+    color: #ffffff;
+    background: #0d6efd;
     border-color: #e8f0fe;
 }
 
@@ -928,6 +928,15 @@ ul#viewTabs {
     #mapViewContainer {
         height: 400px;
     }
+}
+.fs-7.truncate.status {
+    display: inline-block;
+    padding: 2px 8px;
+    background-color: #e0f7fa; /* light cyan, can change based on status */
+    color: #00796b; /* dark teal text */
+    border-radius: 12px;
+    font-size: 0.75rem; /* Bootstrap fs-7 size */
+    white-space: nowrap;
 }
 
 

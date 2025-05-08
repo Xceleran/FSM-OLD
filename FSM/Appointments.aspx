@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <!-- Local Styles and Scripts -->
     <link rel="stylesheet" href="Content/appointments.css">
@@ -133,7 +134,7 @@
                     </div>
                     <div class="card unscheduled-panel">
                         <div class="card-header">
-                            <h3 class="card-title">Unscheduled Appointments</h3>
+                            <h3 class="card-title">Unassigned Appointments</h3>
                         </div>
                         <div class="card-body">
                             <div class="unscheduled-filters">
