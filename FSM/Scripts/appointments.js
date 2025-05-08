@@ -468,7 +468,7 @@ function renderDateView(date) {
                                 <div class="calendar-event ${getEventTimeSlotClass(a)} fs-7 p-1 cursor-move" 
                                      data-id="${a.AppoinmentId}" draggable="true">
                                     ${a.CustomerName} 
-                                      <div class="fs-7 truncate">${a.ServiceType} (${a.Duration}m)</div>                                
+                                      <div class="fs-7 truncate">${a.ServiceType} (${a.Duration})</div>                                
                                     <div class="fs-7 truncate status">${a.AppoinmentStatus}</div>
                                 </div>
                                   
@@ -564,7 +564,7 @@ function renderDateView(date) {
                                      style="height: ${80 * rowspan - 10}px; top: ${2}px;" 
                                      data-id="${a.AppoinmentId}" draggable="true">
                                     <div class="font-weight-medium fs-7">${a.CustomerName}</div>
-                                    <div class="fs-7 truncate">${a.ServiceType} (${a.Duration}m)</div>                                
+                                    <div class="fs-7 truncate">${a.ServiceType} (${a.Duration})</div>                                
                                     <div class="fs-7 truncate status">${a.AppoinmentStatus}</div>
                                 </div>
                                 `;
@@ -647,7 +647,7 @@ function renderDateView(date) {
                                      style="height: ${80 * rowspan - 10}px; top: ${2}px;" 
                                      data-id="${a.AppoinmentId}" draggable="true">
                                     <div class="font-weight-medium fs-7">${a.CustomerName}</div>
-                                    <div class="fs-7 truncate">${a.ServiceType} (${a.Duration}m)</div>
+                                    <div class="fs-7 truncate">${a.ServiceType} (${a.Duration})</div>
                                     <div class="fs-7 truncate status">${a.AppoinmentStatus}</div>
                                 </div>
                                 `;
@@ -737,7 +737,7 @@ function renderResourceView_OLD(date) {
                         <div class="calendar-event ${getEventTimeSlotClass(appointment)} width-95 z-10 cursor-move"
                              data-id="${appointment.AppoinmentId}" draggable="true">
                                  <div class="font-weight-medium fs-7">${a.CustomerName}</div>
-                                    <div class="fs-7 truncate">${a.ServiceType} (${a.Duration}m)</div>                                
+                                    <div class="fs-7 truncate">${a.ServiceType} (${a.Duration})</div>                                
                                     <div class="fs-7 truncate status">${a.AppoinmentStatus}</div>
                         </div>
                     </div>
@@ -1448,7 +1448,7 @@ function renderResourceView(date) {
                                 <div class="calendar-event ${getEventTimeSlotClass(appointment)} width-95 z-10 cursor-move"
                                      data-id="${appointment.AppoinmentId}" draggable="true">
                                     <div class="font-weight-medium fs-7">${appointment.CustomerName}</div>
-                                    <div class="fs-7 truncate">${appointment.ServiceType} (${appointment.Duration}m)</div>
+                                    <div class="fs-7 truncate">${appointment.ServiceType} (${appointment.Duration})</div>
                                     <div class="fs-7 truncate">${formatTimeRange(appointment.TimeSlot)}</div>
                                     <div class="fs-7 truncate status">${appointment.AppoinmentStatus}</div>
                                 </div>
