@@ -3,8 +3,8 @@
 <asp:Content ID="BodyContent" ContentPlaceHolderID="MainContent" runat="server">
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
-      <!-- Local Styles and Scripts -->
-  <link rel="stylesheet" href="Content/customerdetails.css">
+    <!-- Local Styles and Scripts -->
+    <link rel="stylesheet" href="Content/customerdetails.css">
 
 
     <div class="custdet-main-container">
@@ -34,7 +34,18 @@
                         <tr>
                             <td>Site Contact</td>
                             <td id="siteContact">
+                                <asp:Label ID="lblContact" runat="server" /></td>
+                            <td>Phone</td>
+                            <td id="customerPhone">
                                 <asp:Label ID="lblPhone" runat="server" /></td>
+                            <td>Mobile</td>
+                            <td id="customerMobile">
+                                <asp:Label ID="lblMobile" runat="server" /></td>
+                        </tr>
+                        <tr>
+                            <td>Email</td>
+                            <td id="customerEmail">
+                                <asp:Label ID="lblEmail" runat="server" /></td>
                         </tr>
                         <tr>
                             <td>Address</td>
@@ -67,12 +78,18 @@
             <div class="custdet-controls mb-3 d-flex align-items-center flex-wrap gap-2">
                 <div class="input-group">
                     <input type="text" id="apptSearch" class="form-control" placeholder="Search appointments...">
-                    <select id="apptFilter" class="form-select">
+                    <select runat="server" id="apptFilter" class="form-select">
+                        <option value="all">All Status</option>
+                    </select>
+                    <select runat="server" id="ticketStatus" class="form-select">
+                        <option value="all">All Status</option>
+                    </select>
+                    <%-- <select id="apptFilter" class="form-select">
                         <option value="all">All Status</option>
                         <option value="scheduled">Scheduled</option>
                         <option value="pending">Pending</option>
                         <option value="closed">Closed</option>
-                    </select>
+                    </select>--%>
                 </div>
                 <button id="apptExport" class="btn btn-primary d-none">Export to Excel</button>
             </div>
@@ -86,7 +103,6 @@
                             <th scope="col">Status</th>
                             <th scope="col">Resource</th>
                             <th scope="col">Ticket Status</th>
-                            <th scope="col">Custom Tags</th>
                         </tr>
                     </thead>
                     <tbody id="apptTableBody"></tbody>
@@ -126,6 +142,7 @@
                     <thead class="table-light">
                         <tr>
                             <th scope="col">Number</th>
+                            <th scope="col">Appointment ID</th>
                             <th scope="col">Type</th>
                             <th scope="col">Date</th>
                             <th scope="col">Subtotal</th>
@@ -135,7 +152,6 @@
                             <th scope="col">Due</th>
                             <th scope="col">Diposit</th>
                             <th scope="col">Status</th>
-                            <th scope="col">Custom Tags</th>
                         </tr>
                     </thead>
                     <tbody id="invTableBody"></tbody>
@@ -596,7 +612,6 @@
                     <td>${item.AppoinmentStatus || ''}</td>
                     <td>${item.ResourceName || ''}</td>
                     <td>${item.TicketStatus || ''}</td>
-                    <td>${item.CustomTags || ''}</td>
                 </tr>
             `);
             });
@@ -629,11 +644,16 @@
 
         function applyFilters() {
             const searchTerm = $('#apptSearch').val().trim().toLowerCase();
-            const statusFilter = $('#apptFilter').val();
+            const statusFilter = $('#MainContent_apptFilter').val();
+            const ticketFilter = $('#MainContent_ticketStatus').val();
+
             filteredData = appointmentData.filter(item => {
                 // Filter by status if not "all"
-                const matchesStatus = statusFilter === 'all' ||
-                    (item.AppoinmentStatus && item.AppoinmentStatus.toLowerCase() === statusFilter);
+                const matchesStatus = statusFilter === '' ||
+                    (item.AppoinmentStatus === statusFilter);
+
+                const matchesTicketStatus = ticketFilter === '' ||
+                    (item.TicketStatus === ticketFilter);
 
                 // Search in multiple fields
                 const combinedText = [
@@ -642,13 +662,12 @@
                     item.ServiceType,
                     item.AppoinmentStatus,
                     item.ResourceName,
-                    item.TicketStatus,
-                    item.CustomTags
+                    item.TicketStatus
                 ].join(' ').toLowerCase();
 
                 const matchesSearch = combinedText.includes(searchTerm);
 
-                return matchesStatus && matchesSearch;
+                return matchesStatus && matchesTicketStatus && matchesSearch;
             });
 
             currentPage = 1;
@@ -660,7 +679,11 @@
             applyFilters();
         });
 
-        $('#apptFilter').on('change', function () {
+        $('#MainContent_apptFilter').on('change', function () {
+            applyFilters();
+        });
+
+        $('#MainContent_ticketStatus').on('change', function () {
             applyFilters();
         });
 
@@ -700,6 +723,7 @@
                    data-id="${item.ID}" 
                    data-type="${item.InvoiceType}" 
                    data-appid="${item.AppointmentId}">${item.InvoiceNumber || ''}</a></td>
+                <td>${item.AppointmentId || ''}</td>
                 <td>${item.InvoiceType || ''}</td>
                 <td>${item.InvoiceDate || ''}</td>
                 <td>${item.Subtotal || ''}</td>
@@ -709,7 +733,6 @@
                 <td>${item.Due || ''}</td>
                 <td>${item.DepositAmount || ''}</td>
                 <td>${item.InvoiceStatus || ''}</td>
-                <td>${item.CustomTags || ''}</td>
                 </tr>
                 `);
             });
@@ -761,6 +784,7 @@
                 // Search in multiple fields
                 const combinedText = [
                     item.InvoiceNumber,
+                    item.AppointmentId,
                     item.InvoiceType,
                     item.InvoiceDate,
                     item.Subtotal,
@@ -770,7 +794,6 @@
                     item.Due,
                     item.DepositAmount,
                     item.InvoiceStatus,
-                    item.CustomTags
                 ].join(' ').toLowerCase();
 
                 const matchesSearch = combinedText.includes(searchTerm);
