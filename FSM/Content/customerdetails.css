@@ -74,21 +74,27 @@
 
 /* Controls */
 .custdet-controls .input-group {
-    max-width: 500px;
+ 
     display: flex;
     gap: 10px;
     flex-wrap: wrap;
 }
-
-    .custdet-controls .input-group .form-control {
-        flex: 1;
-        border: 1px solid var(--bg-gray-300);
-        border-radius: 8px;
-        padding: 8px;
-        background: var(--bg-white);
-        color: var(--text-gray-800);
-        background-image: none !important;
-    }
+[data-theme="dark"] select option {
+    background: #343a40 !important;
+    color: #ffffff !important;
+}
+[data-theme="dark"] input#apptSearch::placeholder {
+    color: #c3c3c3 !important; 
+}
+.custdet-controls .input-group .form-control {
+    flex: 1;
+    border: 1px solid var(--bg-gray-300);
+    border-radius: 8px;
+    padding: 8px;
+    background: var(--bg-white);
+    color: var(--text-gray-800);
+    background-image: none !important;
+}
 
 [data-theme="dark"] .custdet-controls .input-group .form-control {
     background: rgba(255, 255, 255, 0.12);

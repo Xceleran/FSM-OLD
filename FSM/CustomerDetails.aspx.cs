@@ -32,16 +32,59 @@ namespace FSM
                 lblCustomerName.Text = customer?.FirstName + " " + customer?.LastName;
                 lblCustomerGuid.Text = customer?.CustomerGuid;
                 lblAddress.Text = site?.Address;
-                lblPhone.Text = site?.Contact;
+                lblContact.Text = site?.Contact;
                 lblCustomerId.Text = customerId;
                 lblSiteId.Text = siteId;
                 lblActive.Text = site?.IsActive == true ? "Active" : "Disabled";
                 lblNote.Text = site?.Note;
                 lblCreatedOn.Text = site?.CreatedDateTime?.ToString("yyyy-MM-dd");
                 lblSiteName.Text = site?.SiteName;
+
+                lblPhone.Text = customer?.Phone;
+                lblMobile.Text = customer?.Mobile;
+                lblEmail.Text = customer?.Email;
+
+                LoadData();
             }
         }
 
+        public void LoadData()
+        {
+            string companyid = HttpContext.Current.Session["CompanyID"].ToString();
+            Database db = new Database();
+            try
+            {
+                string Sql = @"SELECT  [StatusID],[StatusName] FROM [msSchedulerV3].[dbo].[tbl_TicketStatus] where CompanyID= '"+ companyid +"';";
+                Sql += @"SELECT  [StatusID],[StatusName] FROM [msSchedulerV3].[dbo].[tbl_Status] where CompanyID='" + companyid + "';";
+
+                DataTable _ticketStatus = new DataTable();
+                DataTable _appStatus = new DataTable();
+                DataSet dataSet = db.Get_DataSet(Sql, companyid);
+
+                _ticketStatus = dataSet.Tables[0];
+                _appStatus = dataSet.Tables[1];
+                if (_ticketStatus.Rows.Count > 0)
+                {
+                    ticketStatus.DataSource = _ticketStatus;
+                    ticketStatus.DataBind();
+                    ticketStatus.DataTextField = "StatusName";
+                    ticketStatus.DataValueField = "StatusName";
+                    ticketStatus.DataBind();
+                    ticketStatus.Items.Insert(0, new ListItem("All Ticket Status", ""));
+                }
+                if (_appStatus.Rows.Count > 0)
+                {
+                    apptFilter.DataSource = _appStatus;
+                    apptFilter.DataBind();
+                    apptFilter.DataTextField = "StatusName";
+                    apptFilter.DataValueField = "StatusName";
+                    apptFilter.DataBind();
+                    apptFilter.Items.Insert(0, new ListItem("All Status", ""));
+                }
+            }
+
+            catch (Exception ex) { }
+        }
         public static CustomerEntity GetCustomerDetails(string customerId)
         {
             var customer = new CustomerEntity();
@@ -65,10 +108,10 @@ namespace FSM
                     //customer.Address2 = dataRow.Field<string>("Address2") ?? "";
                     customer.FirstName = dataRow.Field<string>("FirstName") ?? "";
                     customer.LastName = dataRow.Field<string>("LastName") ?? "";
-                    //customer.Phone = dataRow.Field<string>("Phone") ?? "";
-                    //customer.Mobile = dataRow.Field<string>("Mobile") ?? "";
+                    customer.Phone = dataRow.Field<string>("Phone") ?? "";
+                    customer.Mobile = dataRow.Field<string>("Mobile") ?? "";
                     //customer.CompanyName = dataRow.Field<string>("CompanyName") ?? "";
-                    //customer.Email = dataRow.Field<string>("Email") ?? "";
+                    customer.Email = dataRow.Field<string>("Email") ?? "";
                 }
             }
             catch (Exception ex)
