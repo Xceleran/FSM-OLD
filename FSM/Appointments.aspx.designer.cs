@@ -78,6 +78,15 @@ namespace FSM
         protected global::System.Web.UI.HtmlControls.HtmlSelect StatusTypeFilter_List;
 
         /// <summary>
+        /// TicketStatusFilter_List control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.HtmlControls.HtmlSelect TicketStatusFilter_List;
+
+        /// <summary>
         /// ServiceTypeFilter_Edit control.
         /// </summary>
         /// <remarks>
@@ -94,5 +103,14 @@ namespace FSM
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.HtmlControls.HtmlSelect StatusTypeFilter_Edit;
+
+        /// <summary>
+        /// TicketStatusFilter_Edit control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.HtmlControls.HtmlSelect TicketStatusFilter_Edit;
     }
 }

@@ -19,6 +19,8 @@
     <!-- Inline CSS for Expand/Collapse -->
 
 
+
+
     <!-- Page Content -->
     <div class="container-fluid">
         <header class="mb-4">
@@ -88,7 +90,9 @@
                             </div>
                         </div>
                         <div class="card-body">
-                            <div class="datepicker"><div class="date-nav" id="dateNav"></div></div>
+                            <div class="datepicker">
+                                <div class="date-nav" id="dateNav"></div>
+                            </div>
                             <div id="dayCalendar"></div>
                         </div>
                     </div>
@@ -139,7 +143,9 @@
                             </div>
                         </div>
                         <div class="card-body">
-                            <div class="datepicker"><div class="date-nav" id="resourceDateNav"></div></div>
+                            <div class="datepicker">
+                                <div class="date-nav" id="resourceDateNav"></div>
+                            </div>
                             <div id="resourceViewContainer"></div>
                         </div>
                     </div>
@@ -190,8 +196,14 @@
                                 <button type="button" class="btn btn-primary ms-2" onclick="searchListView(event)">Search By Date</button>
                             </div>
                             <div>
-                                <label for="StatusTypeFilter_List" class="form-label mb-0">Status:</label>
+                                <label for="StatusTypeFilter_List" class="form-label mb-0">Appointment Status:</label>
                                 <select runat="server" id="StatusTypeFilter_List" class="form-select" onchange="renderListView()">
+                                    <option value="all">Select</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="TicketStatusFilter_List" class="form-label mb-0">Ticket Status:</label>
+                                <select runat="server" id="TicketStatusFilter_List" class="form-select" onchange="renderListView()">
                                     <option value="all">Select</option>
                                 </select>
                             </div>
@@ -204,12 +216,13 @@
                         <table class="table list-view-table" id="listTable">
                             <thead>
                                 <tr>
-                                    <th >Customer</th>
-                                    <th>Business Name</th>
+                                    <th data-key="CustomerName" class="sortable">Customer</th>
+                                    <th data-key="BusinessName" class="sortable">Business Name</th>
                                     <th>Address</th>
                                     <th>Request Date</th>
                                     <th>Time Slot</th>
                                     <th>Service Type</th>
+                                    <th>Email</th>
                                     <th>Mobile</th>
                                     <th>Phone</th>
                                     <th>Status</th>
@@ -231,8 +244,8 @@
                             <div class="d-flex flex-wrap gap-2 align-items-center">
                                 <label for="mapDatePicker" class="form-label mb-0">Date:</label>
                                 <input type="date" id="mapDatePicker" class="form-control w-200px">
-                                <label for="mapDispatchGroup" class="form-label mb-0">Group:</label>
-                                <select id="mapDispatchGroup" class="form-select w-120px">
+                                <label for="mapDispatchGroup" class="form-label mb-0 d-none">Group:</label>
+                                <select id="mapDispatchGroup" class="form-select w-120px d-none">
                                     <option value="all">All Technicians</option>
                                     <option value="electricians">Electricians</option>
                                     <option value="plumbers">Plumbers</option>
@@ -403,28 +416,29 @@
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Duration (hours)</label>
-                                <input type="text" name="duration" class="form-control" readonly="readonly"/>
-                                <%--<select name="duration" class="form-select" required>
-                                    <option value="1">1 Hour Package</option>
-                                    <option value="2">2 Hour Package</option>
-                                    <option value="3">3 Hour Package</option>
-                                    <option value="4">4 Hour Package</option>
-                                    <option value="5">5 Hour Package</option>
-                                    <option value="6">6 Hour Package</option>
-                                    <option value="7">7 Hour Package</option>
-                                    <option value="8">8 Hour Package</option>
-                                </select>--%>
+                                <label class="form-label">Time Required</label>
+                                <input type="text" name="duration" class="form-control" readonly="readonly" />
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Address</label>
                                 <input type="text" name="address" class="form-control" readonly="readonly">
                             </div>
-                            <div class="col-12">
-                                <label class="form-label">Status</label>
+                            <div class="col-md-6">
+                                <label class="form-label">Appointment Status</label>
                                 <select runat="server" id="StatusTypeFilter_Edit" name="status" class="form-select" required>
                                     <option value="all">Select</option>
                                 </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Ticket Status</label>
+                                <select runat="server" id="TicketStatusFilter_Edit" name="status" class="form-select" required>
+                                    <option value="all">Select</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Any details</label>
+                                <textarea type="text" name="note" class="form-control"></textarea>
+
                             </div>
                         </div>
                     </div>
@@ -500,9 +514,9 @@
     </div>
 
     <!-- Inline JavaScript for Expand/Collapse -->
- <script>
+    <script>
 
- </script>
+</script>
 
     <script src="Scripts/appointments.js" defer></script>
 </asp:Content>

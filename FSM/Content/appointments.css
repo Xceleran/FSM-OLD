@@ -1162,3 +1162,28 @@ button.btn.btn-primary.ms-2 {
         right: 5px;
     }
 }
+
+th.sortable {
+    cursor: pointer;
+    position: relative;
+    padding-right: 20px;
+}
+
+    th.sortable::after {
+        content: '▲▼'; /* default: no arrow */
+        position: absolute;
+        right: 0;
+        font-size: 12px;
+        color: #555;
+        top: 34%;
+        transform: translate(0, -50%);
+        opacity: 0.5;
+    }
+
+    th.sortable.sort-asc::after {
+        content: '▲';
+    }
+
+    th.sortable.sort-desc::after {
+        content: '▼';
+    }

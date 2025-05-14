@@ -62,7 +62,7 @@ namespace FSM
                 DataTable dt = new DataTable();
 
                 string sql = $@"SELECT  cus.FirstName, cus.LastName,cus.CustomerGuid, cus.BusinessID, cus.BusinessName, cus.IsBusinessContact, 
-                               cus.CustomerID, cus.Phone, cus.Mobile, cus.ZipCode, cus.State, cus.City, cus.Address1,
+                               cus.CustomerID, cus.Email, cus.Phone, cus.Mobile, cus.ZipCode, cus.State, cus.City, cus.Address1,
                                apt.CompanyID, apt.ApptID, apt.ResourceID, apt.ServiceType, apt.CreatedDateTime, CONVERT(VARCHAR(10), 
                                apt.ApptDateTime, 120) as RequestDate, apt.Note, apt.TimeSlot,apt.StartDateTime, apt.EndDateTime,
                                rs.Name as ResourceName, srv.ServiceName, CASE WHEN apt.Status = 'Deleted' THEN 'N/A' ELSE sts.StatusName END AS AppStatus, 
@@ -95,11 +95,13 @@ namespace FSM
                         appoinment.State = row.Field<string>("State") ?? "";
                         appoinment.City = row.Field<string>("City") ?? "";
                         appoinment.Address1 = row.Field<string>("Address1") ?? "";
+                        appoinment.Email = row.Field<string>("Email") ?? "";
 
                         appoinment.CustomerName = row.Field<string>("FirstName") + " " + row.Field<string>("LastName");
 
                         appoinment.AppoinmentId = row["ApptID"].ToString();
                         appoinment.AppoinmentStatus = row.Field<string>("AppStatus") ?? "";
+                        appoinment.Note = row.Field<string>("Note") ?? "";
                         appoinment.TicketStatus = row.Field<string>("AppTicketStatus") ?? "";
                         appoinment.ResourceName = row.Field<string>("ResourceName") ?? "";
                         appoinment.ServiceType = row.Field<string>("ServiceName") ?? "";
@@ -135,12 +137,16 @@ namespace FSM
             {
                 string Sql = "SELECT ServiceTypeID,ServiceName From msSchedulerV3.dbo.tbl_ServiceType where CompanyID = '" + companyid + "' order by ServiceName asc;";
                 Sql += @"SELECT  [StatusID],[StatusName] FROM [msSchedulerV3].[dbo].[tbl_Status] where CompanyID='" + companyid + "';";
+                Sql += @"SELECT  [StatusID],[StatusName] FROM [msSchedulerV3].[dbo].[tbl_TicketStatus] where CompanyID= '" + companyid + "';";
 
                 DataTable _ServiceType = new DataTable();
                 DataTable _Status = new DataTable();
+                DataTable _ticketStatus = new DataTable();
                 DataSet dataSet = db.Get_DataSet(Sql, companyid);
                 _ServiceType = dataSet.Tables[0];
                 _Status = dataSet.Tables[1];
+                _ticketStatus = dataSet.Tables[2];
+
                 if (_ServiceType.Rows.Count > 0)
                 {
                     ServiceTypeFilter.DataSource = _ServiceType;
@@ -211,6 +217,23 @@ namespace FSM
                     StatusTypeFilter_Edit.DataValueField = "StatusID";
                     StatusTypeFilter_Edit.DataBind();
                     StatusTypeFilter_Edit.Items.Insert(0, new ListItem("All Status", ""));
+                }
+
+                if (_ticketStatus.Rows.Count > 0)
+                {
+                    TicketStatusFilter_List.DataSource = _ticketStatus;
+                    TicketStatusFilter_List.DataBind();
+                    TicketStatusFilter_List.DataTextField = "StatusName";
+                    TicketStatusFilter_List.DataValueField = "StatusName";
+                    TicketStatusFilter_List.DataBind();
+                    TicketStatusFilter_List.Items.Insert(0, new ListItem("Ticket Status", ""));
+
+                    TicketStatusFilter_Edit.DataSource = _ticketStatus;
+                    TicketStatusFilter_Edit.DataBind();
+                    TicketStatusFilter_Edit.DataTextField = "StatusName";
+                    TicketStatusFilter_Edit.DataValueField = "StatusID";
+                    TicketStatusFilter_Edit.DataBind();
+                    TicketStatusFilter_Edit.Items.Insert(0, new ListItem("Ticket Status", ""));
                 }
             }
 
@@ -319,7 +342,9 @@ namespace FSM
                                 [TimeSlot] = @TimeSlot,
                                 [ApptDateTime] = @ApptDateTime,
                                 [Status] = @Status,
-                                [ResourceID] = @ResourceID 
+                                [ResourceID] = @ResourceID, 
+                                [TicketStatus] = @TicketStatus, 
+                                [Note] = @Note 
 
                             WHERE [ApptID] = @ApptID and
                                   [CustomerID] = @CustomerID and
@@ -333,6 +358,8 @@ namespace FSM
                 db.Command.Parameters.AddWithValue("@ApptDateTime", appointment.RequestDate);
                 db.Command.Parameters.AddWithValue("@TimeSlot", appointment.TimeSlot);
                 db.Command.Parameters.AddWithValue("@Status", appointment.Status);
+                db.Command.Parameters.AddWithValue("@TicketStatus", appointment.TicketStatus);
+                db.Command.Parameters.AddWithValue("@Note", appointment.Note);
                 db.Command.Parameters.AddWithValue("@ResourceID", appointment.ResourceID);
                 success = db.UpdateSql(strSQL);
             }

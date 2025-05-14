@@ -15,7 +15,7 @@ namespace FSM.Models.AppoinmentModel
         public string ResourceName { get; set; }
         public string TimeSlot { get; set; }
         public string TicketStatus { get; set; }
-        public string CustomTags { get; set; }
+        public string Note { get; set; }
 
         public string Duration { get; set; } = "0";
         public string AppoinmentStatus { get; set; }
