@@ -184,18 +184,6 @@
                                 </select>
                             </div>
                             <div>
-                                <label for="listDatePickerFrom" class="form-label mb-0">From Date:</label>
-                                <input type="date" id="listDatePickerFrom" class="form-control w-200px">
-                            </div>
-                            <div>
-                                <label for="listDatePickerTo" class="form-label mb-0">To Date:</label>
-                                <input type="date" id="listDatePickerTo" class="form-control w-200px">
-                            </div>
-                            <div>
-                                <label></label>
-                                <button type="button" class="btn btn-primary ms-2" onclick="searchListView(event)">Search By Date</button>
-                            </div>
-                            <div>
                                 <label for="StatusTypeFilter_List" class="form-label mb-0">Appointment Status:</label>
                                 <select runat="server" id="StatusTypeFilter_List" class="form-select" onchange="renderListView()">
                                     <option value="all">Select</option>
@@ -208,30 +196,48 @@
                                 </select>
                             </div>
                             <div>
+                                <label for="listDatePickerFrom" class="form-label mb-0">From Date:</label>
+                                <input type="date" id="listDatePickerFrom" class="form-control w-200px">
+                            </div>
+                            <div>
+                                <label for="listDatePickerTo" class="form-label mb-0">To Date:</label>
+                                <input type="date" id="listDatePickerTo" class="form-control w-200px">
+                            </div>
+                            <div>
+                                <label></label>
+                                <button type="button" class="btn btn-primary ms-2" onclick="searchListView(event)">Search By Date</button>
+                            </div>
+
+                            <div>
                                 <button type="button" class="btn btn-secondary ms-2" onclick="clearFilterListView(event)">Clear</button>
                             </div>
                         </div>
                     </div>
                     <div class="card-body">
-                        <table class="table list-view-table" id="listTable">
-                            <thead>
-                                <tr>
-                                    <th data-key="CustomerName" class="sortable">Customer</th>
-                                    <th data-key="BusinessName" class="sortable">Business Name</th>
-                                    <th>Address</th>
-                                    <th>Request Date</th>
-                                    <th>Time Slot</th>
-                                    <th>Service Type</th>
-                                    <th>Email</th>
-                                    <th>Mobile</th>
-                                    <th>Phone</th>
-                                    <th>Status</th>
-                                    <th>Resource</th>
-                                    <th>Ticket Status</th>
-                                </tr>
-                            </thead>
-                            <tbody id="listTableBody"></tbody>
-                        </table>
+                        <div class="list-view-table-container">
+                            <table class="table list-view-table">
+                                <thead>
+                                    <tr>
+                                        <th>View</th>
+                                        <th data-key="CustomerName" class="sortable">Customer</th>
+                                        <th data-key="BusinessName" class="sortable">Business Name</th>
+                                        <th data-key="Address1" class="sortable">Address</th>
+                                        <th data-key="RequestDate" class="sortable">Request Date</th>
+                                        <th data-key="TimeSlot" class="sortable">Time Slot</th>
+                                        <th data-key="ServiceType" class="sortable">Service Type</th>
+                                        <th data-key="Email" class="sortable">Email</th>
+                                        <th data-key="Mobile" class="sortable">Mobile</th>
+                                        <th data-key="Phone" class="sortable">Phone</th>
+                                        <th data-key="AppoinmentStatus" class="sortable">Appointment Status</th>
+                                        <th data-key="ResourceName" class="sortable">Resource</th>
+                                        <th data-key="TicketStatus" class="sortable">Ticket Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="listTableBody">
+                                    <!-- Populated by renderListView -->
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>

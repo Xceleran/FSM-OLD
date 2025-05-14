@@ -79,6 +79,9 @@
     gap: 10px;
     flex-wrap: wrap;
 }
+[data-theme="dark"] a{
+
+}
 [data-theme="dark"] select option {
     background: #343a40 !important;
     color: #ffffff !important;
@@ -266,12 +269,33 @@
     padding: 12px;
     text-align: left;
     border-bottom: 1px solid var(--bg-gray-300);
+    background: #E9EAEB;
 }
-
+/* Dark Mode Link Text for Numbers */
+[data-theme="dark"] a#MainContent_hlMobile:hover {
+    color: #70aaff;
+}
+/* Dark Mode Link Text for Numbers */
+[data-theme="dark"] a#MainContent_hlMobile {
+    color: #8cbbff;
+    text-decoration: none;
+    font-weight: 600;
+}
+    /* Dark Mode Link Text for Email */
+[data-theme="dark"] a#MainContent_hlEmail:hover {
+    color: #70aaff;
+}
+/* Dark Mode Link Text for Email */
+[data-theme="dark"] a#MainContent_hlEmail {
+    color: #8cbbff;
+    text-decoration: none;
+    font-weight: 600;
+}
 [data-theme="dark"] .custdet-container .table thead th {
     border: 2px solid rgb(255 255 255 / 10%);
     background: #26303c;
     color: #f0f7f9;
+
 }
 
 .custdet-container .table tbody tr {

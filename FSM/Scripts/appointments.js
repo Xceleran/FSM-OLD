@@ -769,29 +769,35 @@ function renderListView() {
             });
         }
 
-        tbody.html(filteredAppointments.length === 0 ? '<tr><td colspan="7" class="text-center">No appointments for this date.</td></tr>' :
+        tbody.html(filteredAppointments.length === 0 ? '<tr><td colspan="13" class="text-center">No appointments for this date.</td></tr>' :
             filteredAppointments.map(a => {
                 const timeSlot = a.TimeSlot ? a.TimeSlot.charAt(0).toUpperCase() + a.TimeSlot.slice(1) : 'N/A';
                 return `
-                <tr data-id="${a.AppoinmentId}">
-                    <td>${a.CustomerName}</td>
-                    <td>${a.BusinessName}</td>
-                    <td>${a.Address1 || 'N/A'}</td>
-                    <td>${a.RequestDate || 'N/A'}</td>
-                    <td>${formatTimeRange(timeSlot)}</td>
-                    <td>${a.ServiceType}</td>
-                    <td><a href="mailto:${a.Email}">${a.Email}</a></td>
-                    <td><a href="tel:${a.Mobile}">${a.Mobile}</a></td>
-                    <td><a href="tel:${a.Phone}">${a.Phone}</a></td>
-                    <td>${a.AppoinmentStatus}</td>
-                    <td>${a.ResourceName}</td>
-                    <td>${a.TicketStatus}</td>
-                </tr>
-                `;
+        <tr data-id="${a.AppoinmentId}">
+            <td data-label="View">
+                <button class="btn btn-sm btn-outline-primary view-appointment" data-id="${a.AppoinmentId}">
+                    <i class="fas fa-eye"></i>
+                </button>
+            </td>
+            <td data-label="Customer">${a.CustomerName || 'N/A'}</td>
+            <td data-label="Business Name">${a.BusinessName || 'N/A'}</td>
+            <td data-label="Address">${a.Address1 || 'N/A'}</td>
+            <td data-label="Request Date">${a.RequestDate || 'N/A'}</td>
+            <td data-label="Time Slot">${formatTimeRange(timeSlot) || 'N/A'}</td>
+            <td data-label="Service Type">${a.ServiceType || 'N/A'}</td>
+            <td data-label="Email" class="custom-link">${a.Email ? `<a href="mailto:${a.Email}">${a.Email}</a>` : 'N/A'}</td>
+            <td data-label="Mobile" class="custom-link">${a.Mobile ? `<a href="tel:${a.Mobile}">${a.Mobile}</a>` : 'N/A'}</td>
+            <td data-label="Phone" class="custom-link">${a.Phone ? `<a href="tel:${a.Phone}">${a.Phone}</a>` : 'N/A'}</td>
+            <td data-label="Appointment Status">${a.AppoinmentStatus || 'N/A'}</td>
+            <td data-label="Resource">${a.ResourceName || 'N/A'}</td>
+            <td data-label="Ticket Status">${a.TicketStatus || 'N/A'}</td>
+        </tr>
+        `;
             }).join(''));
 
-        $(document).off('click', '#listTableBody tr').on('click', '#listTableBody tr', function () {
-            openEditModal($(this).data("id"));
+        $(document).off('click', '.view-appointment').on('click', '.view-appointment', function () {
+            const appointmentId = $(this).data("id");
+            openEditModal(appointmentId);
         });
     });
 }
@@ -1320,7 +1326,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Initialize Bootstrap tooltips (from inline script)
-    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(el));
+    // Initialize Bootstrap tooltips with hover-only trigger
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
+        new bootstrap.Tooltip(el, {
+            trigger: 'hover' // Show only on hover, hide when mouse leaves
+        });
+    });
 
     // Reset expansion state when switching tabs (from inline script)
     const tabs = document.querySelectorAll('#viewTabs button[data-bs-toggle="tab"]');
