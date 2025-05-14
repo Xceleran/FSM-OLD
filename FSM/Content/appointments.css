@@ -259,7 +259,7 @@
     }
 
     .table.list-view-table {
-        min-width: 400px; /* Adjust minimum width for smaller screens */
+        min-width: 340px; /* Adjust minimum width for smaller screens */
     }
 
         /* Stack table as cards on mobile */
