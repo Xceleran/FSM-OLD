@@ -16,6 +16,8 @@
     <!-- Local Styles and Scripts -->
     <link rel="stylesheet" href="Content/appointments.css">
 
+    <!-- Inline CSS for Expand/Collapse -->
+
 
     <!-- Page Content -->
     <div class="container-fluid">
@@ -50,29 +52,34 @@
                 <div class="date-view-container">
                     <div class="card calendar-container date-view">
                         <div class="card-header">
-                         
-                            <div class="d-flex flex-wrap gap-2 align-items-center">
-                                <label for="viewSelect" class="form-label mb-0">View:</label>
-                                <select id="viewSelect" class="form-select w-120px" onchange="renderDateView($('#dayDatePicker').val())">
-                                    <option value="day">Day</option>
-                                    <option value="week">Week</option>
-                                    <option value="threeDay">Three-Day</option>
-                                    <option value="month">Month</option>
-                                </select>
-                                <label for="ServiceTypeFilter" class="form-label mb-0 ms-3">Filter:</label>
-                                <select name="ServiceTypeFilter" id="ServiceTypeFilter" class="form-select  w-120px" runat="server" onchange="renderDateView($('#dayDatePicker').val())">
-                                    <option value="select">Select</option>
-                                    <option value="0">Company Use</option>
-                                </select>
-                                <%--<select id="filterSelect" class="form-select w-120px" onchange="renderDateView($('#dayDatePicker').val())">
-                                    <option value="all">All</option>
-                                    <option value="Tasks">Tasks</option>
-                                    <option value="Visits">Visits</option>
-                                    <option value="Maintenance">Maintenance</option>
-                                    <option value="Installation">Installation</option>
-                                </select>--%>
-                                <label for="dayDatePicker" class="form-label mb-0 ms-3">Date:</label>
-                                <input type="date" id="dayDatePicker" class="form-control w-200px" onchange="renderDateView(this.value)">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                <div class="d-flex flex-wrap gap-2 align-items-center">
+                                    <button id="expandCalendarBtn" class="btn btn-outline-secondary me-2" data-bs-toggle="tooltip" title="Expand/Collapse Calendar">
+                                        <i class="fas fa-expand"></i>
+                                    </button>
+                                    <label for="viewSelect" class="form-label mb-0">View:</label>
+                                    <select id="viewSelect" class="form-select w-120px" onchange="renderDateView($('#dayDatePicker').val())">
+                                        <option value="day">Day</option>
+                                        <option value="week">Week</option>
+                                        <option value="threeDay">Three-Day</option>
+                                        <option value="month">Month</option>
+                                    </select>
+                                    <label for="ServiceTypeFilter" class="form-label mb-0">Filter:</label>
+                                    <select name="ServiceTypeFilter" id="ServiceTypeFilter" class="form-select w-120px" runat="server" onchange="renderDateView($('#dayDatePicker').val())">
+                                        <option value="select">Select</option>
+                                        <option value="0">Company Use</option>
+                                    </select>
+                                    <%--<select id="filterSelect" class="form-select w-120px" onchange="renderDateView($('#dayDatePicker').val())">
+                                        <option value="all">All</option>
+                                        <option value="Tasks">Tasks</option>
+                                        <option value="Visits">Visits</option>
+                                        <option value="Maintenance">Maintenance</option>
+                                        <option value="Installation">Installation</option>
+                                    </select>--%>
+                                    <label for="dayDatePicker" class="form-label mb-0 ms-3">Date:</label>
+                                    <input type="date" id="dayDatePicker" class="form-control w-200px" onchange="renderDateView(this.value)">
+                                </div>
+                                <button id="toggleUnscheduledBtn" class="btn btn-sm"><i class="fas fa-chevron-right"></i></button>
                             </div>
                             <div class="time-slot-indicators">
                                 <span class="time-block-indicator time-block-morning"></span>Morning (8AM-12PM)
@@ -81,7 +88,7 @@
                             </div>
                         </div>
                         <div class="card-body">
-                               <div class="datepicker"><div class="date-nav" id="dateNav"></div></div>
+                            <div class="datepicker"><div class="date-nav" id="dateNav"></div></div>
                             <div id="dayCalendar"></div>
                         </div>
                     </div>
@@ -90,7 +97,6 @@
                             <h3 class="card-title">Unassigned Appointments</h3>
                         </div>
                         <div class="card-body">
-
                             <div class="unscheduled-filters">
                                 <select runat="server" id="StatusTypeFilter" class="form-select mb-3" onchange="renderUnscheduledList()">
                                     <option value="all">All Statuses</option>
@@ -110,16 +116,21 @@
                 <div class="date-view-container">
                     <div class="card calendar-container resource-view">
                         <div class="card-header">
-                            
-                            <div class="d-flex flex-wrap gap-2 align-items-center">
-                                <label for="resourceDatePicker" class="form-label mb-0">Date:</label>
-                                <input type="date" id="resourceDatePicker" class="form-control w-200px" onchange="renderResourceView(this.value)">
-                               <%-- <label for="dispatchGroup" class="form-label mb-0 ms-3">Group:</label>
-                                <select id="dispatchGroup" class="form-select w-120px" onchange="renderResourceView($('#resourceDatePicker').val())">
-                                    <option value="all">All Resources</option>
-                                    <option value="electricians">Electricians</option>
-                                    <option value="plumbers">Plumbers</option>
-                                </select>--%>
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                <div class="d-flex flex-wrap gap-2 align-items-center">
+                                    <button id="expandCalendarBtnResource" class="btn btn-outline-secondary me-2" data-bs-toggle="tooltip" title="Expand/Collapse Calendar">
+                                        <i class="fas fa-expand"></i>
+                                    </button>
+                                    <label for="resourceDatePicker" class="form-label mb-0">Date:</label>
+                                    <input type="date" id="resourceDatePicker" class="form-control w-200px" onchange="renderResourceView(this.value)">
+                                    <%--<label for="dispatchGroup" class="form-label mb-0 ms-3">Group:</label>
+                                    <select id="dispatchGroup" class="form-select w-120px" onchange="renderResourceView($('#resourceDatePicker').val())">
+                                        <option value="all">All Resources</option>
+                                        <option value="electricians">Electricians</option>
+                                        <option value="plumbers">Plumbers</option>
+                                    </select>--%>
+                                </div>
+                                <button id="toggleUnscheduledBtnResource" class="btn btn-sm" style="display: block;"><i class="fas fa-chevron-right"></i></button>
                             </div>
                             <div class="time-slot-indicators">
                                 <span class="time-block-indicator time-block-morning"></span>Morning (8AM-12PM)
@@ -160,17 +171,16 @@
                                 <label for="search_term" class="form-label mb-0">Search</label>
                                 <input placeholder="Search anything" type="text" id="search_term" class="form-control w-200px" oninput="renderListView()">
                             </div>
-                             <div>
-     <label for="ServiceTypeFilter_List" class="form-label mb-0 ms-3">Service type:</label>
-     <select name="ServiceTypeFilter_List" id="ServiceTypeFilter_List" class="form-select" runat="server" onchange="renderListView()">
-         <option value="select">Select</option>
-     </select>
- </div>
+                            <div>
+                                <label for="ServiceTypeFilter_List" class="form-label mb-0">Service type:</label>
+                                <select name="ServiceTypeFilter_List" id="ServiceTypeFilter_List" class="form-select" runat="server" onchange="renderListView()">
+                                    <option value="select">Select</option>
+                                </select>
+                            </div>
                             <div>
                                 <label for="listDatePickerFrom" class="form-label mb-0">From Date:</label>
                                 <input type="date" id="listDatePickerFrom" class="form-control w-200px">
                             </div>
-
                             <div>
                                 <label for="listDatePickerTo" class="form-label mb-0">To Date:</label>
                                 <input type="date" id="listDatePickerTo" class="form-control w-200px">
@@ -179,9 +189,8 @@
                                 <label></label>
                                 <button type="button" class="btn btn-primary ms-2" onclick="searchListView(event)">Search By Date</button>
                             </div>
-                           
                             <div>
-                                <label for="StatusTypeFilter_List" class="form-label mb-0 ms-3">Status:</label>
+                                <label for="StatusTypeFilter_List" class="form-label mb-0">Status:</label>
                                 <select runat="server" id="StatusTypeFilter_List" class="form-select" onchange="renderListView()">
                                     <option value="all">Select</option>
                                 </select>
@@ -190,14 +199,12 @@
                                 <button type="button" class="btn btn-secondary ms-2" onclick="clearFilterListView(event)">Clear</button>
                             </div>
                         </div>
-
-
                     </div>
                     <div class="card-body">
                         <table class="table list-view-table" id="listTable">
                             <thead>
                                 <tr>
-                                    <th>Customer</th>
+                                    <th >Customer</th>
                                     <th>Business Name</th>
                                     <th>Address</th>
                                     <th>Request Date</th>
@@ -224,7 +231,7 @@
                             <div class="d-flex flex-wrap gap-2 align-items-center">
                                 <label for="mapDatePicker" class="form-label mb-0">Date:</label>
                                 <input type="date" id="mapDatePicker" class="form-control w-200px">
-                                <label for="mapDispatchGroup" class="form-label mb-0 ms-3">Group:</label>
+                                <label for="mapDispatchGroup" class="form-label mb-0">Group:</label>
                                 <select id="mapDispatchGroup" class="form-select w-120px">
                                     <option value="all">All Technicians</option>
                                     <option value="electricians">Electricians</option>
@@ -398,7 +405,7 @@
                             <div class="col-md-6">
                                 <label class="form-label">Duration (hours)</label>
                                 <input type="text" name="duration" class="form-control" readonly="readonly"/>
-                               <%-- <select name="duration" class="form-select" required>
+                                <%--<select name="duration" class="form-select" required>
                                     <option value="1">1 Hour Package</option>
                                     <option value="2">2 Hour Package</option>
                                     <option value="3">3 Hour Package</option>
@@ -416,7 +423,7 @@
                             <div class="col-12">
                                 <label class="form-label">Status</label>
                                 <select runat="server" id="StatusTypeFilter_Edit" name="status" class="form-select" required>
-                                   <option value="all">Select</option>
+                                    <option value="all">Select</option>
                                 </select>
                             </div>
                         </div>
@@ -492,5 +499,10 @@
         </div>
     </div>
 
-        <script src="Scripts/appointments.js" defer></script>
+    <!-- Inline JavaScript for Expand/Collapse -->
+ <script>
+
+ </script>
+
+    <script src="Scripts/appointments.js" defer></script>
 </asp:Content>

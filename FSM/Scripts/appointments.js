@@ -1220,7 +1220,7 @@ var today = new Date().toISOString().split('T')[0];
 
 // Initialize the page
 document.addEventListener('DOMContentLoaded', () => {
-    // Initialize modal instances
+    // Initialize modal instances (from appointments.js)
     const newModalInstance = new bootstrap.Modal(document.getElementById("newModal"));
     const editModalInstance = new bootstrap.Modal(document.getElementById("editModal"));
     const confirmModalInstance = new bootstrap.Modal(document.getElementById("confirmModal"));
@@ -1229,23 +1229,191 @@ document.addEventListener('DOMContentLoaded', () => {
     window.editModalInstance = editModalInstance;
     window.confirmModalInstance = confirmModalInstance;
 
-    // Show loading indicator
+    // Show loading indicator (from appointments.js)
     $("#dayCalendar").html('<div class="text-center py-4">Loading...</div>');
 
-    // Wait for both time slots and resources to load before rendering
+    // Helper function to check if mobile (from inline script)
+    const isMobile = () => window.matchMedia('(max-width: 849px)').matches;
+
+    // Function to toggle calendar expansion (from inline script)
+    function toggleCalendarExpansion(view) {
+        if (!['dateView', 'resourceView'].includes(view)) {
+            console.error('Invalid view parameter:', view);
+            return;
+        }
+
+        const tabPane = document.getElementById(view);
+        if (!tabPane || !tabPane.classList.contains('active')) {
+            console.warn(`Tab ${view} is not active, skipping toggle`);
+            return;
+        }
+
+        const calendarContainer = document.querySelector(`#${view} .calendar-container`);
+        const unscheduledPanel = document.querySelector(`#${view} .unscheduled-panel`);
+        const toggleUnscheduledBtn = document.getElementById(`toggleUnscheduledBtn${view === 'dateView' ? '' : 'Resource'}`);
+        const expandCalendarBtn = document.getElementById(`expandCalendarBtn${view === 'dateView' ? '' : 'Resource'}`);
+        const sidebar = document.getElementById('sidebar');
+        const toggleSidebarBtn = document.getElementById('toggleSidebar');
+        const sidebarTexts = document.querySelectorAll('.sidebar-text');
+        const sidebarIcons = document.querySelectorAll('.sidebar-icon');
+
+        if (!calendarContainer || !unscheduledPanel || !toggleUnscheduledBtn || !expandCalendarBtn || !sidebar || !toggleSidebarBtn) {
+            console.error('Required elements not found for view:', view, {
+                calendarContainer,
+                unscheduledPanel,
+                toggleUnscheduledBtn,
+                expandCalendarBtn,
+                sidebar,
+                toggleSidebarBtn
+            });
+            return;
+        }
+
+        const isExpanded = calendarContainer.classList.toggle('expanded');
+        unscheduledPanel.classList.toggle('collapsed', isExpanded);
+        toggleUnscheduledBtn.style.display = isExpanded ? 'block' : 'none';
+        expandCalendarBtn.innerHTML = isExpanded ? '<i class="fas fa-compress"></i>' : '<i class="fas fa-expand"></i>';
+
+        localStorage.setItem(`${view}CalendarExpanded`, isExpanded);
+        window.isCalendarExpanded = isExpanded;
+
+        console.log('Before sidebar state update:', {
+            isExpanded,
+            isMobile: isMobile(),
+            sidebarClasses: sidebar.classList.toString(),
+            transform: sidebar.style.transform,
+            isCalendarExpanded: window.isCalendarExpanded
+        });
+
+        sidebar.classList.remove('sidebar-expanded', 'sidebar-collapsed', 'sidebar-hidden', 'sidebar-mobile');
+
+        if (isExpanded) {
+            if (isMobile()) {
+                sidebar.classList.add('sidebar-hidden', 'sidebar-mobile');
+                sidebar.style.transform = 'translateX(-100%)';
+                toggleSidebarBtn.textContent = '☰';
+                toggleSidebarBtn.classList.remove('collapsed');
+                sidebarTexts.forEach(text => text.style.display = 'inline');
+                sidebarIcons.forEach(icon => icon.style.display = 'inline');
+            } else {
+                sidebar.classList.add('sidebar-collapsed');
+                sidebar.style.transform = '';
+                toggleSidebarBtn.textContent = '☰';
+                toggleSidebarBtn.classList.add('collapsed');
+                sidebarTexts.forEach(text => text.style.display = 'none');
+                sidebarIcons.forEach(icon => icon.style.display = 'inline');
+            }
+        } else {
+            if (isMobile()) {
+                sidebar.classList.add('sidebar-hidden', 'sidebar-mobile');
+                sidebar.style.transform = 'translateX(-100%)';
+                toggleSidebarBtn.textContent = '☰';
+                toggleSidebarBtn.classList.remove('collapsed');
+                sidebarTexts.forEach(text => text.style.display = 'inline');
+                sidebarIcons.forEach(icon => icon.style.display = 'inline');
+            } else {
+                sidebar.classList.add('sidebar-expanded');
+                sidebar.style.transform = '';
+                toggleSidebarBtn.textContent = '➤';
+                toggleSidebarBtn.classList.remove('collapsed');
+                sidebarTexts.forEach(text => text.style.display = 'inline');
+                sidebarIcons.forEach(icon => icon.style.display = 'inline');
+            }
+        }
+
+        setTimeout(() => {
+            console.log('After sidebar state update (delayed) for view:', view, {
+                isExpanded: calendarContainer.classList.contains('expanded'),
+                isMobile: isMobile(),
+                sidebarClasses: sidebar.classList.toString(),
+                transform: sidebar.style.transform,
+                toggleBtnText: toggleSidebarBtn.textContent,
+                sidebarTextDisplay: sidebarTexts[0]?.style.display,
+                sidebarIconDisplay: sidebarIcons[0]?.style.display,
+                tabActive: tabPane.classList.contains('active'),
+                isCalendarExpanded: window.isCalendarExpanded
+            });
+        }, 0);
+
+        window.dispatchEvent(new Event('resize'));
+    }
+
+    // Function to toggle unscheduled panel (from inline script)
+    function toggleUnscheduledPanel(view) {
+        const calendarContainer = document.querySelector(`#${view} .calendar-container`);
+        const unscheduledPanel = document.querySelector(`#${view} .unscheduled-panel`);
+        const toggleUnscheduledBtn = document.getElementById(`toggleUnscheduledBtn${view === 'dateView' ? '' : 'Resource'}`);
+        const expandCalendarBtn = document.getElementById(`expandCalendarBtn${view === 'dateView' ? '' : 'Resource'}`);
+
+        if (!calendarContainer || !unscheduledPanel || !toggleUnscheduledBtn || !expandCalendarBtn) return;
+
+        const isCollapsed = unscheduledPanel.classList.toggle('collapsed');
+        toggleUnscheduledBtn.innerHTML = isCollapsed ? '<i class="fas fa-chevron-left"></i>' : '<i class="fas fa-chevron-right"></i>';
+        if (!isCollapsed) {
+            calendarContainer.classList.remove('expanded');
+            toggleUnscheduledBtn.style.display = 'none';
+            expandCalendarBtn.innerHTML = '<i class="fas fa-expand"></i>';
+            localStorage.setItem(`${view}CalendarExpanded`, false);
+        } else {
+            toggleUnscheduledBtn.style.display = 'block';
+        }
+        window.dispatchEvent(new Event('resize'));
+    }
+
+    // Initialize calendar state for both views (from inline script)
+    ['dateView', 'resourceView'].forEach(view => {
+        const expandCalendarBtn = document.getElementById(`expandCalendarBtn${view === 'dateView' ? '' : 'Resource'}`);
+        const toggleUnscheduledBtn = document.getElementById(`toggleUnscheduledBtn${view === 'dateView' ? '' : 'Resource'}`);
+
+        if (expandCalendarBtn) {
+            expandCalendarBtn.addEventListener('click', () => toggleCalendarExpansion(view));
+        }
+        if (toggleUnscheduledBtn) {
+            toggleUnscheduledBtn.addEventListener('click', () => toggleUnscheduledPanel(view));
+        }
+
+        if (localStorage.getItem(`${view}CalendarExpanded`) === 'true') {
+            toggleCalendarExpansion(view);
+        }
+    });
+
+    // Initialize Bootstrap tooltips (from inline script)
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(el));
+
+    // Reset expansion state when switching tabs (from inline script)
+    const tabs = document.querySelectorAll('#viewTabs button[data-bs-toggle="tab"]');
+    tabs.forEach(tab => {
+        tab.addEventListener('shown.bs.tab', function (event) {
+            ['dateView', 'resourceView'].forEach(view => {
+                if (event.target.id !== (view === 'dateView' ? 'date-tab' : 'resource-tab')) {
+                    const calendarContainer = document.querySelector(`#${view} .calendar-container`);
+                    const unscheduledPanel = document.querySelector(`#${view} .unscheduled-panel`);
+                    const toggleUnscheduledBtn = document.getElementById(`toggleUnscheduledBtn${view === 'dateView' ? '' : 'Resource'}`);
+                    const expandCalendarBtn = document.getElementById(`expandCalendarBtn${view === 'dateView' ? '' : 'Resource'}`);
+                    if (calendarContainer && unscheduledPanel && toggleUnscheduledBtn && expandCalendarBtn) {
+                        calendarContainer.classList.remove('expanded');
+                        unscheduledPanel.classList.remove('collapsed');
+                        toggleUnscheduledBtn.style.display = 'none';
+                        expandCalendarBtn.innerHTML = '<i class="fas fa-expand"></i>';
+                        localStorage.setItem(`${view}CalendarExpanded`, false);
+                        window.dispatchEvent(new Event('resize'));
+                    }
+                }
+            });
+        });
+    });
+
+    // Wait for time slots and resources to load (from appointments.js)
     Promise.all([getTimeSlots(), getResources()])
         .then(() => {
             document.getElementById('dateInput').min = today;
-
             $("#dayDatePicker").val(today);
             $("#resourceDatePicker").val(today);
             $("#listDatePicker").val(today);
             $("#mapDatePicker").val(today);
-
-            // Initial render after data is loaded
             renderDateView(today);
 
-            // Set up tab event listeners
+            // Set up tab event listeners (from appointments.js)
             const tabs = document.querySelectorAll('#viewTabs button[data-bs-toggle="tab"]');
             tabs.forEach(tab => {
                 tab.addEventListener('shown.bs.tab', function (event) {
@@ -1275,7 +1443,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             });
 
-            // Map View event listeners
+            // Map View event listeners (from appointments.js)
             document.getElementById('mapDatePicker').addEventListener('change', (e) => {
                 renderMapMarkers(e.target.value);
             });
@@ -1301,20 +1469,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderMapView();
             });
 
-            // Start real-time updates
             simulateRealTimeUpdates();
         })
         .catch((error) => {
             console.error("Failed to load initial data:", error);
             $("#dayCalendar").html('<div class="text-center py-4 text-muted">Failed to load data. Please try refreshing the page.</div>');
         });
-});
 
-// Handle modal dismissals
-document.querySelectorAll('[data-bs-dismiss="modal"]').forEach(button => {
-    button.addEventListener('click', function () {
-        const modal = bootstrap.Modal.getInstance(this.closest('.modal'));
-        modal.hide();
+    // Handle modal dismissals (from appointments.js)
+    document.querySelectorAll('[data-bs-dismiss="modal"]').forEach(button => {
+        button.addEventListener('click', function () {
+            const modal = bootstrap.Modal.getInstance(this.closest('.modal'));
+            modal.hide();
+        });
     });
 });
 
