@@ -69,31 +69,31 @@ namespace FSM
         protected global::System.Web.UI.WebControls.Label lblContact;
 
         /// <summary>
-        /// lblPhone control.
+        /// hlPhone control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Label lblPhone;
+        protected global::System.Web.UI.WebControls.HyperLink hlPhone;
 
         /// <summary>
-        /// lblMobile control.
+        /// hlMobile control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Label lblMobile;
+        protected global::System.Web.UI.WebControls.HyperLink hlMobile;
 
         /// <summary>
-        /// lblEmail control.
+        /// hlEmail control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Label lblEmail;
+        protected global::System.Web.UI.WebControls.HyperLink hlEmail;
 
         /// <summary>
         /// lblAddress control.

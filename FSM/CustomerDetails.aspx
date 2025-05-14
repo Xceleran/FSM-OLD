@@ -37,15 +37,16 @@
                             <td id="siteContact">
                                 <asp:Label ID="lblContact" runat="server" /><br />
                                 <i class="fas fa-phone me-1" style="font-size: 13px;"></i>Phone:
-                                <asp:Label ID="lblPhone" runat="server" /><br />
+                                <asp:HyperLink ID="hlPhone" runat="server"  /><br />
                                 <i class="fas fa-mobile-alt me-1"></i>Mobile:
-                                <asp:Label ID="lblMobile" runat="server" />
+                                <asp:HyperLink ID="hlMobile" runat="server"  />
                             </td>
                         </tr>
                         <tr>
                             <td>Email</td>
                             <td id="customerEmail">
-                                <asp:Label ID="lblEmail" runat="server" /></td>
+                                <asp:HyperLink ID="hlEmail" runat="server" />
+                            </td>
                         </tr>
                         <tr>
                             <td>Address</td>

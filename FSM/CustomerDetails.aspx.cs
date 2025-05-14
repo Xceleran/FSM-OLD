@@ -40,9 +40,12 @@ namespace FSM
                 lblCreatedOn.Text = site?.CreatedDateTime?.ToString("yyyy-MM-dd");
                 lblSiteName.Text = site?.SiteName;
 
-                lblPhone.Text = customer?.Phone;
-                lblMobile.Text = customer?.Mobile;
-                lblEmail.Text = customer?.Email;
+                hlPhone.Text = customer?.Phone;
+                hlPhone.NavigateUrl = "tel:" + customer?.Phone;
+                hlMobile.Text = customer?.Mobile;
+                hlMobile.NavigateUrl = "tel:" + customer?.Mobile;
+                hlEmail.Text  = customer?.Email;
+                hlEmail.NavigateUrl = "mailto:" + customer?.Email;
 
                 LoadData();
             }
