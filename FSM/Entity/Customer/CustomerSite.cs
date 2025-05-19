@@ -21,13 +21,20 @@ namespace FSM.Entity.Customer
     {
         public int Id { get; set; }
         public int SiteId { get; set; }
-        public string SpecialInstruction { get; set; }
-        public string EquipmentName { get; set; }
+        public string Notes { get; set; }
+        public string Make { get; set; }
         public string EquipmentType { get; set; }
-        public int? EquipmentTypeId { get; set; }
+        public string SerialNumber { get; set; }
+        public string Barcode { get; set; }
+        public string Model { get; set; }
         public DateTime? CreatedDateTime { get; set; }
         public string InstallDate { get; set; }
-        public string WarrantyExpireDate { get; set; }
+
+        public string WarrantyStart { get; set; }
+        public string WarrantyEnd { get; set; }
+        public string LaborWarrantyStart { get; set; }
+        public string LaborWarrantyEnd { get; set; }
+        public string CustomerName { get; set; }
     }
 
     public class EquipmentType

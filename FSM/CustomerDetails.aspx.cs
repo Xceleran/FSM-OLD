@@ -1,4 +1,5 @@
-﻿using FSM.Entity.Customer;
+﻿using FSM.Entity.Appoinments;
+using FSM.Entity.Customer;
 using FSM.Entity.Enums;
 using FSM.Models.AppoinmentModel;
 using System;
@@ -44,7 +45,7 @@ namespace FSM
                 hlPhone.NavigateUrl = "tel:" + customer?.Phone;
                 hlMobile.Text = customer?.Mobile;
                 hlMobile.NavigateUrl = "tel:" + customer?.Mobile;
-                hlEmail.Text  = customer?.Email;
+                hlEmail.Text = customer?.Email;
                 hlEmail.NavigateUrl = "mailto:" + customer?.Email;
 
                 LoadData();
@@ -57,7 +58,7 @@ namespace FSM
             Database db = new Database();
             try
             {
-                string Sql = @"SELECT  [StatusID],[StatusName] FROM [msSchedulerV3].[dbo].[tbl_TicketStatus] where CompanyID= '"+ companyid +"';";
+                string Sql = @"SELECT  [StatusID],[StatusName] FROM [msSchedulerV3].[dbo].[tbl_TicketStatus] where CompanyID= '" + companyid + "';";
                 Sql += @"SELECT  [StatusID],[StatusName] FROM [msSchedulerV3].[dbo].[tbl_Status] where CompanyID='" + companyid + "';";
 
                 DataTable _ticketStatus = new DataTable();
@@ -262,7 +263,7 @@ namespace FSM
                             LEFT JOIN tbl_ServiceType AS srv ON apt.ServiceType = srv.ServiceTypeID AND apt.CompanyID = srv.CompanyID
                             LEFT JOIN tbl_Status AS sts ON TRY_CAST(apt.Status AS INT) = sts.StatusID AND apt.CompanyID = sts.CompanyID
                             LEFT JOIN tbl_TicketStatus AS tkt ON apt.TicketStatus = tkt.StatusID AND apt.CompanyID = tkt.CompanyID
-                            WHERE  apt.CustomerID='" + customerId +"' and apt.CompanyID ='"+ companyid +"';";
+                            WHERE  apt.CustomerID='" + customerId + "' and apt.CompanyID ='" + companyid + "';";
                 db.ExecuteParam(sql, out dt);
                 db.Close();
                 if (dt.Rows.Count > 0)
@@ -283,7 +284,7 @@ namespace FSM
                     }
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return appoinments;
             }
@@ -357,15 +358,17 @@ namespace FSM
 
         [WebMethod]
         [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
-        public static List<Equipment> GetSiteEquipmentData(int siteId, string customerId)
+        public static List<Equipment> GetSiteEquipmentData(int siteId, string customerGuid)
         {
+            string companyid = HttpContext.Current.Session["CompanyID"].ToString();
             var equipments = new List<Equipment>();
             Database db = new Database();
             DataTable dt = new DataTable();
             try
             {
                 db.Open();
-                string strSQL = @"SELECT * FROM [msSchedulerV3].dbo.tbl_Equipment WHERE customerId='" + customerId + "' AND SiteId='" + siteId + "' order by EquipmentName";
+                string strSQL = @"SELECT eqp.*, cus.CustomerID, cus.FirstName, cus.LastName FROM [msSchedulerV3].dbo.tbl_Equipment eqp left join [msSchedulerV3].dbo.tbl_Customer cus 
+                                on eqp.CustomerGuid = cus.CustomerGuid WHERE eqp.CustomerGuid='" + customerGuid + "' AND eqp.CompanyID = '" + companyid + "' AND eqp.SiteId='" + siteId + "';";
                 db.Open();
                 db.Execute(strSQL, out dt);
                 db.Close();
@@ -377,13 +380,24 @@ namespace FSM
                         {
                             Id = Convert.ToInt32(dr["Id"]),
                             SiteId = siteId,
-                            CustomerID = customerId,
-                            EquipmentName = dr["EquipmentName"].ToString() ?? "",
-                            SpecialInstruction = dr["SpecialInstruction"].ToString() ?? "",
+                            CustomerGuid = customerGuid,
+                            CustomerName = dr.Field<string>("FirstName") + " " + dr.Field<string>("LastName"),
+                            CustomerID = dr["CustomerID"].ToString() ?? "",
+                            Make = dr["Make"].ToString() ?? "",
+                            Barcode = dr["Barcode"].ToString() ?? "",
+                            SerialNumber = dr["SerialNumber"].ToString() ?? "",
+                            Model = dr["Model"].ToString() ?? "",
+                            Notes = dr["Notes"].ToString() ?? "",
                             EquipmentType = dr["EquipmentType"].ToString() ?? "",
                             CreatedDateTime = Convert.ToDateTime(dr["CreatedDateTime"]),
-                            WarrantyExpireDate = dr["WarrantyExpireDate"] != DBNull.Value && !string.IsNullOrEmpty(dr["WarrantyExpireDate"].ToString())
-                                   ? Convert.ToDateTime(dr["WarrantyExpireDate"]).ToString("yyyy-MM-dd") : string.Empty,
+                            WarrantyStart = dr["WarrantyStart"] != DBNull.Value && !string.IsNullOrEmpty(dr["WarrantyStart"].ToString())
+                                   ? Convert.ToDateTime(dr["WarrantyStart"]).ToString("yyyy-MM-dd") : string.Empty,
+                            WarrantyEnd = dr["WarrantyEnd"] != DBNull.Value && !string.IsNullOrEmpty(dr["WarrantyEnd"].ToString())
+                                   ? Convert.ToDateTime(dr["WarrantyEnd"]).ToString("yyyy-MM-dd") : string.Empty,
+                            LaborWarrantyStart = dr["LaborWarrantyStart"] != DBNull.Value && !string.IsNullOrEmpty(dr["LaborWarrantyStart"].ToString())
+                                   ? Convert.ToDateTime(dr["LaborWarrantyStart"]).ToString("yyyy-MM-dd") : string.Empty,
+                            LaborWarrantyEnd = dr["LaborWarrantyEnd"] != DBNull.Value && !string.IsNullOrEmpty(dr["LaborWarrantyEnd"].ToString())
+                                   ? Convert.ToDateTime(dr["LaborWarrantyEnd"]).ToString("yyyy-MM-dd") : string.Empty,
                             InstallDate = dr["InstallDate"] != DBNull.Value && !string.IsNullOrEmpty(dr["InstallDate"].ToString())
                                    ? Convert.ToDateTime(dr["InstallDate"]).ToString("yyyy-MM-dd") : string.Empty,
                         });
@@ -425,16 +439,22 @@ namespace FSM
             {
                 db.Open();
                 string strSQL = @"INSERT INTO [msSchedulerV3].dbo.tbl_Equipment
-                        (CompanyID, CustomerID, CustomerGuid, SiteId, EquipmentName, SpecialInstruction, EquipmentType, InstallDate, WarrantyExpireDate) output INSERTED.ID
-                        VALUES (@CompanyID, @CustomerID, @CustomerGuid, @SiteId, @EquipmentName, @SpecialInstruction, @EquipmentType, @InstallDate, @WarrantyExpireDate)";
+                        (CompanyID, CustomerID, CustomerGuid, SiteId, Make, Model, Notes, EquipmentType, Barcode, SerialNumber, WarrantyStart, WarrantyEnd, LaborWarrantyStart, LaborWarrantyEnd, InstallDate) output INSERTED.ID
+                        VALUES (@CompanyID, @CustomerID, @CustomerGuid, @SiteId, @Make, @Model, @Notes, @EquipmentType, @Barcode, @SerialNumber, @WarrantyStart, @WarrantyEnd, @LaborWarrantyStart, @LaborWarrantyEnd, @InstallDate)";
                 db.AddParameter("@CompanyID", companyid, SqlDbType.NVarChar);
                 db.AddParameter("@CustomerID", equipment.CustomerID, SqlDbType.NVarChar);
                 db.AddParameter("@CustomerGuid", equipment.CustomerGuid, SqlDbType.NVarChar);
-                db.AddParameter("@EquipmentName", equipment.EquipmentName, SqlDbType.NVarChar);
-                db.AddParameter("@SpecialInstruction", equipment.SpecialInstruction, SqlDbType.NVarChar);
+                db.AddParameter("@Make", equipment.Make, SqlDbType.NVarChar);
+                db.AddParameter("@Model", equipment.Model, SqlDbType.NVarChar);
+                db.AddParameter("@Notes", equipment.Notes, SqlDbType.NVarChar);
                 db.AddParameter("@SiteId", equipment.SiteId, SqlDbType.Int);
                 db.AddParameter("@EquipmentType", equipment.EquipmentType, SqlDbType.NVarChar);
-                db.AddParameter("@WarrantyExpireDate", string.IsNullOrEmpty(equipment.WarrantyExpireDate) ? DBNull.Value : (object)equipment.WarrantyExpireDate, SqlDbType.DateTime);
+                db.AddParameter("@Barcode", equipment.Barcode, SqlDbType.NVarChar);
+                db.AddParameter("@SerialNumber", equipment.SerialNumber, SqlDbType.NVarChar);
+                db.AddParameter("@WarrantyStart", string.IsNullOrEmpty(equipment.WarrantyStart) ? DBNull.Value : (object)equipment.WarrantyStart, SqlDbType.DateTime);
+                db.AddParameter("@WarrantyEnd", string.IsNullOrEmpty(equipment.WarrantyEnd) ? DBNull.Value : (object)equipment.WarrantyEnd, SqlDbType.DateTime);
+                db.AddParameter("@LaborWarrantyStart", string.IsNullOrEmpty(equipment.LaborWarrantyStart) ? DBNull.Value : (object)equipment.LaborWarrantyStart, SqlDbType.DateTime);
+                db.AddParameter("@LaborWarrantyEnd", string.IsNullOrEmpty(equipment.LaborWarrantyEnd) ? DBNull.Value : (object)equipment.LaborWarrantyEnd, SqlDbType.DateTime);
                 db.AddParameter("@InstallDate", string.IsNullOrEmpty(equipment.InstallDate) ? DBNull.Value : (object)equipment.InstallDate, SqlDbType.DateTime);
                 object result = db.ExecuteScalarData(strSQL);
                 if (result != null)
@@ -461,16 +481,29 @@ namespace FSM
             {
                 db.Open();
                 string strSQL = @"UPDATE [msSchedulerV3].dbo.tbl_Equipment SET 
-                                    EquipmentName = @EquipmentName,
+                                    Make = @Make,
                                     EquipmentType = @EquipmentType,
-                                    SpecialInstruction = @SpecialInstruction,
+                                    Barcode = @Barcode,
+                                    SerialNumber = @SerialNumber,
+                                    Model = @Model,
+                                    Notes = @Notes,
                                     InstallDate = @InstallDate,
-                                    WarrantyExpireDate = @WarrantyExpireDate WHERE Id=@Id and SiteId = @SiteId";
-                db.AddParameter("@EquipmentName", equipment.EquipmentName, SqlDbType.NVarChar);
+                                    WarrantyStart = @WarrantyStart, 
+                                    WarrantyEnd = @WarrantyEnd,
+                                    LaborWarrantyStart = @LaborWarrantyStart,
+                                    LaborWarrantyEnd = @LaborWarrantyEnd 
+                                    WHERE Id=@Id and SiteId = @SiteId";
+                db.AddParameter("@Make", equipment.Make, SqlDbType.NVarChar);
                 db.AddParameter("@EquipmentType", equipment.EquipmentType, SqlDbType.NVarChar);
-                db.AddParameter("@SpecialInstruction", equipment.SpecialInstruction, SqlDbType.NVarChar);
+                db.AddParameter("@Barcode", equipment.Barcode, SqlDbType.NVarChar);
+                db.AddParameter("@SerialNumber", equipment.SerialNumber, SqlDbType.NVarChar);
+                db.AddParameter("@Model", equipment.Model, SqlDbType.NVarChar);
+                db.AddParameter("@Notes", equipment.Notes, SqlDbType.NVarChar);
                 db.AddParameter("@InstallDate", string.IsNullOrEmpty(equipment.InstallDate) ? DBNull.Value : (object)equipment.InstallDate, SqlDbType.NVarChar);
-                db.AddParameter("@WarrantyExpireDate", string.IsNullOrEmpty(equipment.WarrantyExpireDate) ? DBNull.Value : (object)equipment.WarrantyExpireDate, SqlDbType.NVarChar);
+                db.AddParameter("@WarrantyStart", string.IsNullOrEmpty(equipment.WarrantyStart) ? DBNull.Value : (object)equipment.WarrantyStart, SqlDbType.NVarChar);
+                db.AddParameter("@WarrantyEnd", string.IsNullOrEmpty(equipment.WarrantyEnd) ? DBNull.Value : (object)equipment.WarrantyEnd, SqlDbType.NVarChar);
+                db.AddParameter("@LaborWarrantyStart", string.IsNullOrEmpty(equipment.LaborWarrantyStart) ? DBNull.Value : (object)equipment.LaborWarrantyStart, SqlDbType.NVarChar);
+                db.AddParameter("@LaborWarrantyEnd", string.IsNullOrEmpty(equipment.LaborWarrantyEnd) ? DBNull.Value : (object)equipment.LaborWarrantyEnd, SqlDbType.NVarChar);
                 db.AddParameter("@SiteId", equipment.SiteId, SqlDbType.Int);
                 db.AddParameter("@Id", equipment.Id, SqlDbType.Int);
                 success = db.UpdateSql(strSQL);

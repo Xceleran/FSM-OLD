@@ -37,9 +37,9 @@
                             <td id="siteContact">
                                 <asp:Label ID="lblContact" runat="server" /><br />
                                 <i class="fas fa-phone me-1" style="font-size: 13px;"></i>Phone:
-                                <asp:HyperLink ID="hlPhone" runat="server"  /><br />
+                                <asp:HyperLink ID="hlPhone" runat="server" /><br />
                                 <i class="fas fa-mobile-alt me-1"></i>Mobile:
-                                <asp:HyperLink ID="hlMobile" runat="server"  />
+                                <asp:HyperLink ID="hlMobile" runat="server" />
                             </td>
                         </tr>
                         <tr>
@@ -170,13 +170,13 @@
             <h2 class="h4 mb-3">Equipment</h2>
             <div class="custdet-controls mb-3 d-flex align-items-center flex-wrap gap-2">
                 <div class="input-group">
-                    <input type="text" id="equipSearch" class="form-control" placeholder="Search equipment...">
-                    <select id="equipFilter" class="form-select">
+                    <input type="text" id="equipSearch" class="form-control col-4" placeholder="Search equipment...">
+                   <%-- <select id="equipFilter" class="form-select">
                         <option value="all">All Types</option>
                         <option value="HVAC">HVAC</option>
                         <option value="Generator">Generator</option>
                         <option value="Plumbing">Plumbing</option>
-                    </select>
+                    </select>--%>
                 </div>
                 <button id="equipAdd" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#equipModal">Add Equipment</button>
             </div>
@@ -184,11 +184,17 @@
                 <table class="table table-bordered table-hover">
                     <thead class="table-light">
                         <tr>
-                            <th scope="col">Name</th>
                             <th scope="col">Type</th>
+                            <th scope="col">Serial Number</th>
+                            <th scope="col">Make</th>
+                            <th scope="col">Model</th>
+                            <th scope="col">Warranty Start</th>
+                            <th scope="col">Warranty Date</th>
+                            <th scope="col">Labor Warranty Start</th>
+                            <th scope="col">Labor Warranty Date</th>
+                            <th scope="col">Barcode</th>
                             <th scope="col">Install Date</th>
-                            <th scope="col">Warranty Expiry</th>
-                            <th scope="col">Special Instruction</th>
+                            <th scope="col">Notes</th>
                             <th scope="col">Actions</th>
                         </tr>
                     </thead>
@@ -271,29 +277,66 @@
                     <div class="modal-body">
                         <form id="equipForm">
                             <input type="number" id="equipId" value="0" hidden="hidden">
-                            <div class="mb-3">
-                                <label for="equipName" class="form-label">Equipment Name <span class="text-danger">*</span></label>
-                                <input type="text" id="equipName" class="form-control" required>
+                            <div class="row mb-4">
+                                <div class="col-6">
+                                    <label for="SerialNumber" class="form-label">Serial Number <span class="text-danger">*</span></label>
+                                    <input type="text" id="SerialNumber" class="form-control" required>
+                                </div>
+                                <div class="col-6">
+                                    <label for="equipType" class="form-label">Type <span class="text-danger">*</span></label>
+                                    <input type="text" id="equipType" class="form-control" required>
+                                    <%--                                <select id="equipType" class="form-select" required>
+        <option value="HVAC">HVAC</option>
+        <option value="Generator">Generator</option>
+        <option value="Plumbing">Plumbing</option>
+    </select>--%>
+                                </div>
+
                             </div>
-                            <div class="mb-3">
-                                <label for="equipType" class="form-label">Type <span class="text-danger">*</span></label>
-                                <select id="equipType" class="form-select" required>
-                                    <option value="HVAC">HVAC</option>
-                                    <option value="Generator">Generator</option>
-                                    <option value="Plumbing">Plumbing</option>
-                                </select>
+                            <div class="row mb-4">
+                                <div class="col-4">
+                                    <label for="Make" class="form-label">Make </label>
+                                    <input type="text" id="Make" class="form-control">
+                                </div>
+                                <div class="col-4">
+                                    <label for="Model" class="form-label">Model </label>
+                                    <input type="text" id="Model" class="form-control">
+                                </div>
+                                <div class="col-4">
+                                    <label for="Barcode" class="form-label">Barcode </label>
+                                    <input type="text" id="Barcode" class="form-control">
+                                </div>
                             </div>
-                            <div class="mb-3">
-                                <label for="equipInstallDate" class="form-label">Install Date</label>
-                                <input type="date" id="equipInstallDate" class="form-control">
+
+                            <div class="row mb-4">
+                                <div class="col-6">
+                                    <label for="WarrantyStart" class="form-label">Warranty Start</label>
+                                    <input type="date" id="WarrantyStart" class="form-control">
+                                </div>
+                                <div class="col-6">
+                                    <label for="WarrantyEnd" class="form-label">Warranty End</label>
+                                    <input type="date" id="WarrantyEnd" class="form-control">
+                                </div>
                             </div>
-                            <div class="mb-3">
-                                <label for="equipWarrantyExpiry" class="form-label">Warranty Expiry</label>
-                                <input type="date" id="equipWarrantyExpiry" class="form-control">
+                            <div class="row mb-4">
+                                <div class="col-6">
+                                    <label for="LaborWarrantyStart" class="form-label">Labor Warranty Start</label>
+                                    <input type="date" id="LaborWarrantyStart" class="form-control">
+                                </div>
+                                <div class="col-6">
+                                    <label for="LaborWarrantyEnd" class="form-label">Labor Warranty End</label>
+                                    <input type="date" id="LaborWarrantyEnd" class="form-control">
+                                </div>
                             </div>
-                            <div class="mb-3">
-                                <label for="instruction" class="form-label">Special Instruction</label>
-                                <input type="text" id="instruction" class="form-control">
+                            <div class="row mb-4">
+                                <div class="col-6">
+                                    <label for="equipInstallDate" class="form-label">Install Date</label>
+                                    <input type="date" id="equipInstallDate" class="form-control">
+                                </div>
+                                <div class="col-6">
+                                    <label for="instruction" class="form-label">Notes</label>
+                                    <input type="text" id="instruction" class="form-control">
+                                </div>
                             </div>
                         </form>
                     </div>
@@ -574,7 +617,7 @@
         function loadData() {
             loadAppoinments(customerId);
             loadInvoices(customerId);
-            loadEquipment(customerId, siteId);
+            loadEquipment(siteId, customerGuid);
         }
 
         function loadAppoinments(customerId) {
@@ -820,12 +863,12 @@
         });
 
 
-        function loadEquipment(customerId, siteId) {
+        function loadEquipment(siteId, customerGuid) {
             $.ajax({
                 url: 'CustomerDetails.aspx/GetSiteEquipmentData',
                 type: "POST",
                 contentType: "application/json; charset=utf-8",
-                data: JSON.stringify({ siteId: siteId, customerId: customerId }),
+                data: JSON.stringify({ siteId: siteId, customerGuid: customerGuid }),
                 dataType: 'json',
                 success: function (rs) {
                     equipmentData = rs.d || [];
@@ -844,18 +887,24 @@
             tbody.empty();
 
             if (pageData.length === 0) {
-                tbody.append('<tr><td colspan="7">No equipment found.</td></tr>');
+                tbody.append('<tr><td colspan="12">No equipment found.</td></tr>');
                 return;
             }
 
             pageData.forEach(item => {
                 tbody.append(`
                 <tr>
-                <td>${item.EquipmentName || ''}</td>
                 <td>${item.EquipmentType || ''}</td>
+                <td>${item.SerialNumber || ''}</td>
+                <td>${item.Make || ''}</td>
+                <td>${item.Model || ''}</td>
+                <td>${item.WarrantyStart || ''}</td>
+                <td>${item.WarrantyEnd || ''}</td>
+                <td>${item.LaborWarrantyStart || ''}</td>
+                <td>${item.LaborWarrantyEnd || ''}</td>
+                <td>${item.Barcode || ''}</td>
                 <td>${item.InstallDate || ''}</td>
-                <td>${item.WarrantyExpireDate || ''}</td>
-                <td>${item.SpecialInstruction || ''}</td>
+                <td>${item.Notes || ''}</td>
                 <td>
                 <button type=button class="btn btn-primary" onclick=editEqp(event,"${item.Id}")>Edit</button>
                 <button type=button class="btn btn-danger" onclick=deleteEqp(event,"${item.Id}")>Delete</button>
@@ -864,28 +913,35 @@
             });
         }
 
+
         function applyFiltersEqp() {
             const searchTerm = $('#equipSearch').val().trim().toLowerCase();
-            const typeFilter = $('#equipFilter').val().trim().toLowerCase();
+           // const typeFilter = $('#equipFilter').val().trim().toLowerCase();
 
             filteredEquipmentData = equipmentData.filter(item => {
 
                 // Filter by status if not "all"
-                const matchesType = typeFilter === 'all' ||
-                    (item.EquipmentType && item.EquipmentType.toLowerCase() === typeFilter);
+                //const matchesType = typeFilter === 'all' ||
+                //    (item.EquipmentType && item.EquipmentType.toLowerCase() === typeFilter);
 
                 // Search in multiple fields
                 const combinedText = [
-                    item.EquipmentName,
                     item.EquipmentType,
+                    item.SerialNumber,
+                    item.Make,
+                    item.Model,
+                    item.WarrantyStart,
+                    item.WarrantyEnd,
+                    item.LaborWarrantyStart,
+                    item.LaborWarrantyEnd,
+                    item.Barcode,
                     item.InstallDate,
-                    item.WarrantyExpireDate,
-                    item.SpecialInstruction
+                    item.Notes
                 ].join(' ').toLowerCase();
 
                 const matchesSearch = combinedText.includes(searchTerm);
 
-                return matchesType && matchesSearch;
+                return matchesSearch;
             });
 
             currentPage = 1;
@@ -905,9 +961,9 @@
             applyFiltersEqp();
         });
 
-        $('#equipFilter').on('change', function () {
-            applyFiltersEqp();
-        });
+        //$('#equipFilter').on('change', function () {
+        //    applyFiltersEqp();
+        //});
 
 
         function equipmentSave(event) {
@@ -918,11 +974,17 @@
                     SiteId: siteId,
                     CustomerID: customerId,
                     CustomerGuid: customerGuid,
-                    SpecialInstruction: $('#instruction').val().trim(),
-                    WarrantyExpireDate: $('#equipWarrantyExpiry').val().trim(),
+                    Notes: $('#instruction').val().trim(),
+                    WarrantyStart: $('#WarrantyStart').val().trim(),
+                    WarrantyEnd: $('#WarrantyEnd').val().trim(),
+                    LaborWarrantyStart: $('#LaborWarrantyStart').val().trim(),
+                    LaborWarrantyEnd: $('#LaborWarrantyEnd').val().trim(),
                     InstallDate: $('#equipInstallDate').val().trim(),
-                    EquipmentName: $('#equipName').val().trim(),
+                    SerialNumber: $('#SerialNumber').val().trim(),
                     EquipmentType: $('#equipType').val().trim(),
+                    Barcode: $('#Barcode').val().trim(),
+                    Model: $('#Model').val().trim(),
+                    Make: $('#Make').val().trim(),
                 };
 
                 let message = "saved";
@@ -942,7 +1004,7 @@
                             closeModal('equipModal');
                             document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
                             showToast("Equipment " + message + " successfully!");
-                            loadEquipment(customerId, siteId);
+                            loadEquipment(siteId, customerGuid);
                         }
                         else {
                             showToast("Something went wrong!");
@@ -961,11 +1023,17 @@
             if (equip) {
                 document.getElementById('equipModalLabel').textContent = 'Edit Equipment';
                 document.getElementById('equipId').value = data;
-                document.getElementById('equipName').value = equip.EquipmentName;
+                document.getElementById('SerialNumber').value = equip.SerialNumber;
                 document.getElementById('equipType').value = equip.EquipmentType;
+                document.getElementById('Barcode').value = equip.Barcode;
+                document.getElementById('Model').value = equip.Model;
+                document.getElementById('Make').value = equip.Make;
                 document.getElementById('equipInstallDate').value = equip.InstallDate || '';
-                document.getElementById('equipWarrantyExpiry').value = equip.WarrantyExpireDate || '';
-                document.getElementById('instruction').value = equip.SpecialInstruction || '';
+                document.getElementById('WarrantyStart').value = equip.WarrantyStart || '';
+                document.getElementById('WarrantyEnd').value = equip.WarrantyEnd || '';
+                document.getElementById('LaborWarrantyStart').value = equip.LaborWarrantyStart || '';
+                document.getElementById('LaborWarrantyEnd').value = equip.LaborWarrantyEnd || '';
+                document.getElementById('instruction').value = equip.Notes || '';
                 const modal = new bootstrap.Modal(document.getElementById('equipModal'));
                 modal.show();
             }
@@ -983,7 +1051,7 @@
                     success: function (rs) {
                         if (rs.d) {
                             showToast('Deleted Successfully');
-                            loadEquipment(customerId, siteId)
+                            loadEquipment(siteId, customerGuid)
                         }
                     },
                     error: function (error) { }
@@ -997,8 +1065,8 @@
             let errorMessage = "";
 
             // Required field validation
-            if ($("#equipName").val().trim() === "") {
-                errorMessage += "Equipment Name is required.\n";
+            if ($("#SerialNumber").val().trim() === "") {
+                errorMessage += "Serial Number is required.\n";
                 isValid = false;
             }
 
