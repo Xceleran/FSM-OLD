@@ -5,8 +5,8 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/2.2.2/css/dataTables.dataTables.min.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/select/3.0.0/css/select.dataTables.min.css">
 
-     <!-- Local Styles and Scripts -->
-   <link rel="stylesheet" href="Content/customer.css">
+    <!-- Local Styles and Scripts -->
+    <link rel="stylesheet" href="Content/customer.css">
 
 
     <div class="cust-page-container">
@@ -50,6 +50,8 @@
                         <div class="cust-section-content" id="contact">
                             <p class="cust-info-text"><span class="cust-info-label">Email:</span> <span class="cust-info-value" id="customerEmail">-</span></p>
                             <p class="cust-info-text"><span class="cust-info-label">Phone:</span> <span class="cust-info-value" id="customerPhone">-</span></p>
+                            <p class="cust-info-text"><span class="cust-info-label">Address:</span> <span class="cust-info-value" id="customerAddress">-</span></p>
+                            <p class="cust-info-text"><span class="cust-info-label">Job Title:</span> <span class="cust-info-value" id="customerJobTitle">-</span></p>
                         </div>
                     </div>
 
@@ -208,10 +210,10 @@
             </form>
         </div>
     </div>
-        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/2.2.2/js/dataTables.min.js"></script>
     <script type="text/javascript" src="https://cdn.datatables.net/select/3.0.0/js/dataTables.select.min.js"></script>
-      <script src="Scripts/customer.js"></script>
+    <script src="Scripts/customer.js"></script>
     <script>
 
 </script>

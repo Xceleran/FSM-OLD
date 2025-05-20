@@ -521,9 +521,6 @@ th.sortable {
     overflow: hidden;
 }
 
-    .unscheduled-panel .card-body {
-        overflow: auto;
-    }
 
     .unscheduled-panel.collapsed {
         /*   width: 0;
@@ -535,10 +532,14 @@ th.sortable {
 
 .unscheduled-list {
     height: 500px;
-    overflow-y: auto;
+    overflow-y: scroll;
     transition: opacity 0.3s ease;
+    
 }
-
+[data-theme="dark"] .unscheduled-list {
+    scrollbar-width: thin;
+    scrollbar-color: #d1d5db #646e79;
+}
 .unscheduled-panel.collapsed + #toggleUnscheduledBtn,
 .unscheduled-panel.collapsed + #toggleUnscheduledBtnResource {
     right: 0;

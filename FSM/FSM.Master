@@ -171,6 +171,8 @@
         <div class="page-container">
             <div class="right-logo">
                 <img src="https://testsite.myserviceforce.com/fsm/images/FMSXceleran.png" alt="Xceleran Logo" class="right-logo-img">
+       <%--          <img src="https://central.xceleran.com/fsm/images/FMSXceleran.png" alt="Xceleran Logo" class="right-logo-img">--%>
+             
             </div>
             <aside id="sidebar" class="sidebar">
                 <div class="sidebar-logo">
@@ -250,6 +252,8 @@
                 <div class="sidebar-footer">
                     <h6 class="logo-title">Powered by</h6>
                     <img id="sidebar-footer-img" src="https://testsite.myserviceforce.com/fsm/images/xceleranwhite.png" alt="FMSXceleran Logo" class="sidebar-footer-img">
+                   <%-- <img id="sidebar-footer-img" src="https://central.xceleran.com/fsm/images/xceleranwhite.png" alt="FMSXceleran Logo" class="sidebar-footer-img">--%>
+                   
                 </div>
             </aside>
 
@@ -326,7 +330,7 @@
     window.isCalendarExpanded = false;
 
     // Initial session timeout settings
-    let SESSION_TIMEOUT_DURATION = 10 * 60 * 1000; // Default 10 minutes in milliseconds
+    let SESSION_TIMEOUT_DURATION = 60 * 60 * 1000; // Default 10 minutes in milliseconds
     const MODAL_DISPLAY_BEFORE_TIMEOUT = 30 * 1000; // Show modal 30 seconds before timeout
     let timeoutTimer, countdownTimer;
     let countdownTimeRemaining = MODAL_DISPLAY_BEFORE_TIMEOUT;
