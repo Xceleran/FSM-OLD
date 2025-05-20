@@ -108,11 +108,11 @@ namespace FSM
                         appoinment.RequestDate = row.Field<string>("RequestDate") ?? "";
                         appoinment.TimeSlot = row.Field<string>("TimeSlot") ?? "";
                         appoinment.AppoinmentDate = row.Field<string>("RequestDate") ?? "";
+                        appoinment.StartDateTime = Convert.ToDateTime(row["StartDateTime"]).ToString("MM/dd/yyyy hh:mm tt");
+                        appoinment.EndDateTime = Convert.ToDateTime(row["EndDateTime"]).ToString("MM/dd/yyyy hh:mm tt");
 
                         int serviceTypeID = Convert.ToInt32(row.Field<string>("ServiceType"));
-
                         appoinment.Duration = CalculateDuration(serviceTypeID);
-
                         appoinments.Add(appoinment);
                     }
                 }
@@ -344,7 +344,10 @@ namespace FSM
                                 [Status] = @Status,
                                 [ResourceID] = @ResourceID, 
                                 [TicketStatus] = @TicketStatus, 
-                                [Note] = @Note 
+                                [Note] = @Note,
+                                [StartDateTime] = @StartDateTime,
+                                [EndDateTime] = @EndDateTime
+
 
                             WHERE [ApptID] = @ApptID and
                                   [CustomerID] = @CustomerID and
@@ -361,6 +364,8 @@ namespace FSM
                 db.Command.Parameters.AddWithValue("@TicketStatus", appointment.TicketStatus);
                 db.Command.Parameters.AddWithValue("@Note", appointment.Note);
                 db.Command.Parameters.AddWithValue("@ResourceID", appointment.ResourceID);
+                db.Command.Parameters.AddWithValue("@StartDateTime", appointment.StartDateTime);
+                db.Command.Parameters.AddWithValue("@EndDateTime", appointment.EndDateTime);
                 success = db.UpdateSql(strSQL);
             }
 

@@ -20,6 +20,8 @@ const timeSlots = {
 
 var allTimeSlots = [];
 var resources = [];
+var timerequired_Hour = 0;
+var timerequired_Minute = 0;
 
 // Fallback function for SweetAlert2
 const showAlert = (options) => {
@@ -960,10 +962,13 @@ function openEditModal(id, date, time, resource, confirm) {
     if (!a) return;
     currentEditId = id;
     const form = document.getElementById("editForm");
+    form.querySelector("[name='duration']").value = a.Duration || 0;
     form.querySelector("[id='AppoinmentId']").value = parseInt(a.AppoinmentId);
     form.querySelector("[id='CustomerID']").value = parseInt(a.CustomerID);
     form.querySelector("[name='customerName']").value = a.CustomerName;
     form.querySelector("[name='note']").value = a.Note;
+    form.querySelector("[id='txt_StartDate']").value = a.StartDateTime;
+    form.querySelector("[id='txt_EndDate']").value = a.EndDateTime;
     const service_select = form.querySelector("[id='MainContent_ServiceTypeFilter_Edit']");
     getSelectedId(service_select, a.ServiceType || "");
     const select = form.querySelector("[name='resource']");
@@ -983,6 +988,8 @@ function openEditModal(id, date, time, resource, confirm) {
     }
     if (time) {
         form.querySelector("[name='timeSlot']").value = time;
+        extractHoursAndMinutes(a.Duration);
+        calculateStartEndTime();
     } else {
         form.querySelector("[name='timeSlot']").value = a.TimeSlot;
     }
@@ -1003,12 +1010,13 @@ function openEditModal(id, date, time, resource, confirm) {
             return;
         } else {
             form.querySelector("[name='date']").value = date;
+            calculateDate(date);
         }
     } else {
         form.querySelector("[name='date']").value = a.RequestDate || '';
     }
 
-    form.querySelector("[name='duration']").value = a.Duration || 0;
+    
     form.querySelector("[name='address']").value = a.Address1 || '';
     const status_select = form.querySelector("[id='MainContent_StatusTypeFilter_Edit']");
     getSelectedId(status_select, a.AppoinmentStatus || "");
@@ -1022,7 +1030,6 @@ function openEditModal(id, date, time, resource, confirm) {
     service_select.disabled = isClosed;
     status_select.disabled = isClosed;
     ticket_status.disabled = isClosed;
-
     window.editModalInstance.show();
 }
 
@@ -1422,7 +1429,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderMapView();
             });
 
-            simulateRealTimeUpdates();
+           // simulateRealTimeUpdates();
         })
         .catch((error) => {
             console.error("Failed to load initial data:", error);
@@ -1661,6 +1668,8 @@ function saveAppoinmentData(e) {
     appointment.Status = form.get("ctl00$MainContent$StatusTypeFilter_Edit");
     appointment.TicketStatus = form.get("ctl00$MainContent$TicketStatusFilter_Edit");
     appointment.Note = form.get("note");
+    appointment.StartDateTime = form.get("txt_StartDate");
+    appointment.EndDateTime = form.get("txt_EndDate");
 
     $.ajax({
         type: "POST",
@@ -1710,7 +1719,7 @@ function saveAppoinmentData(e) {
 
 function calculateTimeRequired(e) {
     e.preventDefault();
-    const selectedValue = e.target.value;
+    const selectedValue = $('#MainContent_ServiceTypeFilter_Edit').val();
     if (selectedValue) {
         $.ajax({
             type: "POST",
@@ -1722,10 +1731,63 @@ function calculateTimeRequired(e) {
                 console.log(response.d);
                 const form = document.getElementById("editForm");
                 form.querySelector("[name='duration']").value = response.d || 0;
+                extractHoursAndMinutes(response.d);
+                calculateStartEndTime();
             },
             error: function (xhr, status, error) {
                 console.error("Error updating details: ", error);
             }
         });
     }
+}
+
+function updateDate(e) {
+    e.preventDefault();
+    const selectedValue = e.target.value;
+    calculateDate(selectedValue);
+}
+function calculateDate(date) {
+    var startDate = $("#txt_StartDate").val().split(" ");
+    var endDate = $("#txt_EndDate").val().split(" ");
+    startDate[0] = moment(date, "YYYY-MM-DD").format("MM/DD/YYYY");
+    endDate[0] = moment(date, "YYYY-MM-DD").format("MM/DD/YYYY");
+    $("#txt_StartDate").val(startDate.join(' '));
+    $("#txt_EndDate").val(endDate.join(' '));
+}
+
+function calculateStartEndTime() {
+    var time_slot = $("#time_slot").val();
+    for (var i = 0; i < allTimeSlots.length; i++) {
+        if (allTimeSlots[i].TimeBlockSchedule == time_slot) {
+            const slot = $("#txt_StartDate").val().split(" ")
+            $("#txt_StartDate").val(slot[0] + ' ' + allTimeSlots[i].StartTime);
+            const slot2 = $("#txt_EndDate").val().split(" ")
+            $("#txt_EndDate").val(slot2[0] + ' ' + allTimeSlots[i].EndTime);
+        }
+    }
+    var _end = moment($("#txt_StartDate").val(), 'MM/DD/YYYY hh:mm A');
+    if (timerequired_Hour > 0) {
+        _end = _end.add(timerequired_Hour, 'hours');
+    }
+    if (timerequired_Minute > 0) {
+        _end = _end.add(timerequired_Minute, 'minutes');
+        $("#txt_EndDate").val(moment(_end, "MM/DD/YYYY hh:mm A").format("MM/DD/YYYY hh:mm a"));
+    }
+    if (timerequired_Minute = 0 && timerequired_Minute == 0) {}
+    else {
+        $("#txt_EndDate").val(moment(_end, "MM/DD/YYYY hh:mm A").format("MM/DD/YYYY hh:mm a"));
+    }
+}
+
+function extractHoursAndMinutes(timeString) {
+    const hourMatch = timeString.match(/(\d+)\s*Hr/);
+    const minuteMatch = timeString.match(/(\d+)\s*Min/);
+    if (hourMatch) {
+        timerequired_Hour = parseInt(hourMatch[1], 10);
+    }
+    $('#timerequired_Hour').val(timerequired_Hour);
+    if (minuteMatch) {
+        timerequired_Minute = parseInt(minuteMatch[1], 10);
+    }
+    $('#timerequired_Minute').val(timerequired_Hour);
 }

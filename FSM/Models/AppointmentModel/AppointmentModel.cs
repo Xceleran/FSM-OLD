@@ -10,6 +10,9 @@ namespace FSM.Models.AppoinmentModel
     {
         public string AppoinmentId { get; set; }
         public string AppoinmentDate { get; set; }
+
+        public string StartDateTime { get; set; }
+        public string EndDateTime { get; set; }
         public string RequestDate { get; set; }
         public string ServiceType { get; set; }
         public string ResourceName { get; set; }

@@ -12,7 +12,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
+    <script src="Scripts/moment.js"></script>
     <!-- Local Styles and Scripts -->
     <link rel="stylesheet" href="Content/appointments.css">
 
@@ -392,6 +392,8 @@
                     <div class="modal-body">
                         <input type="hidden" id="AppoinmentId" name="AppoinmentId">
                         <input type="hidden" id="CustomerID" name="CustomerID">
+                        <input type="hidden" id="timerequired_Hour" name="timerequired_Hour">
+                        <input type="hidden" id="timerequired_Minute" name="timerequired_Minute">
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label">Customer Name</label>
@@ -405,7 +407,7 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Date</label>
-                                <input type="date" name="date" class="form-control" id="dateInput" required>
+                                <input type="date" name="date" class="form-control" id="dateInput" required onchange="updateDate(event)">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Resource</label>
@@ -415,7 +417,7 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Time Slot</label>
-                                <select id="time_slot" name="timeSlot" class="form-select" required>
+                                <select id="time_slot" name="timeSlot" class="form-select" required onchange="calculateTimeRequired(event)">
                                     <option value="morning">Morning</option>
                                     <option value="afternoon">Afternoon</option>
                                     <option value="emergency">Emergency</option>
@@ -423,7 +425,16 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Time Required</label>
-                                <input type="text" name="duration" class="form-control" readonly="readonly" />
+                                <input type="text" id="duration" name="duration" class="form-control" readonly="readonly" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Appointment Start Date</label>
+                                <input type="text" name="txt_StartDate" class="form-control" id="txt_StartDate" readonly="readonly">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Appointment End Date</label>
+                                <input type="text" name="txt_EndDate" class="form-control" id="txt_EndDate" readonly="readonly">
+                                <small id="customer_EndDate" style="display:none;" class="mb-3 text-warning">End date time cant be smaller than start date time.</small>
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Address</label>
