@@ -578,13 +578,13 @@ p.cust-site-active {
     }
 
 [data-theme="dark"] .cust-modal-submit {
-    background: rgba(255, 255, 255, 0.12);
+    background: rgb(94 124 253);
     color: var(--text-gray-700);
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
     [data-theme="dark"] .cust-modal-submit:hover {
-        background: rgb(12, 23, 54);
+        background: rgb(66, 89, 186);
     }
 
 .cust-modal-cancel {

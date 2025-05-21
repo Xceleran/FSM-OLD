@@ -36,16 +36,17 @@
         }
 
         .hero-section-mockup {
-            background: var(--bg-light);
+            position: relative;
             border-radius: 8px;
             padding: 2rem;
-            margin: 5rem auto;
+            margin-top: 5rem;
             box-shadow: var(--shadow-lg);
             display: flex;
-            flex-direction: row;
+            flex-direction: column;
+            justify-content: flex-start;
             align-items: center;
-            justify-content: center;
-            gap: 2rem;
+            height: 500px;
+            overflow: hidden;
         }
 
         [data-theme="dark"] .hero-section-mockup {
@@ -54,82 +55,69 @@
             -webkit-backdrop-filter: blur(8px);
         }
 
+        .hero-image-mockup {
+            max-width: 100%;
+            max-height: 80%; /* Prevent image from taking full height on mobile */
+            border-radius: 8px;
+            position: absolute;
+            z-index: 1;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -40%); /* Center the image */
+        }
+
         .hero-text-mockup {
-            flex: 1;
-            text-align: left;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            margin-bottom: 1rem;
+            transform: translate(40%, 50%);
+        }
+
+        [data-theme="dark"] .page-title-mockup {
+            color: rgb(94 124 253);
         }
 
         .page-title-mockup {
-            font-size: clamp(4rem, 5vw, 3rem);
+            font-size: clamp(2rem, 5vw, 3rem);
             font-weight: 700;
-            color: var(--text-blue-700);
-            margin-bottom: -8px;
+            color: #0d6efd;
+            margin-bottom: -0.5rem;
+        }
+
+        [data-theme="dark"] .subtitle-mockup {
+            color: white;
         }
 
         .subtitle-mockup {
-            font-size: clamp(4.25rem, 3vw, 1.75rem);
+            font-size: 40px;
             font-weight: 400;
-            color: var(--text-gray-700);
+            color: #305072;
             margin-bottom: 1rem;
         }
-
-        .hero-image-mockup {
-            max-width: 100%;
-            width: clamp(200px, 40vw, 600px);
-            height: auto;
-            border-radius: 8px;
-            object-fit: cover;
-        }
-
-        .logo-image-mockup {
-            max-width: 80px;
-            height: auto;
-            border-radius: 4px;
-            content: url('https://testsite.myserviceforce.com/fsm/images/xceleran.png');
-            /*content: url('https://central.xceleran.com/fsm/images//xceleran.png');*/
-            margin: 0 auto;
-            display: block;
-        }
-
-        [data-theme="dark"] .logo-image-mockup {
-            content: url('https://testsite.myserviceforce.com/fsm/images/xceleranwhite.png');        
-           /* content: url('https://central.xceleran.com/fsm/images//xceleranwhite.png');*/
-        }
-
-  
 
         /* Responsive Design */
         @media (max-width: 992px) {
             .hero-section-mockup {
-                flex-direction: column;
-                text-align: center;
+                height: 400px;
                 padding: 1.5rem;
-                gap: 1.5rem;
+                margin: 3rem auto; /* Reduce margin for medium screens */
             }
 
             .hero-text-mockup {
-                text-align: center;
-            }
-
-            .hero-image-mockup {
-                width: 100%;
-                max-width: 500px;
+                transform: translate(0%, 0%);
             }
 
             .page-title-mockup {
                 font-size: clamp(1.75rem, 4vw, 2.5rem);
-
             }
 
             .subtitle-mockup {
                 font-size: clamp(1rem, 2.5vw, 1.5rem);
             }
 
-            .logo-image-mockup {
-                max-width: 60px;
+            .hero-image-mockup {
+                max-height: 70%; /* Slightly smaller on medium screens */
             }
         }
 
@@ -141,30 +129,21 @@
             .hero-section-mockup {
                 margin: 1rem auto;
                 padding: 1rem;
+                height: 300px; /* Reduced height for mobile */
             }
-             .page-title-mockup {
-        margin-bottom: 1rem;
 
- }
-         
+            .page-title-mockup {
+                font-size: clamp(1.5rem, 3.5vw, 2rem); /* Smaller font for mobile */
+                margin-bottom: 0.5rem;
+            }
+
+            .subtitle-mockup {
+                font-size: clamp(0.875rem, 2vw, 1.25rem); /* Smaller font for mobile */
+            }
+
             .hero-image-mockup {
-                max-width: 100%;
-            }
-
-            .dashboard-content-mockup {
-                padding: 1rem;
-            }
-
-            .chart-bar-mockup {
-                height: 6rem;
-            }
-
-            .chart-bar-mockup .bars-mockup {
-                height: 5rem;
-            }
-
-            .chart-bar-mockup .bar-mockup {
-                width: 1rem;
+                max-height: 60%; /* Smaller image on mobile */
+                max-width: 90%; /* Ensure image fits within mobile width */
             }
         }
     </style>
@@ -172,16 +151,13 @@
     <main class="main-content-mockup container-fluid container-fluid-mockup">
         <!-- Hero Section -->
         <section class="hero-section-mockup">
-                <img src="https://testsite.myserviceforce.com/fsm/images/fsmmain.png" alt="Technician with Van" class="hero-image-mockup">
-           <%-- <img src="https://central.xceleran.com/fsm/images/fsmmain.png" alt="Technician with Van" class="hero-image-mockup">--%>
-
             <div class="hero-text-mockup">
                 <h1 class="page-title-mockup">Welcome to FSM</h1>
                 <p class="subtitle-mockup">Field Service Module</p>
             </div>
-        
+            <img src="https://testsite.myserviceforce.com/fsm/images/fsmmain.png" alt="Technician with Van" class="hero-image-mockup">
+            <%--  <img src="https://central.xceleran.com/fsm/images/fsmmain.png" alt="Technician with Van" class="hero-image-mockup">--%>
         </section>
-
     </main>
 
     <!-- Bootstrap JS CDN -->

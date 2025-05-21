@@ -405,7 +405,6 @@ th.sortable {
 .appointment-card {
     border: 1px solid #e2e8f0;
     border-radius: 8px;
-    padding: 12px;
     margin-bottom: 12px;
     background: #f9fafb;
     cursor: grab;
@@ -534,6 +533,7 @@ th.sortable {
     height: 500px;
     overflow-y: scroll;
     transition: opacity 0.3s ease;
+    padding: 5px;
     
 }
 [data-theme="dark"] .unscheduled-list {
