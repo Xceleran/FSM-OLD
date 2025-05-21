@@ -259,7 +259,7 @@
     }
 
     .table.list-view-table {
-        min-width: 340px; /* Adjust minimum width for smaller screens */
+        min-width: 294px; /* Adjust minimum width for smaller screens */
     }
 
         /* Stack table as cards on mobile */
@@ -333,6 +333,17 @@
         .table.list-view-table tbody td {
             padding: 6px 10px;
         }
+    .date-nav {
+        flex-direction: column;
+    }
+
+    .prevperiod {
+        transform: translate(-90%, 331%);
+    }
+
+    .nextperiod {
+        transform: translate(90%, 0%);
+    }
 }
 
 /* Sorting Arrow Adjustments */
@@ -1364,17 +1375,18 @@ button.btn.btn-primary.ms-2 {
 /*View Icon*/
 [data-theme="dark"] button.btn.btn-sm.btn-outline-primary.view-appointment:hover {
     background: #818cf8;
+    border: 1px solid #818cf8;
 }
 
 [data-theme="dark"] button.btn.btn-sm.btn-outline-primary.view-appointment {
-    border: 1px solid #818cf8;
+    border: 1px solid #ffffff;
 }
 [data-theme="dark"] i.fas.fa-eye {
-    color: #a1a9f4;
-}
-[data-theme="dark"] i.fas.fa-eye:hover {
     color: #ffffff;
 }
+    [data-theme="dark"] i.fas.fa-eye:hover {
+        color: #ffffff;
+    }
 [data-theme="dark"] .custom-link a {
     color: #96a0ff !important;
     text-decoration: none;

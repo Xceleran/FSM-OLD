@@ -104,6 +104,7 @@
 /* DataTable Layout */
 div.dt-container div.dt-layout-row {
     padding: 15px;
+    overflow: auto;
 }
 
 /* Customer Section */
