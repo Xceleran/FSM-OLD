@@ -100,7 +100,8 @@
                     <div class="container">
                         <div class="invoice-header">
                             <div>
-                                <img src="https://testsite.myserviceforce.com/fsm/images/xceleran.png" alt="Xceleran Logo" class="right-logo-img">
+                                <%--<img src="https://testsite.myserviceforce.com/fsm/images/xceleran.png" alt="Xceleran Logo" class="right-logo-img">--%>
+                                <img src="https://central.xceleran.com/fsm/images/xceleran.png" alt="Xceleran Logo" class="right-logo-img">
                             </div>
                             <div class="company-info">
                                 <p></p>
