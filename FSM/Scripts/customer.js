@@ -155,6 +155,15 @@ function generateCustomerDetails(data) {
         document.getElementById('customerName').textContent = data.FirstName + " " + data.LastName;
         document.getElementById('customerEmail').textContent = data.Email || '-';
         document.getElementById('customerPhone').textContent = data.Phone || '-';
+        // Construct and display Address
+        var address = [
+            data.Address1,
+            data.City,
+            data.State,
+            data.ZipCode
+        ].filter(Boolean).join(', '); // Join non-empty fields with commas
+        document.getElementById('customerAddress').textContent = address || '-';
+        document.getElementById('customerJobTitle').textContent = data.JobTitle || '-';
         document.getElementById('CustomerID').value = data.CustomerID;
         document.getElementById('CustomerGuid').value = data.CustomerGuid;
         loadCustomerSiteData(data.CustomerID);

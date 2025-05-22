@@ -136,6 +136,7 @@ img.right-logo-img {
     height: 100vh;
     z-index: 50;
     transition: transform 0.3s ease-in-out;
+    z-index: 1005;
 }
 
 .sidebar-logo {
@@ -322,7 +323,7 @@ img.right-logo-img {
     position: absolute;
     top: 10px;
     left: calc(256px + 10px);
-    z-index: 1000;
+    z-index: 1006;
     transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -427,7 +428,7 @@ img.right-logo-img {
     width: 18px;
     height: 18px;
     border-radius: 50%;
-    top: 5px;
+    top: 4px;
     transition: 1s;
 }
 

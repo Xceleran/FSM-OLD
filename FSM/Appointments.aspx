@@ -12,6 +12,8 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.datatables.net/responsive/3.0.2/js/dataTables.responsive.min.js"></script>
+<link rel="stylesheet" href="https://cdn.datatables.net/responsive/3.0.2/css/responsive.dataTables.min.css">
     <script src="Scripts/moment.js"></script>
     <!-- Local Styles and Scripts -->
     <link rel="stylesheet" href="Content/appointments.css">
@@ -267,9 +269,9 @@
                                 </li>
                             </ul>
                         </div>
-                        <div class="map-controls mt-2">
-                            <button id="mapOptimizeRouteBtn" class="btn btn-primary">Optimize Route</button>
-                            <button id="mapAddCustomMarkerBtn" class="btn btn-primary ms-2">Add Custom Marker</button>
+                        <div class="map-controls mt-2 ">
+                            <button id="mapOptimizeRouteBtn" class="btn btn-primary mb-3">Optimize Route</button>
+                            <button id="mapAddCustomMarkerBtn" class="btn btn-primary mb-3">Add Custom Marker</button>
                         </div>
                         <div class="map-status-legend mt-2">
                             <span class="status-indicator pending"></span>Pending

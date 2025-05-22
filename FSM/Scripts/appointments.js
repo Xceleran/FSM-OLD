@@ -291,7 +291,7 @@ function renderDateNav(containerId, selectedDate) {
     if (view === "month") daysToShow = 0;
 
     let html = `
-        <button class="btn btn-primary" onclick="prevPeriod('${containerId}')"><i class="fas fa-chevron-left"></i></button>
+        <button class="btn btn-primary prevperiod" onclick="prevPeriod('${containerId}')"><i class="fas fa-chevron-left"></i></button>
     `;
 
     if (daysToShow > 0) {
@@ -317,7 +317,7 @@ function renderDateNav(containerId, selectedDate) {
     }
 
     html += `
-        <button class="btn btn-primary" onclick="nextPeriod('${containerId}')"><i class="fas fa-chevron-right"></i></button>
+        <button class="btn btn-primary nextperiod" onclick="nextPeriod('${containerId}')"><i class="fas fa-chevron-right"></i></button>
         <button class="btn btn-primary ms-2" onclick="gotoToday('${containerId}')">Today</button>
     `;
     container.html(html);

@@ -5,18 +5,145 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/2.2.2/css/dataTables.dataTables.min.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/select/3.0.0/css/select.dataTables.min.css">
 
-     <!-- Local Styles and Scripts -->
-   <link rel="stylesheet" href="Content/customer.css">
+    <!-- Local Styles and Scripts -->
+    <link rel="stylesheet" href="Content/customer.css">
 
+    <style>
+         [data-theme="dark"] .cust-modal-label{
+             color: white !important;
+         }
+        /* Close Icon for Modals */
+        .cust-modal-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            font-size: 24px;
+            color: var(--text-gray-800);
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .cust-modal-close:hover {
+            color: var(--text-orange-700);
+        }
+
+        [data-theme="dark"] .cust-modal-close {
+            color: var(--text-gray-700);
+        }
+
+        [data-theme="dark"] .cust-modal-close:hover {
+            color: rgb(185, 215, 244);
+        }
+
+        /* Updated Modal Buttons Alignment */
+        .cust-modal-btns {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        /* Modal Content Adjustments for Light/Dark Mode */
+        .cust-modal-content {
+            background: var(--bg-white);
+            padding: 16px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            border: 1px solid var(--bg-gray-300);
+            box-shadow: var(--shadow-lg);
+            position: relative;
+        }
+
+        [data-theme="dark"] .cust-modal-content {
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .cust-modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--text-gray-800);
+        }
+
+        [data-theme="dark"] .cust-modal-title {
+            color: var(--text-gray-700);
+        }
+
+        /* Toggle Switch Styles */
+        .cust-toggle-switch {
+            display: flex;
+            align-items: start;
+            flex-direction: row;
+            gap: 8px;
+        }
+
+        .cust-toggle-switch input[type="checkbox"] {
+            position: relative;
+            width: 45px;
+            height: 25px;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background: var(--bg-gray-300);
+            border-radius: 20px;
+            outline: none;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .cust-toggle-switch input[type="checkbox"]:checked {
+            background: var(--text-orange-500);
+        }
+
+        .cust-toggle-switch input[type="checkbox"]::before {
+            content: '';
+            position: absolute;
+            width: 17px;
+            height: 17px;
+            border-radius: 50%;
+            top: 3px;
+            left: 2px;
+            background: var(--bg-white);
+            transition: transform 0.3s ease;
+        }
+
+        .cust-toggle-switch input[type="checkbox"]:checked::before {
+            transform: translateX(20px);
+        }
+
+        [data-theme="dark"] .cust-toggle-switch input[type="checkbox"] {
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        [data-theme="dark"] .cust-toggle-switch input[type="checkbox"]:checked {
+            background: rgb(94, 124, 253);
+        }
+
+        [data-theme="dark"] .cust-toggle-switch input[type="checkbox"]::before {
+            background: var(--text-gray-700);
+        }
+
+        .cust-toggle-switch label {
+            color: var(--text-gray-800);
+            font-weight: 500;
+        }
+
+        [data-theme="dark"] .cust-toggle-switch label {
+            color: var(--text-gray-700);
+        }
+    </style>
 
     <div class="cust-page-container">
         <!-- Page Header -->
         <header class="cust-header mt-3">
             <h1 class="cust-title">Customers</h1>
-            <%-- <div class="cust-search-container">
-                <input type="text" placeholder="Search customers..." class="cust-search-input" id="customerSearch" />
-                <button class="cust-add-btn" id="addCustomerBtn">+ Add Customer</button>
-            </div>--%>
         </header>
 
         <!-- Customer Section -->
@@ -38,10 +165,6 @@
             <div class="cust-details-container">
                 <div class="cust-details-header">
                     <h2 class="cust-details-title" id="customerName">Select a Customer</h2>
-                    <%--<div class="cust-details-btns">
-                        <button class="cust-edit-btn" id="editCustomerBtn" disabled>Edit</button>
-                        <button class="cust-message-btn" id="messageCustomerBtn" disabled>Message</button>
-                    </div>--%>
                 </div>
                 <div class="cust-details-content">
                     <!-- Contact Info -->
@@ -50,6 +173,8 @@
                         <div class="cust-section-content" id="contact">
                             <p class="cust-info-text"><span class="cust-info-label">Email:</span> <span class="cust-info-value" id="customerEmail">-</span></p>
                             <p class="cust-info-text"><span class="cust-info-label">Phone:</span> <span class="cust-info-value" id="customerPhone">-</span></p>
+                            <p class="cust-info-text"><span class="cust-info-label">Address:</span> <span class="cust-info-value" id="customerAddress">-</span></p>
+                            <p class="cust-info-text"><span class="cust-info-label">Job Title:</span> <span class="cust-info-value" id="customerJobTitle">-</span></p>
                         </div>
                     </div>
 
@@ -75,7 +200,9 @@
                                     <a href="CustomerDetails.aspx?siteId=2" class="cust-site-view-link">View Details</a>
                                 </div>
                             </div>
-                            <button class="cust-site-add-btn" id="addSiteBtn">+ Add Site</button>
+                          <div class="d-flex justify-content-end mb-3">
+  <button class="btn btn-primary" id="addSiteBtn">+ Add Site</button>
+</div>
                         </div>
                     </div>
                 </div>
@@ -86,6 +213,7 @@
     <!-- Add Customer Modal -->
     <div class="cust-modal" id="addCustomerModal">
         <div class="cust-modal-content">
+            <button class="cust-modal-close" id="closeAddCustomerIcon">×</button>
             <h2 class="cust-modal-title">Add New Customer</h2>
             <form id="addCustomerForm" class="cust-modal-form">
                 <div class="cust-modal-field">
@@ -105,8 +233,8 @@
                     <input type="text" name="phone" class="cust-modal-input" />
                 </div>
                 <div class="cust-modal-btns">
-                    <button type="submit" class="cust-modal-submit">Add Customer</button>
                     <button type="button" class="cust-modal-cancel" id="closeAddCustomer">Cancel</button>
+                    <button type="submit" class="cust-modal-submit">Add Customer</button>
                 </div>
             </form>
         </div>
@@ -115,6 +243,7 @@
     <!-- Edit Customer Modal -->
     <div class="cust-modal" id="editCustomerModal">
         <div class="cust-modal-content">
+            <button class="cust-modal-close" id="closeEditCustomerIcon">×</button>
             <h2 class="cust-modal-title">Edit Customer</h2>
             <form id="editCustomerForm" class="cust-modal-form">
                 <div class="cust-modal-field">
@@ -134,8 +263,8 @@
                     <input type="text" name="phone" id="editPhone" class="cust-modal-input" />
                 </div>
                 <div class="cust-modal-btns">
-                    <button type="submit" class="cust-modal-submit">Save Changes</button>
                     <button type="button" class="cust-modal-cancel" id="closeEditCustomer">Cancel</button>
+                    <button type="submit" class="cust-modal-submit">Save Changes</button>
                 </div>
             </form>
         </div>
@@ -144,6 +273,7 @@
     <!-- Add Site Modal -->
     <div class="cust-modal" id="addSiteModal">
         <div class="cust-modal-content">
+            <button class="cust-modal-close" id="closeAddSiteIcon">×</button>
             <h2 class="cust-modal-title">Add New Site</h2>
             <input type="number" id="SiteId" value="0" hidden="hidden" />
             <input type="text" id="CustomerID" hidden="hidden" />
@@ -158,61 +288,41 @@
                     <input type="text" id="address" name="address" class="cust-modal-input" required />
                 </div>
                 <div class="cust-modal-field">
-                    <label for="contact" class="cust-modal-label">Site Contact</label>
+                    <label for="siteContact" class="cust-modal-label">Site Contact</label>
                     <input type="text" id="siteContact" name="contact" class="cust-modal-input" />
                 </div>
-                <%--<div class="cust-modal-field">
-                    <label class="cust-modal-label">Equipment Name</label>
-                    <input type="text" name="equipName" class="cust-modal-input" />
-                </div>
-                <div class="cust-modal-field">
-                    <label class="cust-modal-label">Equipment Type</label>
-                    <select name="equipType" class="cust-modal-input">
-                        <option value="">Select Type</option>
-                        <option value="hvac">HVAC</option>
-                        <option value="generator">Generator</option>
-                        <option value="plumbing">Plumbing</option>
-                    </select>
-                </div>
-                <div class="cust-modal-field">
-                    <label class="cust-modal-label">Install Date</label>
-                    <input type="date" name="equipInstallDate" class="cust-modal-input" />
-                </div>
-                <div class="cust-modal-field">
-                    <label class="cust-modal-label">Warranty Expiry</label>
-                    <input type="date" name="equipWarrantyExpiry" class="cust-modal-input" />
-                </div>
-                <div class="cust-modal-field">
-                    <label class="cust-modal-label">Service Agreement</label>
-                    <input type="file" name="serviceAgreement" accept=".pdf" class="cust-modal-input" />
-                    <div id="addSiteAgreementPreview" class="cust-pdf-preview"></div>
-                </div>
-                <div class="cust-modal-field">
-                    <label class="cust-modal-label">Alarms</label>
-                    <input type="text" name="alarms" class="cust-modal-input" />
-                </div>--%>
                 <div class="cust-modal-field">
                     <label for="note" class="cust-modal-label">Note</label>
                     <input id="note" type="text" name="note" class="cust-modal-input" />
                 </div>
-                <div class="cust-modal-field">
-                    <label>
-                        <input type="checkbox" id="isActive" checked />
-                        Active
-                    </label>
+                <div class="cust-modal-field cust-toggle-switch">
+                    <label for="isActive">Active</label>
+                    <input type="checkbox" id="isActive" name="isActive" checked />
                 </div>
                 <div class="cust-modal-btns">
-                    <button type="button" onclick="saveSite(event)" class="cust-modal-submit">Add Site</button>
                     <button type="button" class="cust-modal-cancel" id="closeAddSite">Cancel</button>
+                    <button type="button" onclick="saveSite(event)" class="cust-modal-submit">Add Site</button>
                 </div>
             </form>
         </div>
     </div>
-        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/2.2.2/js/dataTables.min.js"></script>
     <script type="text/javascript" src="https://cdn.datatables.net/select/3.0.0/js/dataTables.select.min.js"></script>
-      <script src="Scripts/customer.js"></script>
+    <script src="Scripts/customer.js"></script>
     <script>
-
-</script>
+        // JavaScript to handle close icon functionality
+        $(document).ready(function () {
+            $('#closeAddCustomerIcon').on('click', function () {
+                $('#addCustomerModal').hide();
+            });
+            $('#closeEditCustomerIcon').on('click', function () {
+                $('#editCustomerModal').hide();
+            });
+            $('#closeAddSiteIcon').on('click', function () {
+                $('#addSiteModal').hide();
+            });
+        });
+    </script>
 </asp:Content>
