@@ -326,7 +326,7 @@
     window.isCalendarExpanded = false;
 
     // Initial session timeout settings
-    let SESSION_TIMEOUT_DURATION = 10 * 60 * 1000; // Default 10 minutes in milliseconds
+    let SESSION_TIMEOUT_DURATION = 1 * 60 * 1000; // Default 10 minutes in milliseconds
     const MODAL_DISPLAY_BEFORE_TIMEOUT = 30 * 1000; // Show modal 30 seconds before timeout
     let timeoutTimer, countdownTimer;
     let countdownTimeRemaining = MODAL_DISPLAY_BEFORE_TIMEOUT;
@@ -454,7 +454,7 @@
             clearInterval(countdownTimer);
             localStorage.clear();
             sessionStorage.clear();
-            window.location.href = '/Login/Logout';
+            window.location.href = '/Dashboard.aspx?logout=true';
         } catch (error) {
             console.error('Error in confirmLogout:', error);
         }
