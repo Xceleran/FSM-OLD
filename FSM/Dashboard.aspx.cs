@@ -9,14 +9,19 @@ namespace FSM
 {
     public partial class Dashboard : System.Web.UI.Page
     {
+        static string AccountsUrl = ConfigurationManager.AppSettings["Accounts_Xinator_Url"].ToString();
         protected void Page_Load(object sender, EventArgs e)
         {
-            string AccountsUrl = ConfigurationManager.AppSettings["Accounts_Xinator_Url"].ToString();
-            string sUrl = "UnAuthorize.aspx";
-
-            if (Session["CompanyID"] == null)
+            if (Session["CompanyID"] == null || Request.QueryString["logout"] == "true")
             {
-                Response.Redirect(sUrl);
+                Session.Clear();
+                Session.Abandon();
+                if (!AccountsUrl.EndsWith("/"))
+                {
+                    AccountsUrl += "/";
+                }
+                string url = AccountsUrl + "Login.aspx";
+                Response.Redirect(url);
             }
         }
     }

@@ -459,7 +459,8 @@
             clearInterval(countdownTimer);
             localStorage.clear();
             sessionStorage.clear();
-            window.location.href = '/Login/Logout';
+            window.location.href = '/Dashboard.aspx?logout=true';
+
         } catch (error) {
             console.error('Error in confirmLogout:', error);
         }
