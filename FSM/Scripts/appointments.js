@@ -1,5 +1,5 @@
-﻿let appointments = [];
-
+﻿// Global variables
+let appointments = [];
 let currentView = "date";
 let currentDate = new Date();
 let currentEditId = null;
@@ -26,9 +26,9 @@ var timerequired_Minute = 0;
 // Fallback function for SweetAlert2
 const showAlert = (options) => {
     if (typeof Swal !== 'undefined') {
-        return Swal.fire(options); // Return promise for confirmation dialogs
+        return Swal.fire(options);
     } else {
-        console.warn('SweetAlert2 not loaded, falling back to native alert');
+        console.warn(' Facade pattern not found: Swal not loaded, falling back to native alert');
         if (options.showCancelButton) {
             return Promise.resolve({ isConfirmed: confirm(options.text) });
         }
@@ -37,11 +37,54 @@ const showAlert = (options) => {
     }
 };
 
+// Calculate appointment duration in minutes
+function parseDuration(durationString) {
+    if (!durationString) return 60; // Default to 60 minutes if empty
+    let totalMinutes = 0;
+    // Normalize the string by replacing colons and multiple spaces
+    const normalized = durationString.replace(/\s*:\s*/g, ' ').trim();
+    const hourMatch = normalized.match(/(\d+)\s*Hr/i);
+    const minuteMatch = normalized.match(/(\d+)\s*Min/i);
+    if (hourMatch) totalMinutes += parseInt(hourMatch[1], 10) * 60;
+    if (minuteMatch) totalMinutes += parseInt(minuteMatch[1], 10);
+    return totalMinutes || 60; // Default to 60 minutes if parsing fails
+}
+
+// Parse time string (e.g., "8:00 AM" or "morning") to minutes since midnight
+function parseTimeToMinutes(timeStr) {
+    if (!timeStr) return 0;
+
+    // Check if timeStr is a time slot key (e.g., "morning", "afternoon", "emergency")
+    const lowerTimeStr = timeStr.toLowerCase();
+    if (timeSlots[lowerTimeStr]) {
+        timeStr = timeSlots[lowerTimeStr].start; // Use start time from timeSlots
+    } else {
+        // Check if timeStr matches a TimeBlock in allTimeSlots
+        const matchingSlot = allTimeSlots.find(slot =>
+            slot.TimeBlock.toLowerCase() === lowerTimeStr ||
+            slot.TimeBlockSchedule.toLowerCase() === lowerTimeStr
+        );
+        if (matchingSlot) {
+            timeStr = matchingSlot.TimeBlockSchedule.split('-')[0];
+        }
+    }
+
+    const [time, period] = timeStr.trim().split(/\s+/);
+    let [hours, minutes] = time.split(':').map(Number);
+    if (isNaN(hours) || isNaN(minutes)) {
+        console.warn(`Invalid time format: ${timeStr}`);
+        return 0; // Fallback to 0 if parsing fails
+    }
+    if (period && period.toUpperCase() === 'PM' && hours !== 12) hours += 12;
+    if (period && period.toUpperCase() === 'AM' && hours === 12) hours = 0;
+    return hours * 60 + minutes;
+}
+
 function getAppoinments(searchValue, fromDate, toDate, today, callback) {
-    searchValue = searchValue;
-    fromDate = fromDate;
-    toDate = toDate;
-    today = today;
+    searchValue = searchValue || "";
+    fromDate = fromDate || "";
+    toDate = toDate || "";
+    today = today || "";
     $.ajax({
         type: "POST",
         url: "Appointments.aspx/LoadAppoinments",
@@ -55,7 +98,7 @@ function getAppoinments(searchValue, fromDate, toDate, today, callback) {
         dataType: "json",
         success: function (response) {
             appointments = response.d;
-            console.log(response.d);
+            console.log('Appointments loaded:', appointments);
             callback(appointments);
         },
         error: function (xhr, status, error) {
@@ -63,7 +106,6 @@ function getAppoinments(searchValue, fromDate, toDate, today, callback) {
             callback([]);
         }
     });
-
     return appointments;
 }
 
@@ -77,26 +119,6 @@ function saveAppointments() {
 }
 
 // Check for scheduling conflicts
-function hasConflict_Old(appointment, newTimeSlot, newResource, newDate, excludeId = null) {
-    if (!newTimeSlot || !newResource || !newDate) return false;
-
-    const slot = timeSlots[newTimeSlot];
-    const startHour = parseInt(slot.start.split(':')[0]);
-    const duration = appointment.duration || 1;
-    const endHour = startHour + duration;
-
-    return appointments.some(a => {
-        if (a.AppoinmentId === excludeId || a.ResourceName !== newResource || a.RequestDate !== newDate || !a.TimeSlot) return false;
-
-        const aSlot = timeSlots[a.timeSlot];
-        const aStart = parseInt(aSlot.start.split(':')[0]);
-        const aDuration = a.duration || 1;
-        const aEnd = aStart + aDuration;
-
-        return (startHour < aEnd) && (endHour > aStart);
-    });
-}
-
 function hasConflict(appointment, newTimeSlot, newResource, newDate, excludeId = null) {
     if (!newTimeSlot || !newResource || !newDate) return false;
 
@@ -112,7 +134,7 @@ function hasConflict(appointment, newTimeSlot, newResource, newDate, excludeId =
 function getEventTimeSlotClass(appointment) {
     const timeSlot = (appointment.TimeSlot || '')
         .toLowerCase()
-        .replace(/\s*\(.*\)/, '') // Remove "( 9:00AM - 12:00AM )"
+        .replace(/\s*\(.*\)/, '')
         .trim();
     return timeSlot === "morning" ? "time-block-morning" :
         timeSlot === "afternoon" ? "time-block-afternoon" :
@@ -126,14 +148,12 @@ function initMapView(date) {
         mapViewInstance.remove();
     }
 
-    // Initialize the map
     mapViewInstance = L.map('mapViewContainer', {
         zoomControl: true,
         dragging: true,
         scrollWheelZoom: true
     }).setView([40.7128, -74.0060], 10);
 
-    // Add Map/Satellite tile layers
     const mapLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors'
     });
@@ -141,17 +161,14 @@ function initMapView(date) {
         attribution: '© Esri'
     });
 
-    // Set layer based on current view
     if (isMapView) {
         mapLayer.addTo(mapViewInstance);
     } else {
         satelliteLayer.addTo(mapViewInstance);
     }
 
-    // Render markers
     renderMapMarkers(date);
 
-    // Ensure map renders correctly
     setTimeout(() => {
         mapViewInstance.invalidateSize();
     }, 100);
@@ -159,14 +176,12 @@ function initMapView(date) {
 
 // Render markers on the map based on filters
 function renderMapMarkers(date) {
-    // Clear existing markers (except custom ones)
     mapViewInstance.eachLayer(layer => {
         if (layer instanceof L.Marker && !customMarkers.includes(layer)) {
             mapViewInstance.removeLayer(layer);
         }
     });
 
-    // Filter appointments based on date, group, and status
     const selectedGroup = $("#mapDispatchGroup").val();
     const selectedStatus = $("#statusFilter").val();
 
@@ -178,12 +193,11 @@ function renderMapMarkers(date) {
         return true;
     });
 
-    // Add markers for filtered appointments
     filteredAppointments.forEach(a => {
-        const markerColor = a.status.toLowerCase() === 'pending' ? '#f59e0b' : // Amber
-            a.status.toLowerCase() === 'dispatched' ? '#6b7280' : // Gray
-                a.status.toLowerCase() === 'inroute' ? '#3b82f6' : // Blue
-                    '#22c55e'; // Green for Arrived
+        const markerColor = a.status.toLowerCase() === 'pending' ? '#f59e0b' :
+            a.status.toLowerCase() === 'dispatched' ? '#6b7280' :
+                a.status.toLowerCase() === 'inroute' ? '#3b82f6' :
+                    '#22c55e';
 
         const markerIcon = L.divIcon({
             className: 'custom-div-icon',
@@ -197,7 +211,6 @@ function renderMapMarkers(date) {
             .bindPopup(`<b>${a.customerName}</b><br>${a.serviceType}<br>Status: ${a.status}`);
     });
 
-    // Adjust map bounds if there are markers
     if (filteredAppointments.length > 0) {
         const bounds = L.latLngBounds(filteredAppointments.map(a => [a.location.lat, a.location.lng]));
         mapViewInstance.fitBounds(bounds);
@@ -239,7 +252,7 @@ function optimizeRoute() {
         filteredAppointments = filteredAppointments.filter(a => technicianGroups[selectedGroup]?.includes(a.resource));
     }
     if (selectedStatus !== 'all') {
-        filteredAppointments = filteredAppointments.filter(a => a.status.toLowerCase() === selectedStatus.toLowerCase());
+        filteredAppointments = filteredAppointments.filter(a => a.status.toLowerCase() !== selectedStatus.toLowerCase());
     }
 
     if (filteredAppointments.length < 2) {
@@ -258,7 +271,6 @@ function optimizeRoute() {
         return;
     }
 
-    // Mock route points
     const routePoints = filteredAppointments.map(a => [a.location.lat, a.location.lng]);
     routeLayer = L.polyline(routePoints, { color: '#0000ff', weight: 4, dashArray: '5, 10' }).addTo(mapViewInstance);
     mapViewInstance.fitBounds(routePoints);
@@ -273,25 +285,24 @@ function renderMapView() {
 // Simulate real-time updates (mock implementation)
 function simulateRealTimeUpdates() {
     setInterval(() => {
-        // Mock status change
         const randomAppointment = appointments[Math.floor(Math.random() * appointments.length)];
         const statuses = ['pending', 'dispatched', 'inRoute', 'arrived'];
         randomAppointment.status = statuses[Math.floor(Math.random() * statuses.length)];
         if (currentView === "map") {
             renderMapMarkers(document.getElementById('mapDatePicker').value);
         }
-    }, 10000); // Update every 10 seconds
+    }, 10000);
 }
 
 // Render date navigation
 function renderDateNav(containerId, selectedDate) {
     const container = $(`#${containerId}`);
     const view = containerId === "dateNav" ? $("#viewSelect").val() : "day";
-    let daysToShow = view === "week" ? 7 : view === "threeDay" ? 3 : 3; // Show 3 days for day view
+    let daysToShow = view === "week" ? 7 : view === "threeDay" ? 3 : 3;
     if (view === "month") daysToShow = 0;
 
     let html = `
-        <button class="btn btn-primary prevperiod" onclick="prevPeriod('${containerId}')"><i class="fas fa-chevron-left"></i></button>
+        <button class="btn btn-primary" onclick="prevPeriod('${containerId}')"><i class="fas fa-chevron-left"></i></button>
     `;
 
     if (daysToShow > 0) {
@@ -317,7 +328,7 @@ function renderDateNav(containerId, selectedDate) {
     }
 
     html += `
-        <button class="btn btn-primary nextperiod" onclick="nextPeriod('${containerId}')"><i class="fas fa-chevron-right"></i></button>
+        <button class="btn btn-primary" onclick="nextPeriod('${containerId}')"><i class="fas fa-chevron-right"></i></button>
         <button class="btn btn-primary ms-2" onclick="gotoToday('${containerId}')">Today</button>
     `;
     container.html(html);
@@ -338,7 +349,6 @@ function prevPeriod(containerId) {
     if (view === 'month') {
         currentDate.setMonth(currentDate.getMonth() - 1);
     } else {
-        // Move one day back for day/threeDay/week view
         currentDate.setDate(currentDate.getDate() - 1);
     }
     const dateStr = currentDate.toISOString().split('T')[0];
@@ -354,7 +364,6 @@ function nextPeriod(containerId) {
     if (view === 'month') {
         currentDate.setMonth(currentDate.getMonth() + 1);
     } else {
-        // Move one day forward for day/threeDay/week view
         currentDate.setDate(currentDate.getDate() + 1);
     }
     const dateStr = currentDate.toISOString().split('T')[0];
@@ -374,7 +383,144 @@ function gotoToday(containerId) {
     else renderResourceView(dateStr);
 }
 
-// Render Date View
+// Create appointment details popup for calendar events
+const calendarDetailsPopup = document.createElement('div');
+calendarDetailsPopup.className = 'appointment-details-popup';
+document.body.appendChild(calendarDetailsPopup);
+
+// Create appointment details popup for appointment cards
+const cardDetailsPopup = document.createElement('div');
+cardDetailsPopup.className = 'appointment-card-details-popup';
+document.body.appendChild(cardDetailsPopup);
+// Function to populate and show the details popup
+function showDetailsPopup(appointment, element, event, popup) {
+    if (element.classList.contains('ui-draggable-dragging')) return; // Skip if dragging
+
+    // Add expanded class to highlight the appointment block
+    element.classList.add('expanded');
+
+    // Populate popup content with appointment details
+    popup.innerHTML = `
+        <div class="details-title">${appointment.CustomerName || 'N/A'}</div>
+        <div class="details-item">
+            <span class="details-label">Service Type:</span>
+            <span class="details-value">${appointment.ServiceType || 'N/A'}</span>
+        </div>
+        <div class="details-item">
+            <span class="details-label">Date:</span>
+            <span class="details-value">${appointment.RequestDate || 'N/A'}</span>
+        </div>
+        <div class="details-item">
+            <span class="details-label">Time Slot:</span>
+            <span class="details-value">${formatTimeRange(appointment.TimeSlot) || 'N/A'}</span>
+        </div>
+        <div class="details-item">
+            <span class="details-label">Duration:</span>
+            <span class="details-value">${appointment.Duration || 'N/A'}</span>
+        </div>
+        <div class="details-item">
+            <span class="details-label">Resource:</span>
+            <span class="details-value">${appointment.ResourceName || 'Unassigned'}</span>
+        </div>
+        <div class="details-item">
+            <span class="details-label">Status:</span>
+            <span class="details-value">${appointment.AppoinmentStatus || 'N/A'}</span>
+        </div>
+        <div class="details-item">
+            <span class="details-label">Address:</span>
+            <span class="details-value">${appointment.Address1 || 'N/A'}</span>
+        </div>
+    `;
+
+    // Position popup relative to the appointment block
+    const rect = element.getBoundingClientRect();
+    const popupWidth = popup.offsetWidth || 200; // Fallback width if not yet rendered
+    const popupHeight = popup.offsetHeight || 100; // Fallback height
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const isResourceView = currentView === 'resource' && element.classList.contains('calendar-event-resource');
+    // Default positioning
+    let left, top;
+
+    if (isResourceView) {
+        // In resource view for calendar-event-resource, position below to avoid overlap with horizontal expansion
+        left = rect.left;
+        top = rect.bottom + 10;
+        // Adjust if it overflows the bottom
+        if (top + popupHeight > viewportHeight) {
+            top = rect.top - popupHeight - 10; // Position above instead
+        }
+        // Adjust if it overflows the right
+        if (left + popupWidth > viewportWidth) {
+            left = viewportWidth - popupWidth - 10;
+        }
+    } else {
+        // In date views or for appointment-card, position to the right
+        left = rect.right + 10;
+        top = rect.top;
+        // Adjust if it overflows the right edge
+        if (left + popupWidth > viewportWidth) {
+            left = rect.left - popupWidth - 10; // Position to the left instead
+        }
+        // Adjust if it overflows the bottom
+        if (top + popupHeight > viewportHeight) {
+            top = viewportHeight - popupHeight - 10;
+        }
+    }
+
+    // Ensure it stays within the viewport
+    left = Math.max(10, left); // Prevent going off left edge
+    top = Math.max(10, top); // Prevent going off top edge
+
+    popup.style.left = `${left}px`;
+    popup.style.top = `${top}px`;
+
+    // Show popup with animation
+    popup.classList.add('show');
+}
+// Function to hide the details popup and remove expanded state
+function hideDetailsPopup(popup) {
+    popup.classList.remove('show');
+    // Remove expanded class from all appointment elements
+    document.querySelectorAll('.calendar-event.expanded, .appointment-card.expanded').forEach(el => {
+        el.classList.remove('expanded');
+    });
+}
+
+// Add hover functionality to appointment elements
+function setupHoverEvents() {
+    document.querySelectorAll('.calendar-event, .calendar-event-resource, .appointment-card').forEach(element => {
+        // Remove existing event listeners to prevent duplicates
+        element.removeEventListener('mouseenter', handleMouseEnter);
+        element.removeEventListener('mouseleave', handleMouseLeave);
+
+        // Define mouseenter handler
+        function handleMouseEnter(e) {
+            const appointmentId = this.dataset.id;
+            const appointment = appointments.find(a => a.AppoinmentId === appointmentId.toString());
+            if (appointment) {
+                // Choose the appropriate popup based on element class
+                const isCalendarEvent = this.classList.contains('calendar-event') || this.classList.contains('calendar-event-resource');
+                const popup = isCalendarEvent ? calendarDetailsPopup : cardDetailsPopup;
+                showDetailsPopup(appointment, this, e, popup);
+            }
+        }
+
+        // Define mouseleave handler
+        function handleMouseLeave() {
+            const isCalendarEvent = this.classList.contains('calendar-event') || this.classList.contains('calendar-event-resource');
+            const popup = isCalendarEvent ? calendarDetailsPopup : cardDetailsPopup;
+            this.classList.remove('expanded');
+            hideDetailsPopup(popup);
+        }
+
+        // Add new event listeners
+        element.addEventListener('mouseenter', handleMouseEnter);
+        element.addEventListener('mouseleave', handleMouseLeave);
+    });
+}
+
+// Render Date View with duration-based independent positioning
 function renderDateView(date) {
     currentDate = new Date(date);
     const container = $("#dayCalendar").addClass('date-view').removeClass('resource-view');
@@ -384,6 +530,7 @@ function renderDateView(date) {
     renderDateNav("dateNav", dateStr);
     let fromDate, toDate, today;
     let fromStr, toStr;
+
     switch (view) {
         case 'month':
             fromDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
@@ -403,7 +550,7 @@ function renderDateView(date) {
             break;
         case 'threeDay':
             fromDate = new Date(currentDate);
-            fromDate.setDate(currentDate.getDate() - 1); // Set to start from the day before
+            fromDate.setDate(currentDate.getDate() - 1);
             toDate = new Date(currentDate);
             toDate.setDate(currentDate.getDate() + 1);
             fromStr = fromDate.toISOString().split('T')[0];
@@ -416,15 +563,20 @@ function renderDateView(date) {
             today = date;
             break;
     }
+    const slotDurationMinutes = allTimeSlots.length > 0 ?
+        (typeof allTimeSlots[0].Duration === 'string' ?
+            parseInt(allTimeSlots[0].Duration, 10) || 60 :
+            allTimeSlots[0].Duration || 60) : 60;
+    console.log('slotDurationMinutes:', slotDurationMinutes); // Debug
     getAppoinments(filter, fromStr, toStr, today, function (appointments) {
-        var filteredAppointments = filter === ''
-            ? appointments
-            : appointments.filter(a => a.ServiceType === filter);
+        var filteredAppointments = filter === '' ?
+            appointments :
+            appointments.filter(a => a.ServiceType === filter);
 
         let html = `
-        <div class="custom-calendar-header d-flex justify-content-center">
-            <span>${view === 'month' ? currentDate.toLocaleString('default', { month: 'long', year: 'numeric' }) : currentDate.toLocaleDateString()}</span>
-        </div>`;
+            <div class="custom-calendar-header d-flex justify-content-center">
+                <span>${view === 'month' ? currentDate.toLocaleString('default', { month: 'long', year: 'numeric' }) : currentDate.toLocaleDateString()}</span>
+            </div>`;
 
         if (view === 'month') {
             const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
@@ -454,10 +606,9 @@ function renderDateView(date) {
                                 <div class="calendar-event ${getEventTimeSlotClass(a)} fs-7 p-1 cursor-move" 
                                      data-id="${a.AppoinmentId}" draggable="true">
                                     ${a.CustomerName} 
-                                      <div class="fs-7 truncate">${a.ServiceType} (${a.Duration})</div>                                
+                                    <div class="fs-7 truncate">${a.ServiceType} (${a.Duration})</div>                                
                                     <div class="fs-7 truncate status">${a.AppoinmentStatus}</div>
                                 </div>
-                                  
                             `).join('')}
                         </div>
                     ` : ''}
@@ -470,9 +621,9 @@ function renderDateView(date) {
             const startDate = new Date(currentDate);
 
             if (view === 'week') {
-                startDate.setDate(startDate.getDate() - startDate.getDay()); // Sunday
+                startDate.setDate(startDate.getDate() - startDate.getDay());
             } else if (view === 'threeDay') {
-                startDate.setDate(startDate.getDate() - 1); // Yesterday
+                startDate.setDate(startDate.getDate() - 1);
             }
 
             const dayDates = Array.from({ length: days }, (_, i) => {
@@ -503,10 +654,8 @@ function renderDateView(date) {
                 `;
             } else {
                 const renderedAppointments = {};
-                const spannedSlots = {};
                 dayDates.forEach(d => {
                     renderedAppointments[d] = new Set();
-                    spannedSlots[d] = new Array(allTimeSlots.length).fill(false);
                 });
 
                 allTimeSlots.forEach((time, index) => {
@@ -517,50 +666,58 @@ function renderDateView(date) {
                         </div>
                     `;
                     dayDates.forEach(dStr => {
-                        if (spannedSlots[dStr][index]) {
-                            html += '<div class="h-120px border-bottom last-border-bottom-none border-right last-border-right-none p-1 calendar-cell"></div>';
-                            return;
-                        }
-
-                        const events = filteredAppointments.filter(a =>
-                            a.RequestDate === dStr &&
-                            a.TimeSlot === time.TimeBlockSchedule &&
-                            !renderedAppointments[dStr].has(a.AppoinmentId)
-                        );
-
-                        let cellContent = '';
-                        let rowspan = 1;
-
-                        if (events.length > 0) {
-                            events.forEach(a => {
-                                let duration = 1;
-                                if (a.TimeSlot == time.TimeBlockSchedule) {
-                                    duration = time.Duration;
+                        const cellAppointments = filteredAppointments
+                            .filter(a => a.RequestDate === dStr && a.TimeSlot)
+                            .map(a => {
+                                const timeSlot = allTimeSlots.find(slot =>
+                                    slot.TimeBlockSchedule === a.TimeSlot ||
+                                    slot.TimeBlock.toLowerCase() === a.TimeSlot.toLowerCase()
+                                );
+                                if (!timeSlot) {
+                                    console.warn(`No matching time slot for appointment ${a.AppoinmentId}: TimeSlot=${a.TimeSlot}`);
+                                    return null;
                                 }
-
-                                rowspan = Math.min(duration, allTimeSlots.length - index);
-                                renderedAppointments[dStr].add(a.AppoinmentId);
-
-                                for (let i = index + 1; i < index + rowspan && i < allTimeSlots.length; i++) {
-                                    spannedSlots[dStr][i] = true;
+                                const startIndex = allTimeSlots.findIndex(slot => slot.TimeBlockSchedule === timeSlot.TimeBlockSchedule);
+                                if (startIndex !== -1 && !renderedAppointments[dStr].has(a.AppoinmentId)) {
+                                    const durationMinutes = parseDuration(a.Duration);
+                                    const startTimeMinutes = parseTimeToMinutes(timeSlot.TimeBlockSchedule.split('-')[0]);
+                                    const slotStartTimeMinutes = parseTimeToMinutes(time.TimeBlockSchedule.split('-')[0]);
+                                    if (isNaN(startTimeMinutes) || isNaN(slotStartTimeMinutes) || isNaN(durationMinutes) || slotDurationMinutes === 0) {
+                                        console.warn(`Invalid data for appointment ${a.AppoinmentId}:`, {
+                                            startTimeMinutes,
+                                            slotStartTimeMinutes,
+                                            durationMinutes,
+                                            slotDurationMinutes,
+                                            timeSlot: a.TimeSlot
+                                        });
+                                        return null;
+                                    }
+                                    const offsetMinutes = startTimeMinutes - slotStartTimeMinutes;
+                                    const offsetPx = (offsetMinutes / slotDurationMinutes) * 120;
+                                    const heightPx = Math.max(120, (durationMinutes / slotDurationMinutes) * 120); // Ensure minimum height
+                                    console.log(`Appointment ${a.AppoinmentId}: durationMinutes=${durationMinutes}, heightPx=${heightPx}`); // Debug
+                                    return { appointment: a, offsetPx, heightPx, startIndex };
                                 }
-
-                                cellContent += `
-                                <div class="calendar-event ${getEventTimeSlotClass(a)} width-95 z-10 cursor-move"
-                                     style="height: ${80 * rowspan - 10}px; top: ${2}px;" 
-                                     data-id="${a.AppoinmentId}" draggable="true">
-                                    <div class="font-weight-medium fs-7">${a.CustomerName}</div>
-                                    <div class="fs-7 truncate">${a.ServiceType} (${a.Duration})</div>                                
-                                    <div class="fs-7 truncate status">${a.AppoinmentStatus}</div>
-                                </div>
-                                `;
-                            });
-                        }
+                                return null;
+                            })
+                            .filter(a => a && a.startIndex === index);
 
                         html += `
                         <div class="h-120px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
+                             style="overflow: hidden;"
                              data-date="${dStr}" data-time="${time.TimeBlockSchedule}">
-                            ${cellContent}
+                            ${cellAppointments.map(({ appointment, heightPx }) => {
+                            renderedAppointments[dStr].add(appointment.AppoinmentId);
+                            return `
+                                <div class="calendar-event ${getEventTimeSlotClass(appointment)} cursor-move fs-7 truncate"
+                                     style="position: absolute; height: ${heightPx}px; top: 0; width: 100px;"
+                                     data-id="${appointment.AppoinmentId}" draggable="true">
+                                    <div class="font-weight-medium fs-7">${appointment.CustomerName}</div>
+                                    <div class="fs-7 truncate">${appointment.ServiceType} (${appointment.Duration})</div>
+                                    <div class="fs-7 truncate status">${appointment.AppoinmentStatus}</div>
+                                </div>
+                                `;
+                        }).join('')}
                         </div>
                         `;
                     });
@@ -588,7 +745,6 @@ function renderDateView(date) {
                 </div>
                 `;
             } else {
-                const spannedSlots = new Array(allTimeSlots.length).fill(false);
                 const renderedAppointments = new Set();
 
                 allTimeSlots.forEach((time, index) => {
@@ -599,54 +755,59 @@ function renderDateView(date) {
                         </div>
                     `;
 
-                    if (spannedSlots[index]) {
-                        html += `
+                    const cellAppointments = filteredAppointments
+                        .filter(a => a.RequestDate === dateStr && a.TimeSlot)
+                        .map(a => {
+                            const timeSlot = allTimeSlots.find(slot =>
+                                slot.TimeBlockSchedule === a.TimeSlot ||
+                                slot.TimeBlock.toLowerCase() === a.TimeSlot.toLowerCase()
+                            );
+                            if (!timeSlot) {
+                                console.warn(`No matching time slot for appointment ${a.AppoinmentId}: TimeSlot=${a.TimeSlot}`);
+                                return null;
+                            }
+                            const startIndex = allTimeSlots.findIndex(slot => slot.TimeBlockSchedule === timeSlot.TimeBlockSchedule);
+                            if (startIndex === index && !renderedAppointments.has(a.AppoinmentId)) {
+                                const durationMinutes = parseDuration(a.Duration);
+                                const startTimeMinutes = parseTimeToMinutes(timeSlot.TimeBlockSchedule.split('-')[0]);
+                                const slotStartTimeMinutes = parseTimeToMinutes(time.TimeBlockSchedule.split('-')[0]);
+                                if (isNaN(startTimeMinutes) || isNaN(slotStartTimeMinutes) || isNaN(durationMinutes) || slotDurationMinutes === 0) {
+                                    console.warn(`Invalid data for appointment ${a.AppoinmentId}:`, {
+                                        startTimeMinutes,
+                                        slotStartTimeMinutes,
+                                        durationMinutes,
+                                        slotDurationMinutes,
+                                        timeSlot: a.TimeSlot
+                                    });
+                                    return null;
+                                }
+                                const offsetMinutes = startTimeMinutes - slotStartTimeMinutes;
+                                const offsetPx = (offsetMinutes / slotDurationMinutes) * 120;
+                                const heightPx = (durationMinutes / slotDurationMinutes) * 120;
+                                return { appointment: a, offsetPx, heightPx };
+                            }
+                            return null;
+                        })
+                        .filter(a => a);
+
+                    html += `
                         <div class="h-120px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
-                             data-date="${dateStr}" data-time="${formatTimeRange(time.TimeBlockSchedule)}">
-                        </div>
-                        `;
-                    } else {
-                        const events = filteredAppointments.filter(a =>
-                            a.RequestDate === dateStr &&
-                            a.TimeSlot == time.TimeBlockSchedule &&
-                            !renderedAppointments.has(a.AppoinmentId)
-                        );
-
-                        let cellContent = '';
-                        let rowspan = 1;
-
-                        if (events.length > 0) {
-                            events.forEach(a => {
-                                let duration = 1;
-                                if (a.TimeSlot == time.TimeBlockSchedule) {
-                                    duration = time.Duration;
-                                }
-                                rowspan = Math.min(duration, allTimeSlots.length - index);
-                                renderedAppointments.add(a.AppoinmentId);
-
-                                for (let i = index + 1; i < index + rowspan && i < allTimeSlots.length; i++) {
-                                    spannedSlots[i] = true;
-                                }
-
-                                cellContent += `
-                                <div class="calendar-event ${getEventTimeSlotClass(a)} width-95 z-10 cursor-move"
-                                     style="height: ${80 * rowspan - 10}px; top: ${2}px;" 
-                                     data-id="${a.AppoinmentId}" draggable="true">
-                                    <div class="font-weight-medium fs-7">${a.CustomerName}</div>
-                                    <div class="fs-7 truncate">${a.ServiceType} (${a.Duration})</div>
-                                    <div class="fs-7 truncate status">${a.AppoinmentStatus}</div>
+                             style="overflow: hidden;"
+                             data-date="${dateStr}" data-time="${time.TimeBlockSchedule}">
+                            ${cellAppointments.map(({ appointment, heightPx }) => {
+                        renderedAppointments.add(appointment.AppoinmentId);
+                        return `
+                                <div class="calendar-event ${getEventTimeSlotClass(appointment)} cursor-move fs-7 truncate"
+                                     style="position: absolute; height: ${heightPx}px;"
+                                     data-id="${appointment.AppoinmentId}" draggable="true">
+                                    <div class="font-weight-medium fs-7">${appointment.CustomerName}</div>
+                                    <div class="fs-7 truncate">${appointment.ServiceType} (${appointment.Duration})</div>
+                                    <div class="fs-7 truncate status">${appointment.AppoinmentStatus}</div>
                                 </div>
                                 `;
-                            });
-                        }
-
-                        html += `
-                        <div class="h-120px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
-                             data-date="${dateStr}" data-time="${time.TimeBlockSchedule}">
-                            ${cellContent}
+                    }).join('')}
                         </div>
                         `;
-                    }
                     html += `</div>`;
                 });
             }
@@ -656,9 +817,11 @@ function renderDateView(date) {
 
         container.html(html);
         setupDragAndDrop();
+        setupHoverEvents();
         renderUnscheduledList();
     });
 }
+
 function searchListView(e) {
     e.preventDefault();
     const selectedDateFrom = $("#listDatePickerFrom").val();
@@ -680,6 +843,7 @@ function searchListView(e) {
     }
     renderListView();
 }
+
 function clearFilterListView(e) {
     e.preventDefault();
     const selectedDateFrom = $("#listDatePickerFrom").val();
@@ -702,28 +866,21 @@ function clearFilterListView(e) {
 
 let currentSort = {
     key: '',
-    direction: 'asc' // or 'desc'
+    direction: 'asc'
 };
 
 $(document).off('click', 'th.sortable').on('click', 'th.sortable', function () {
     const key = $(this).data('key');
-
     if (currentSort.key === key) {
         currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
     } else {
         currentSort.key = key;
         currentSort.direction = 'asc';
     }
-
-    // Remove sort classes from all
     $('th.sortable').removeClass('sort-asc sort-desc');
-
-    // Add the new sort class
     $(this).addClass(currentSort.direction === 'asc' ? 'sort-asc' : 'sort-desc');
-
-    renderListView(); // apply sorting and rerender
+    renderListView();
 });
-
 
 // Render List View
 function renderListView() {
@@ -739,13 +896,10 @@ function renderListView() {
         var filteredAppointments = appointments.filter(item => {
             const matchesType = typeFilter === '' ||
                 (item.ServiceType === typeFilter);
-
             const matchesStatus = statusFilter === '' ||
                 (item.AppoinmentStatus === statusFilter);
-
             const matchesTicket = ticketFilter === '' ||
                 (item.TicketStatus === ticketFilter);
-
             const combinedText = [
                 item.CustomerName,
                 item.BusinessName,
@@ -755,7 +909,6 @@ function renderListView() {
                 item.Phone,
                 item.Address1
             ].join(' ').toLowerCase();
-
             const matchesSearch = combinedText.includes(searchTerm);
             return matchesType && matchesStatus && matchesTicket && matchesSearch;
         });
@@ -764,7 +917,6 @@ function renderListView() {
             filteredAppointments.sort((a, b) => {
                 const valA = a[currentSort.key] ? a[currentSort.key].toString().toLowerCase() : '';
                 const valB = b[currentSort.key] ? b[currentSort.key].toString().toLowerCase() : '';
-
                 if (valA < valB) return currentSort.direction === 'asc' ? -1 : 1;
                 if (valA > valB) return currentSort.direction === 'asc' ? 1 : -1;
                 return 0;
@@ -842,11 +994,12 @@ function renderUnscheduledList(view = 'date') {
         `).join(''));
 
     setupDragAndDrop();
+    setupHoverEvents();
 }
 
 // Setup drag-and-drop functionality
 function setupDragAndDrop() {
-    $(".calendar-event, .appointment-card").draggable({
+    $(".calendar-event, .calendar-event-resource, .appointment-card").draggable({
         revert: "invalid",
         revertDuration: 300,
         zIndex: 1000,
@@ -864,21 +1017,20 @@ function setupDragAndDrop() {
         },
         stop: function () {
             $(this).removeClass("dragging");
-            // updateAllViews();
         }
     });
 
     $(".drop-target").droppable({
-        accept: ".appointment-card, .calendar-event",
+        accept: ".appointment-card, .calendar-event-resource, .calendar-event",
         hoverClass: "drag-over",
+
         drop: function (event, ui) {
             const appointmentId = ui.draggable.data("id");
             const date = $(this).data("date");
             const time = $(this).data("time");
             const resource = $(this).data("resource") ||
-                appointments.find(a => a.id === appointmentId)?.ResourceName ||
+                appointments.find(a => a.AppoinmentId === appointmentId.toString())?.ResourceName ||
                 "Unassigned";
-            //const timeSlot = time ? Object.keys(timeSlots).find(slot => timeSlots[slot].start === time) : "morning";
 
             openEditModal(appointmentId, date, time, resource, true);
         }
@@ -889,11 +1041,11 @@ function setupDragAndDrop() {
         hoverClass: "drag-over",
         drop: function (event, ui) {
             const appointmentId = ui.draggable.data("id");
-            const appointment = appointments.find(a => a.id === appointmentId);
+            const appointment = appointments.find(a => a.AppoinmentId === appointmentId.toString());
             if (appointment) {
-                appointment.date = null;
-                appointment.timeSlot = null;
-                appointment.duration = 1;
+                appointment.RequestDate = null;
+                appointment.TimeSlot = null;
+                appointment.Duration = "1 Hr";
                 saveAppointments();
                 updateAllViews();
             }
@@ -908,7 +1060,6 @@ function setupDragAndDrop() {
 // Open modal to create a new appointment
 function openNewModal(date = null) {
     const form = document.getElementById("newForm");
-    //form.reset();
     if (date) form.querySelector("[name='date']").value = date;
     window.newModalInstance.show();
 }
@@ -918,23 +1069,23 @@ function createAppointment(e) {
     e.preventDefault();
     const form = new FormData(e.target);
     const newAppointment = {
-        id: Math.max(...appointments.map(a => a.id), 0) + 1,
-        customerName: form.get("customerName"),
-        serviceType: form.get("serviceType"),
-        date: form.get("date"),
-        timeSlot: form.get("timeSlot"),
-        duration: parseInt(form.get("duration")) || 1,
-        resource: form.get("resource"),
-        status: form.get("status"),
+        AppoinmentId: (Math.max(...appointments.map(a => parseInt(a.AppoinmentId)), 0) + 1).toString(),
+        CustomerName: form.get("customerName"),
+        ServiceType: form.get("serviceType"),
+        RequestDate: form.get("date"),
+        TimeSlot: form.get("timeSlot"),
+        Duration: form.get("duration") || "1 Hr",
+        ResourceName: form.get("resource"),
+        AppoinmentStatus: form.get("status"),
         location: {
-            address: form.get("address"),
+            Address1: form.get("address"),
             lat: 40.7128,
             lng: -74.0060
         },
         priority: "Medium"
     };
 
-    if (newAppointment.date && newAppointment.timeSlot && hasConflict(newAppointment, newAppointment.timeSlot, newAppointment.resource, newAppointment.date)) {
+    if (newAppointment.RequestDate && newAppointment.TimeSlot && hasConflict(newAppointment, newAppointment.TimeSlot, newAppointment.ResourceName, newAppointment.RequestDate)) {
         showAlert({
             icon: 'error',
             title: 'Scheduling Conflict',
@@ -962,13 +1113,13 @@ function openEditModal(id, date, time, resource, confirm) {
     if (!a) return;
     currentEditId = id;
     const form = document.getElementById("editForm");
-    form.querySelector("[name='duration']").value = a.Duration || 0;
+    form.querySelector("[name='duration']").value = a.Duration || "1 Hr";
     form.querySelector("[id='AppoinmentId']").value = parseInt(a.AppoinmentId);
-    form.querySelector("[id='CustomerID']").value = parseInt(a.CustomerID);
-    form.querySelector("[name='customerName']").value = a.CustomerName;
-    form.querySelector("[name='note']").value = a.Note;
-    form.querySelector("[id='txt_StartDate']").value = a.StartDateTime;
-    form.querySelector("[id='txt_EndDate']").value = a.EndDateTime;
+    form.querySelector("[id='CustomerID']").value = parseInt(a.CustomerID) || '';
+    form.querySelector("[name='customerName']").value = a.CustomerName || '';
+    form.querySelector("[name='note']").value = a.Note || '';
+    form.querySelector("[id='txt_StartDate']").value = a.StartDateTime || '';
+    form.querySelector("[id='txt_EndDate']").value = a.EndDateTime || '';
     const service_select = form.querySelector("[id='MainContent_ServiceTypeFilter_Edit']");
     getSelectedId(service_select, a.ServiceType || "");
     const select = form.querySelector("[name='resource']");
@@ -991,7 +1142,7 @@ function openEditModal(id, date, time, resource, confirm) {
         extractHoursAndMinutes(a.Duration);
         calculateStartEndTime();
     } else {
-        form.querySelector("[name='timeSlot']").value = a.TimeSlot;
+        form.querySelector("[name='timeSlot']").value = a.TimeSlot || '';
     }
     if (date) {
         if (date < today) {
@@ -1016,16 +1167,12 @@ function openEditModal(id, date, time, resource, confirm) {
         form.querySelector("[name='date']").value = a.RequestDate || '';
     }
 
-    
     form.querySelector("[name='address']").value = a.Address1 || '';
     const status_select = form.querySelector("[id='MainContent_StatusTypeFilter_Edit']");
     getSelectedId(status_select, a.AppoinmentStatus || "");
-
-
     const ticket_status = form.querySelector("[id='MainContent_TicketStatusFilter_Edit']");
     getSelectedId(ticket_status, a.TicketStatus || "");
 
-    // Disable dropdowns if status is "Closed"
     const isClosed = a.AppoinmentStatus.toLowerCase() === "closed";
     service_select.disabled = isClosed;
     status_select.disabled = isClosed;
@@ -1043,41 +1190,23 @@ function updateAppointment(e) {
 
     const newDate = form.get("date");
     const newTimeSlot = form.get("timeSlot");
-
     const formData = document.getElementById("editForm");
-
     const select_rs = formData.querySelector("[name='resource']");
     const newResource = select_rs.options[select_rs.selectedIndex].text;
-
-    //if (newDate && newTimeSlot && hasConflict(appointment, newTimeSlot, newResource, newDate, id)) {
-    //    showAlert({
-    //        icon: 'error',
-    //        title: 'Scheduling Conflict',
-    //        text: 'A scheduling conflict was detected!',
-    //        confirmButtonText: 'OK',
-    //        customClass: {
-    //            popup: 'swal-custom-popup',
-    //            title: 'swal-custom-title',
-    //            content: 'swal-custom-content',
-    //            confirmButton: 'swal-custom-button'
-    //        }
-    //    });
-    //    return;
-    //}
 
     saveAppoinmentData(e);
 }
 
 // Open modal to confirm scheduling
 function openConfirmModal(id, date, timeSlot, resource) {
-    const a = appointments.find(x => x.AppoinmentId === id);
+    const a = appointments.find(x => x.AppoinmentId === id.toString());
     if (!a) return;
     const form = document.getElementById("confirmForm");
-    form.querySelector("[name='id']").value = a.id;
-    form.querySelector("[name='customerName']").value = a.customerName;
+    form.querySelector("[name='id']").value = a.AppoinmentId;
+    form.querySelector("[name='customerName']").value = a.CustomerName;
     form.querySelector("[name='date']").value = date || '';
     form.querySelector("[name='timeSlot']").value = timeSlot || 'morning';
-    form.querySelector("[name='duration']").value = a.duration || 1;
+    form.querySelector("[name='duration']").value = a.Duration || "1 Hr";
     form.querySelector("[name='resource']").value = resource || 'Unassigned';
     window.confirmModalInstance.show();
 }
@@ -1086,14 +1215,14 @@ function openConfirmModal(id, date, timeSlot, resource) {
 function confirmScheduling(e) {
     e.preventDefault();
     const form = new FormData(e.target);
-    const id = parseInt(form.get("id"));
-    const appointment = appointments.find(a => a.id === id);
+    const id = form.get("id");
+    const appointment = appointments.find(a => a.AppoinmentId === id);
     if (!appointment) return;
 
     const newDate = form.get("date");
     const newTimeSlot = form.get("timeSlot");
     const newResource = form.get("resource");
-    const newDuration = parseInt(form.get("duration")) || 1;
+    const newDuration = form.get("duration") || "1 Hr";
 
     if (hasConflict(appointment, newTimeSlot, newResource, newDate, id)) {
         showAlert({
@@ -1111,10 +1240,10 @@ function confirmScheduling(e) {
         return;
     }
 
-    appointment.date = newDate;
-    appointment.timeSlot = newTimeSlot;
-    appointment.resource = newResource;
-    appointment.duration = newDuration;
+    appointment.RequestDate = newDate;
+    appointment.TimeSlot = newTimeSlot;
+    appointment.ResourceName = newResource;
+    appointment.Duration = newDuration;
     saveAppointments();
     updateAllViews();
     window.confirmModalInstance.hide();
@@ -1138,7 +1267,7 @@ function deleteAppointment() {
         }
     }).then((result) => {
         if (result.isConfirmed) {
-            appointments = appointments.filter(a => a.id !== currentEditId);
+            appointments = appointments.filter(a => a.AppoinmentId !== currentEditId.toString());
             saveAppointments();
             updateAllViews();
             window.editModalInstance.hide();
@@ -1148,11 +1277,11 @@ function deleteAppointment() {
 
 // Unschedule an appointment
 function unscheduleAppointment() {
-    const appointment = appointments.find(a => a.id === currentEditId);
+    const appointment = appointments.find(a => a.AppoinmentId === currentEditId.toString());
     if (!appointment) return;
-    appointment.date = null;
-    appointment.timeSlot = null;
-    appointment.duration = 1;
+    appointment.RequestDate = null;
+    appointment.TimeSlot = null;
+    appointment.Duration = "1 Hr";
     saveAppointments();
     updateAllViews();
     window.editModalInstance.hide();
@@ -1171,11 +1300,122 @@ function updateAllViews() {
     }
 }
 
+// Render Resource View with duration-based independent positioning
+function renderResourceView(date) {
+    const container = $("#resourceViewContainer").addClass('resource-view').removeClass('date-view');
+    const selectedGroup = $("#dispatchGroup").val();
+    const dateStr = new Date(date).toISOString().split('T')[0];
+
+    renderDateNav("resourceDateNav", dateStr);
+
+    const filteredResources = resources;
+    const slotDurationMinutes = allTimeSlots.length > 0 ?
+        (typeof allTimeSlots[0].Duration === 'string' ?
+            parseInt(allTimeSlots[0].Duration, 10) || 60 :
+            allTimeSlots[0].Duration || 60) : 60;
+
+    getAppoinments("", "", "", dateStr, function (appointments) {
+        let html = `
+            <div class="border rounded overflow-hidden">
+                <div class="calendar-grid" style="grid-template-columns: 120px repeat(${allTimeSlots.length}, 1fr);">
+                    <div class="p-2 border-right bg-gray-50 calendar-header-cell"></div>
+                    ${allTimeSlots.map(time => `
+                        <div class="p-2 text-center font-weight-medium border-right last-border-right-none bg-gray-50 calendar-header-cell">
+                            ${formatTimeRange(time.TimeBlockSchedule)}
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="calendar-body">
+        `;
+
+        if (!allTimeSlots.length || !resources.length) {
+            html += `
+            <div class="text-center py-4 text-muted">
+                No resources or time slots available.
+            </div>
+            `;
+        } else {
+            filteredResources.forEach(resource => {
+                html += `
+                    <div class="calendar-grid" style="grid-template-columns: 120px repeat(${allTimeSlots.length}, 1fr);">
+                        <div class="h-120px border-bottom last-border-bottom-none p-1 fs-7 text-center bg-gray-50 calendar-time-cell">
+                            ${resource.ResourceName}
+                        </div>
+                `;
+
+                allTimeSlots.forEach((time, index) => {
+                    const cellAppointments = appointments
+                        .filter(a => a.ResourceName === resource.ResourceName &&
+                            a.RequestDate === dateStr &&
+                            a.TimeSlot)
+                        .map(a => {
+                            const timeSlot = allTimeSlots.find(slot =>
+                                slot.TimeBlockSchedule === a.TimeSlot ||
+                                slot.TimeBlock.toLowerCase() === a.TimeSlot.toLowerCase()
+                            );
+                            if (!timeSlot) {
+                                console.warn(`No matching time slot for appointment ${a.AppoinmentId}: TimeSlot=${a.TimeSlot}`);
+                                return null;
+                            }
+                            const startIndex = allTimeSlots.findIndex(slot => slot.TimeBlockSchedule === timeSlot.TimeBlockSchedule);
+                            if (startIndex === index) {
+                                const durationMinutes = parseDuration(a.Duration);
+                                const startTimeMinutes = parseTimeToMinutes(timeSlot.TimeBlockSchedule.split('-')[0]);
+                                const slotStartTimeMinutes = parseTimeToMinutes(time.TimeBlockSchedule.split('-')[0]);
+                                if (isNaN(startTimeMinutes) || isNaN(slotStartTimeMinutes) || isNaN(durationMinutes) || slotDurationMinutes === 0) {
+                                    console.warn(`Invalid data for appointment ${a.AppoinmentId}:`, {
+                                        startTimeMinutes,
+                                        slotStartTimeMinutes,
+                                        durationMinutes,
+                                        slotDurationMinutes,
+                                        timeSlot: a.TimeSlot
+                                    });
+                                    return null;
+                                }
+                                const offsetMinutes = startTimeMinutes - slotStartTimeMinutes;
+                                const offsetPx = (offsetMinutes / slotDurationMinutes) * 100;
+                                const widthPx = (durationMinutes / slotDurationMinutes) * 100;
+                                return { appointment: a, offsetPx, widthPx };
+                            }
+                            return null;
+                        })
+                        .filter(a => a);
+
+                    html += `
+                    <div class="h-120px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
+                         data-date="${dateStr}" 
+                         data-time="${time.TimeBlockSchedule}" 
+                         data-resource="${resource.ResourceName}">
+                        ${cellAppointments.map(({ appointment, offsetPx, widthPx }) => `
+                            <div class="calendar-event-resource ${getEventTimeSlotClass(appointment)} cursor-move"
+                                 style="position: absolute;"
+                                 data-id="${appointment.AppoinmentId}" 
+                                 draggable="true">
+                                <div class="font-weight-medium fs-7">${appointment.CustomerName}</div>
+                                <div class="fs-7 truncate">${appointment.ServiceType} (${appointment.Duration})</div>
+                                <div class="fs-7 truncate status">${appointment.AppoinmentStatus}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    `;
+                });
+
+                html += `</div>`;
+            });
+        }
+
+        html += `</div></div>`;
+        container.html(html);
+        setupDragAndDrop();
+        setupHoverEvents();
+        renderUnscheduledList('resource');
+    });
+}
+
 var today = new Date().toISOString().split('T')[0];
 
 // Initialize the page
 document.addEventListener('DOMContentLoaded', () => {
-    // Initialize modal instances (from appointments.js)
     const newModalInstance = new bootstrap.Modal(document.getElementById("newModal"));
     const editModalInstance = new bootstrap.Modal(document.getElementById("editModal"));
     const confirmModalInstance = new bootstrap.Modal(document.getElementById("confirmModal"));
@@ -1184,13 +1424,10 @@ document.addEventListener('DOMContentLoaded', () => {
     window.editModalInstance = editModalInstance;
     window.confirmModalInstance = confirmModalInstance;
 
-    // Show loading indicator (from appointments.js)
     $("#dayCalendar").html('<div class="text-center py-4">Loading...</div>');
 
-    // Helper function to check if mobile (from inline script)
     const isMobile = () => window.matchMedia('(max-width: 849px)').matches;
 
-    // Function to toggle calendar expansion (from inline script)
     function toggleCalendarExpansion(view) {
         if (!['dateView', 'resourceView'].includes(view)) {
             console.error('Invalid view parameter:', view);
@@ -1213,14 +1450,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const sidebarIcons = document.querySelectorAll('.sidebar-icon');
 
         if (!calendarContainer || !unscheduledPanel || !toggleUnscheduledBtn || !expandCalendarBtn || !sidebar || !toggleSidebarBtn) {
-            console.error('Required elements not found for view:', view, {
-                calendarContainer,
-                unscheduledPanel,
-                toggleUnscheduledBtn,
-                expandCalendarBtn,
-                sidebar,
-                toggleSidebarBtn
-            });
+            console.error('Required elements not found for view:', view);
             return;
         }
 
@@ -1231,14 +1461,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         localStorage.setItem(`${view}CalendarExpanded`, isExpanded);
         window.isCalendarExpanded = isExpanded;
-
-        console.log('Before sidebar state update:', {
-            isExpanded,
-            isMobile: isMobile(),
-            sidebarClasses: sidebar.classList.toString(),
-            transform: sidebar.style.transform,
-            isCalendarExpanded: window.isCalendarExpanded
-        });
 
         sidebar.classList.remove('sidebar-expanded', 'sidebar-collapsed', 'sidebar-hidden', 'sidebar-mobile');
 
@@ -1277,23 +1499,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         setTimeout(() => {
-            console.log('After sidebar state update (delayed) for view:', view, {
-                isExpanded: calendarContainer.classList.contains('expanded'),
-                isMobile: isMobile(),
-                sidebarClasses: sidebar.classList.toString(),
-                transform: sidebar.style.transform,
-                toggleBtnText: toggleSidebarBtn.textContent,
-                sidebarTextDisplay: sidebarTexts[0]?.style.display,
-                sidebarIconDisplay: sidebarIcons[0]?.style.display,
-                tabActive: tabPane.classList.contains('active'),
-                isCalendarExpanded: window.isCalendarExpanded
-            });
+            window.dispatchEvent(new Event('resize'));
         }, 0);
-
-        window.dispatchEvent(new Event('resize'));
     }
 
-    // Function to toggle unscheduled panel (from inline script)
     function toggleUnscheduledPanel(view) {
         const calendarContainer = document.querySelector(`#${view} .calendar-container`);
         const unscheduledPanel = document.querySelector(`#${view} .unscheduled-panel`);
@@ -1315,7 +1524,6 @@ document.addEventListener('DOMContentLoaded', () => {
         window.dispatchEvent(new Event('resize'));
     }
 
-    // Initialize calendar state for both views (from inline script)
     ['dateView', 'resourceView'].forEach(view => {
         const expandCalendarBtn = document.getElementById(`expandCalendarBtn${view === 'dateView' ? '' : 'Resource'}`);
         const toggleUnscheduledBtn = document.getElementById(`toggleUnscheduledBtn${view === 'dateView' ? '' : 'Resource'}`);
@@ -1332,15 +1540,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Initialize Bootstrap tooltips (from inline script)
-    // Initialize Bootstrap tooltips with hover-only trigger
     document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
         new bootstrap.Tooltip(el, {
-            trigger: 'hover' // Show only on hover, hide when mouse leaves
+            trigger: 'hover'
         });
     });
 
-    // Reset expansion state when switching tabs (from inline script)
     const tabs = document.querySelectorAll('#viewTabs button[data-bs-toggle="tab"]');
     tabs.forEach(tab => {
         tab.addEventListener('shown.bs.tab', function (event) {
@@ -1363,9 +1568,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Wait for time slots and resources to load (from appointments.js)
     Promise.all([getTimeSlots(), getResources()])
         .then(() => {
+            console.log('TimeSlots:', allTimeSlots);
+            console.log('Resources:', resources);
             document.getElementById('dateInput').min = today;
             $("#dayDatePicker").val(today);
             $("#resourceDatePicker").val(today);
@@ -1373,7 +1579,6 @@ document.addEventListener('DOMContentLoaded', () => {
             $("#mapDatePicker").val(today);
             renderDateView(today);
 
-            // Set up tab event listeners (from appointments.js)
             const tabs = document.querySelectorAll('#viewTabs button[data-bs-toggle="tab"]');
             tabs.forEach(tab => {
                 tab.addEventListener('shown.bs.tab', function (event) {
@@ -1403,7 +1608,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             });
 
-            // Map View event listeners (from appointments.js)
             document.getElementById('mapDatePicker').addEventListener('change', (e) => {
                 renderMapMarkers(e.target.value);
             });
@@ -1428,15 +1632,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 isMapView = false;
                 renderMapView();
             });
-
-           // simulateRealTimeUpdates();
         })
         .catch((error) => {
             console.error("Failed to load initial data:", error);
             $("#dayCalendar").html('<div class="text-center py-4 text-muted">Failed to load data. Please try refreshing the page.</div>');
         });
 
-    // Handle modal dismissals (from appointments.js)
     document.querySelectorAll('[data-bs-dismiss="modal"]').forEach(button => {
         button.addEventListener('click', function () {
             const modal = bootstrap.Modal.getInstance(this.closest('.modal'));
@@ -1467,12 +1668,12 @@ function getTimeSlots() {
         contentType: "application/json; charset=utf-8",
         dataType: "json"
     }).then(function (response) {
-        console.log(response.d);
+        console.log('TimeSlots fetched:', response.d);
         allTimeSlots = response.d;
         renderTimeSlots(response.d);
         populateTimeSlotDropdown(response.d);
     }).catch(function (xhr, status, error) {
-        console.error("Error updating details: ", error);
+        console.error("Error fetching time slots: ", error);
         throw error;
     });
 }
@@ -1481,15 +1682,11 @@ function renderTimeSlots(timeSlots) {
     const container = $(".time-slot-indicators");
     container.empty();
     timeSlots.forEach(slot => {
-        const fullLabel = slot.TimeBlock; // e.g., "Morning ( 9:00AM )"
-
-        // Extract the first word before "(" for the class
+        const fullLabel = slot.TimeBlock;
         const match = fullLabel.match(/^(\w+)/);
         const timeBlockClass = match ? match[1].toLowerCase() : "default";
-
         const className = `time-block-${timeBlockClass}`;
         const html = `<span class="time-block-indicator ${className}"></span>${slot.TimeBlockSchedule} `;
-
         container.append(html);
     });
 }
@@ -1502,109 +1699,17 @@ function getResources() {
         contentType: "application/json; charset=utf-8",
         dataType: "json"
     }).then(function (response) {
-        console.log(response.d);
+        console.log('Resources fetched:', response.d);
         resources = response.d;
         populateResourceDropdown(response.d);
     }).catch(function (xhr, status, error) {
-        console.error("Error updating details: ", error);
+        console.error("Error fetching resources: ", error);
         throw error;
     });
 }
 
-// Render Resource View
-function renderResourceView(date) {
-    const container = $("#resourceViewContainer").addClass('resource-view').removeClass('date-view');
-    const selectedGroup = $("#dispatchGroup").val();
-    const dateStr = new Date(date).toISOString().split('T')[0];
-
-    renderDateNav("resourceDateNav", dateStr);
-
-    const filteredResources = resources;
-
-    // Call getAppoinments and pass a callback
-    getAppoinments("", "", "", dateStr, function (appointments) {
-        let html = `
-            <div class="border rounded overflow-hidden">
-                <div class="calendar-grid" style="grid-template-columns: 120px repeat(${allTimeSlots.length}, 1fr);">
-                    <div class="p-2 border-right bg-gray-50 calendar-header-cell"></div>
-                    ${allTimeSlots.map(time => `
-                        <div class="p-2 text-center font-weight-medium border-right last-border-right-none bg-gray-50 calendar-header-cell">
-                            ${formatTimeRange(time.TimeBlockSchedule)}
-                        </div>
-                    `).join('')}
-                </div>
-                <div class="calendar-body">
-        `;
-
-        if (!allTimeSlots || allTimeSlots.length === 0 || !resources || resources.length === 0) {
-            html += `
-            <div class="text-center py-4 text-muted">
-                No resources or time slots available. Please try refreshing the page.
-            </div>
-            `;
-        } else {
-            filteredResources.forEach(resource => {
-                html += `
-                    <div class="calendar-grid" style="grid-template-columns: 120px repeat(${allTimeSlots.length}, 1fr);">
-                        <div class="h-120px border-bottom last-border-bottom-none p-1 fs-7 text-center bg-gray-50 calendar-time-cell">
-                            ${resource.ResourceName}
-                        </div>
-                `;
-
-                const occupiedSlots = new Array(allTimeSlots.length).fill(false);
-
-                appointments
-                    .filter(a => a.ResourceName === resource.ResourceName && a.RequestDate === dateStr && a.TimeSlot)
-                    .forEach(a => {
-                        const startIndex = allTimeSlots.findIndex(slot => slot.TimeBlockSchedule === a.TimeSlot);
-                        if (startIndex !== -1) {
-                            occupiedSlots[startIndex] = { appointment: a };
-                        }
-                    });
-
-                let index = 0;
-                while (index < allTimeSlots.length) {
-                    if (occupiedSlots[index] && occupiedSlots[index].appointment) {
-                        const appointment = occupiedSlots[index].appointment;
-                        const duration = appointment.Duration || 1;
-                        const colspan = 1;
-
-                        html += `
-                            <div class="h-120px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
-                                 style="grid-column: span ${colspan};"
-                                 data-date="${dateStr}" data-time="${allTimeSlots[index].TimeBlockSchedule}" data-resource="${resource.ResourceName}">
-                                <div class="calendar-event ${getEventTimeSlotClass(appointment)} width-95 z-10 cursor-move"
-                                     data-id="${appointment.AppoinmentId}" draggable="true">
-                                    <div class="font-weight-medium fs-7">${appointment.CustomerName}</div>
-                                    <div class="fs-7 truncate">${appointment.ServiceType} (${appointment.Duration})</div>
-                                    <div class="fs-7 truncate">${formatTimeRange(appointment.TimeSlot)}</div>
-                                    <div class="fs-7 truncate status">${appointment.AppoinmentStatus}</div>
-                                </div>
-                            </div>
-                        `;
-                        index += colspan;
-                    } else {
-                        html += `
-                            <div class="h-120px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
-                                 data-date="${dateStr}" data-time="${allTimeSlots[index].TimeBlockSchedule}" data-resource="${resource.ResourceName}">
-                            </div>
-                        `;
-                        index += 1;
-                    }
-                }
-
-                html += `</div>`;
-            });
-        }
-
-        html += `</div></div>`;
-        container.html(html);
-        setupDragAndDrop();
-        renderUnscheduledList('resource');
-    });
-}
-
 function formatTimeRange(str) {
+    if (!str) return 'N/A';
     return str.replace(/[()]/g, '')
         .trim()
         .replace(/\s{2,}/g, ' ')
@@ -1613,12 +1718,8 @@ function formatTimeRange(str) {
 
 function populateResourceDropdown(resources) {
     const $dropdown = $("#resource_list");
-    $dropdown.empty(); // clear existing options
-
-    // Add default option (like Unassigned)
+    $dropdown.empty();
     $dropdown.append(`<option value="0">Unassigned</option>`);
-
-    // Add options from resources
     resources.forEach(resource => {
         $dropdown.append(`<option value="${resource.Id}">${resource.ResourceName}</option>`);
     });
@@ -1626,7 +1727,6 @@ function populateResourceDropdown(resources) {
 
 function getSelectedId(select, targetName) {
     let matched = false;
-
     for (const option of select.options) {
         if (option.text.trim() === targetName.trim()) {
             select.value = option.value;
@@ -1634,8 +1734,6 @@ function getSelectedId(select, targetName) {
             break;
         }
     }
-
-    // If no match, select the first option
     if (!matched && select.options.length > 0) {
         select.selectedIndex = 0;
     }
@@ -1643,12 +1741,8 @@ function getSelectedId(select, targetName) {
 
 function populateTimeSlotDropdown(slots) {
     const $dropdown = $("#time_slot");
-    $dropdown.empty(); // clear existing options
-
-    // Add default option (like Unassigned)
+    $dropdown.empty();
     $dropdown.append(`<option value="0">Select</option>`);
-
-    // Add options from resources
     slots.forEach(slot => {
         $dropdown.append(`<option value="${slot.TimeBlockSchedule}">${slot.TimeBlockSchedule}</option>`);
     });
@@ -1701,93 +1795,78 @@ function saveAppoinmentData(e) {
                     customClass: {
                         popup: 'swal-custom-popup',
                         title: 'swal-custom-title',
-                        content: 'swal-custom-content',
+                        content: 'swal-custom--content',
                         confirmButton: 'swal-custom-button'
                     }
                 });
             }
-
             updateAllViews();
             window.editModalInstance.hide();
         },
         error: function (xhr, status, error) {
-            console.error("Error updating details: ", error);
-            window.editModalInstance.hide();
+            console.error("Error updating appointment: ", error);
+            showAlert({
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to update appointment due to a server error.',
+                confirmButtonText: 'OK',
+                customClass: {
+                    popup: 'swal-custom-popup',
+                    title: 'swal-custom-title',
+                    content: 'swal-custom-content',
+                    confirmButton: 'swal-custom-button'
+                }
+            });
         }
     });
 }
 
-function calculateTimeRequired(e) {
-    e.preventDefault();
-    const selectedValue = $('#MainContent_ServiceTypeFilter_Edit').val();
-    if (selectedValue) {
-        $.ajax({
-            type: "POST",
-            url: "Appointments.aspx/GetDuration",
-            data: JSON.stringify({ serviceTypeID: selectedValue }),
-            contentType: "application/json; charset=utf-8",
-            dataType: "json",
-            success: function (response) {
-                console.log(response.d);
-                const form = document.getElementById("editForm");
-                form.querySelector("[name='duration']").value = response.d || 0;
-                extractHoursAndMinutes(response.d);
-                calculateStartEndTime();
-            },
-            error: function (xhr, status, error) {
-                console.error("Error updating details: ", error);
-            }
-        });
+function extractHoursAndMinutes(duration) {
+    if (!duration) {
+        timerequired_Hour = 0;
+        timerequired_Minute = 0;
+        return;
     }
-}
-
-function updateDate(e) {
-    e.preventDefault();
-    const selectedValue = e.target.value;
-    calculateDate(selectedValue);
-}
-function calculateDate(date) {
-    var startDate = $("#txt_StartDate").val().split(" ");
-    var endDate = $("#txt_EndDate").val().split(" ");
-    startDate[0] = moment(date, "YYYY-MM-DD").format("MM/DD/YYYY");
-    endDate[0] = moment(date, "YYYY-MM-DD").format("MM/DD/YYYY");
-    $("#txt_StartDate").val(startDate.join(' '));
-    $("#txt_EndDate").val(endDate.join(' '));
+    const hourMatch = duration.match(/(\d+)\s*Hr/i);
+    const minuteMatch = duration.match(/(\d+)\s*Min/i);
+    timerequired_Hour = hourMatch ? parseInt(hourMatch[1], 10) : 0;
+    timerequired_Minute = minuteMatch ? parseInt(minuteMatch[1], 10) : 0;
 }
 
 function calculateStartEndTime() {
-    var time_slot = $("#time_slot").val();
-    for (var i = 0; i < allTimeSlots.length; i++) {
-        if (allTimeSlots[i].TimeBlockSchedule == time_slot) {
-            const slot = $("#txt_StartDate").val().split(" ")
-            $("#txt_StartDate").val(slot[0] + ' ' + allTimeSlots[i].StartTime);
-            const slot2 = $("#txt_EndDate").val().split(" ")
-            $("#txt_EndDate").val(slot2[0] + ' ' + allTimeSlots[i].EndTime);
-        }
+    const form = document.getElementById("editForm");
+    const timeSlot = form.querySelector("[name='timeSlot']").value;
+    if (!timeSlot) return;
+
+    const startTimeStr = timeSlot.split('-')[0].trim();
+    const startDateTime = new Date(`${form.querySelector("[name='date']").value} ${startTimeStr}`);
+    if (isNaN(startDateTime)) {
+        console.warn(`Invalid start time: ${startTimeStr}`);
+        return;
     }
-    var _end = moment($("#txt_StartDate").val(), 'MM/DD/YYYY hh:mm A');
-    if (timerequired_Hour > 0) {
-        _end = _end.add(timerequired_Hour, 'hours');
-    }
-    if (timerequired_Minute > 0) {
-        _end = _end.add(timerequired_Minute, 'minutes');
-        $("#txt_EndDate").val(moment(_end, "MM/DD/YYYY hh:mm A").format("MM/DD/YYYY hh:mm a"));
-    }
-    if (timerequired_Minute = 0 && timerequired_Minute == 0) {}
-    else {
-        $("#txt_EndDate").val(moment(_end, "MM/DD/YYYY hh:mm A").format("MM/DD/YYYY hh:mm a"));
-    }
+
+    const durationMinutes = (timerequired_Hour * 60) + timerequired_Minute;
+    const endDateTime = new Date(startDateTime.getTime() + durationMinutes * 60000);
+
+    const formatTime = (date) => {
+        let hours = date.getHours();
+        const minutes = date.getMinutes().toString().padStart(2, '0');
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12 || 12;
+        return `${hours}:${minutes} ${ampm}`;
+    };
+
+    form.querySelector("[id='txt_StartDate']").value = `${startDateTime.toISOString().split('T')[0]} ${formatTime(startDateTime)}`;
+    form.querySelector("[id='txt_EndDate']").value = `${endDateTime.toISOString().split('T')[0]} ${formatTime(endDateTime)}`;
 }
 
-function extractHoursAndMinutes(timeString) {
-    const hourMatch = timeString.match(/(\d+)\s*Hr/);
-    const minuteMatch = timeString.match(/(\d+)\s*Min/);
-    if (hourMatch) {
-        timerequired_Hour = parseInt(hourMatch[1], 10);
+function calculateDate(dateStr) {
+    const form = document.getElementById("editForm");
+    const date = new Date(dateStr);
+    if (isNaN(date)) {
+        console.warn(`Invalid date: ${dateStr}`);
+        return;
     }
-    $('#timerequired_Hour').val(timerequired_Hour);
-    if (minuteMatch) {
-        timerequired_Minute = parseInt(minuteMatch[1], 10);
-    }
-    $('#timerequired_Minute').val(timerequired_Hour);
+    form.querySelector("[name='date']").value = date.toISOString().split('T')[0];
+    calculateStartEndTime();
 }

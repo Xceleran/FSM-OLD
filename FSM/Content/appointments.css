@@ -34,9 +34,9 @@
     transition: transform 0.2s ease;
 }
 
-.date-view-container:has(.unscheduled-panel.collapsed) {
+/*.date-view-container:has(.unscheduled-panel.collapsed) {
     grid-template-columns: 1fr 0fr;
-}
+}*/
 
 [data-theme="dark"] .card {
     background: rgb(255 255 255 / 14%);
@@ -333,6 +333,7 @@
         .table.list-view-table tbody td {
             padding: 6px 10px;
         }
+
     .date-nav {
         flex-direction: column;
     }
@@ -525,32 +526,33 @@ th.sortable {
 }
 
 /* Unscheduled Panel */
-.unscheduled-panel {
+/*.unscheduled-panel {
     transition: width 0.3s ease;
     position: relative;
     overflow: hidden;
-}
+}*/
 
 
-    .unscheduled-panel.collapsed {
-        /*   width: 0;
+.unscheduled-panel.collapsed {
+    /*   width: 0;
         min-width: 0;
         overflow: hidden;*/
-        flex: 0 0 50px;
-        overflow: hidden;
-    }
+ /*   flex: 0 0 50px;
+    overflow: hidden;*/
+}
 
-.unscheduled-list {
+/*.unscheduled-list {
     height: 500px;
     overflow-y: scroll;
     transition: opacity 0.3s ease;
     padding: 5px;
-    
-}
+}*/
+
 [data-theme="dark"] .unscheduled-list {
     scrollbar-width: thin;
     scrollbar-color: #d1d5db #646e79;
 }
+
 .unscheduled-panel.collapsed + #toggleUnscheduledBtn,
 .unscheduled-panel.collapsed + #toggleUnscheduledBtnResource {
     right: 0;
@@ -1218,7 +1220,7 @@ ul#viewTabs {
     background-color: #e0f7fa; /* light cyan, can change based on status */
     color: #00796b; /* dark teal text */
     border-radius: 12px;
-    font-size: 0.75rem; /* Bootstrap fs-7 size */
+    font-size: 0.55rem; /* Bootstrap fs-7 size */
     white-space: nowrap;
 }
 
@@ -1381,17 +1383,431 @@ button.btn.btn-primary.ms-2 {
 [data-theme="dark"] button.btn.btn-sm.btn-outline-primary.view-appointment {
     border: 1px solid #ffffff;
 }
+
 [data-theme="dark"] i.fas.fa-eye {
     color: #ffffff;
 }
+
     [data-theme="dark"] i.fas.fa-eye:hover {
         color: #ffffff;
     }
+
 [data-theme="dark"] .custom-link a {
     color: #96a0ff !important;
     text-decoration: none;
     font-weight: 500;
 }
+
     [data-theme="dark"] .custom-link a:hover {
         color: #7e8aff !important;
     }
+
+/* Appointment Details Popup */
+.appointment-details-popup {
+    position: fixed;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    padding: 16px;
+    z-index: 2000;
+    max-width: 300px;
+    display: none;
+    border: 1px solid #e2e8f0;
+}
+
+[data-theme="dark"] .appointment-details-popup {
+    background: #2d3748;
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.appointment-details-popup.show {
+    display: block;
+}
+
+.details-title {
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-bottom: 12px;
+    color: #2d3748;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 8px;
+}
+
+[data-theme="dark"] .details-title {
+    color: white;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.details-item {
+    margin-bottom: 8px;
+    display: flex;
+}
+
+.details-label {
+    font-weight: 600;
+    margin-right: 8px;
+    flex: 0 0 100px;
+    color: #4b5563;
+}
+
+[data-theme="dark"] .details-label {
+    color: #d1d5db;
+}
+
+.details-value {
+    flex: 1;
+    color: #4b5563;
+}
+
+[data-theme="dark"] .details-value {
+    color: #ebebeb;
+}
+
+/* Expanded appointment blocks */
+.calendar-event.expanded {
+    z-index: 1000;
+    transform: scale(1.05);
+    box-shadow: 0 0 15px rgba(0,0,0,0.3);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+
+
+[data-theme="dark"] .calendar-event.expanded, {
+    box-shadow: 0 0 15px rgba(255,255,255,0.1);
+}
+
+.calendar-event {
+    max-height: 30px;
+    overflow: hidden;
+    transition: max-height 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease, border-color 0.3s ease;
+    cursor: pointer;
+    position: relative;
+}
+
+    .calendar-event:hover {
+        max-height: 1000px;
+        z-index: 10;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+
+.appointment-card {
+    overflow: hidden;
+    padding: 8px;
+    position: relative;
+}
+
+    .appointment-card:hover {
+        z-index: 10;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        cursor: pointer;
+    }
+
+
+    .calendar-event.expanded,
+    .appointment-card.expanded {
+        border-color: #6366f1;
+    }
+
+[data-theme="dark"] .calendar-event.expanded,
+[data-theme="dark"] .appointment-card.expanded {
+    border-color: #818cf8;
+}
+
+/* --- Styles for the Details Popup --- */
+.appointment-details-popup {
+    position: absolute;
+    background-color: white;
+    border: 1px solid #28a745;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    padding: 15px;
+    border-radius: 8px;
+    z-index: 1000; /* High z-index to appear on top */
+    display: none; /* Hidden by default, shown via JS */
+    min-width: 280px;
+    max-width: 350px;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    color: #333;
+}
+
+    .appointment-details-popup .details-title {
+        font-weight: bold;
+        font-size: 1.1rem;
+        margin-bottom: 10px;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 8px;
+        color: #1a1a1a;
+    }
+
+    .appointment-details-popup .details-item {
+        margin-bottom: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .appointment-details-popup .details-label {
+        font-weight: 600;
+        color: #555;
+        margin-right: 10px;
+        flex-shrink: 0;
+    }
+
+    .appointment-details-popup .details-value {
+        text-align: right;
+        color: #222;
+    }
+
+/* Dark theme adjustments for popup */
+[data-theme="dark"] .appointment-details-popup {
+    background-color: #2d3748; /* Dark background */
+    border-color: #4a5568; /* Darker border */
+    color: #e2e8f0; /* Light text */
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+}
+
+    [data-theme="dark"] .appointment-details-popup .details-title {
+        color: #ffffff;
+        border-bottom-color: #4a5568;
+    }
+
+    [data-theme="dark"] .appointment-details-popup .details-label {
+        color: #a0aec0; /* Lighter gray label */
+    }
+
+    [data-theme="dark"] .appointment-details-popup .details-value {
+        color: #e2e8f0; /* Light text value */
+    }
+
+/* --- End of added styles for Calendar Event Popup --- */
+
+.appointment-card-details-popup {
+    position: absolute;
+    background-color: white;
+    border: 1px solid #28a745; /* Green border to differentiate from calendar popup */
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    padding: 15px;
+    border-radius: 8px;
+    z-index: 1000; /* High z-index to appear on top */
+    display: none; /* Hidden by default, shown via JS */
+    min-width: 280px;
+    max-width: 350px;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    color: #333;
+    transform: translateX(-35%);
+}
+
+    .appointment-card-details-popup.show {
+        display: block; /* Show when active */
+    }
+
+    .appointment-card-details-popup .details-title {
+        font-weight: bold;
+        font-size: 1.1rem;
+        margin-bottom: 10px;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 8px;
+        color: #1a1a1a;
+    }
+
+    .appointment-card-details-popup .details-item {
+        margin-bottom: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .appointment-card-details-popup .details-label {
+        font-weight: 600;
+        color: #555;
+        margin-right: 10px;
+        flex-shrink: 0;
+    }
+
+    .appointment-card-details-popup .details-value {
+        text-align: right;
+        color: #222;
+    }
+
+/* Dark theme adjustments for popup */
+[data-theme="dark"] .appointment-card-details-popup {
+    background-color: #2d3748; /* Dark background */
+    border-color: #48bb78; /* Lighter green border for dark theme */
+    color: #e2e8f0; /* Light text */
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+}
+
+    [data-theme="dark"] .appointment-card-details-popup .details-title {
+        color: #ffffff;
+        border-bottom-color: #4a5568;
+    }
+
+    [data-theme="dark"] .appointment-card-details-popup .details-label {
+        color: #a0aec0; /* Lighter gray label */
+    }
+
+    [data-theme="dark"] .appointment-card-details-popup .details-value {
+        color: #e2e8f0; /* Light text value */
+    }
+/* --- End of added styles for Appointment Card Popup --- */
+/* Unscheduled List Scrolling Fix */
+.unscheduled-panel {
+    display: flex;
+    flex-direction: hidden; /* Ensure parent allows scrolling */
+    box-sizing: border-box;
+}
+
+    .unscheduled-panel .card {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        overflow-y: hidden; /* Prevent card from overflowing parent */
+    }
+
+    .unscheduled-panel .card-body {
+        flex: 1; /* Allow card-body to grow and shrink */
+        overflow-y: hidden; /* Enable scrolling within card-body */
+        padding-bottom: 10px; /* Ensure content isn't cut off */
+        box-sizing: border-box;
+    }
+
+.unscheduled-list {
+    max-height: 500px; /* Set max-height instead of fixed height */
+    height: auto; /* Allow flexible height */
+    overflow-y: auto; /* Show scrollbar only when needed */
+    box-sizing: border-box;
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+}
+
+    /* Custom scrollbar styles for unscheduled-list */
+    .unscheduled-list::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .unscheduled-list::-webkit-scrollbar-track {
+        background-color: #e0e0e0;
+        border-radius: 4px;
+        margin: 5px 0; /* Prevent scrollbar from touching edges */
+    }
+
+    .unscheduled-list::-webkit-scrollbar-thumb {
+        background-color: #888;
+        border-radius: 4px;
+        border-bottom: 2px solid #e0e0e0;
+    }
+
+[data-theme="dark"] .unscheduled-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+[data-theme="dark"] .unscheduled-list::-webkit-scrollbar-track {
+    background-color: #4a5568;
+    border-radius: 4px;
+}
+
+[data-theme="dark"] .unscheduled-list::-webkit-scrollbar-thumb {
+    background-color: #d1d5db;
+    border-radius: 4px;
+    border-bottom: 2px solid #4a5568;
+}
+
+/* Responsive adjustments for unscheduled-list */
+@media (max-width: 849px) {
+    .unscheduled-list {
+        max-height: 300px); /* Smaller height for mobile */
+    }
+}
+
+/* Calendar Event for Resource View */
+.calendar-event-resource {
+    width: 70px;
+    margin: 0;
+    padding: 6px;
+    box-sizing: border-box;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    height: 85px;
+}
+    .calendar-event-resource.expanded  .fs-7.truncate.status {
+        font-size: 0.75rem;
+        margin-top: 5px;
+    }
+.calendar-event.expanded .fs-7.truncate.status{
+    font-size: 0.75rem;
+    margin-top: 5px;
+}
+
+[data-theme="dark"] .calendar-event-resource {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.0.1);
+    color: var(--text-gray-700);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+/* Replace expansion styles for calendar-event and appointment-card */
+.calendar-event.expanded {
+    max-height: calc(200px); /* Limit vertical expansion */
+    z-index: 1000;
+    transform: scale(1.05);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.0.2);
+    border-color: #6366f1;
+    transition: all 0.3s ease;
+}
+
+[data-theme="dark"] .calendar-event.expanded {
+    box-shadow: 0 5px 15px rgba(255,255,255,0.0.1);
+    border-color: #818cf8;
+}
+
+.calendar-event-resource.expanded {
+    max-width: calc(360px); /* Limit horizontal expansion */
+    width: auto !important; /* Override inline width */
+    z-index: 1000;
+    transform: none; /* Avoid scaling to maintain layout */
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    border-color: #6366f1;
+    transition: max-width 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+[data-theme="dark"] .calendar-event-resource.expanded {
+    box-shadow: 0 5px 15px rgba(255, 255, 255, 0.1);
+    border-color: #818cf8;
+}
+
+.appointment-card.expanded {
+    max-height: calc(200px); /* Limit vertical expansion */
+    z-index: 1000;
+    transform: none; /* Avoid scaling */
+    box-shadow: 0 5px 15px rgba(0,0,0,0.0.2);
+    border-color: #6366f1;
+    transition: all 0.3s ease;
+}
+
+[data-theme="dark"] .appointment-card.expanded {
+    box-shadow: 0 5px 15px rgba(255,255,255,0.0.1);
+    border-color: #818cf8;
+}
+.calendar-event-resource .fs-7 {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.calendar-event-resource:hover .fs-7 {
+    white-space: normal; /* Allow text to wrap */
+    overflow: visible; /* Show full text */
+    text-overflow: clip; /* Remove ellipsis */
+}
+
+.calendar-event-resource.expanded .fs-7 {
+    white-space: normal; /* Allow text to wrap */
+    overflow: visible; /* Show full text */
+    text-overflow: clip; /* Remove ellipsis */
+}
