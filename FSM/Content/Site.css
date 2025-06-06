@@ -306,7 +306,7 @@ img.right-logo-img {
     flex-direction: column;
     overflow-y: auto;
     min-height: 0;
-   /* margin-top: 50px;*/
+    margin-top: 50px;
 }
 
 [data-theme="dark"] .content-wrapper {

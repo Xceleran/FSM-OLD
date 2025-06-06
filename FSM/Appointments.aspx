@@ -13,7 +13,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.datatables.net/responsive/3.0.2/js/dataTables.responsive.min.js"></script>
-<link rel="stylesheet" href="https://cdn.datatables.net/responsive/3.0.2/css/responsive.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/3.0.2/css/responsive.dataTables.min.css">
     <script src="Scripts/moment.js"></script>
     <!-- Local Styles and Scripts -->
     <link rel="stylesheet" href="Content/appointments.css">
@@ -70,8 +70,10 @@
                                     </select>
                                     <label for="ServiceTypeFilter" class="form-label mb-0">Filter:</label>
                                     <select name="ServiceTypeFilter" id="ServiceTypeFilter" class="form-select w-120px" runat="server" onchange="renderDateView($('#dayDatePicker').val())">
-                                        <option value="select">Select</option>
-                                        <option value="0">Company Use</option>
+                                                                                <option value="all">All Types</option>
+                                        <option value="IT Support">IT Support</option>
+                                        <option value="1 Hour">1 Hour</option>
+                                        <option value="2 Hour">2 Hour</option>
                                     </select>
                                     <%--<select id="filterSelect" class="form-select w-120px" onchange="renderDateView($('#dayDatePicker').val())">
                                         <option value="all">All</option>
@@ -85,10 +87,10 @@
                                 </div>
                                 <button id="toggleUnscheduledBtn" class="btn btn-sm"><i class="fas fa-chevron-right"></i></button>
                             </div>
-                            <div class="time-slot-indicators">
-                                <span class="time-block-indicator time-block-morning"></span>Morning (8AM-12PM)
-                                <span class="time-block-indicator time-block-afternoon"></span>Afternoon (12PM-4PM)
-                                <span class="time-block-indicator time-block-emergency"></span>Emergency (6PM-10PM)
+                                                     <div class="appt-type-indicators">
+                                <span class="appt-type-indicator appt-type-it-support"></span>IT Support
+                                <span class="appt-type-indicator appt-type-1-hour"></span>1 Hour
+                                <span class="appt-type-indicator appt-type-2-hour"></span>2 Hour
                             </div>
                         </div>
                         <div class="card-body">
@@ -108,7 +110,31 @@
                                     <option value="all">All Statuses</option>
                                 </select>
                                 <select runat="server" id="ServiceTypeFilter_2" class="form-select mb-3" onchange="renderUnscheduledList()">
-                                    <option value="all">All Service Types</option>
+                                                                       <option value="all">All Types</option>
+                                    <option value="IT Support">IT Support</option>
+                                    <option value="1 Hour">1 Hour</option>
+                                    <option value="2 Hour">2 Hour</option>
+                                </select>
+
+                                <select id="ProvinceFilter" class="form-select mb-3" onchange="renderUnscheduledList()">
+                                    <option value="all">All Provinces/Territories</option>
+                                    <option value="AB">Alberta</option>
+                                    <option value="BC">British Columbia</option>
+                                    <option value="MB">Manitoba</option>
+                                    <option value="NB">New Brunswick</option>
+                                    <option value="NL">Newfoundland and Labrador</option>
+                                    <option value="NS">Nova Scotia</option>
+                                    <option value="NT">Northwest Territories</option>
+                                    <option value="NU">Nunavut</option>
+                                    <option value="ON">Ontario</option>
+                                    <option value="PE">Prince Edward Island</option>
+                                    <option value="QC">Quebec</option>
+                                    <option value="SK">Saskatchewan</option>
+                                    <option value="YT">Yukon</option>
+                                </select>
+                                <select id="PostalCodeFilter" class="form-select mb-3" onchange="renderUnscheduledList()">
+                                    <option value="all">All Postal Codes</option>
+                                    <!-- Populated dynamically via JavaScript -->
                                 </select>
                                 <input type="text" id="searchFilter" class="form-control mb-3" placeholder="Search by customer..." oninput="renderUnscheduledList()">
                             </div>
@@ -138,10 +164,10 @@
                                 </div>
                                 <button id="toggleUnscheduledBtnResource" class="btn btn-sm" style="display: block;"><i class="fas fa-chevron-right"></i></button>
                             </div>
-                            <div class="time-slot-indicators">
-                                <span class="time-block-indicator time-block-morning"></span>Morning (8AM-12PM)
-                                <span class="time-block-indicator time-block-afternoon"></span>Afternoon (12PM-4PM)
-                                <span class="time-block-indicator time-block-emergency"></span>Emergency (6PM-10PM)
+                                                       <div class="appt-type-indicators">
+                                <span class="appt-type-indicator appt-type-it-support"></span>IT Support
+                                <span class="appt-type-indicator appt-type-1-hour"></span>1 Hour
+                                <span class="appt-type-indicator appt-type-2-hour"></span>2 Hour
                             </div>
                         </div>
                         <div class="card-body">
@@ -161,7 +187,30 @@
                                     <option value="all">All Statuses</option>
                                 </select>
                                 <select runat="server" id="ServiceTypeFilter_Resource" class="form-select mb-3" onchange="renderUnscheduledList('resource')">
-                                    <option value="all">All Service Types</option>
+                                                                        <option value="IT Support">IT Support</option>
+                                    <option value="1 Hour">1 Hour</option>
+                                    <option value="2 Hour">2 Hour</option>
+                                </select>
+
+                                <select id="ProvinceFilterResource" class="form-select mb-3" onchange="renderUnscheduledList('resource')">
+                                    <option value="all">All Provinces/Territories</option>
+                                    <option value="AB">Alberta</option>
+                                    <option value="BC">British Columbia</option>
+                                    <option value="MB">Manitoba</option>
+                                    <option value="NB">New Brunswick</option>
+                                    <option value="NL">Newfoundland and Labrador</option>
+                                    <option value="NS">Nova Scotia</option>
+                                    <option value="NT">Northwest Territories</option>
+                                    <option value="NU">Nunavut</option>
+                                    <option value="ON">Ontario</option>
+                                    <option value="PE">Prince Edward Island</option>
+                                    <option value="QC">Quebec</option>
+                                    <option value="SK">Saskatchewan</option>
+                                    <option value="YT">Yukon</option>
+                                </select>
+                                <select id="PostalCodeFilterResource" class="form-select mb-3" onchange="renderUnscheduledList('resource')">
+                                    <option value="all">All Postal Codes</option>
+                                    <!-- Populated dynamically via JavaScript -->
                                 </select>
                                 <input type="text" id="searchFilterResource" class="form-control mb-3" placeholder="Search by customer..." oninput="renderUnscheduledList('resource')">
                             </div>
@@ -182,7 +231,10 @@
                             <div>
                                 <label for="ServiceTypeFilter_List" class="form-label mb-0">Service type:</label>
                                 <select name="ServiceTypeFilter_List" id="ServiceTypeFilter_List" class="form-select" runat="server" onchange="renderListView()">
-                                    <option value="select">Select</option>
+                                                                      <option value="all">All Types</option>
+                                    <option value="IT Support">IT Support</option>
+                                    <option value="1 Hour">1 Hour</option>
+                                    <option value="2 Hour">2 Hour</option>
                                 </select>
                             </div>
                             <div>
@@ -320,10 +372,9 @@
                             <div class="col-md-6">
                                 <label class="form-label">Service Type</label>
                                 <select name="serviceTypeNew" class="form-select" required>
-                                    <option value="Tasks">Tasks</option>
-                                    <option value="Visits">Visits</option>
-                                    <option value="Maintenance">Maintenance</option>
-                                    <option value="Installation">Installation</option>
+                                                                       <option value="IT Support">IT Support</option>
+                                    <option value="1 Hour">1 Hour</option>
+                                    <option value="2 Hour">2 Hour</option>
                                 </select>
                             </div>
                             <div class="col-md-6">
@@ -404,7 +455,9 @@
                             <div class="col-md-6">
                                 <label class="form-label">Service Type</label>
                                 <select runat="server" id="ServiceTypeFilter_Edit" name="serviceTypeEdit" class="form-select" onchange="calculateTimeRequired(event)" required>
-                                    <option value="all">All Service Types</option>
+                                                                   <option value="IT Support">IT Support</option>
+                                    <option value="1 Hour">1 Hour</option>
+                                    <option value="2 Hour">2 Hour</option>
                                 </select>
                             </div>
                             <div class="col-md-6">
@@ -436,7 +489,7 @@
                             <div class="col-md-6">
                                 <label class="form-label">Appointment End Date</label>
                                 <input type="text" name="txt_EndDate" class="form-control" id="txt_EndDate" readonly="readonly">
-                                <small id="customer_EndDate" style="display:none;" class="mb-3 text-warning">End date time cant be smaller than start date time.</small>
+                                <small id="customer_EndDate" style="display: none;" class="mb-3 text-warning">End date time cant be smaller than start date time.</small>
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Address</label>
@@ -538,4 +591,5 @@
 </script>
 
     <script src="Scripts/appointments.js" defer></script>
+    <%--     <script src="Scripts/backupjs/appointments.js" defer></script>--%>
 </asp:Content>

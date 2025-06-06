@@ -80,6 +80,7 @@ function parseTimeToMinutes(timeStr) {
     return hours * 60 + minutes;
 }
 
+// Update getAppoinments
 function getAppoinments(searchValue, fromDate, toDate, today, callback) {
     searchValue = searchValue || "";
     fromDate = fromDate || "";
@@ -99,16 +100,33 @@ function getAppoinments(searchValue, fromDate, toDate, today, callback) {
         success: function (response) {
             appointments = response.d;
             console.log('Appointments loaded:', appointments);
+            populatePostalCodeDropdowns();
             callback(appointments);
         },
         error: function (xhr, status, error) {
-            console.error("Error updating details: ", error);
+            console.error('Error loading appointments:', error);
             callback([]);
         }
     });
-    return appointments;
 }
+// Populate Postal Code dropdowns
+function populatePostalCodeDropdowns() {
+    const postalCodes = [...new Set(appointments
+        .map(app => app.PostalCode)
+        .filter(code => code && code.trim() !== ''))].sort();
 
+    const $postalCodeFilter = $('#PostalCodeFilter');
+    const $postalCodeFilterResource = $('#PostalCodeFilterResource');
+
+    $postalCodeFilter.empty().append('<option value="all">All Postal Codes</option>');
+    $postalCodeFilterResource.empty().append('<option value="all">All Postal Codes</option>');
+
+    postalCodes.forEach(code => {
+        const option = `<option value="${code}">${code}</option>`;
+        $postalCodeFilter.append(option);
+        $postalCodeFilterResource.append(option);
+    });
+}
 // Save appointments to localStorage
 function saveAppointments() {
     try {
@@ -563,11 +581,12 @@ function renderDateView(date) {
             today = date;
             break;
     }
+
     const slotDurationMinutes = allTimeSlots.length > 0 ?
         (typeof allTimeSlots[0].Duration === 'string' ?
             parseInt(allTimeSlots[0].Duration, 10) || 60 :
             allTimeSlots[0].Duration || 60) : 60;
-    console.log('slotDurationMinutes:', slotDurationMinutes); // Debug
+
     getAppoinments(filter, fromStr, toStr, today, function (appointments) {
         var filteredAppointments = filter === '' ?
             appointments :
@@ -666,6 +685,7 @@ function renderDateView(date) {
                         </div>
                     `;
                     dayDates.forEach(dStr => {
+                        // Group appointments by time slot for this day
                         const cellAppointments = filteredAppointments
                             .filter(a => a.RequestDate === dStr && a.TimeSlot)
                             .map(a => {
@@ -694,23 +714,38 @@ function renderDateView(date) {
                                     }
                                     const offsetMinutes = startTimeMinutes - slotStartTimeMinutes;
                                     const offsetPx = (offsetMinutes / slotDurationMinutes) * 120;
-                                    const heightPx = Math.max(120, (durationMinutes / slotDurationMinutes) * 120); // Ensure minimum height
-                                    console.log(`Appointment ${a.AppoinmentId}: durationMinutes=${durationMinutes}, heightPx=${heightPx}`); // Debug
+                                    const heightPx = (durationMinutes / slotDurationMinutes) * 120;
                                     return { appointment: a, offsetPx, heightPx, startIndex };
                                 }
                                 return null;
                             })
                             .filter(a => a && a.startIndex === index);
 
+                        // Sort appointments by start time to ensure consistent ordering
+                        cellAppointments.sort((a, b) => {
+                            const aStart = parseTimeToMinutes(a.appointment.TimeSlot.split('-')[0]);
+                            const bStart = parseTimeToMinutes(b.appointment.TimeSlot.split('-')[0]);
+                            return aStart - bStart;
+                        });
+
+                        // Assign horizontal positions starting at 72px, incrementing by 100px
+                        const appointmentsWithPosition = cellAppointments.map((appt, idx) => {
+                            const leftPx = 72 + idx * 100; // Start at 72px, then 172px, 272px, etc.
+                            return {
+                                ...appt,
+                                leftPx
+                            };
+                        });
+
                         html += `
                         <div class="h-120px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
                              style="overflow: hidden;"
                              data-date="${dStr}" data-time="${time.TimeBlockSchedule}">
-                            ${cellAppointments.map(({ appointment, heightPx }) => {
+                            ${appointmentsWithPosition.map(({ appointment, heightPx, offsetPx, leftPx }) => {
                             renderedAppointments[dStr].add(appointment.AppoinmentId);
                             return `
                                 <div class="calendar-event ${getEventTimeSlotClass(appointment)} cursor-move fs-7 truncate"
-                                     style="position: absolute; height: ${heightPx}px; top: 0; width: 100px;"
+                                     style="position: absolute; height: ${heightPx}px; top: ${offsetPx}px; left: ${leftPx}px; width: 90px;"
                                      data-id="${appointment.AppoinmentId}" draggable="true">
                                     <div class="font-weight-medium fs-7">${appointment.CustomerName}</div>
                                     <div class="fs-7 truncate">${appointment.ServiceType} (${appointment.Duration})</div>
@@ -790,15 +825,31 @@ function renderDateView(date) {
                         })
                         .filter(a => a);
 
+                    // Sort appointments by start time
+                    cellAppointments.sort((a, b) => {
+                        const aStart = parseTimeToMinutes(a.appointment.TimeSlot.split('-')[0]);
+                        const bStart = parseTimeToMinutes(b.appointment.TimeSlot.split('-')[0]);
+                        return aStart - bStart;
+                    });
+
+                    // Assign horizontal positions starting at 72px
+                    const appointmentsWithPosition = cellAppointments.map((appt, idx) => {
+                        const leftPx = 72 + idx * 100; // Start at 72px, then 172px, 272px, etc.
+                        return {
+                            ...appt,
+                            leftPx
+                        };
+                    });
+
                     html += `
                         <div class="h-120px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
                              style="overflow: hidden;"
                              data-date="${dateStr}" data-time="${time.TimeBlockSchedule}">
-                            ${cellAppointments.map(({ appointment, heightPx }) => {
+                            ${appointmentsWithPosition.map(({ appointment, heightPx, offsetPx, leftPx }) => {
                         renderedAppointments.add(appointment.AppoinmentId);
                         return `
                                 <div class="calendar-event ${getEventTimeSlotClass(appointment)} cursor-move fs-7 truncate"
-                                     style="position: absolute; height: ${heightPx}px;"
+                                     style="position: absolute; height: ${heightPx}px;  left: ${leftPx}px; width: 90px;"
                                      data-id="${appointment.AppoinmentId}" draggable="true">
                                     <div class="font-weight-medium fs-7">${appointment.CustomerName}</div>
                                     <div class="fs-7 truncate">${appointment.ServiceType} (${appointment.Duration})</div>
@@ -821,6 +872,7 @@ function renderDateView(date) {
         renderUnscheduledList();
     });
 }
+
 
 function searchListView(e) {
     e.preventDefault();
@@ -958,43 +1010,69 @@ function renderListView() {
 
 // Render Unscheduled List
 function renderUnscheduledList(view = 'date') {
-    const container = view === 'date' ? $("#unscheduledList") : $("#unscheduledListResource");
-    const statusFilter = view === 'date' ? $("#MainContent_StatusTypeFilter").val() : $("#MainContent_StatusTypeFilter_Resource").val();
-    const serviceTypeFilter = view === 'date' ? $("#MainContent_ServiceTypeFilter_2").val() : $("#MainContent_ServiceTypeFilter_Resource").val();
-    const searchFilter = view === 'date' ? $("#searchFilter").val().toLowerCase() : $("#searchFilterResource").val().toLowerCase();
+    const isResourceView = view === 'resource';
+    const statusFilterId = isResourceView ? '#StatusTypeFilter_Resource' : '#StatusTypeFilter';
+    const serviceFilterId = isResourceView ? '#ServiceTypeFilter_Resource' : '#ServiceTypeFilter_2';
+    const searchFilterId = isResourceView ? '#searchFilterResource' : '#searchFilter';
+    const provinceFilterId = isResourceView ? '#ProvinceFilterResource' : '#ProvinceFilter';
+    const postalCodeFilterId = isResourceView ? '#PostalCodeFilterResource' : '#PostalCodeFilter';
+    const listContainerId = isResourceView ? '#unscheduledListResource' : '#unscheduledList';
 
-    let unscheduled = appointments;
+    const statusFilter = $(statusFilterId).val();
+    const serviceFilter = $(serviceFilterId).val();
+    const searchFilter = $(searchFilterId).val().toLowerCase();
+    const provinceFilter = $(provinceFilterId).val();
+    const postalCodeFilter = $(postalCodeFilterId).val();
 
-    if (statusFilter !== '') {
-        unscheduled = unscheduled.filter(a => a.AppoinmentStatus === statusFilter);
-    }
-    if (serviceTypeFilter !== '') {
-        unscheduled = unscheduled.filter(a => a.ServiceType === serviceTypeFilter);
-    }
-    if (searchFilter) {
-        unscheduled = unscheduled.filter(a => a.CustomerName.toLowerCase().includes(searchFilter));
+    const filteredAppointments = appointments.filter(app => {
+        const isUnassigned = !app.ResourceID || app.ResourceID === '0' || app.ResourceID === '';
+        const matchesStatus = statusFilter === 'all' || app.AppoinmentStatus === statusFilter;
+        const matchesService = serviceFilter === 'all' || app.ServiceType === serviceFilter;
+        const matchesSearch = !searchFilter || 
+            (app.CustomerName && app.CustomerName.toLowerCase().includes(searchFilter)) ||
+            (app.Address1 && app.Address1.toLowerCase().includes(searchFilter));
+        const matchesProvince = provinceFilter === 'all' || 
+            (app.Province && app.Province.toUpperCase() === provinceFilter);
+        const matchesPostalCode = postalCodeFilter === 'all' || 
+            (app.PostalCode && app.PostalCode.toUpperCase() === postalCodeFilter);
+
+        return isUnassigned && matchesStatus && matchesService && matchesSearch && matchesProvince && matchesPostalCode;
+    });
+
+    const $listContainer = $(listContainerId);
+    $listContainer.empty();
+
+    if (filteredAppointments.length === 0) {
+        $listContainer.append('<p>No unassigned appointments found.</p>');
+        return;
     }
 
-    container.html(unscheduled.length === 0 ? '<div class="text-center py-4 text-muted">No unscheduled appointments.</div>' :
-        unscheduled.map(a => `
-           <div class="appointment-card card mb-3 shadow-sm ${getEventTimeSlotClass(a)}" data-id="${a.AppoinmentId}" draggable="true">
-                <div class="card-body p-3">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <h3 class="font-weight-medium fs-6 mb-0">${a.CustomerName}</h3>
-                    </div>
-                    <div class="fs-7 text-muted mt-1 line-clamp-2">${a.Address1}</div>
-                    <div class="fs-7 text-muted mt-1 line-clamp-2">${a.RequestDate}</div>
-                    <div class="fs-7 text-muted mt-1 line-clamp-2">${formatTimeRange(a.TimeSlot)}</div>
-                    <div class="d-flex justify-content-between align-items-center mt-2">
-                        <span class="fs-7">${a.ServiceType}</span>
-                        <button class="btn btn-outline-secondary btn-sm" onclick="openEditModal(${a.AppoinmentId})">Schedule</button>
-                    </div>
+    filteredAppointments.forEach(app => {
+        const serviceType = app.ServiceType || 'Unknown';
+        const typeClass = serviceType === 'IT Support' ? 'appt-type-it-support' :
+                         serviceType === '1 Hour' ? 'appt-type-1-hour' :
+                         serviceType === '2 Hour' ? 'appt-type-2-hour' : '';
+        const timeSlotDisplay = app.TimeBlock || app.TimeSlot || 'Not specified';
+        const address = app.Address1 || 'No address';
+        const province = app.Province || '';
+        const postalCode = app.PostalCode || '';
+        const appointmentHtml = `
+            <div class="unscheduled-item ${typeClass}" data-id="${app.AppoinmentId}" draggable="true" ondragstart="drag(event)">
+                <div class="unscheduled-item-header">
+                    <span class="unscheduled-item-title">${app.CustomerName || 'Unknown Customer'}</span>
+                    <span class="unscheduled-item-status ${app.AppoinmentStatus.toLowerCase()}">${app.AppoinmentStatus}</span>
+                </div>
+                <div class="unscheduled-item-details">
+                    <p><strong>Service:</strong> ${serviceType}</p>
+                    <p><strong>Time:</strong> ${timeSlotDisplay}</p>
+                    <p><strong>Address:</strong> ${address}${province ? ', ' + province : ''}${postalCode ? ' ' + postalCode : ''}</p>
                 </div>
             </div>
-        `).join(''));
+        `;
+        $listContainer.append(appointmentHtml);
+    });
 
-    setupDragAndDrop();
-    setupHoverEvents();
+    $('.unscheduled-item').on('dragstart', drag);
 }
 
 // Setup drag-and-drop functionality
@@ -1388,7 +1466,7 @@ function renderResourceView(date) {
                          data-resource="${resource.ResourceName}">
                         ${cellAppointments.map(({ appointment, offsetPx, widthPx }) => `
                             <div class="calendar-event-resource ${getEventTimeSlotClass(appointment)} cursor-move"
-                                 style="position: absolute;"
+                                 style="position: absolute; width: ${widthPx}px;"
                                  data-id="${appointment.AppoinmentId}" 
                                  draggable="true">
                                 <div class="font-weight-medium fs-7">${appointment.CustomerName}</div>

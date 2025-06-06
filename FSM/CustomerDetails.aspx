@@ -7,258 +7,306 @@
     <!-- Local Styles and Scripts -->
     <link rel="stylesheet" href="Content/customerdetails.css">
 
-
     <div class="custdet-main-container">
         <h1 class="display-6 mb-4">Site : <span id="siteName">
             <asp:Label ID="lblSiteName" runat="server" /></span></h1>
 
-        <!-- Basic Information Container -->
-        <div class="custdet-container">
-            <h2 class="h4 mb-3">Basic Information</h2>
-            <asp:Label Style="display: none;" ID="lblCustomerId" runat="server" />
-            <asp:Label Style="display: none;" ID="lblSiteId" runat="server" />
-            <asp:Label Style="display: none;" ID="lblCustomerGuid" runat="server" />
-            <div class="table-responsive">
-                <table class="table table-bordered table-hover">
-                    <thead class="table-light">
-                        <tr>
-                            <th scope="col">Field</th>
-                            <th scope="col">Value</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Customer Name</td>
-                            <td id="customerName">
-                                <asp:Label ID="lblCustomerName" runat="server" /></td>
-                        </tr>
-                        <tr>
-                            <td>Site Contact</td>
-                            <td id="siteContact">
-                                <asp:Label ID="lblContact" runat="server" /><br />
-                                <i class="fas fa-phone me-1" style="font-size: 13px;"></i>Phone:
-                                <asp:HyperLink ID="hlPhone" runat="server" /><br />
-                                <i class="fas fa-mobile-alt me-1"></i>Mobile:
-                                <asp:HyperLink ID="hlMobile" runat="server" />
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Email</td>
-                            <td id="customerEmail">
-                                <asp:HyperLink ID="hlEmail" runat="server" />
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Address</td>
-                            <td id="siteAddress">
-                                <asp:Label ID="lblAddress" runat="server" /></td>
-                        </tr>
-                        <tr>
-                            <td>Status</td>
-                            <td id="siteStatus">
-                                <asp:Label ID="lblActive" runat="server" /></td>
-                        </tr>
-                        <tr>
-                            <td>Special Instructions</td>
-                            <td id="siteInstructions">
-                                <asp:Label ID="lblNote" runat="server" /></td>
-                        </tr>
-                        <tr>
-                            <td>Created On</td>
-                            <td id="siteDescription">
-                                <asp:Label ID="lblCreatedOn" runat="server" /></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+        <!-- Tab Navigation -->
+        <ul class="nav nav-tabs mb-3" id="custdetTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="basic-tab" data-bs-toggle="tab" data-bs-target="#basic" type="button" role="tab" aria-controls="basic" aria-selected="true">Basic Information</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="appointments-tab" data-bs-toggle="tab" data-bs-target="#appointments" type="button" role="tab" aria-controls="appointments" aria-selected="false">Service & Appointments</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="invoices-tab" data-bs-toggle="tab" data-bs-target="#invoices" type="button" role="tab" aria-controls="invoices" aria-selected="false">Invoices & Estimates</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="equipment-tab" data-bs-toggle="tab" data-bs-target="#equipment" type="button" role="tab" aria-controls="equipment" aria-selected="false">Equipment</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="agreements-tab" data-bs-toggle="tab" data-bs-target="#agreements" type="button" role="tab" aria-controls="agreements" aria-selected="false">Maintenance Agreements</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="documents-tab" data-bs-toggle="tab" data-bs-target="#documents" type="button" role="tab" aria-controls="documents" aria-selected="false">Proposals</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="pictures-tab" data-bs-toggle="tab" data-bs-target="#pictures" type="button" role="tab" aria-controls="pictures" aria-selected="false">Pictures</button>
+            </li>
+        </ul>
 
-        <!-- Service & Appointments Container -->
-        <div class="custdet-container">
-            <h2 class="h4 mb-3">Service & Appointments</h2>
-            <div class="custdet-controls mb-3 d-flex align-items-center flex-wrap gap-2">
-                <div class="input-group">
-                    <input type="text" id="apptSearch" class="form-control" placeholder="Search appointments...">
-                    <select runat="server" id="apptFilter" class="form-select">
-                        <option value="all">All Status</option>
-                    </select>
-                    <select runat="server" id="ticketStatus" class="form-select">
-                        <option value="all">All Status</option>
-                    </select>
-                    <%-- <select id="apptFilter" class="form-select">
-                        <option value="all">All Status</option>
-                        <option value="scheduled">Scheduled</option>
-                        <option value="pending">Pending</option>
-                        <option value="closed">Closed</option>
-                    </select>--%>
+        <!-- Tab Content -->
+        <div class="tab-content" id="custdetTabContent">
+            <!-- Basic Information -->
+            <div class="tab-pane fade show active" id="basic" role="tabpanel" aria-labelledby="basic-tab">
+                <div class="custdet-container">
+                    <h2 class="h4 mb-3">Basic Information</h2>
+                    <asp:Label Style="display: none;" ID="lblCustomerId" runat="server" />
+                    <asp:Label Style="display: none;" ID="lblSiteId" runat="server" />
+                    <asp:Label Style="display: none;" ID="lblCustomerGuid" runat="server" />
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th scope="col">Field</th>
+                                    <th scope="col">Value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Customer Name</td>
+                                    <td id="customerName">
+                                        <asp:Label ID="lblCustomerName" runat="server" /></td>
+                                </tr>
+                                <tr>
+                                    <td>Site Contact</td>
+                                    <td id="siteContact">
+                                        <asp:Label ID="lblContact" runat="server" /><br />
+                                        <i class="fas fa-phone me-1" style="font-size: 13px;"></i>Phone:
+                                        <asp:HyperLink ID="hlPhone" runat="server" /><br />
+                                        <i class="fas fa-mobile-alt me-1"></i>Mobile:
+                                        <asp:HyperLink ID="hlMobile" runat="server" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Email</td>
+                                    <td id="customerEmail">
+                                        <asp:HyperLink ID="hlEmail" runat="server" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Address</td>
+                                    <td id="siteAddress">
+                                        <asp:Label ID="lblAddress" runat="server" /></td>
+                                </tr>
+                                <tr>
+                                    <td>Status</td>
+                                    <td id="siteStatus">
+                                        <asp:Label ID="lblActive" runat="server" /></td>
+                                </tr>
+                                <tr>
+                                    <td>Special Instructions</td>
+                                    <td id="siteInstructions">
+                                        <asp:Label ID="lblNote" runat="server" /></td>
+                                </tr>
+                                <tr>
+                                    <td>Created On</td>
+                                    <td id="siteDescription">
+                                        <asp:Label ID="lblCreatedOn" runat="server" /></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-                <button id="apptExport" class="btn btn-primary d-none">Export to Excel</button>
             </div>
-            <div class="table-responsive">
-                <table class="table table-bordered table-hover">
-                    <thead class="table-light">
-                        <tr>
-                            <th scope="col">Request Date</th>
-                            <th scope="col">Time Slot</th>
-                            <th scope="col">Service Type</th>
-                            <th scope="col">Status</th>
-                            <th scope="col">Resource</th>
-                            <th scope="col">Ticket Status</th>
-                        </tr>
-                    </thead>
-                    <tbody id="apptTableBody"></tbody>
-                </table>
-            </div>
-            <div class="d-flex justify-content-between align-items-center mt-3">
-                <button id="apptPrev" class="btn btn-outline-secondary">Previous</button>
-                <span id="apptPageInfo" class="text-muted">Page 1 of 1</span>
-                <button id="apptNext" class="btn btn-outline-secondary">Next</button>
-            </div>
-        </div>
 
-        <!-- Invoices & Estimates Container -->
-        <div class="custdet-container">
-            <h2 class="h4 mb-3">Invoices & Estimates</h2>
-            <div class="custdet-controls mb-3 d-flex align-items-center flex-wrap gap-2">
-                <div class="input-group">
-                    <input type="text" id="invSearch" class="form-control" placeholder="Search invoices...">
-                    <select id="invFilter" class="form-select">
-                        <option value="all">All Status</option>
-                        <option value="unpaid">Due</option>
-                        <option value="paid">Paid</option>
-                    </select>
-
-                    <select id="invFilterType" class="form-select">
-                        <option value="all">All Type</option>
-                        <option value="invoice">Invoice</option>
-                        <option value="proposal">Estimate</option>
-                    </select>
+            <!-- Service & Appointments -->
+            <div class="tab-pane fade" id="appointments" role="tabpanel" aria-labelledby="appointments-tab">
+                <div class="custdet-container">
+                    <h2 class="h4 mb-3">Service & Appointments</h2>
+                    <div class="custdet-controls mb-3 d-flex align-items-center flex-wrap gap-2">
+                        <div class="input-group">
+                            <input type="text" id="apptSearch" class="form-control" placeholder="Search appointments...">
+                            <select runat="server" id="apptFilter" class="form-select">
+                                <option value="all">All Status</option>
+                            </select>
+                            <select runat="server" id="ticketStatus" class="form-select">
+                                <option value="all">All Status</option>
+                            </select>
+                            <%-- <select id="apptFilter" class="form-select">
+                                <option value="all">All Status</option>
+                                <option value="scheduled">Scheduled</option>
+                                <option value="pending">Pending</option>
+                                <option value="closed">Closed</option>
+                            </select>--%>
+                        </div>
+                        <button type="button" id="apptExport" class="btn btn-primary d-none">Export to Excel</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th scope="col">Request Date</th>
+                                    <th scope="col">Time Slot</th>
+                                    <th scope="col">Service Type</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col">Resource</th>
+                                    <th scope="col">Ticket Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="apptTableBody"></tbody>
+                        </table>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <button type="button" id="apptPrev" class="btn btn-outline-secondary">Previous</button>
+                        <span id="apptPageInfo" class="text-muted">Page 1 of 1</span>
+                        <button type="button" id="apptNext" class="btn btn-outline-secondary">Next</button>
+                    </div>
                 </div>
-                <a class="btn btn-primary" onclick="redirectToInvoice('Invoice')">Create Invoice</a>
-                <a class="btn btn-primary" onclick="redirectToInvoice('Proposal')">Create Estimate</a>
-                <button id="invExport" class="btn btn-primary d-none">Export to Excel</button>
             </div>
-            <div class="table-responsive">
-                <table class="table table-bordered table-hover">
-                    <thead class="table-light">
-                        <tr>
-                            <th scope="col">Number</th>
-                            <th scope="col">Appointment ID</th>
-                            <th scope="col">Type</th>
-                            <th scope="col">Date</th>
-                            <th scope="col">Subtotal</th>
-                            <th scope="col">Discount</th>
-                            <th scope="col">Tax</th>
-                            <th scope="col">Total</th>
-                            <th scope="col">Due</th>
-                            <th scope="col">Diposit</th>
-                            <th scope="col">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody id="invTableBody"></tbody>
-                </table>
-            </div>
-            <div class="d-flex justify-content-between align-items-center mt-3">
-                <button id="invPrev" class="btn btn-outline-secondary">Previous</button>
-                <span id="invPageInfo" class="text-muted">Page 1 of 1</span>
-                <button id="invNext" class="btn btn-outline-secondary">Next</button>
-            </div>
-        </div>
 
-        <!-- Equipment Container -->
-        <div class="custdet-container">
-            <h2 class="h4 mb-3">Equipment</h2>
-            <div class="custdet-controls mb-3 d-flex align-items-center flex-wrap gap-2">
-                <div class="input-group">
-                    <input type="text" id="equipSearch" class="form-control col-4" placeholder="Search equipment...">
-                   <%-- <select id="equipFilter" class="form-select">
-                        <option value="all">All Types</option>
-                        <option value="HVAC">HVAC</option>
-                        <option value="Generator">Generator</option>
-                        <option value="Plumbing">Plumbing</option>
-                    </select>--%>
+            <!-- Invoices & Estimates -->
+            <div class="tab-pane fade" id="invoices" role="tabpanel" aria-labelledby="invoices-tab">
+                <div class="custdet-container">
+                    <h2 class="h4 mb-3">Invoices & Estimates</h2>
+                    <div class="custdet-controls mb-3 d-flex align-items-center flex-wrap gap-2">
+                        <div class="input-group">
+                            <input type="text" id="invSearch" class="form-control" placeholder="Search invoices...">
+                            <select id="invFilter" class="form-select">
+                                <option value="all">All Status</option>
+                                <option value="unpaid">Due</option>
+                                <option value="paid">Paid</option>
+                            </select>
+                            <select id="invFilterType" class="form-select">
+                                <option value="all">All Type</option>
+                                <option value="invoice">Invoice</option>
+                                <option value="proposal">Estimate</option>
+                            </select>
+                        </div>
+                        <a class="btn btn-primary" onclick="redirectToInvoice('Invoice')">Create Invoice</a>
+                        <a class="btn btn-primary" onclick="redirectToInvoice('Proposal')">Create Estimate</a>
+                        <button type="button" id="invExport" class="btn btn-primary d-none">Export to Excel</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th scope="col">Number</th>
+                                    <th scope="col">Appointment ID</th>
+                                    <th scope="col">Type</th>
+                                    <th scope="col">Date</th>
+                                    <th scope="col">Subtotal</th>
+                                    <th scope="col">Discount</th>
+                                    <th scope="col">Tax</th>
+                                    <th scope="col">Total</th>
+                                    <th scope="col">Due</th>
+                                    <th scope="col">Diposit</th>
+                                    <th scope="col">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="invTableBody"></tbody>
+                        </table>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <button type="button" id="invPrev" class="btn btn-outline-secondary">Previous</button>
+                        <span id="invPageInfo" class="text-muted">Page 1 of 1</span>
+                        <button type="button" id="invNext" class="btn btn-outline-secondary">Next</button>
+                    </div>
                 </div>
-                <button id="equipAdd" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#equipModal">Add Equipment</button>
             </div>
-            <div class="table-responsive">
-                <table class="table table-bordered table-hover">
-                    <thead class="table-light">
-                        <tr>
-                            <th scope="col">Type</th>
-                            <th scope="col">Serial Number</th>
-                            <th scope="col">Make</th>
-                            <th scope="col">Model</th>
-                            <th scope="col">Warranty Start</th>
-                            <th scope="col">Warranty Date</th>
-                            <th scope="col">Labor Warranty Start</th>
-                            <th scope="col">Labor Warranty Date</th>
-                            <th scope="col">Barcode</th>
-                            <th scope="col">Install Date</th>
-                            <th scope="col">Notes</th>
-                            <th scope="col">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="equipTableBody"></tbody>
-                </table>
-            </div>
-            <div class="d-flex justify-content-between align-items-center mt-3">
-                <button id="eqpPrev" class="btn btn-outline-secondary">Previous</button>
-                <span id="eqpPageInfo" class="text-muted">Page 1 of 1</span>
-                <button id="eqpNext" class="btn btn-outline-secondary">Next</button>
-            </div>
-        </div>
 
-        <!-- Maintenance Agreements Container -->
-        <div class="custdet-container d-none">
-            <h2 class="h4 mb-3">Maintenance Agreements</h2>
-            <div class="custdet-controls mb-3 d-flex justify-content-end flex-wrap gap-2">
-                <button id="agreeAdd" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#agreeModal">Upload Agreement</button>
-            </div>
-            <div class="table-responsive">
-                <table class="table table-bordered table-hover">
-                    <thead class="table-light">
-                        <tr>
-                            <th scope="col">Document</th>
-                            <th scope="col">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="agreementTableBody"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Documents Container -->
-        <div class="custdet-container d-none">
-            <h2 class="h4 mb-3">Documents</h2>
-            <div class="table-responsive">
-                <table class="table table-bordered table-hover">
-                    <thead class="table-light">
-                        <tr>
-                            <th scope="col">Name</th>
-                            <th scope="col">Status</th>
-                            <th scope="col">Link</th>
-                        </tr>
-                    </thead>
-                    <tbody id="docTableBody"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Pictures Container -->
-        <div class="custdet-container d-none">
-            <h2 class="h4 mb-3">Pictures</h2>
-            <div class="custdet-controls mb-3 d-flex align-items-center flex-wrap gap-2">
-                <div class="input-group">
-                    <select id="picCategory" class="form-select">
-                        <option value="equipment">Equipment</option>
-                        <option value="service">Service</option>
-                        <option value="folder">Folder</option>
-                    </select>
-                    <input type="file" id="picUpload" accept="image/*" class="form-control">
+            <!-- Equipment -->
+            <div class="tab-pane fade" id="equipment" role="tabpanel" aria-labelledby="equipment-tab">
+                <div class="custdet-container">
+                    <h2 class="h4 mb-3">Equipment</h2>
+                    <div class="custdet-controls mb-3 d-flex align-items-center flex-wrap gap-2">
+                        <div class="input-group">
+                            <input type="text" id="equipSearch" class="form-control col-4" placeholder="Search equipment...">
+                            <%-- <select id="equipFilter" class="form-select">
+                                <option value="all">All Types</option>
+                                <option value="HVAC">HVAC</option>
+                                <option value="Generator">Generator</option>
+                                <option value="Plumbing">Plumbing</option>
+                            </select>--%>
+                        </div>
+                        <button type="button" id="equipAdd" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#equipModal">Add Equipment</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th scope="col">Type</th>
+                                    <th scope="col">Serial Number</th>
+                                    <th scope="col">Make</th>
+                                    <th scope="col">Model</th>
+                                    <th scope="col">Warranty Start</th>
+                                    <th scope="col">Warranty Date</th>
+                                    <th scope="col">Labor Warranty Start</th>
+                                    <th scope="col">Labor Warranty Date</th>
+                                    <th scope="col">Barcode</th>
+                                    <th scope="col">Install Date</th>
+                                    <th scope="col">Notes</th>
+                                    <th scope="col">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="equipTableBody"></tbody>
+                        </table>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <button type="button" id="eqpPrev" class="btn btn-outline-secondary">Previous</button>
+                        <span id="eqpPageInfo" class="text-muted">Page 1 of 1</span>
+                        <button type="button" id="eqpNext" class="btn btn-outline-secondary">Next</button>
+                    </div>
                 </div>
-                <button id="picUploadBtn" class="btn btn-primary">Upload</button>
             </div>
-            <div class="custdet-gallery d-flex flex-wrap gap-3" id="picGallery"></div>
+
+            <!-- Maintenance Agreements -->
+            <div class="tab-pane fade" id="agreements" role="tabpanel" aria-labelledby="agreements-tab">
+                <div class="custdet-container">
+                    <h2 class="h4 mb-3">Maintenance Agreements</h2>
+                    <div class="custdet-controls mb-3 d-flex align-items-center flex-wrap gap-2">
+                        <div class="input-group">
+                            <input type="text" id="agreeSearch" class="form-control" placeholder="Search agreements...">
+                        </div>
+                        <button type="button" id="agreeAdd" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#agreeModal">Upload Agreement</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th scope="col">Document</th>
+                                    <th scope="col">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="agreementTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Documents -->
+            <div class="tab-pane fade" id="documents" role="tabpanel" aria-labelledby="documents-tab">
+                <div class="custdet-container">
+                    <h2 class="h4 mb-3">Documents</h2>
+                    <div class="custdet-controls mb-3 d-flex align-items-center flex-wrap gap-2">
+                        <div class="input-group">
+                            <input type="text" id="docSearch" class="form-control" placeholder="Search documents...">
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th scope="col">Name</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col">Link</th>
+                                </tr>
+                            </thead>
+                            <tbody id="docTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pictures -->
+            <div class="tab-pane fade" id="pictures" role="tabpanel" aria-labelledby="pictures-tab">
+                <div class="custdet-container">
+                    <h2 class="h4 mb-3">Pictures</h2>
+                    <div class="custdet-controls mb-3 d-flex align-items-center flex-wrap gap-2">
+                        <div class="input-group">
+                            <select id="picCategory" class="form-select">
+                                <option value="equipment">Equipment</option>
+                                <option value="service">Service</option>
+                                <option value="folder">Folder</option>
+                            </select>
+                            <input type="file" id="picUpload" accept="image/*" class="form-control">
+                        </div>
+                        <button type="button" id="picUploadBtn" class="btn btn-primary">Upload</button>
+                    </div>
+                    <div class="custdet-gallery d-flex flex-wrap gap-3" id="picGallery"></div>
+                </div>
+            </div>
         </div>
 
         <!-- Back Button -->
@@ -291,7 +339,6 @@
         <option value="Plumbing">Plumbing</option>
     </select>--%>
                                 </div>
-
                             </div>
                             <div class="row mb-4">
                                 <div class="col-4">
@@ -307,7 +354,6 @@
                                     <input type="text" id="Barcode" class="form-control">
                                 </div>
                             </div>
-
                             <div class="row mb-4">
                                 <div class="col-6">
                                     <label for="WarrantyStart" class="form-label">Warranty Start</label>
@@ -383,9 +429,9 @@
 
     <!-- Bootstrap 5 JS and Popper.js -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <script>
-
         // Toast Notification
         function showToast(message) {
             const toast = new bootstrap.Toast(document.getElementById('toast'));
@@ -417,17 +463,19 @@
                 showToast(`Assigning equipment ${id} to work order...`);
             };
 
-
             // Maintenance Agreements
-            function renderAgreements() {
+            function renderAgreements(searchTerm = '') {
                 const tbody = document.getElementById('agreementTableBody');
-                tbody.innerHTML = site.serviceAgreements.map(a => `
+                const filteredAgreements = site.serviceAgreements.filter(a => 
+                    (a.file || '').toLowerCase().includes(searchTerm.toLowerCase())
+                );
+                tbody.innerHTML = filteredAgreements.map(a => `
                     <tr>
                         <td>${a.file ? 'Agreement PDF' : 'No file'}</td>
                         <td>
                             ${a.file ? `<a href="${a.file}" class="btn btn-sm btn-outline-primary me-1" download>Download</a>` : ''}
-                            <button class="btn btn-sm btn-outline-primary me-1" onclick="editAgreement('${a.id}')">Edit</button>
-                            <button class="btn btn-sm btn-outline-danger" onclick="deleteAgreement('${a.id}')">Delete</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary me-1" onclick="editAgreement('${a.id}')">Edit</button>
+                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteAgreement('${a.id}')">Delete</button>
                         </td>
                     </tr>
                 `).join('') || '<tr><td colspan="2">No agreements</td></tr>';
@@ -451,7 +499,7 @@
                     document.getElementById('agreeFile').value = '';
                     const preview = document.getElementById('agreeFilePreview');
                     if (agree.file) {
-                        preview.innerHTML = `<iframe src="${a.file}" style="width:100%;height:100%;"></iframe>`;
+                        preview.innerHTML = `<iframe src="${agree.file}" style="width:100%;height:100%;"></iframe>`;
                         preview.style.display = 'block';
                     } else {
                         preview.style.display = 'none';
@@ -524,6 +572,37 @@
                 showToast(editingAgreeId ? 'Agreement updated successfully' : 'Agreement uploaded successfully');
             });
 
+            // Agreements Search
+            document.getElementById('agreeSearch').addEventListener('input', () => {
+                const searchTerm = document.getElementById('agreeSearch').value;
+                renderAgreements(searchTerm);
+            });
+
+            // Documents Search
+            function renderDocuments(searchTerm = '') {
+                const tbody = document.getElementById('docTableBody');
+                // Placeholder data (replace with actual data source)
+                const documents = [
+                    { name: 'Doc1.pdf', status: 'Active', link: '#' },
+                    { name: 'Doc2.pdf', status: 'Pending', link: '#' }
+                ];
+                const filteredDocs = documents.filter(d => 
+                    d.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    d.status.toLowerCase().includes(searchTerm.toLowerCase())
+                );
+                tbody.innerHTML = filteredDocs.map(d => `
+                    <tr>
+                        <td>${d.name}</td>
+                        <td>${d.status}</td>
+                        <td><a href="${d.link}" class="invoice-link">View</a></td>
+                    </tr>
+                `).join('') || '<tr><td colspan="3">No documents found</td></tr>';
+            }
+
+            document.getElementById('docSearch').addEventListener('input', () => {
+                const searchTerm = document.getElementById('docSearch').value;
+                renderDocuments(searchTerm);
+            });
 
             // Pictures
             let pictures = { equipment: {}, service: {}, folder: {} };
@@ -533,7 +612,7 @@
                 gallery.innerHTML = pics.map((p, i) => `
                     <div class="custdet-gallery-item">
                         <img src="${p}" alt="Picture">
-                        <button class="custdet-delete-btn" onclick="deletePicture('${category}', '${id}', ${i})">X</button>
+                        <button type="button" class="custdet-delete-btn" onclick="deletePicture('${category}', '${id}', ${i})">X</button>
                     </div>
                 `).join('') || 'No pictures available';
             }
@@ -586,11 +665,9 @@
             }
 
             // Initial Render
-            // renderAppointments(1);
-            //renderInvoices(1);
-            //renderEquipment();
-            //renderAgreements();
-            //renderPictures('equipment');
+            renderAgreements();
+            renderDocuments();
+            renderPictures('equipment');
         });
 
         let appointmentData = [];
@@ -731,7 +808,6 @@
             applyFilters();
         });
 
-
         function loadInvoices(customerId) {
             $.ajax({
                 url: 'CustomerDetails.aspx/GetCustomerInvoices',
@@ -813,7 +889,6 @@
             const typeFilter = $('#invFilterType').val().trim().toLowerCase();
 
             filteredInvoiceData = invoiceData.filter(item => {
-
                 if (item.InvoiceType == "Proposal") {
                     item.InvoiceType = "Estimate"
                 }
@@ -862,7 +937,6 @@
             applyFiltersInv();
         });
 
-
         function loadEquipment(siteId, customerGuid) {
             $.ajax({
                 url: 'CustomerDetails.aspx/GetSiteEquipmentData',
@@ -906,20 +980,18 @@
                 <td>${item.InstallDate || ''}</td>
                 <td>${item.Notes || ''}</td>
                 <td>
-                <button type=button class="btn btn-primary" onclick=editEqp(event,"${item.Id}")>Edit</button>
-                <button type=button class="btn btn-danger" onclick=deleteEqp(event,"${item.Id}")>Delete</button>
+                <button type="button" class="btn btn-primary" onclick="editEqp(event,'${item.Id}')">Edit</button>
+                <button type="button" class="btn btn-danger" onclick="deleteEqp(event,'${item.Id}')">Delete</button>
                 </td>
                 </tr>`);
             });
         }
 
-
         function applyFiltersEqp() {
             const searchTerm = $('#equipSearch').val().trim().toLowerCase();
-           // const typeFilter = $('#equipFilter').val().trim().toLowerCase();
+            // const typeFilter = $('#equipFilter').val().trim().toLowerCase();
 
             filteredEquipmentData = equipmentData.filter(item => {
-
                 // Filter by status if not "all"
                 //const matchesType = typeFilter === 'all' ||
                 //    (item.EquipmentType && item.EquipmentType.toLowerCase() === typeFilter);
@@ -964,7 +1036,6 @@
         //$('#equipFilter').on('change', function () {
         //    applyFiltersEqp();
         //});
-
 
         function equipmentSave(event) {
             event.preventDefault();
@@ -1057,7 +1128,6 @@
                     error: function (error) { }
                 })
             }
-
         }
 
         function validateForm() {

@@ -374,7 +374,7 @@ th.sortable {
     }
 
 /* Time Slot Indicators */
-.time-block-indicator {
+/*.time-block-indicator {
     display: inline-block;
     width: 16px;
     height: 16px;
@@ -411,7 +411,7 @@ th.sortable {
 [data-theme="dark"] .time-block-emergency {
     background-color: #ea580c;
     border-color: #c2410c;
-}
+}*/
 
 /* Appointment Card (Unscheduled Appointments) */
 .appointment-card {
@@ -1743,7 +1743,7 @@ button.btn.btn-primary.ms-2 {
 
 /* Replace expansion styles for calendar-event and appointment-card */
 .calendar-event.expanded {
-    max-height: calc(200px); /* Limit vertical expansion */
+    max-height: calc(500px); /* Limit vertical expansion */
     z-index: 1000;
     transform: scale(1.05);
     box-shadow: 0 5px 15px rgba(0,0,0,0.0.2);
@@ -1800,4 +1800,90 @@ button.btn.btn-primary.ms-2 {
     white-space: normal; /* Allow text to wrap */
     overflow: visible; /* Show full text */
     text-overflow: clip; /* Remove ellipsis */
+}
+
+/*Color by Type*/
+/* Appointment Type Indicators */
+.appt-type-indicators {
+    margin-top: 10px;
+    font-size: 0.9rem;
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.appt-type-indicator {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    margin-right: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.appt-type-it-support {
+    background-color: #c7d2fe; /* Blue shade similar to time-block-morning */
+    border-color: #a5b4fc;
+}
+
+.appt-type-1-hour {
+    background-color: #a7f3d0; /* Green shade for 1 Hour */
+    border-color: #6ee7b7;
+}
+
+.appt-type-2-hour {
+    background-color: #fed7aa; /* Orange shade similar to time-block-emergency */
+    border-color: #fdba74;
+}
+
+[data-theme="dark"] .appt-type-it-support {
+    background-color: #4f46e5;
+    border-color: #4338ca;
+}
+
+[data-theme="dark"] .appt-type-1-hour {
+    background-color: #10b981;
+    border-color: #059669;
+}
+
+[data-theme="dark"] .appt-type-2-hour {
+    background-color: #ea580c;
+    border-color: #c2410c;
+}
+
+/* Calendar Event and Appointment Card Styles for Appointment Types */
+.calendar-event-it-support, .appointment-card-it-support {
+    background-color: #c7d2fe;
+    border: 1px solid #a5b4fc;
+}
+
+.calendar-event-1-hour, .appointment-card-1-hour {
+    background-color: #a7f3d0;
+    border: 1px solid #6ee7b7;
+}
+
+.calendar-event-2-hour, .appointment-card-2-hour {
+    background-color: #fed7aa;
+    border: 1px solid #fdba74;
+}
+
+[data-theme="dark"] .calendar-event-it-support, [data-theme="dark"] .appointment-card-it-support {
+    background-color: rgb(79, 70, 229, 0.3);
+    border: 1px solid #4338ca;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+[data-theme="dark"] .calendar-event-1-hour, [data-theme="dark"] .appointment-card-1-hour {
+    background-color: rgb(16, 185, 129, 0.3);
+    border: 1px solid #059669;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+[data-theme="dark"] .calendar-event-2-hour, [data-theme="dark"] .appointment-card-2-hour {
+    background-color: rgb(234, 88, 12, 0.3);
+    border: 1px solid #c2410c;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
 }
