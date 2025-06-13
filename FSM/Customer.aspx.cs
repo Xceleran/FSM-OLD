@@ -20,7 +20,7 @@ namespace FSM
     {
         string CompanyID = "";
         protected void Page_Load(object sender, EventArgs e)
-         {
+        {
             if (Session["CompanyID"] == null)
             {
                 Response.Redirect("Dashboard.aspx");
@@ -50,16 +50,21 @@ namespace FSM
 
                 string countSql = @"SELECT COUNT(*) FROM [msSchedulerV3].[dbo].[tbl_Customer] " + whereCondition;
                 db.Open();
-                object result =  db.ExecuteScalar(countSql);
+                object result = db.ExecuteScalar(countSql);
                 if (result != null)
                 {
                     totalRecords = Convert.ToInt32(result);
                 }
                 db.Close();
 
-                string sql = $@"SELECT * FROM [msSchedulerV3].[dbo].[tbl_Customer] {whereCondition}
-                                ORDER BY {sortColumn} {sortDirection} OFFSET {start} ROWS FETCH NEXT {length} ROWS ONLY;";
-
+                string sql = $@"SELECT c.*, 
+                ISNULL((SELECT TOP 1 CASE WHEN a.Status = 'Deleted' THEN 'N/A' ELSE s.StatusName END
+                        FROM [msSchedulerV3].[dbo].[tbl_Appointment] a
+                        LEFT JOIN [msSchedulerV3].[dbo].[tbl_Status] s ON TRY_CAST(a.Status AS INT) = s.StatusID AND a.CompanyID = s.CompanyID
+                        WHERE a.CustomerID = c.CustomerID AND a.CompanyID = c.CompanyID
+                        ORDER BY a.ApptDateTime DESC), 'N/A') AS StatusName
+                FROM [msSchedulerV3].[dbo].[tbl_Customer] c {whereCondition}
+                ORDER BY {sortColumn} {sortDirection} OFFSET {start} ROWS FETCH NEXT {length} ROWS ONLY;";
                 db.Open();
                 db.Execute(sql, out dt);
                 db.Close();
@@ -100,7 +105,8 @@ namespace FSM
                             CreatedDateTime = Convert.ToDateTime(dr["CreatedDateTime"]),
                             CallPopAppId = dr["CallPopAppId"].ToString(),
                             QboId = dr["QboId"].ToString(),
-                            CreatedCompanyID = dr["CreatedCompanyID"].ToString()
+                            CreatedCompanyID = dr["CreatedCompanyID"].ToString(),
+                            StatusName = dr["StatusName"].ToString()
                         });
                     }
                 }
@@ -210,11 +216,11 @@ namespace FSM
             try
             {
                 db.Open();
-                string strSQL = @"SELECT * FROM [msSchedulerV3].dbo.tbl_CustomerSite WHERE CompanyID='"+ companyid +"' AND CustomerID='"+ customerId +"' order by SiteName";
+                string strSQL = @"SELECT * FROM [msSchedulerV3].dbo.tbl_CustomerSite WHERE CompanyID='" + companyid + "' AND CustomerID='" + customerId + "' order by SiteName";
                 db.Open();
                 db.Execute(strSQL, out dt);
                 db.Close();
-                if(dt.Rows.Count > 0)
+                if (dt.Rows.Count > 0)
                 {
                     foreach (DataRow dr in dt.Rows)
                     {
@@ -234,7 +240,7 @@ namespace FSM
                     }
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return sites;
             }
@@ -324,7 +330,7 @@ namespace FSM
                 db.AddParameter("@Id", site.Id, SqlDbType.Int);
                 success = db.UpdateSql(strSQL);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 success = false;
             }
@@ -335,4 +341,6 @@ namespace FSM
             return success;
         }
     }
+
+
 }

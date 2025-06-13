@@ -69,6 +69,32 @@
             });
         });
     }
+    // Edit Customer Info Table
+    const editCustomerBtn = document.getElementById('editCustomerBtn');
+    if (editCustomerBtn) {
+        editCustomerBtn.addEventListener('click', () => {
+            const customerData = table.row({ selected: true }).data();
+            if (customerData) {
+                // Populate the edit modal fields
+                document.getElementById('editFirstName').value = customerData.FirstName || '';
+                document.getElementById('editLastName').value = customerData.LastName || '';
+                document.getElementById('editEmail').value = customerData.Email || '';
+                document.getElementById('editPhone').value = customerData.Phone || '';
+                // Store CustomerID and CustomerGuid for saving
+                document.getElementById('editCustomerForm').dataset.customerId = customerData.CustomerID;
+                document.getElementById('editCustomerForm').dataset.customerGuid = customerData.CustomerGuid;
+                openModal('editCustomerModal');
+            } else {
+                alert('Please select a customer to edit.');
+            }
+        });
+    }
+
+    // Close Edit Customer Modal
+    const closeEditCustomerBtn = document.getElementById('closeEditCustomer');
+    if (closeEditCustomerBtn) {
+        closeEditCustomerBtn.addEventListener('click', () => closeModal('editCustomerModal'));
+    }
 });
 
 var sites = [];
@@ -94,6 +120,7 @@ loadCustomers();
 
 function loadCustomers() {
     table = $('#customerTable').DataTable({
+
         "processing": true,
         "serverSide": true,
         "filter": true,
@@ -123,10 +150,49 @@ function loadCustomers() {
         },
         "paging": true,
         "pageLength": 10,
+        //Edit Button for Customer Table
         "columns": [
             { "data": "FirstName", "name": "First Name", "autoWidth": true },
             { "data": "LastName", "name": "Last Name", "autoWidth": true },
             { "data": "Email", "name": "Email", "autoWidth": true },
+            {
+                "data": "StatusName",
+                "name": "Status",
+                "autoWidth": true,
+                "render": function (data, type, row) {
+                    let statusClass;
+                    switch (data) {
+                        case 'Scheduled':
+                            statusClass = 'status-scheduled';
+                            break;
+                        case 'Pending':
+                            statusClass = 'status-pending';
+                            break;
+                        case 'Closed':
+                            statusClass = 'status-closed';
+                            break;
+                        case 'N/A':
+                        default:
+                            statusClass = 'status-na';
+                            break;
+                    }
+                    return `<span class="badge ${statusClass}">${data}</span>`;
+                }
+            },
+            {
+                "data": null,
+                "render": function (data, type, row) {
+                    return '<button class="cust-table-edit-btn" data-customer-id="' + row.CustomerID + '">' +
+                        '<svg viewBox="0 0 20 20" width="18" height="18" xmlns="http://www.w3.org/2000/svg" fill="none">' +
+                        '<g id="SVGRepo_bgCarrier" stroke-width="0"></g>' +
+                        '<g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>' +
+                        '<g id="SVGRepo_iconCarrier">' +
+                        '<path fill="currentColor" fill-rule="evenodd" d="M15.198 3.52a1.612 1.612 0 012.223 2.336L6.346 16.421l-2.854.375 1.17-3.272L15.197 3.521zm3.725-1.322a3.612 3.612 0 00-5.102-.128L3.11 12.238a1 1 0 00-.253.388l-1.8 5.037a1 1 0 001.072 1.328l4.8-.63a1 1 0 00.56-.267L18.8 7.304a3.612 3.612 0 00.122-5.106zM12 17a1 1 0 100 2h6a1 1 0 100-2h-6z"></path>' +
+                        '</g></svg></button>';
+                },
+                "orderable": false,
+                "width": "10%"
+            }
         ],
         "select": {
             "style": "single"
@@ -305,6 +371,73 @@ function validateSiteForm() {
     }
     if ($("#address").val().trim() === "") {
         errorMessage += "Adress is required.\n";
+        isValid = false;
+    }
+
+    if (!isValid) {
+        alert(errorMessage);
+    }
+    return isValid;
+
+}
+// Save Edited Customer Info
+const editCustomerForm = document.getElementById('editCustomerForm');
+if (editCustomerForm) {
+    editCustomerForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        if (validateCustomerForm()) {
+            const customer = {
+                CustomerID: editCustomerForm.dataset.customerId,
+                CustomerGuid: editCustomerForm.dataset.customerGuid,
+                FirstName: document.getElementById('editFirstName').value.trim(),
+                LastName: document.getElementById('editLastName').value.trim(),
+                Email: document.getElementById('editEmail').value.trim(),
+                Phone: document.getElementById('editPhone').value.trim()
+            };
+
+            $.ajax({
+                type: "POST",
+                url: "Customer.aspx/UpdateCustomer",
+                data: JSON.stringify({ customer: customer }),
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (response) {
+                    if (response.d) {
+                        alert("Customer updated successfully!");
+                        closeModal('editCustomerModal');
+                        table.ajax.reload(); // Refresh the DataTable
+                        generateCustomerDetails(customer); // Update details display
+                    } else {
+                        alert("Failed to update customer.");
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error updating customer: ", error);
+                    alert("Error updating customer.");
+                }
+            });
+        }
+    });
+}
+
+// Validate Edit Customer Form
+function validateCustomerForm() {
+    let isValid = true;
+    let errorMessage = "";
+
+    if ($("#editFirstName").val().trim() === "") {
+        errorMessage += "First Name is required.\n";
+        isValid = false;
+    }
+    if ($("#editLastName").val().trim() === "") {
+        errorMessage += "Last Name is required.\n";
+        isValid = false;
+    }
+    if ($("#editEmail").val().trim() === "") {
+        errorMessage += "Email is required.\n";
+        isValid = false;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test($("#editEmail").val().trim())) {
+        errorMessage += "Invalid email format.\n";
         isValid = false;
     }
 
