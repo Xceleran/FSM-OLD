@@ -575,9 +575,10 @@
                             <tr>
                                 <th>#</th>
                                 <th>Item Name</th>
-                                <th>Item Type</th>
+                                <th>Category</th>
                                 <th>Description</th>
-                                <th>Barcode</th>
+                                <th>SKU</th>
+                                <th>Qty on Hand</th>
                                 <th>Price</th>
                                 <th>Is Taxable</th>
                                 <th>Actions</th>
@@ -617,14 +618,14 @@
                                 <input type="text" id="description" class="form-control" />
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label fw-medium">Barcode</label>
-                                <input type="text" id="barcode" class="form-control" />
+                                <label class="form-label fw-medium">Sku</label>
+                                <input type="text" id="Sku" class="form-control" />
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-medium">Price</label>
                                 <input type="number" id="price" class="form-control" step="0.01" required />
                             </div>
-                            <div class="col-md-6 mb-3">
+                            <div class="col-md-3 mb-3">
                                 <label class="form-label fw-medium">Taxable</label>
                                 <div class="d-flex gap-3">
                                     <div class="form-check">
@@ -636,6 +637,10 @@
                                         <label class="form-check-label" for="taxNo">No</label>
                                     </div>
                                 </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label fw-medium">Quantity</label>
+                                <input type="number" id="quantity" class="form-control" step="1" required />
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-medium">Item Type</label>
@@ -664,27 +669,6 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // DOM Elements
-            //const itemList = document.getElementById('itemList');
-            //const imageView = document.getElementById('imageView');
-            //const listView = document.getElementById('listView');
-            //const searchBar = document.getElementById('searchBar');
-            //const entriesPerPage = document.getElementById('entriesPerPage');
-            //const prevPageBtn = document.getElementById('prevPage');
-            //const nextPageBtn = document.getElementById('nextPage');
-            //const pageInfo = document.getElementById('pageInfo');
-            //const addItemBtn = document.getElementById('addItemBtn');
-            //const itemModal = new bootstrap.Modal(document.getElementById('itemModal'));
-            //const itemForm = document.getElementById('itemForm');
-            //const cancelBtn = document.getElementById('cancelBtn');
-            //const categoryFilter = document.getElementById('categoryFilter');
-            //const viewToggle = document.getElementById('viewToggle');
-            //const categorySelect = document.getElementById('category');
-            //const imageSection = document.getElementById('imageSection');
-            //const itemImage = document.getElementById('itemImage');
-            //const imagePreview = document.getElementById('imagePreview');
-            //const imageError = document.getElementById('imageError');
-
 
             //let itemsPerPage = parseInt(entriesPerPage.value);
             let currentView = 'list';
@@ -708,8 +692,6 @@
             function initialize() {
                 //listView.style.display = 'block';
             }
-            // Start
-            //initialize();
         });
 
 
@@ -758,7 +740,8 @@
                     item.ItemName,
                     item.typeName,
                     item.Description,
-                    item.Barcode,
+                    item.Sku,
+                    item.Quantity,
                     item.Price,
                     item.Taxable
                 ].join(' ').toLowerCase();
@@ -792,7 +775,8 @@
                 <td>${item.ItemName || ''}</td>
                 <td>${typeName}</td>
                 <td>${item.Description || ''}</td>
-                <td>${item.Barcode || ''}</td>
+                <td>${item.Sku || ''}</td>
+                <td>${item.Quantity || ''}</td>
                 <td>${item.Price || ''}</td>
                 <td>${item.Taxable || ''}</td>
                 <td>
@@ -898,7 +882,7 @@
                         $('#itemName').val(data.ItemName);
                         $('#Id').val(data.Id);
                         $('#description').val(data.Description);
-                        $('#barcode').val(data.Barcode);
+                        $('#Sku').val(data.Sku);
                         $('#price').val(data.Price);
                         $('#location').val(data.Location);
                         populateItemTypes(data.ItemTypeId);
@@ -932,7 +916,7 @@
                 CompanyID: $('#companyId').val(),
                 ItemName: $('#itemName').val().trim(),
                 Description: $('#description').val().trim(),
-                Barcode: $('#barcode').val().trim(),
+                Sku: $('#Sku').val().trim(),
                 Price: parseFloat($('#price').val()) || 0,
                 IsTaxable: $('input[name="taxable"]:checked').val() === "1",
                 Location: $('#location').val().trim(),
@@ -960,6 +944,23 @@
                 },
                 error: function (xhr, status, error) {
                     console.error("Error updating details: ", error);
+                }
+            });
+        }
+
+
+        function SyncQuickBook() {
+            var prgBar = document.getElementById("ProgressGIF");
+            prgBar.style.display = "block";
+            $.ajax({
+                type: "POST",
+                url: "BillableItems.aspx/SyncQBOItems",
+                contentType: "application/json",
+                dataType: "json",
+                success: function (msg) {
+                    alert(msg.d);
+                    prgBar.style.display = "none";
+                    window.location.href = "BillableItems.aspx";
                 }
             });
         }

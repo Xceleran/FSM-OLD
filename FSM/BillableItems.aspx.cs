@@ -1,9 +1,16 @@
 ﻿using FSM.Entity.Customer;
+using FSM.Helper;
+using FSM.Processors;
+using Intuit.Ipp.Core;
+using Intuit.Ipp.Data;
+using Intuit.Ipp.DataService;
+using Intuit.Ipp.QueryFilter;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
+using System.Diagnostics;
 using System.Linq;
 using System.Web;
 using System.Web.Script.Services;
@@ -175,6 +182,8 @@ namespace FSM
                                     Name = @Name,
                                     Description = @Description,
                                     Barcode = @Barcode,
+                                    Sku = @Sku,
+                                    Quantity = @Quantity,
                                     Location = @Location,
                                     Price = @Price,
                                     ItemTypeId = @ItemTypeId,
@@ -184,8 +193,10 @@ namespace FSM
                 db.AddParameter("@Name", itemData.ItemName ?? (object)DBNull.Value, SqlDbType.NVarChar);
                 db.AddParameter("@Description", itemData.Description ?? (object)DBNull.Value, SqlDbType.NVarChar);
                 db.AddParameter("@Barcode", itemData.Barcode ?? (object)DBNull.Value, SqlDbType.NVarChar);
+                db.AddParameter("@Sku", itemData.Sku ?? (object)DBNull.Value, SqlDbType.NVarChar);
                 db.AddParameter("@Location", itemData.Location ?? (object)DBNull.Value, SqlDbType.NVarChar);
                 db.AddParameter("@Price", itemData.Price, SqlDbType.Decimal);
+                db.AddParameter("@Quantity", itemData.Quantity, SqlDbType.Decimal);
                 db.AddParameter("@ItemTypeId", itemData.ItemTypeId, SqlDbType.Int);
                 db.AddParameter("@Id", itemData.Id ?? (object)DBNull.Value, SqlDbType.NVarChar);
                 db.AddParameter("@IsTaxable", itemData.IsTaxable, SqlDbType.Bit);
@@ -202,6 +213,169 @@ namespace FSM
             }
             return success;
         }
+
+        // Sync With QBO -- Yuvi
+        [WebMethod(EnableSession = false)]
+        public static string SyncQBOItems()
+        {
+            bool saveStat = false;
+            try
+            {
+                string QboLastUpdatedTime = string.Empty;
+
+                string Sql = @"SELECT QboLastUpdatedTime FROM [msSchedulerV3].[dbo].[tbl_Company]  Where [CompanyID] = '" + HttpContext.Current.Session["CompanyID"].ToString() + "'";
+
+                Database db = new Database(ConfigurationManager.AppSettings["ConnString"].ToString());
+
+                DataTable dt = new DataTable();
+
+                QboLastUpdatedTime = db.ExecuteScalarString(Sql);
+                if (string.IsNullOrEmpty(QboLastUpdatedTime))
+                {
+                    QboLastUpdatedTime = "1990-01-01T00:00:00";
+                }
+
+                QboLastUpdatedTime = Convert.ToDateTime(QboLastUpdatedTime).ToString("yyyy-MM-ddTHH:mm:ss");
+
+                QBOSettins qBoStngPost = new QBOSettins();
+                QBOManager qBOManager = new QBOManager();
+                if (qBOManager.VerifyCompanySetting(HttpContext.Current.Session["CompanyID"].ToString(), ref qBoStngPost))
+                {
+                    ServiceContext context = qBOManager.GetServiceContext(qBoStngPost, HttpContext.Current.Session["CompanyID"].ToString());
+                    saveStat = qBOManager.ItemSynchronization(qBoStngPost, HttpContext.Current.Session["CompanyID"].ToString(), context, QboLastUpdatedTime);
+                }
+                if (saveStat)
+                    return "Items have been synchronized.";
+                else
+                    return "Item Synchronization failed.";
+            }
+            catch
+            {
+                return "Item Synchronization failed.";
+            }
+        }
+
+
+        private bool QBSaveItem(ref int ItemId, Item itemData)
+        {
+
+            string cId = Session["CompanyID"].ToString();
+            QBOSettins qBoStng = new QBOSettins();
+            QBOManager qBOManager = new QBOManager();
+            if (qBOManager.VerifyCompanySetting(cId, ref qBoStng))
+            {
+                try
+                {
+                    ServiceContext serviceContext = qBOManager.GetServiceContext(qBoStng, cId);
+
+                    string qboQuery = "select * from Item ";
+                    QueryService<Intuit.Ipp.Data.Item> qsItem = new QueryService<Intuit.Ipp.Data.Item>(serviceContext);
+                    List<Intuit.Ipp.Data.Item> listItems = qsItem.ExecuteIdsQuery(qboQuery).ToList<Intuit.Ipp.Data.Item>();
+
+                    bool isExists = false;
+                    foreach (Intuit.Ipp.Data.Item ilst in listItems)
+                    {
+                        if (ilst.Name == itemData.ItemName)
+                        {
+                            ItemId = Convert.ToInt16(ilst.Id);
+                            isExists = true;
+                        }
+                    }
+                    if (!isExists)
+                    {
+                        Intuit.Ipp.Data.Item Itm = new Intuit.Ipp.Data.Item();
+                        Itm.Name = itemData.ItemName;
+                        Itm.Description = itemData.Description;
+                        Itm.Taxable = itemData.IsTaxable;
+                        Itm.UnitPrice = itemData.Price;
+                        Itm.TypeSpecified = true;
+                        Itm.Type = ItemTypeEnum.Service;
+                        Itm.Sku = itemData.Sku;
+                        Itm.TrackQtyOnHand = true;
+                        Itm.TrackQtyOnHandSpecified = true;
+                        Itm.QtyOnHandSpecified = true;
+                        Itm.QtyOnHand = itemData.Quantity;
+
+                        Itm.InvStartDateSpecified = true;
+                        Itm.InvStartDate = DateTime.Now;
+                        Itm.UnitPriceSpecified = true;
+                        Itm.PurchaseDesc = "";
+                        Itm.PurchaseCostSpecified = true;
+                        Itm.PurchaseCost = 0;
+
+                        //Itm.TrackQtyOnHand = true;
+                        //Itm.TrackQtyOnHandSpecified = true;
+                        //Itm.QtyOnHandSpecified = true;
+                        //
+                        //Itm.InvStartDateSpecified = true;
+                        //Itm.InvStartDate = DateTime.Now;
+                        //Itm.UnitPriceSpecified = true;
+                        //Itm.PurchaseDesc = "";
+                        //Itm.PurchaseCostSpecified = true;
+                        //Itm.PurchaseCost = 0;
+
+
+                        //string AccTypeId = "";
+                        //QBOManager.AccountTypeCheck(qBoStng, CompanyID, ItemTypeId.SelectedValue, ref AccTypeId);
+                        //Itm.IncomeAccountRef = new ReferenceType();
+                        //Itm.IncomeAccountRef.Value = AccTypeId;
+
+                        Itm.IncomeAccountRef = new ReferenceType();
+                        Itm.IncomeAccountRef.Value = "1";
+
+                        //Itm.IncomeAccountRef = new ReferenceType();
+                        //Itm.IncomeAccountRef.Value = "79";
+
+                        //Itm.ExpenseAccountRef = new ReferenceType();
+                        //Itm.ExpenseAccountRef.Value = "80";
+
+                        //Itm.AssetAccountRef = new ReferenceType();
+                        //Itm.AssetAccountRef.Value = "81";
+
+                        //QueryService<Intuit.Ipp.Data.Account> querySvc = new QueryService<Intuit.Ipp.Data.Account>(serviceContext);
+                        //var AccountList = querySvc.ExecuteIdsQuery("SELECT * FROM Account").ToList();
+                        //var AssetAccountRef = AccountList.Where(x => x.AccountType == AccountTypeEnum.OtherCurrentAsset && x.Name == "Inventory Asset").FirstOrDefault();
+                        //if (AssetAccountRef != null)
+                        //{
+                        //    Itm.AssetAccountRef = new ReferenceType();
+                        //    Itm.AssetAccountRef.Value = AssetAccountRef.Id;
+                        //}
+
+                        //var IncomeAccountRef = AccountList.Where(x => x.AccountType == AccountTypeEnum.Income && x.Name == "Sales of Product Income").FirstOrDefault();
+                        //if (IncomeAccountRef != null)
+                        //{
+                        //    Itm.IncomeAccountRef = new ReferenceType();
+                        //    Itm.IncomeAccountRef.Value = IncomeAccountRef.Id;
+                        //}
+
+                        //var ExpenseAccountRef = AccountList.Where(x => x.AccountType == AccountTypeEnum.CostofGoodsSold && x.Name == "Cost of Goods Sold").FirstOrDefault();
+                        //if (ExpenseAccountRef != null)
+                        //{
+                        //    Itm.ExpenseAccountRef = new ReferenceType();
+                        //    Itm.ExpenseAccountRef.Value = ExpenseAccountRef.Id;
+                        //}
+
+                        DataService dataService = new DataService(serviceContext);
+                        Intuit.Ipp.Data.Item Item = dataService.Add(Itm);
+                        ItemId = Convert.ToInt16(Item.Id);
+                    }
+                    return true;
+                }
+                catch (Intuit.Ipp.Exception.IdsException ex)
+                {
+                    string errDetail = "";
+                    var innerException = ((Intuit.Ipp.Exception.ValidationException)(ex.InnerException)).InnerExceptions.FirstOrDefault();
+                    if (innerException != null)
+                    {
+                        errDetail = innerException.Detail;
+                        throw new ApplicationException(innerException.Detail);
+                    }
+                    return false;
+                }
+            }
+            else
+                return false;
+        }
     }
 
 
@@ -212,6 +386,8 @@ namespace FSM
         public string ItemName { get; set; }
         public string Description { get; set; }
         public string Barcode { get; set; }
+        public string Sku { get; set; }
+        public decimal Quantity { get; set; }
         public string Taxable { get; set; }
         public bool IsTaxable { get; set; }
         public decimal Price { get; set; }
