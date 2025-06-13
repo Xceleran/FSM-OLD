@@ -140,6 +140,7 @@
     <Content Include="Content\invoice.css" />
     <Content Include="Content\Site.css" />
     <Content Include="Customer.aspx" />
+    <Content Include="Forms.aspx" />
     <Content Include="CustomerDetails.aspx" />
     <Content Include="AuthVerify.aspx" />
     <Content Include="Dashboard.aspx" />
@@ -235,6 +236,13 @@
     </Compile>
     <Compile Include="Customer.aspx.designer.cs">
       <DependentUpon>Customer.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Forms.aspx.cs">
+      <DependentUpon>Forms.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Forms.aspx.designer.cs">
+      <DependentUpon>Forms.aspx</DependentUpon>
     </Compile>
     <Compile Include="CustomerDetails.aspx.cs">
       <DependentUpon>CustomerDetails.aspx</DependentUpon>
