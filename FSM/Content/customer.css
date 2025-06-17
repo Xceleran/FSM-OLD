@@ -1180,7 +1180,9 @@ tr.selected .cust-table-edit-btn {
     min-width: 200px;
     justify-content: flex-end;
 }
-
+[data-theme="dark"] div.dt-container .dt-paging .dt-paging-button {
+    color: white !important;
+}
     /* Toggle input styling */
     .toggle-switch input[type="checkbox"] {
         position: relative;
