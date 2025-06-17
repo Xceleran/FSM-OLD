@@ -16,12 +16,44 @@
         <!-- Page Header -->
         <header class="cust-header mt-3">
             <h1 class="cust-title">Customers</h1>
+                <div class="cec-btn">
+     <a href="https://testsite.myserviceforce.com/cec/CustomerList.aspx?m=2" class="custom-launch-btn" role="button" target="_blank">
+  <span>
+    <span>Launch CEC</span>
+    <span aria-hidden="true">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" />
+      </svg>
+    </span>
+  </span>
+</a>
+    </div>
         </header>
+    
 
         <!-- Customer Section -->
         <section class="cust-section">
             <!-- Customer List -->
+
             <div class="cust-list-container">
+           <div class="mb-3 d-flex justify-content-between align-items-center">
+    <div class="mb-3 p-3">
+        <label for="statusFilter" class="form-label">Filter by Status:</label>
+        <select id="statusFilter" class="form-select w-auto">
+            <option value="all">All Statuses</option>
+            <option value="Scheduled">Scheduled</option>
+            <option value="Pending">Pending</option>
+            <option value="Closed">Closed</option>
+            <option value="Cancelled">Cancelled</option>
+            <option value="InProgress">Installation In Progress</option>
+        </select>
+    </div>
+    <div class="toggle-switch">
+        <label for="hideNA" class="form-label">Hide N/A Appointments:</label>
+        <input type="checkbox" id="hideNA" checked />
+    </div>
+</div>
+
                 <table id="customerTable" class="display" style="width: 100%">
                     <thead>
                         <tr>

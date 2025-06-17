@@ -129,7 +129,7 @@
                                 <tr>
                                     <th scope="col">Request Date</th>
                                     <th scope="col">Time Slot</th>
-                                    <th scope="col">Service Type</th>
+                                    <th scope="col">Appointment Type</th>
                                     <th scope="col">Status</th>
                                     <th scope="col">Resource</th>
                                     <th scope="col">Ticket Status</th>

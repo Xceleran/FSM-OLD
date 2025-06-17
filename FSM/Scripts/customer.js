@@ -120,7 +120,6 @@ loadCustomers();
 
 function loadCustomers() {
     table = $('#customerTable').DataTable({
-
         "processing": true,
         "serverSide": true,
         "filter": true,
@@ -136,7 +135,8 @@ function loadCustomers() {
                     length: d.length,
                     searchValue: d.search.value,
                     sortColumn: d.columns[d.order[0].column].data,
-                    sortDirection: d.order[0].dir
+                    sortDirection: d.order[0].dir,
+
                 });
             },
             "dataSrc": function (json) {
@@ -150,7 +150,6 @@ function loadCustomers() {
         },
         "paging": true,
         "pageLength": 10,
-        //Edit Button for Customer Table
         "columns": [
             { "data": "FirstName", "name": "First Name", "autoWidth": true },
             { "data": "LastName", "name": "Last Name", "autoWidth": true },
@@ -204,16 +203,38 @@ function loadCustomers() {
                 var firstRowData = api.row(0).data();
                 generateCustomerDetails(firstRowData);
             }
+
+            applyNAFilter(); 
         }
     });
 }
 
+// Row click handler to load customer details
 $('#customerTable tbody').on('click', 'tr', function () {
     var data = table.row(this).data();
     if (data) {
         generateCustomerDetails(data);
     }
 });
+
+
+function applyNAFilter() {
+    const hideNA = $('#hideNA').is(':checked');
+    $('#customerTable tbody tr').each(function () {
+        const statusText = $(this).find('td:eq(3) .badge').text().trim(); // status column is 4th (index 3)
+        if (hideNA && statusText === 'N/A') {
+            $(this).hide();
+        } else {
+            $(this).show();
+        }
+    });
+}
+
+// 🟨 Listen for checkbox toggle and redraw the table
+$('#hideNA').on('change', function () {
+    if (table) table.draw(); // triggers drawCallback
+});
+
 
 function generateCustomerDetails(data) {
     console.log(data);
