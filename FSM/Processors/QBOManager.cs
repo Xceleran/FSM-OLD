@@ -208,9 +208,6 @@ namespace FSM.Processors
                                         }
                                     }
                                     catch { }
-
-
-
                                     isExist = true;
                                 }
                             }
@@ -231,10 +228,12 @@ namespace FSM.Processors
                                     Description = ilst.Description.Trim().Replace("'", "''");
                                 }
 
+                                int itemTypeId = GetItemTypeIdByName(ilst.Type.ToString());
+
                                 InsertSql += "INSERT INTO Items" +
-                                               " (Name, Description, Barcode, ItemTypeId, Price, IsTaxable,CompanyId,QboId,IsDeleted,CreatedDate )" +
-                                               " VALUES  ('" + name + "','" + Description + "','',5,'" + Convert.ToDouble(ilst.UnitPrice) + "','" + Taxable + "','" +
-                                               CompanyID + "'," + ilst.Id + ",0,GETDATE()); ";
+                                               " (Name, Description, Barcode, ItemTypeId, Price, IsTaxable,CompanyId,QboId, Quantity, Sku, IsDeleted,CreatedDate )" +
+                                               " VALUES  ('" + name + "','" + Description + "','','"+ itemTypeId + "','" + Convert.ToDouble(ilst.UnitPrice) + "','" + Taxable + "','" +
+                                               CompanyID + "'," + ilst.Id + ", '" + Convert.ToDouble(ilst.UnitPrice) + "', '" + ilst.Sku + "', 0 , GETDATE()); ";
                                 //db.Execute(Sql);
                             }
                         }
@@ -319,6 +318,67 @@ namespace FSM.Processors
             }
             catch (Exception ex)
             {}
+        }
+
+
+        public int GetItemTypeIdByName(string name)
+        {
+            string conString = ConfigurationManager.AppSettings["ConnStrJobs"].ToString();
+            Database db = new Database(conString);
+            int id = 0;
+            try
+            {
+                db.Open();
+                DataTable dt = new DataTable();
+                string sql = @"Select Id from [myServiceJobs].[dbo].[ItemTypes] where Name = '"+ name + "'";
+                db.Execute(sql, out dt);
+                db.Close();
+                if (dt.Rows.Count > 0)
+                {
+                    DataRow dItem = dt.Rows[0];
+                    id = Convert.ToInt32(dItem["Id"].ToString());
+                }
+            }
+            catch (Exception ex)
+            {
+                return id;
+            }
+            finally
+            {
+                db.Close();
+            }
+
+            return id;
+        }
+
+        public string GetItemTypeNameById(int Id)
+        {
+            string conString = ConfigurationManager.AppSettings["ConnStrJobs"].ToString();
+            Database db = new Database(conString);
+            string name = "";
+            try
+            {
+                db.Open();
+                DataTable dt = new DataTable();
+                string sql = @"Select Name from [myServiceJobs].[dbo].[ItemTypes] where Id = '" + Id + "'";
+                db.Execute(sql, out dt);
+                db.Close();
+                if (dt.Rows.Count > 0)
+                {
+                    DataRow dItem = dt.Rows[0];
+                    name = dItem["Id"].ToString();
+                }
+            }
+            catch (Exception ex)
+            {
+                return name;
+            }
+            finally
+            {
+                db.Close();
+            }
+
+            return name;
         }
 
     }

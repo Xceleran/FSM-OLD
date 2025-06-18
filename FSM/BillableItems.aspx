@@ -520,7 +520,7 @@
         }
     </style>
 
-    <input type="hidden" id="companyId" value="7369" />
+    <input type="hidden" id="companyId" value="" runat="server"/>
 
     <div class="bill-container">
         <header class="mb-4">
@@ -534,7 +534,22 @@
                 </div>--%>
             </div>
         </header>
-
+        <section class="mb-4">
+            <div class="row align-items-center">
+                <div class="float-start">
+                    <p style="display: none" id="ProgressGIF">
+                        <img id="imgProcess" src="images/Rolling.gif" />
+                        Sync on progress....
+                    </p>
+                </div>
+                <div class="col-md-6">
+                    <span class="btn btn-primary" title="QuickBooks Online Sync" runat="server" id="SyncQuickBook" onclick="SyncQuickBook()">QuickBooks Online Sync</span>
+                </div>
+                <div class="col-md-6">
+                    <span class="btn btn-primary float-end" title="Add Item" runat="server" id="spnAddNew" onclick="AddNewClicked()"><i class="fa fa-plus"></i>+</span>
+                </div>
+            </div>
+        </section>
         <section class="mb-4">
             <div class="row align-items-center">
                 <div class="col-md-6 mb-3 mb-md-0">
@@ -611,44 +626,57 @@
                         <div class="row p-3">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-medium">Item Name</label>
-                                <input type="text" id="itemName" class="form-control" required />
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-medium">Description</label>
-                                <input type="text" id="description" class="form-control" />
+                                <input name="itemName" type="text" id="itemName" class="form-control" required />
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-medium">Sku</label>
-                                <input type="text" id="Sku" class="form-control" />
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-medium">Price</label>
-                                <input type="number" id="price" class="form-control" step="0.01" required />
+                                <input name="Sku" type="text" id="Sku" class="form-control" />
                             </div>
                             <div class="col-md-3 mb-3">
                                 <label class="form-label fw-medium">Taxable</label>
                                 <div class="d-flex gap-3">
                                     <div class="form-check">
-                                        <input type="radio" name="taxable" value="1" id="taxYes" class="form-check-input" checked />
+                                        <input type="radio" name="taxable" value="1" id="taxYes" class="form-check-input" />
                                         <label class="form-check-label" for="taxYes">Yes</label>
                                     </div>
                                     <div class="form-check">
-                                        <input type="radio" name="taxable" value="0" id="taxNo" class="form-check-input" />
+                                        <input type="radio" name="taxable" value="0" id="taxNo" class="form-check-input" checked />
                                         <label class="form-check-label" for="taxNo">No</label>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-md-3 mb-3">
                                 <label class="form-label fw-medium">Quantity</label>
-                                <input type="number" id="quantity" class="form-control" step="1" required />
+                                <input name="quantity" type="number" id="quantity" class="form-control" step="1" required />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-medium">Price</label>
+                                <input name="price" type="number" id="price" class="form-control" step="0.01" required />
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-medium">Item Type</label>
                                 <select id="itemType" class="form-select"></select>
                             </div>
+                           <%-- <div class="col-md-6 mb-3">
+                                <label class="form-label fw-medium">Item Type</label>
+                                <select id="qboType" class="form-select">
+                                    <option value="0">Select QBO Type</option>
+                                    <option value="1">Service</option>
+                                    <option value="2">Non-Inventory</option>
+                                    <option value="3">Inventory</option>
+                                    <option value="4">Other Charge</option>
+                                    <option value="5">Payment</option>
+                                    <option value="6">Discount</option>
+                                    <option value="7">Sales Tax</option>
+                                </select>
+                            </div>--%>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-medium">Location</label>
-                                <input type="text" id="location" class="form-control" />
+                                <input name="location" type="text" id="location" class="form-control" />
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label fw-medium">Description</label>
+                                <textarea name="location" id="description" class="form-control"></textarea>
                             </div>
                             <%--<div class="col-12 mb-3 bill-modal-image-section" id="imageSection" style="display: none;">
                                 <label class="form-label fw-medium">Item Image</label>
@@ -730,7 +758,6 @@
 
         function applyFilters() {
             const searchTerm = $('#searchBar').val().trim().toLowerCase();
-            console.log($('#categoryFilter').val());
             const selectedType = $('#categoryFilter').val().toLowerCase();
 
             filteredData = itemData.filter(item => {
@@ -780,7 +807,7 @@
                 <td>${item.Price || ''}</td>
                 <td>${item.Taxable || ''}</td>
                 <td>
-                    <button onclick="editItem('${item.Id}')" class="btn btn-sm edit-btn">Edit</button>
+                    <button title="Edit" onclick="editItem('${item.Id}')" class="btn btn-sm edit-btn">Edit</button>
                 </td>
                 </tr>`
                 );
@@ -883,10 +910,11 @@
                         $('#Id').val(data.Id);
                         $('#description').val(data.Description);
                         $('#Sku').val(data.Sku);
+                        $('#quantity').val(data.Quantity);
                         $('#price').val(data.Price);
                         $('#location').val(data.Location);
                         populateItemTypes(data.ItemTypeId);
-                        if (data.IsTaxable === "YES") {
+                        if (data.IsTaxable === true) {
                             $('#taxYes').prop('checked', true);
                         } else {
                             $('#taxNo').prop('checked', true);
@@ -901,7 +929,7 @@
         function populateItemTypes(selectedId) {
             const $dropdown = $('#itemType');
             $dropdown.empty(); // clear if anything exists
-
+            $dropdown.append('<option value="0">Select Service</option>');
             $.each(itemTypes, function (i, item) {
                 const isSelected = item.Id === selectedId;
                 const option = `<option value="${item.Id}" ${isSelected ? 'selected' : ''}>${item.Name}</option>`;
@@ -911,23 +939,35 @@
 
         function updateItem(e) {
             e.preventDefault();
+            if (!validateItemForm()) {
+                return;
+            }
+            let itemId = $('#Id').val();
+            if (itemId != '') {
+                updateData();
+            }
+            else {
+                saveData();
+            }
+        }
+
+        function updateData() {
             const itemData = {
                 Id: $('#Id').val(),
-                CompanyID: $('#companyId').val(),
+                CompanyID: $('#MainContent_companyId').val(),
                 ItemName: $('#itemName').val().trim(),
                 Description: $('#description').val().trim(),
                 Sku: $('#Sku').val().trim(),
                 Price: parseFloat($('#price').val()) || 0,
+                Quantity: parseFloat($('#quantity').val()) || 0,
                 IsTaxable: $('input[name="taxable"]:checked').val() === "1",
                 Location: $('#location').val().trim(),
                 ItemTypeId: parseInt($('#itemType').val().trim()),
             };
-
             console.log(itemData);
-
             $.ajax({
                 type: "POST",
-                url: "BillableItems.aspx/SaveItemData",
+                url: "BillableItems.aspx/SaveItem",
                 data: JSON.stringify({ itemData: itemData }),
                 contentType: "application/json; charset=utf-8",
                 dataType: "json",
@@ -948,6 +988,60 @@
             });
         }
 
+        function saveData() {
+            const itemData = {
+                Id: $('#Id').val(),
+                CompanyID: $('#MainContent_companyId').val(),
+                ItemName: $('#itemName').val().trim(),
+                Description: $('#description').val().trim(),
+                Sku: $('#Sku').val().trim(),
+                Price: parseFloat($('#price').val()) || 0,
+                Quantity: parseFloat($('#quantity').val()) || 0,
+                IsTaxable: $('input[name="taxable"]:checked').val() === "1",
+                Location: $('#location').val().trim(),
+                ItemTypeId: parseInt($('#itemType').val().trim()),
+            };
+            console.log(itemData);
+            $.ajax({
+                type: "POST",
+                url: "BillableItems.aspx/SaveItem",
+                data: JSON.stringify({ itemData: itemData }),
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (response) {
+                    console.log(response);
+                    if (response.d) {
+                        alert("Item added successfully!");
+                        itemModal.hide();
+                        loadItems();
+                    }
+                    else {
+                        alert("Something went wrong!");
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error updating details: ", error);
+                }
+            });
+        }
+
+        function validateItemForm() {
+            const itemName = $('#itemName').val().trim();
+            const price = parseFloat($('#price').val());
+
+            if (!itemName) {
+                alert('Item Name is required.');
+                $('#itemName').focus();
+                return false;
+            }
+
+            if (isNaN(price) || price <= 0) {
+                alert('Price is required and must be a positive number.');
+                $('#price').focus();
+                return false;
+            }
+            return true;
+        }
 
         function SyncQuickBook() {
             var prgBar = document.getElementById("ProgressGIF");
@@ -963,6 +1057,23 @@
                     window.location.href = "BillableItems.aspx";
                 }
             });
+        }
+
+
+        function AddNewClicked() {
+            $('#modalTitle').text("Add New Item");
+            $('#submitBtn').text("Save");
+            $('#Id').val('');
+            $('#itemName').val('');
+            $('#description').val('');
+            $('#Sku').val('');
+            $('#price').val(0);
+            $('#quantity').val(0);
+            $('#location').val('');
+            $('#itemType').val(0);
+            $('#taxNo').prop('checked', true);
+            populateItemTypes(0)
+            itemModal.show();
         }
     </script>
 </asp:Content>

@@ -880,8 +880,12 @@ public class Database
     {
         try
         {
-            CheckConnnection();
-            this.Command = new SqlCommand(sql, this.Connection);
+            //CheckConnnection();
+            this.Connection = new SqlConnection(this.ConnectionString);
+            this.Connection.Open();
+            this.Command.Connection = this.Connection;
+            this.Command.CommandText = sql;
+            //this.Command = new SqlCommand(sql, this.Connection);
             string i = this.Command.ExecuteScalar().ToString();
             this.Close();
             return i;
