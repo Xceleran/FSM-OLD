@@ -27,13 +27,23 @@
     <div class="container-fluid">
         <header class="mb-4">
             <div class="row align-items-center">
-                <div class="col-md-6 col-12">
+                <div class="col-12">
                     <h1 class="page-title">Dispatch Calendar</h1>
+                    <div class="cec-btn">
+                        <a href="https://testsite.myserviceforce.com/cec/calendar.aspx?m=3" class="custom-launch-btn" role="button" target="_blank">
+                            <span>
+                                <span>CEC Appointments</span>
+                                <span aria-hidden="true">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" />
+                                    </svg>
+                                </span>
+                            </span>
+                        </a>
+                    </div>
                 </div>
-                <%--<div class="col-md-6 col-12 text-md-end text-center mt-2 mt-md-0">
-                    <button class="btn btn-primary" onclick="openNewModal()">+ Create Appointment</button>
-                </div>--%>
             </div>
+
         </header>
 
         <ul class="nav nav-tabs mb-4 gap-1" id="viewTabs" role="tablist">
@@ -70,7 +80,7 @@
                                     </select>
                                     <label for="ServiceTypeFilter" class="form-label mb-0">Filter:</label>
                                     <select name="ServiceTypeFilter" id="ServiceTypeFilter" class="form-select w-120px" runat="server" onchange="renderDateView($('#dayDatePicker').val())">
-                                                                                <option value="all">All Types</option>
+                                        <option value="all">All Types</option>
                                         <option value="IT Support">IT Support</option>
                                         <option value="1 Hour">1 Hour</option>
                                         <option value="2 Hour">2 Hour</option>
@@ -87,7 +97,7 @@
                                 </div>
                                 <button id="toggleUnscheduledBtn" class="btn btn-sm"><i class="fas fa-chevron-right"></i></button>
                             </div>
-                                                     <div class="appt-type-indicators">
+                            <div class="appt-type-indicators">
                                 <span class="appt-type-indicator appt-type-it-support"></span>IT Support
                                 <span class="appt-type-indicator appt-type-1-hour"></span>1 Hour
                                 <span class="appt-type-indicator appt-type-2-hour"></span>2 Hour
@@ -110,7 +120,7 @@
                                     <option value="all">All Statuses</option>
                                 </select>
                                 <select runat="server" id="ServiceTypeFilter_2" class="form-select mb-3" onchange="renderUnscheduledList()">
-                                                                       <option value="all">All Types</option>
+                                    <option value="all">All Types</option>
                                     <option value="IT Support">IT Support</option>
                                     <option value="1 Hour">1 Hour</option>
                                     <option value="2 Hour">2 Hour</option>
@@ -164,7 +174,7 @@
                                 </div>
                                 <button id="toggleUnscheduledBtnResource" class="btn btn-sm" style="display: block;"><i class="fas fa-chevron-right"></i></button>
                             </div>
-                                                       <div class="appt-type-indicators">
+                            <div class="appt-type-indicators">
                                 <span class="appt-type-indicator appt-type-it-support"></span>IT Support
                                 <span class="appt-type-indicator appt-type-1-hour"></span>1 Hour
                                 <span class="appt-type-indicator appt-type-2-hour"></span>2 Hour
@@ -187,7 +197,7 @@
                                     <option value="all">All Statuses</option>
                                 </select>
                                 <select runat="server" id="ServiceTypeFilter_Resource" class="form-select mb-3" onchange="renderUnscheduledList('resource')">
-                                                                        <option value="IT Support">IT Support</option>
+                                    <option value="IT Support">IT Support</option>
                                     <option value="1 Hour">1 Hour</option>
                                     <option value="2 Hour">2 Hour</option>
                                 </select>
@@ -231,7 +241,7 @@
                             <div>
                                 <label for="ServiceTypeFilter_List" class="form-label mb-0">Service type:</label>
                                 <select name="ServiceTypeFilter_List" id="ServiceTypeFilter_List" class="form-select" runat="server" onchange="renderListView()">
-                                                                      <option value="all">All Types</option>
+                                    <option value="all">All Types</option>
                                     <option value="IT Support">IT Support</option>
                                     <option value="1 Hour">1 Hour</option>
                                     <option value="2 Hour">2 Hour</option>
@@ -372,7 +382,7 @@
                             <div class="col-md-6">
                                 <label class="form-label">Service Type</label>
                                 <select name="serviceTypeNew" class="form-select" required>
-                                                                       <option value="IT Support">IT Support</option>
+                                    <option value="IT Support">IT Support</option>
                                     <option value="1 Hour">1 Hour</option>
                                     <option value="2 Hour">2 Hour</option>
                                 </select>
@@ -455,7 +465,7 @@
                             <div class="col-md-6">
                                 <label class="form-label">Service Type</label>
                                 <select runat="server" id="ServiceTypeFilter_Edit" name="serviceTypeEdit" class="form-select" onchange="calculateTimeRequired(event)" required>
-                                                                   <option value="IT Support">IT Support</option>
+                                    <option value="IT Support">IT Support</option>
                                     <option value="1 Hour">1 Hour</option>
                                     <option value="2 Hour">2 Hour</option>
                                 </select>
@@ -589,7 +599,28 @@
     <script>
 
 </script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const cecBtn = document.querySelector(".cec-btn");
+
+        // Listen to Bootstrap's tab show event
+        const viewTabs = document.querySelectorAll('#viewTabs .nav-link');
+
+        viewTabs.forEach(tab => {
+            tab.addEventListener('shown.bs.tab', function (event) {
+                const activatedTabId = event.target.id;
+
+                if (activatedTabId === "map-tab") {
+                    cecBtn.style.display = "none";
+                } else {
+                    cecBtn.style.display = "flex";
+                }
+            });
+        });
+    });
+</script>
+
 
     <script src="Scripts/appointments.js" defer></script>
-    <%--     <script src="Scripts/backupjs/appointments.js" defer></script>--%>
+
 </asp:Content>
