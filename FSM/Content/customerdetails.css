@@ -31,12 +31,10 @@
 .custdet-main-container {
     padding: 20px;
     margin-top: 35px;
-    background: var(--bg-gray-100);
+
 }
 
-[data-theme="dark"] .custdet-main-container {
-    background: var(--bg-gray-100);
-}
+
 
 /* Container */
 .custdet-container {

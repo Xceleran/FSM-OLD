@@ -56,8 +56,10 @@ namespace FSM.Entity.Customer
         public string CreatedCompanyID { get; set; } = "";
 
 
-        public string CustomerName {  get; set; }   
+        public string CustomerName { get; set; }
         public Dictionary<string, string> CustomFields { get; set; }
+
+        public string StatusName { get; set; } // Added line
 
     }
 

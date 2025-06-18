@@ -745,7 +745,7 @@ function renderDateView(date) {
                             renderedAppointments[dStr].add(appointment.AppoinmentId);
                             return `
                                 <div class="calendar-event ${getEventTimeSlotClass(appointment)} cursor-move fs-7 truncate"
-                                     style="position: absolute; height: ${heightPx}px; top: ${offsetPx}px; left: ${leftPx}px; width: 90px;"
+                                     style="position: absolute; height: ${heightPx}px; width: 90px;"
                                      data-id="${appointment.AppoinmentId}" draggable="true">
                                     <div class="font-weight-medium fs-7">${appointment.CustomerName}</div>
                                     <div class="fs-7 truncate">${appointment.ServiceType} (${appointment.Duration})</div>
@@ -849,7 +849,7 @@ function renderDateView(date) {
                         renderedAppointments.add(appointment.AppoinmentId);
                         return `
                                 <div class="calendar-event ${getEventTimeSlotClass(appointment)} cursor-move fs-7 truncate"
-                                     style="position: absolute; height: ${heightPx}px;  left: ${leftPx}px; width: 90px;"
+                                     style="position: absolute; height: ${heightPx}px;  width: 90px;"
                                      data-id="${appointment.AppoinmentId}" draggable="true">
                                     <div class="font-weight-medium fs-7">${appointment.CustomerName}</div>
                                     <div class="fs-7 truncate">${appointment.ServiceType} (${appointment.Duration})</div>

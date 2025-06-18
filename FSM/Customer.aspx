@@ -9,153 +9,58 @@
     <link rel="stylesheet" href="Content/customer.css">
 
     <style>
-         [data-theme="dark"] .cust-modal-label{
-             color: white !important;
-         }
-        /* Close Icon for Modals */
-        .cust-modal-close {
-            position: absolute;
-            top: 16px;
-            right: 16px;
-            font-size: 24px;
-            color: var(--text-gray-800);
-            cursor: pointer;
-            background: none;
-            border: none;
-            padding: 0;
-            line-height: 1;
-        }
-
-        .cust-modal-close:hover {
-            color: var(--text-orange-700);
-        }
-
-        [data-theme="dark"] .cust-modal-close {
-            color: var(--text-gray-700);
-        }
-
-        [data-theme="dark"] .cust-modal-close:hover {
-            color: rgb(185, 215, 244);
-        }
-
-        /* Updated Modal Buttons Alignment */
-        .cust-modal-btns {
-            display: flex;
-            justify-content: flex-end;
-            gap: 8px;
-        }
-
-        /* Modal Content Adjustments for Light/Dark Mode */
-        .cust-modal-content {
-            background: var(--bg-white);
-            padding: 16px;
-            border-radius: 8px;
-            width: 90%;
-            max-width: 500px;
-            border: 1px solid var(--bg-gray-300);
-            box-shadow: var(--shadow-lg);
-            position: relative;
-        }
-
-        [data-theme="dark"] .cust-modal-content {
-            background: rgba(255, 255, 255, 0.12);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .cust-modal-title {
-            font-size: 20px;
-            font-weight: 600;
-            margin-bottom: 16px;
-            color: var(--text-gray-800);
-        }
-
-        [data-theme="dark"] .cust-modal-title {
-            color: var(--text-gray-700);
-        }
-
-        /* Toggle Switch Styles */
-        .cust-toggle-switch {
-            display: flex;
-            align-items: start;
-            flex-direction: row;
-            gap: 8px;
-        }
-
-        .cust-toggle-switch input[type="checkbox"] {
-            position: relative;
-            width: 45px;
-            height: 25px;
-            appearance: none;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            background: var(--bg-gray-300);
-            border-radius: 20px;
-            outline: none;
-            cursor: pointer;
-            transition: background 0.3s ease;
-        }
-
-        .cust-toggle-switch input[type="checkbox"]:checked {
-            background: var(--text-orange-500);
-        }
-
-        .cust-toggle-switch input[type="checkbox"]::before {
-            content: '';
-            position: absolute;
-            width: 17px;
-            height: 17px;
-            border-radius: 50%;
-            top: 3px;
-            left: 2px;
-            background: var(--bg-white);
-            transition: transform 0.3s ease;
-        }
-
-        .cust-toggle-switch input[type="checkbox"]:checked::before {
-            transform: translateX(20px);
-        }
-
-        [data-theme="dark"] .cust-toggle-switch input[type="checkbox"] {
-            background: rgba(255, 255, 255, 0.12);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        [data-theme="dark"] .cust-toggle-switch input[type="checkbox"]:checked {
-            background: rgb(94, 124, 253);
-        }
-
-        [data-theme="dark"] .cust-toggle-switch input[type="checkbox"]::before {
-            background: var(--text-gray-700);
-        }
-
-        .cust-toggle-switch label {
-            color: var(--text-gray-800);
-            font-weight: 500;
-        }
-
-        [data-theme="dark"] .cust-toggle-switch label {
-            color: var(--text-gray-700);
-        }
+   
     </style>
 
     <div class="cust-page-container">
         <!-- Page Header -->
         <header class="cust-header mt-3">
             <h1 class="cust-title">Customers</h1>
+                <div class="cec-btn">
+     <a href="https://testsite.myserviceforce.com/cec/CustomerList.aspx?m=2" class="custom-launch-btn" role="button" target="_blank">
+  <span>
+    <span>Launch CEC</span>
+    <span aria-hidden="true">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" />
+      </svg>
+    </span>
+  </span>
+</a>
+    </div>
         </header>
+    
 
         <!-- Customer Section -->
         <section class="cust-section">
             <!-- Customer List -->
+
             <div class="cust-list-container">
+           <div class="mb-3 d-flex justify-content-between align-items-center">
+    <div class="mb-3 p-3">
+        <label for="statusFilter" class="form-label">Filter by Status:</label>
+        <select id="statusFilter" class="form-select w-auto">
+            <option value="all">All Statuses</option>
+            <option value="Scheduled">Scheduled</option>
+            <option value="Pending">Pending</option>
+            <option value="Closed">Closed</option>
+            <option value="Cancelled">Cancelled</option>
+            <option value="InProgress">Installation In Progress</option>
+        </select>
+    </div>
+    <div class="toggle-switch">
+        <label for="hideNA" class="form-label">Hide N/A Appointments:</label>
+        <input type="checkbox" id="hideNA" checked />
+    </div>
+</div>
+
                 <table id="customerTable" class="display" style="width: 100%">
                     <thead>
                         <tr>
                             <th>First Name</th>
                             <th>Last Name</th>
                             <th>Email</th>
+                            <th>Status</th>
                         </tr>
                     </thead>
                 </table>
@@ -165,6 +70,7 @@
             <div class="cust-details-container">
                 <div class="cust-details-header">
                     <h2 class="cust-details-title" id="customerName">Select a Customer</h2>
+                    <button class="btn btn-primary" id="editCustomerBtn">Edit Customer</button>
                 </div>
                 <div class="cust-details-content">
                     <!-- Contact Info -->
@@ -200,9 +106,9 @@
                                     <a href="CustomerDetails.aspx?siteId=2" class="cust-site-view-link">View Details</a>
                                 </div>
                             </div>
-                          <div class="d-flex justify-content-end mb-3">
-  <button class="btn btn-primary" id="addSiteBtn">+ Add Site</button>
-</div>
+                            <div class="d-flex justify-content-end mb-3">
+                                <button class="btn btn-primary" id="addSiteBtn">+ Add Site</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -323,6 +229,22 @@
             $('#closeAddSiteIcon').on('click', function () {
                 $('#addSiteModal').hide();
             });
+        });
+
+    </script>
+    <script>
+        $('#customerTable tbody').on('click', '.cust-table-edit-btn', function () {
+            const customerId = $(this).data('customer-id');
+            const customerData = table.row($(this).closest('tr')).data();
+            if (customerData) {
+                document.getElementById('editFirstName').value = customerData.FirstName || '';
+                document.getElementById('editLastName').value = customerData.LastName || '';
+                document.getElementById('editEmail').value = customerData.Email || '';
+                document.getElementById('editPhone').value = customerData.Phone || '';
+                document.getElementById('editCustomerForm').dataset.customerId = customerData.CustomerID;
+                document.getElementById('editCustomerForm').dataset.customerGuid = customerData.CustomerGuid;
+                openModal('editCustomerModal');
+            }
         });
     </script>
 </asp:Content>
