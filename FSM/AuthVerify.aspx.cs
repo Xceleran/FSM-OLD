@@ -34,8 +34,8 @@ namespace FSM
             }
             else if (Request.QueryString["BYPass"] != null)
             {
-                companyID = "13185";
-                userID = "locationa@lhg.com";
+                companyID = "13149";
+                userID = "location1@airmaster.com";
             }
             if (!string.IsNullOrEmpty(companyID) && !string.IsNullOrEmpty(userID))
             {
