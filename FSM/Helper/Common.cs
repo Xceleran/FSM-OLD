@@ -41,6 +41,12 @@ namespace FSM.Helper
             return sInput;
 
         }
+
+        public enum Pages
+        {
+            BillableItems,
+            QboConnection
+        }
     }
 
     public class QboCommon

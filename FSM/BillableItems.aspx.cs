@@ -84,7 +84,7 @@ namespace FSM
             {
                 db.Open();
                 DataTable dt = new DataTable();
-                string sql = @"select Id,Name as ItemName, ItemTypeId, Description, Location, Sku, Quantity,(case when IsTaxable = 'FALSE' then 'NO' else 'YES' end )as IsTaxable, Price 
+                string sql = @"select Id,Name as ItemName, ItemTypeId, Description, Location, Sku, Quantity, QboId,(case when IsTaxable = 'FALSE' then 'NO' else 'YES' end )as IsTaxable, Price 
                 from [msSchedulerV3].[dbo].[Items] where IsDeleted = 0 and CompanyId= '" + companyid + "' order by ItemName;";
 
                 db.ExecuteParam(sql, out dt);
@@ -97,6 +97,7 @@ namespace FSM
                         item.CompanyID = companyid;
                         item.Id = row.Field<string>("Id") ?? "";
                         item.ItemName = row.Field<string>("ItemName") ?? "";
+                        item.QboId = row.Field<decimal>("QboId").ToString();
                         item.Description = row.Field<string>("Description") ?? "";
                         item.Taxable = row.Field<string>("IsTaxable") ?? "";
                         item.Location = row.Field<string>("Location") ?? "";
@@ -105,7 +106,6 @@ namespace FSM
                         var quantityValue = row["Quantity"];
                         item.Quantity = quantityValue != DBNull.Value ? Convert.ToDecimal(quantityValue) : 0;
                         item.ItemTypeId = Convert.ToInt32(row["ItemTypeId"].ToString());
-
                         items.Add(item);
                     }
                 }
@@ -143,6 +143,7 @@ namespace FSM
                         DataRow dItem = dt.Rows[0];
                         item.CompanyID = companyid;
                         item.Id = dItem.Field<string>("Id") ?? "";
+                        item.QboId = dItem.Field<decimal>("QboId").ToString();
                         item.ItemName = dItem.Field<string>("Name") ?? "";
                         item.Description = dItem.Field<string>("Description") ?? "";
                         item.IsTaxable = bool.Parse(dItem["IsTaxable"].ToString());
@@ -198,7 +199,9 @@ namespace FSM
                         QBSaveItem(ref QboItemId, itemData);
                         itemData.QboId = QboItemId.ToString();
                     }
-                    catch (Exception ex) { }
+                    catch (Exception ex) {
+                        throw new ApplicationException(ex.Message.ToString());
+                    }
 
                     string id = Guid.NewGuid().ToString();
                     string strSQL = @"INSERT INTO [msSchedulerV3].[dbo].[Items]
@@ -212,7 +215,7 @@ namespace FSM
                     db.AddParameter("@Quantity", itemData.Quantity, SqlDbType.Decimal);
                     db.AddParameter("@ItemTypeId", itemData.ItemTypeId, SqlDbType.Int);
                     db.AddParameter("@Id", id, SqlDbType.NVarChar);
-                    db.AddParameter("@QboId", itemData.QboId, SqlDbType.NVarChar);
+                    db.AddParameter("@QboId", itemData.QboId, SqlDbType.Decimal);
                     db.AddParameter("@IsTaxable", itemData.IsTaxable, SqlDbType.Bit);
                     db.AddParameter("@IsDeleted", 0, SqlDbType.Bit);
                     db.AddParameter("@CompanyId", itemData.CompanyID ?? (object)DBNull.Value, SqlDbType.NVarChar);
@@ -256,7 +259,7 @@ namespace FSM
                     db.AddParameter("@Quantity", itemData.Quantity, SqlDbType.Decimal);
                     db.AddParameter("@ItemTypeId", itemData.ItemTypeId, SqlDbType.Int);
                     db.AddParameter("@Id", id, SqlDbType.NVarChar);
-                    db.AddParameter("@QboId", itemData.QboId, SqlDbType.NVarChar);
+                    db.AddParameter("@QboId", itemData.QboId, SqlDbType.Decimal);
                     db.AddParameter("@IsTaxable", itemData.IsTaxable, SqlDbType.Bit);
                     db.AddParameter("@IsDeleted", 0, SqlDbType.Bit);
                     db.AddParameter("@CompanyId", itemData.CompanyID ?? (object)DBNull.Value, SqlDbType.NVarChar);
@@ -543,15 +546,18 @@ namespace FSM
                         Itm.Taxable = itemData.IsTaxable;
                         Itm.UnitPrice = itemData.Price;
                         Itm.TypeSpecified = true;
-                        if (Enum.TryParse<ItemTypeEnum>(itemName, ignoreCase: true, out var itemType))
-                        {
-                            Itm.Type = itemType;
-                        }
-                        else Itm.Type = ItemTypeEnum.Service;
+                        //if (Enum.TryParse<ItemTypeEnum>(itemName, ignoreCase: true, out var itemType))
+                        //{
+                        //    Itm.Type = itemType;
+                        //}
+                        //else 
+                            
+                        Itm.Type = ItemTypeEnum.Service;
                         Itm.Sku = itemData.Sku;
-                        Itm.TrackQtyOnHand = true;
-                        Itm.TrackQtyOnHandSpecified = true;
-                        Itm.QtyOnHandSpecified = true;
+
+                        Itm.TrackQtyOnHand = false;
+                        Itm.TrackQtyOnHandSpecified = false;
+                        Itm.QtyOnHandSpecified = false;
                         Itm.QtyOnHand = itemData.Quantity;
 
                         Itm.InvStartDateSpecified = true;

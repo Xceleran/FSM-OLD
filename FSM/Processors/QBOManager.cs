@@ -122,6 +122,84 @@ namespace FSM.Processors
 
         }
 
+        public CompanyInfo GetQboCompanyInfo(ServiceContext serviceContext)
+        {
+            CompanyInfo companyInfo = null;
+            try
+            {
+
+                QueryService<CompanyInfo> querySvc = new QueryService<CompanyInfo>(serviceContext);
+                companyInfo = querySvc.ExecuteIdsQuery("SELECT * FROM CompanyInfo").FirstOrDefault();
+            }
+            catch { }
+
+            return companyInfo;
+        }
+
+        public bool SaveCompanySetting(string CompanyID, string AccessToken, string RefreshToken, string BQOFileID)
+        {
+            bool bRetVal = false;
+            Database db = new Database();
+            string Sql = "";
+            try
+            {
+                Sql = "Delete From [myServiceJobs].[dbo].[QBOCompanySettings] Where CompanyID = '" + CompanyID + "';";
+                Sql += "INSERT INTO [myServiceJobs].[dbo].[QBOCompanySettings] " +
+                      "(CompanyID,UserID,AccessToken,RefreshToken,BQOFileID) " +
+                      " VALUES (" +
+                      "'" + CompanyID + "'," +
+                      "'" + HttpContext.Current.Session["LoginUser"].ToString() + "'," +
+                      "'" + AccessToken + "'," +
+                      "'" + RefreshToken + "'," +
+                      "'" + BQOFileID + "');";
+
+                db.Execute(Sql);
+
+                bRetVal = true;
+            }
+            catch (Exception ex)
+            {
+                HttpContext.Current.Response.Write(Sql);
+            }
+            db.Close();
+
+            return bRetVal;
+        }
+        public bool DeleteCompanySetting(string CompanyID)
+        {
+
+            string clientId = ConfigurationManager.AppSettings["clientId"];
+            string clientSecret = ConfigurationManager.AppSettings["clientSecret"];
+            string redirectURI = ConfigurationManager.AppSettings["redirectURI"];
+            string appEnvironment = ConfigurationManager.AppSettings["appEnvironment"];
+
+            bool bRetVal = false;
+            try
+            {
+                QBOSettins qbs = new QBOSettins();
+                QBOManager qBOManager = new QBOManager();
+                bool IsQuickBookEnabled = qBOManager.VerifyCompanySetting(CompanyID, ref qbs);
+                //  ServiceContext context = QBOManager.GetServiceContext(qbs, CompanyID);
+                OAuth2Client oauthClient = new OAuth2Client(clientId, clientSecret, redirectURI, appEnvironment);
+                var tokenResp = oauthClient.RevokeTokenAsync(qbs.RefreshToken).GetAwaiter().GetResult();
+
+            }
+            catch
+            {}
+
+            try
+            {
+                Database db = new Database();
+                //  db.Open();
+                string Sql = "Delete From [myServiceJobs].[dbo].[QBOCompanySettings] Where CompanyID = '" + CompanyID + "'";
+                db.Execute(Sql);
+                bRetVal = true;
+                db.Close();
+            }
+            catch { }
+
+            return bRetVal;
+        }
 
         // Item Synchronization
         public bool ItemSynchronization(QBOSettins qboSettings, string CompanyID, ServiceContext context, string QboLastUpdatedTime)
@@ -264,8 +342,8 @@ namespace FSM.Processors
                 QueryService<Intuit.Ipp.Data.Account> querySvc = new QueryService<Intuit.Ipp.Data.Account>(context);
                 var AccountList = querySvc.ExecuteIdsQuery("SELECT * FROM Account").ToList();
                 var AssetAccountRef = AccountList.Where(x => x.AccountType == AccountTypeEnum.Income).FirstOrDefault();
-                Database db = new Database(ConfigurationManager.AppSettings["ConnStrSch"].ToString());
-                string Sql = @"select Id,Name,Description,Barcode, IsTaxable,Price from Items Where QboId='0'  and  [CompanyID] = @CompanyID";
+                Database db = new Database(ConfigurationManager.AppSettings["ConnString"].ToString());
+                string Sql = @"select Id,Name,Description,Sku, IsTaxable,Price, Quantity from Items Where QboId='0'  and  [CompanyID] = @CompanyID";
                 DataSet dataSet = db.Get_DataSet(Sql, CompanyID);
                 string InsertSql = string.Empty;
                 if (dataSet.Tables[0] != null)
@@ -286,7 +364,7 @@ namespace FSM.Processors
                             Itm.TrackQtyOnHand = true;
                             Itm.TrackQtyOnHandSpecified = true;
                             Itm.QtyOnHandSpecified = true;
-                            Itm.QtyOnHand = decimal.Parse(dr["Quantity"].ToString().Trim()); ;
+                            Itm.QtyOnHand = decimal.Parse(dr["Quantity"].ToString()); ;
                             Itm.InvStartDateSpecified = true;
                             Itm.InvStartDate = DateTime.Now;
                             Itm.UnitPriceSpecified = true;
@@ -366,7 +444,7 @@ namespace FSM.Processors
                 if (dt.Rows.Count > 0)
                 {
                     DataRow dItem = dt.Rows[0];
-                    name = dItem["Id"].ToString();
+                    name = dItem["Name"].ToString();
                 }
             }
             catch (Exception ex)
@@ -379,6 +457,69 @@ namespace FSM.Processors
             }
 
             return name;
+        }
+
+        public void AccountTypeCheck(QBOSettins qboSettings, string CompanyID, string Id, ref string QboId)
+        {
+            try
+            {
+                Database db = new Database(ConfigurationManager.AppSettings["ConnStrJobs"].ToString());
+                //  db.Open();
+                string Sql = @"select * from ItemTypes where Id='" + Id + "'";
+                DataTable dt;
+                db.Execute(Sql, out dt);
+
+                DataRow dr = dt.Rows[0];
+                if (!string.IsNullOrEmpty(dr["QboId"].ToString()))
+                {
+                    QboId = dr["QboId"].ToString();
+                }
+                else
+                {
+                    ServiceContext context = GetServiceContext(qboSettings, CompanyID);
+                    string qboQuery = "select * from Account ";
+                    QueryService<Intuit.Ipp.Data.Account> qsItem = new QueryService<Intuit.Ipp.Data.Account>(context);
+                    List<Intuit.Ipp.Data.Account> listItem = qsItem.ExecuteIdsQuery(qboQuery).ToList<Intuit.Ipp.Data.Account>();
+                    foreach (Intuit.Ipp.Data.Account ilst in listItem)
+                    {
+                        if (ilst.Name == dr["Name"].ToString())
+                        {
+                            QboId = ilst.Id;
+                        }
+                    }
+
+                    //Search Income Account if Not Found
+                    if (string.IsNullOrEmpty(QboId))
+                    {
+                        foreach (Intuit.Ipp.Data.Account ilst in listItem)
+                        {
+                            if (ilst.Name == "Sales of Product Income")
+                            {
+                                QboId = ilst.Id;
+                                break;
+                            }
+                        }
+                        //Create Account if Not Found
+                        if (string.IsNullOrEmpty(QboId))
+                        {
+                            Intuit.Ipp.Data.Account Itm = new Intuit.Ipp.Data.Account();
+                            Itm.Name = "Sales of Product Income";
+                            Itm.AccountTypeSpecified = true;
+                            Itm.AccountType = AccountTypeEnum.Income;
+                            Itm.statusSpecified = true;
+                            DataService dataService = new DataService(context);
+                            Intuit.Ipp.Data.Account itemAdd = dataService.Add(Itm);
+                            QboId = itemAdd.Id;
+                            Sql = "update ItemTypes set QboId=" + itemAdd.Id + " Where Id = '" + Id + "'";
+                            db.Execute(Sql);
+                        }
+                    }
+                }
+                db.Close();
+            }
+            catch
+            {
+            }
         }
 
     }

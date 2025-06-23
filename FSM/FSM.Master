@@ -172,7 +172,6 @@
             <div class="right-logo">
                 <%--<img src="https://testsite.myserviceforce.com/fsm/images/FMSXceleran.png" alt="Xceleran Logo" class="right-logo-img">--%>
                  <img src="https://central.xceleran.com/fsm/images/FMSXceleran.png" alt="Xceleran Logo" class="right-logo-img">
-             
             </div>
             <aside id="sidebar" class="sidebar">
                 <div class="sidebar-logo">

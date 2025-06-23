@@ -623,6 +623,7 @@
                     </div>
                     <form id="itemForm" class="modal-body">
                         <input type="text" id="Id" hidden="hidden" />
+                        <input type="text" id="QboId" hidden="hidden" />
                         <div class="row p-3">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-medium">Item Name</label>
@@ -807,7 +808,7 @@
                 <td>${item.Price || ''}</td>
                 <td>${item.Taxable || ''}</td>
                 <td>
-                    <button title="Edit" onclick="editItem('${item.Id}')" class="btn btn-sm edit-btn">Edit</button>
+                    <button title="Edit" onclick="editItem(event, '${item.Id}')" class="btn btn-sm edit-btn">Edit</button>
                 </td>
                 </tr>`
                 );
@@ -893,7 +894,8 @@
             return type ? type.Name : '';
         }
 
-        function editItem(id) {
+        function editItem(e, id) {
+            e.preventDefault();
             if (id) {
                 $.ajax({
                     url: 'BillableItems.aspx/GetItemById',
@@ -906,6 +908,7 @@
                         const data = rs.d;
                         $('#modalTitle').text("Edit Item");
                         $('#submitBtn').text("Update");
+                        $('#QboId').val(data.QboId);
                         $('#itemName').val(data.ItemName);
                         $('#Id').val(data.Id);
                         $('#description').val(data.Description);
@@ -954,6 +957,7 @@
         function updateData() {
             const itemData = {
                 Id: $('#Id').val(),
+                QboId: $('#QboId').val(),
                 CompanyID: $('#MainContent_companyId').val(),
                 ItemName: $('#itemName').val().trim(),
                 Description: $('#description').val().trim(),
@@ -991,6 +995,7 @@
         function saveData() {
             const itemData = {
                 Id: $('#Id').val(),
+                QboId: $('#QboId').val(),
                 CompanyID: $('#MainContent_companyId').val(),
                 ItemName: $('#itemName').val().trim(),
                 Description: $('#description').val().trim(),
@@ -1071,6 +1076,7 @@
             $('#quantity').val(0);
             $('#location').val('');
             $('#itemType').val(0);
+            $('#QboId').val('');
             $('#taxNo').prop('checked', true);
             populateItemTypes(0)
             itemModal.show();

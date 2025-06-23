@@ -47,7 +47,10 @@ namespace FSM.Processors
                 {
                     HttpContext.Current.Session["CompanyType"] = dataSet.Tables[2].Rows[0]["CompanyType"].ToString();
                 }
-
+                if (HttpContext.Current.Session["CompanyType"].ToString() == "Aire-Master")
+                {
+                    HttpContext.Current.Session["IsAireMaster"] = true;
+                }
                 if (dt.Rows.Count > 0)
                 {
                     DataRow dr = dt.Rows[0];
@@ -131,8 +134,8 @@ namespace FSM.Processors
             userPrivilege.CanAccessInvoice = Priveleges.Where(x => x.text == "CanAccessInvoice").ToList().Count() > 0 ? true : false;
 
             HttpContext.Current.Session["userPrivilege"] = userPrivilege;
-            //HttpContext.Current.Session["CanAccessQuickBooks"] = userPrivilege.CanAccessQuickBooks;
-            //HttpContext.Current.Session["CanAccessUserInfo"] = userPrivilege.CanAccessUserInfo;
+            HttpContext.Current.Session["CanAccessQuickBooks"] = userPrivilege.CanAccessQuickBooks;
+            HttpContext.Current.Session["CanAccessUserInfo"] = userPrivilege.CanAccessUserInfo;
             HttpContext.Current.Session["CanAccessInvoice"] = userPrivilege.CanAccessInvoice;
         }
     }
