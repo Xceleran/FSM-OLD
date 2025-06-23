@@ -47,9 +47,9 @@ namespace FSM.Processors
                 {
                     HttpContext.Current.Session["CompanyType"] = dataSet.Tables[2].Rows[0]["CompanyType"].ToString();
                 }
-                if (HttpContext.Current.Session["CompanyType"].ToString() == "Aire-Master")
+                if (HttpContext.Current.Session["CompanyType"].ToString() == "LHG")
                 {
-                    HttpContext.Current.Session["IsAireMaster"] = true;
+                    HttpContext.Current.Session["IsLHG"] = true;
                 }
                 if (dt.Rows.Count > 0)
                 {

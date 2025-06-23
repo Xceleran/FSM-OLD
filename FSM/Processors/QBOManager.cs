@@ -222,7 +222,7 @@ namespace FSM.Processors
 
                         if (listItems.Count < MAXRESULTS)
                         {
-                            if (Convert.ToBoolean(HttpContext.Current.Session["IsAireMaster"]))
+                            if (Convert.ToBoolean(HttpContext.Current.Session["IsLHG"]))
                             {
                                 SyncItemToQBO(qboSettings, CompanyID, context);
                             }
@@ -232,7 +232,7 @@ namespace FSM.Processors
                     }
                     else
                     {
-                        if (Convert.ToBoolean(HttpContext.Current.Session["IsAireMaster"]))
+                        if (Convert.ToBoolean(HttpContext.Current.Session["IsLHG"]))
                         {
                             SyncItemToQBO(qboSettings, CompanyID, context);
                         }
