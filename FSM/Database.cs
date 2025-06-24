@@ -648,7 +648,6 @@ public class Database
 
     public object ExecuteScalar(string Sql)
     {
-
         try
         {
             this.Connection = new SqlConnection(this.ConnectionString);
@@ -876,6 +875,26 @@ public class Database
             this.Connection.Close();
         }
         return result;
+    }
+    public string ExecuteScalarString(String sql)
+    {
+        try
+        {
+            //CheckConnnection();
+            this.Connection = new SqlConnection(this.ConnectionString);
+            this.Connection.Open();
+            this.Command.Connection = this.Connection;
+            this.Command.CommandText = sql;
+            //this.Command = new SqlCommand(sql, this.Connection);
+            string i = this.Command.ExecuteScalar().ToString();
+            this.Close();
+            return i;
+        }
+        catch (Exception ex)
+        {
+            return "0";
+            //return false;
+        }
     }
 }
 

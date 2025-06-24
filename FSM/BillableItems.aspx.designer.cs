@@ -7,9 +7,38 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace FSM {
-    
-    
-    public partial class BillableItems {
+namespace FSM
+{
+
+
+    public partial class BillableItems
+    {
+
+        /// <summary>
+        /// companyId control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.HtmlControls.HtmlInputHidden companyId;
+
+        /// <summary>
+        /// SyncQuickBook control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.HtmlControls.HtmlGenericControl SyncQuickBook;
+
+        /// <summary>
+        /// spnAddNew control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.HtmlControls.HtmlGenericControl spnAddNew;
     }
 }
