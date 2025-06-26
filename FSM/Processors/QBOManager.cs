@@ -361,10 +361,12 @@ namespace FSM.Processors
                             Itm.Type = ItemTypeEnum.Service;
                             Itm.Sku = Common.CleanInput(dr["Sku"].ToString().Trim());
                             
-                            Itm.TrackQtyOnHand = true;
-                            Itm.TrackQtyOnHandSpecified = true;
-                            Itm.QtyOnHandSpecified = true;
-                            Itm.QtyOnHand = decimal.Parse(dr["Quantity"].ToString()); ;
+                            Itm.TrackQtyOnHand = false;
+                            Itm.TrackQtyOnHandSpecified = false;
+                            Itm.QtyOnHandSpecified = false;
+                            Itm.QtyOnHand = 0;
+                            //decimal.Parse(dr["Quantity"].ToString()); 
+
                             Itm.InvStartDateSpecified = true;
                             Itm.InvStartDate = DateTime.Now;
                             Itm.UnitPriceSpecified = true;

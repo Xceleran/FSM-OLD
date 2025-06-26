@@ -222,8 +222,9 @@ namespace FSM
                     object result = db.ExecuteScalarData(strSQL);
                     if (result != null)
                     {
+                        success = true;
                         db.Close();
-                        success = SaveItemJobsDb(itemData);
+                        SaveItemJobsDb(itemData);
                     }
                 }
                 else
@@ -546,19 +547,19 @@ namespace FSM
                         Itm.Taxable = itemData.IsTaxable;
                         Itm.UnitPrice = itemData.Price;
                         Itm.TypeSpecified = true;
-                        //if (Enum.TryParse<ItemTypeEnum>(itemName, ignoreCase: true, out var itemType))
-                        //{
-                        //    Itm.Type = itemType;
-                        //}
-                        //else 
-                            
-                        Itm.Type = ItemTypeEnum.Service;
+                        if (Enum.TryParse<ItemTypeEnum>(itemName, ignoreCase: true, out var itemType))
+                        {
+                            Itm.Type = itemType;
+                        }
+                        else
+                            Itm.Type = ItemTypeEnum.Service;
+
                         Itm.Sku = itemData.Sku;
 
                         Itm.TrackQtyOnHand = false;
                         Itm.TrackQtyOnHandSpecified = false;
                         Itm.QtyOnHandSpecified = false;
-                        Itm.QtyOnHand = itemData.Quantity;
+                        Itm.QtyOnHand = 0;
 
                         Itm.InvStartDateSpecified = true;
                         Itm.InvStartDate = DateTime.Now;
@@ -579,13 +580,13 @@ namespace FSM
                         //Itm.PurchaseCost = 0;
 
 
-                        //string AccTypeId = "";
-                        //QBOManager.AccountTypeCheck(qBoStng, CompanyID, ItemTypeId.SelectedValue, ref AccTypeId);
-                        //Itm.IncomeAccountRef = new ReferenceType();
-                        //Itm.IncomeAccountRef.Value = AccTypeId;
-
+                        string AccTypeId = "";
+                        qBOManager.AccountTypeCheck(qBoStng, cId, itemData.ItemTypeId.ToString(), ref AccTypeId);
                         Itm.IncomeAccountRef = new ReferenceType();
-                        Itm.IncomeAccountRef.Value = "1";
+                        Itm.IncomeAccountRef.Value = AccTypeId;
+
+                        //Itm.IncomeAccountRef = new ReferenceType();
+                        //Itm.IncomeAccountRef.Value = "1";
 
                         //Itm.IncomeAccountRef = new ReferenceType();
                         //Itm.IncomeAccountRef.Value = "79";

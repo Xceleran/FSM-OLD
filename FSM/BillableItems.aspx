@@ -648,7 +648,7 @@
                             </div>
                             <div class="col-md-3 mb-3">
                                 <label class="form-label fw-medium">Quantity</label>
-                                <input name="quantity" type="number" id="quantity" class="form-control" step="1" required />
+                                <input name="quantity" type="number" id="quantity" class="form-control" step="1"  />
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-medium">Price</label>
