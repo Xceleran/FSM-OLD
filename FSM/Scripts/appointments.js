@@ -582,10 +582,7 @@ function renderDateView(date) {
             break;
     }
 
-    const slotDurationMinutes = allTimeSlots.length > 0 ?
-        (typeof allTimeSlots[0].Duration === 'string' ?
-            parseInt(allTimeSlots[0].Duration, 10) || 60 :
-            allTimeSlots[0].Duration || 60) : 60;
+    const slotDurationMinutes = 30; // Enforce 30-minute intervals
 
     getAppoinments(filter, fromStr, toStr, today, function (appointments) {
         var filteredAppointments = filter === '' ?
@@ -640,7 +637,7 @@ function renderDateView(date) {
             const startDate = new Date(currentDate);
 
             if (view === 'week') {
-                startDate.setDate(startDate.getDate() - startDate.getDay());
+                startDate.setDate(startDate.getDate() - currentDate.getDay());
             } else if (view === 'threeDay') {
                 startDate.setDate(startDate.getDate() - 1);
             }
@@ -680,7 +677,7 @@ function renderDateView(date) {
                 allTimeSlots.forEach((time, index) => {
                     html += `
                     <div class="calendar-grid" style="grid-template-columns: 60px repeat(${dayDates.length}, 1fr);">
-                        <div class="h-120px border-bottom last-border-bottom-none p-1 fs-7 text-right pr-2 bg-gray-50 calendar-time-cell">
+                        <div class="h-60px border-bottom last-border-bottom-none p-1 fs-7 text-right pr-2 bg-gray-50 calendar-time-cell">
                             ${formatTimeRange(time.TimeBlockSchedule)}
                         </div>
                     `;
@@ -713,8 +710,8 @@ function renderDateView(date) {
                                         return null;
                                     }
                                     const offsetMinutes = startTimeMinutes - slotStartTimeMinutes;
-                                    const offsetPx = (offsetMinutes / slotDurationMinutes) * 120;
-                                    const heightPx = (durationMinutes / slotDurationMinutes) * 120;
+                                    const offsetPx = (offsetMinutes / slotDurationMinutes) * 60;
+                                    const heightPx = (durationMinutes / slotDurationMinutes) * 60;
                                     return { appointment: a, offsetPx, heightPx, startIndex };
                                 }
                                 return null;
@@ -738,7 +735,7 @@ function renderDateView(date) {
                         });
 
                         html += `
-                        <div class="h-120px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
+                        <div class="h-60px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
                              style="overflow: hidden;"
                              data-date="${dStr}" data-time="${time.TimeBlockSchedule}">
                             ${appointmentsWithPosition.map(({ appointment, heightPx, offsetPx, leftPx }) => {
@@ -785,7 +782,7 @@ function renderDateView(date) {
                 allTimeSlots.forEach((time, index) => {
                     html += `
                     <div class="calendar-grid" style="grid-template-columns: 70px 1fr;">
-                        <div class="h-120px border-bottom last-border-bottom-none p-1 fs-7 text-right pr-2 bg-gray-50 calendar-time-cell">
+                        <div class="h-60px border-bottom last-border-bottom-none p-1 fs-7 text-right pr-2 bg-gray-50 calendar-time-cell">
                             ${formatTimeRange(time.TimeBlockSchedule)}
                         </div>
                     `;
@@ -817,8 +814,8 @@ function renderDateView(date) {
                                     return null;
                                 }
                                 const offsetMinutes = startTimeMinutes - slotStartTimeMinutes;
-                                const offsetPx = (offsetMinutes / slotDurationMinutes) * 120;
-                                const heightPx = (durationMinutes / slotDurationMinutes) * 120;
+                                const offsetPx = (offsetMinutes / slotDurationMinutes) * 60;
+                                const heightPx = (durationMinutes / slotDurationMinutes) * 60;
                                 return { appointment: a, offsetPx, heightPx };
                             }
                             return null;
@@ -842,14 +839,14 @@ function renderDateView(date) {
                     });
 
                     html += `
-                        <div class="h-120px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
+                        <div class="h-60px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
                              style="overflow: hidden;"
                              data-date="${dateStr}" data-time="${time.TimeBlockSchedule}">
                             ${appointmentsWithPosition.map(({ appointment, heightPx, offsetPx, leftPx }) => {
                         renderedAppointments.add(appointment.AppoinmentId);
                         return `
                                 <div class="calendar-event ${getEventTimeSlotClass(appointment)} cursor-move fs-7 truncate"
-                                     style="position: absolute; height: ${heightPx}px;  width: 90px;"
+                                     style="position: absolute; height: ${heightPx}px; width: 90px;"
                                      data-id="${appointment.AppoinmentId}" draggable="true">
                                     <div class="font-weight-medium fs-7">${appointment.CustomerName}</div>
                                     <div class="fs-7 truncate">${appointment.ServiceType} (${appointment.Duration})</div>
@@ -1011,75 +1008,90 @@ function renderListView() {
 // Render Unscheduled List
 function renderUnscheduledList(view = 'date') {
     const isResourceView = view === 'resource';
-    const statusFilterId = isResourceView ? '#StatusTypeFilter_Resource' : '#StatusTypeFilter';
-    const serviceFilterId = isResourceView ? '#ServiceTypeFilter_Resource' : '#ServiceTypeFilter_2';
+    // Use correct filter IDs based on view
+    const statusFilterId = isResourceView ? '#MainContent_StatusTypeFilter_Resource' : '#MainContent_StatusTypeFilter';
+    const serviceFilterId = isResourceView ? '#MainContent_ServiceTypeFilter_Resource' : '#MainContent_ServiceTypeFilter_2';
     const searchFilterId = isResourceView ? '#searchFilterResource' : '#searchFilter';
-    const provinceFilterId = isResourceView ? '#ProvinceFilterResource' : '#ProvinceFilter';
-    const postalCodeFilterId = isResourceView ? '#PostalCodeFilterResource' : '#PostalCodeFilter';
     const listContainerId = isResourceView ? '#unscheduledListResource' : '#unscheduledList';
 
-    const statusFilter = $(statusFilterId).val();
-    const serviceFilter = $(serviceFilterId).val();
-    const searchFilter = $(searchFilterId).val().toLowerCase();
-    const provinceFilter = $(provinceFilterId).val();
-    const postalCodeFilter = $(postalCodeFilterId).val();
+    const $listContainer = $(listContainerId);
+    const statusFilter = $(statusFilterId).val() || '';
+    const serviceFilter = $(serviceFilterId).val() || '';
+    const searchFilter = $(searchFilterId).val().toLowerCase().trim() || '';
 
+    // Filter appointments
     const filteredAppointments = appointments.filter(app => {
-        const isUnassigned = !app.ResourceID || app.ResourceID === '0' || app.ResourceID === '';
-        const matchesStatus = statusFilter === 'all' || app.AppoinmentStatus === statusFilter;
-        const matchesService = serviceFilter === 'all' || app.ServiceType === serviceFilter;
-        const matchesSearch = !searchFilter || 
+        // Unassigned: ResourceID is null, 0, '', or ResourceName is null, 'Unassigned', 'None', or ''
+        const isUnassigned = !app.ResourceID || app.ResourceID === '0' || app.ResourceID === 0 || app.ResourceID === '' ||
+            app.ResourceName === null || app.ResourceName === 'Unassigned' || app.ResourceName === 'None' || app.ResourceName === '';
+        // Status filter
+        const matchesStatus = statusFilter === '' || app.AppoinmentStatus === statusFilter;
+        // Service type filter
+        const matchesService = serviceFilter === '' || app.ServiceType === serviceFilter;
+        // Search filter (CustomerName and Address1, case-insensitive)
+        const matchesSearch = !searchFilter ||
             (app.CustomerName && app.CustomerName.toLowerCase().includes(searchFilter)) ||
             (app.Address1 && app.Address1.toLowerCase().includes(searchFilter));
-        const matchesProvince = provinceFilter === 'all' || 
-            (app.Province && app.Province.toUpperCase() === provinceFilter);
-        const matchesPostalCode = postalCodeFilter === 'all' || 
-            (app.PostalCode && app.PostalCode.toUpperCase() === postalCodeFilter);
 
-        return isUnassigned && matchesStatus && matchesService && matchesSearch && matchesProvince && matchesPostalCode;
+        return isUnassigned && matchesStatus && matchesService && matchesSearch;
     });
 
-    const $listContainer = $(listContainerId);
-    $listContainer.empty();
+    // Debug: Log filtered appointments
+    console.log(`Rendering unscheduled list for view: ${view}`, {
+        totalAppointments: appointments.length,
+        filteredAppointments: filteredAppointments,
+        filters: { statusFilter, serviceFilter, searchFilter }
+    });
 
+    // Clear container
+    $listContainer.empty().css('display', 'block'); // Ensure container is visible
+
+    // Render appointments or empty state
     if (filteredAppointments.length === 0) {
-        $listContainer.append('<p>No unassigned appointments found.</p>');
+        $listContainer.append('<div class="text-center py-4 text-muted">No unassigned appointments found. Ensure appointments have ResourceID as null, 0, or empty, or ResourceName as null, "Unassigned", "None", or empty.</div>');
         return;
     }
 
     filteredAppointments.forEach(app => {
         const serviceType = app.ServiceType || 'Unknown';
         const typeClass = serviceType === 'IT Support' ? 'appt-type-it-support' :
-                         serviceType === '1 Hour' ? 'appt-type-1-hour' :
-                         serviceType === '2 Hour' ? 'appt-type-2-hour' : '';
-        const timeSlotDisplay = app.TimeBlock || app.TimeSlot || 'Not specified';
+            serviceType === '1 Hour' ? 'appt-type-1-hour' :
+                serviceType === '2 Hour' ? 'appt-type-2-hour' : '';
+        const timeSlotDisplay = app.TimeSlot || 'Not specified';
         const address = app.Address1 || 'No address';
-        const province = app.Province || '';
-        const postalCode = app.PostalCode || '';
+        const state = app.State || ''; // Use State from AppointmentModel
+        const zipCode = app.ZipCode || ''; // Use ZipCode from AppointmentModel
+
         const appointmentHtml = `
-            <div class="unscheduled-item ${typeClass}" data-id="${app.AppoinmentId}" draggable="true" ondragstart="drag(event)">
-                <div class="unscheduled-item-header">
-                    <span class="unscheduled-item-title">${app.CustomerName || 'Unknown Customer'}</span>
-                    <span class="unscheduled-item-status ${app.AppoinmentStatus.toLowerCase()}">${app.AppoinmentStatus}</span>
-                </div>
-                <div class="unscheduled-item-details">
-                    <p><strong>Service:</strong> ${serviceType}</p>
-                    <p><strong>Time:</strong> ${timeSlotDisplay}</p>
-                    <p><strong>Address:</strong> ${address}${province ? ', ' + province : ''}${postalCode ? ' ' + postalCode : ''}</p>
+            <div class="appointment-card card mb-3 shadow-sm unscheduled-item ${typeClass} ${getEventTimeSlotClass(app)}" data-id="${app.AppoinmentId}" draggable="true">
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <h3 class="font-weight-medium fs-6 mb-0">${app.CustomerName || 'Unknown Customer'}</h3>
+                        <span class="fs-7 badge bg-${app.AppoinmentStatus.toLowerCase() === 'pending' ? 'warning' : 'success'}">${app.AppoinmentStatus}</span>
+                    </div>
+                    <div class="fs-7 text-muted mt-1 line-clamp-2">${address}${state ? ', ' + state : ''}${zipCode ? ' ' + zipCode : ''}</div>
+                    <div class="fs-7 text-muted mt-1 line-clamp-2">${app.RequestDate || 'No date'}</div>
+                    <div class="fs-7 text-muted mt-1 line-clamp-2">${formatTimeRange(timeSlotDisplay)}</div>
+                    <div class="d-flex justify-content-between align-items-center mt-2">
+                        <span class="fs-7">${serviceType}</span>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="openEditModal(${app.AppoinmentId})">Schedule</button>
+                    </div>
                 </div>
             </div>
         `;
         $listContainer.append(appointmentHtml);
     });
 
-    $('.unscheduled-item').on('dragstart', drag);
+    // Reinitialize drag-and-drop
+    setupDragAndDrop();
 }
 
 // Setup drag-and-drop functionality
 function setupDragAndDrop() {
+    // Initialize draggable elements
     $(".calendar-event, .calendar-event-resource, .appointment-card").draggable({
         revert: "invalid",
-        revertDuration: 300,
+        revertDuration: 200,
         zIndex: 1000,
         helper: "clone",
         opacity: 0.7,
@@ -1087,61 +1099,156 @@ function setupDragAndDrop() {
         scrollSensitivity: 100,
         start: function (event, ui) {
             $(this).addClass("dragging");
-            ui.helper.css({
+            ui.helper.addClass("shadow-sm").css({
                 width: $(this).width(),
                 transition: "none",
                 transform: "translateZ(0)"
             });
+            // Hide details popup during drag
+            hideDetailsPopup(calendarDetailsPopup);
+            hideDetailsPopup(cardDetailsPopup);
         },
         stop: function () {
             $(this).removeClass("dragging");
         }
     });
-
     $(".drop-target").droppable({
-        accept: ".appointment-card, .calendar-event-resource, .calendar-event",
+        accept: ".appointment-card, .calendar-event, .calendar-event-resource",
         hoverClass: "drag-over",
-
+        tolerance: "pointer",
         drop: function (event, ui) {
-            const appointmentId = ui.draggable.data("id");
+            const appointmentId = ui.draggable.data("id").toString();
             const date = $(this).data("date");
             const time = $(this).data("time");
-            const resource = $(this).data("resource") ||
-                appointments.find(a => a.AppoinmentId === appointmentId.toString())?.ResourceName ||
-                "Unassigned";
+            const resource = $(this).data("resource") || "Unassigned";
 
+            const appointment = appointments.find(a => a.AppoinmentId === appointmentId);
+            if (!appointment) {
+                console.warn(`Appointment not found for ID: ${appointmentId}`);
+                return;
+            }
+
+            // Check for conflicts
+            if (hasConflict(appointment, time, resource, date, appointmentId)) {
+                showAlert({
+                    icon: 'error',
+                    title: 'Scheduling Conflict',
+                    text: 'This time slot is already taken for the selected resource and date.',
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        popup: 'swal-custom-popup',
+                        title: 'swal-custom-title',
+                        content: 'swal-custom-content',
+                        confirmButton: 'swal-custom-button'
+                    }
+                });
+                return;
+            }
+
+            // Open edit modal with pre-filled values
             openEditModal(appointmentId, date, time, resource, true);
         }
     });
-
     $("#unscheduledList, #unscheduledListResource").droppable({
-        accept: ".calendar-event",
+        accept: ".calendar-event, .calendar-event-resource, .appointment-card",
         hoverClass: "drag-over",
+        tolerance: "pointer",
         drop: function (event, ui) {
-            const appointmentId = ui.draggable.data("id");
-            const appointment = appointments.find(a => a.AppoinmentId === appointmentId.toString());
-            if (appointment) {
-                appointment.RequestDate = null;
-                appointment.TimeSlot = null;
-                appointment.Duration = "1 Hr";
-                saveAppointments();
-                updateAllViews();
+            const appointmentId = ui.draggable.data("id").toString();
+            const appointment = appointments.find(a => a.AppoinmentId === appointmentId);
+            if (!appointment) {
+                console.warn(`Appointment not found for ID: ${appointmentId}`);
+                return;
             }
+
+            // Mark as unassigned
+            appointment.ResourceID = 0;
+            appointment.ResourceName = 'Unassigned';
+            appointment.RequestDate = null;
+            appointment.TimeSlot = null;
+            appointment.Duration = '1 Hr';
+
+            // Save to server
+            const serverAppointment = {
+                AppoinmentId: parseInt(appointment.AppoinmentId),
+                CustomerID: parseInt(appointment.CustomerID) || null,
+                ServiceType: appointment.ServiceType,
+                RequestDate: null,
+                TimeSlot: null,
+                ResourceID: 0,
+                Status: appointment.AppoinmentStatus,
+                TicketStatus: appointment.TicketStatus || null,
+                Note: appointment.Note || '',
+                StartDateTime: null,
+                EndDateTime: null
+            };
+
+            $.ajax({
+                type: "POST",
+                url: "Appointments.aspx/UpdateAppointment",
+                data: JSON.stringify({ appointment: serverAppointment }),
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (response) {
+                    if (response.d) {
+                        showAlert({
+                            icon: 'success',
+                            title: 'Success',
+                            text: 'Appointment unscheduled successfully!',
+                            confirmButtonText: 'OK',
+                            timer: 2000,
+                            customClass: {
+                                popup: 'swal-custom-popup',
+                                title: 'swal-custom-title',
+                                content: 'swal-custom-content',
+                                confirmButton: 'swal-custom-button'
+                            }
+                        });
+                        saveAppointments();
+                        updateAllViews();
+                    } else {
+                        showAlert({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Failed to unschedule appointment.',
+                            confirmButtonText: 'OK',
+                            customClass: {
+                                popup: 'swal-custom-popup',
+                                title: 'swal-custom-title',
+                                content: 'swal-custom-content',
+                                confirmButton: 'swal-custom-button'
+                            }
+                        });
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error unscheduling appointment:", error);
+                    showAlert({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Failed to unschedule appointment due to a server error.',
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            popup: 'swal-custom-popup',
+                            title: 'swal-custom-title',
+                            content: 'swal-custom-content',
+                            confirmButton: 'swal-custom-button'
+                        }
+                    });
+                }
+            });
         }
     });
 
-    $(document).off('click', '.calendar-event, .appointment-card').on('click', '.calendar-event, .appointment-card', function () {
-        openEditModal($(this).data("id"));
-    });
+    // Rebind click handlers to prevent duplicate bindings
+    $(document).off('click', '.calendar-event, .calendar-event-resource, .appointment-card')
+        .on('click', '.calendar-event, .calendar-event-resource, .appointment-card', function (e) {
+            if (!$(this).hasClass('ui-draggable-dragging')) {
+                const appointmentId = $(this).data("id").toString();
+                openEditModal(appointmentId);
+            }
+        });
 }
-
-// Open modal to create a new appointment
-function openNewModal(date = null) {
-    const form = document.getElementById("newForm");
-    if (date) form.querySelector("[name='date']").value = date;
-    window.newModalInstance.show();
-}
-
 // Create a new appointment
 function createAppointment(e) {
     e.preventDefault();
@@ -1384,13 +1491,10 @@ function renderResourceView(date) {
     const selectedGroup = $("#dispatchGroup").val();
     const dateStr = new Date(date).toISOString().split('T')[0];
 
-    renderDateNav("resourceDateNav", dateStr);
+    renderDateNav("resourceNav", dateStr);
 
     const filteredResources = resources;
-    const slotDurationMinutes = allTimeSlots.length > 0 ?
-        (typeof allTimeSlots[0].Duration === 'string' ?
-            parseInt(allTimeSlots[0].Duration, 10) || 60 :
-            allTimeSlots[0].Duration || 60) : 60;
+    const slotDurationMinutes = 30; // Enforce 30-minute intervals
 
     getAppoinments("", "", "", dateStr, function (appointments) {
         let html = `
@@ -1416,7 +1520,7 @@ function renderResourceView(date) {
             filteredResources.forEach(resource => {
                 html += `
                     <div class="calendar-grid" style="grid-template-columns: 120px repeat(${allTimeSlots.length}, 1fr);">
-                        <div class="h-120px border-bottom last-border-bottom-none p-1 fs-7 text-center bg-gray-50 calendar-time-cell">
+                        <div class="h-60px border-bottom last-border-bottom-none p-1 fs-7 text-center bg-gray-50 calendar-time-cell">
                             ${resource.ResourceName}
                         </div>
                 `;
@@ -1451,8 +1555,8 @@ function renderResourceView(date) {
                                     return null;
                                 }
                                 const offsetMinutes = startTimeMinutes - slotStartTimeMinutes;
-                                const offsetPx = (offsetMinutes / slotDurationMinutes) * 100;
-                                const widthPx = (durationMinutes / slotDurationMinutes) * 100;
+                                const offsetPx = (offsetMinutes / slotDurationMinutes) * 50;
+                                const widthPx = (durationMinutes / slotDurationMinutes) * 50;
                                 return { appointment: a, offsetPx, widthPx };
                             }
                             return null;
@@ -1460,7 +1564,7 @@ function renderResourceView(date) {
                         .filter(a => a);
 
                     html += `
-                    <div class="h-120px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
+                    <div class="h-60px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
                          data-date="${dateStr}" 
                          data-time="${time.TimeBlockSchedule}" 
                          data-resource="${resource.ResourceName}">

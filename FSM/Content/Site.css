@@ -272,6 +272,9 @@ img.right-logo-img {
 
 .sidebar-expanded .sidebar-text {
     display: inline;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .sidebar-footer {
@@ -464,6 +467,9 @@ input:checked + .slider {
     color: var(--text-gray-700);
     font-size: 16px;
     margin-left: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 [data-theme="dark"] .theme-toggle-text {
