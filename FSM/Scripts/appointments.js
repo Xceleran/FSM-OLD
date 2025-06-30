@@ -1926,7 +1926,7 @@ function populateTimeSlotDropdown(slots) {
     $dropdown.empty();
     $dropdown.append(`<option value="0">Select</option>`);
     slots.forEach(slot => {
-        $dropdown.append(`<option value="${slot.TimeBlockSchedule}">${slot.TimeBlockSchedule}</option>`);
+        $dropdown.append(`<option value="${slot.TimeBlock}">${slot.TimeBlockSchedule}</option>`);
     });
 }
 
