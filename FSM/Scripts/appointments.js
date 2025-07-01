@@ -99,7 +99,10 @@ function getAppoinments(searchValue, fromDate, toDate, today, callback) {
         dataType: "json",
         success: function (response) {
             appointments = response.d;
-            console.log('Appointments loaded:', appointments);
+            console.log('Appointments loaded:', appointments.map(a => ({
+                AppoinmentId: a.AppoinmentId,
+                ServiceType: a.ServiceType
+            })));
             populatePostalCodeDropdowns();
             callback(appointments);
         },
@@ -150,13 +153,16 @@ function hasConflict(appointment, newTimeSlot, newResource, newDate, excludeId =
 
 // Get CSS class for time slot
 function getEventTimeSlotClass(appointment) {
-    const timeSlot = (appointment.TimeSlot || '')
-        .toLowerCase()
-        .replace(/\s*\(.*\)/, '')
-        .trim();
-    return timeSlot === "morning" ? "time-block-morning" :
-        timeSlot === "afternoon" ? "time-block-afternoon" :
-            timeSlot === "emergency" ? "time-block-emergency" : "";
+    const serviceType = (appointment.ServiceType || '').toLowerCase().trim();
+    if (serviceType.includes('it support') || serviceType.includes('it')) {
+        return 'service-type-it-support';
+    } else if (serviceType.includes('1 hour') || serviceType.includes('1 hr')) {
+        return 'service-type-1-hour';
+    } else if (serviceType.includes('2 hour') || serviceType.includes('2 hr')) {
+        return 'service-type-2-hour';
+    } else {
+        return 'service-type-default';
+    }
 }
 
 // Initialize the Map View
@@ -742,7 +748,7 @@ function renderDateView(date) {
                             renderedAppointments[dStr].add(appointment.AppoinmentId);
                             return `
                                 <div class="calendar-event ${getEventTimeSlotClass(appointment)} cursor-move fs-7 truncate"
-                                     style="position: absolute; height: ${heightPx}px; width: 90px;"
+                                     style="position: absolute; height: ${heightPx}px; width: 150px;"
                                      data-id="${appointment.AppoinmentId}" draggable="true">
                                     <div class="font-weight-medium fs-7">${appointment.CustomerName}</div>
                                     <div class="fs-7 truncate">${appointment.ServiceType} (${appointment.Duration})</div>
@@ -846,7 +852,7 @@ function renderDateView(date) {
                         renderedAppointments.add(appointment.AppoinmentId);
                         return `
                                 <div class="calendar-event ${getEventTimeSlotClass(appointment)} cursor-move fs-7 truncate"
-                                     style="position: absolute; height: ${heightPx}px; width: 90px;"
+                                     style="position: absolute; height: ${heightPx}px; width: 150px;"
                                      data-id="${appointment.AppoinmentId}" draggable="true">
                                     <div class="font-weight-medium fs-7">${appointment.CustomerName}</div>
                                     <div class="fs-7 truncate">${appointment.ServiceType} (${appointment.Duration})</div>
@@ -1008,7 +1014,6 @@ function renderListView() {
 // Render Unscheduled List
 function renderUnscheduledList(view = 'date') {
     const isResourceView = view === 'resource';
-    // Use correct filter IDs based on view
     const statusFilterId = isResourceView ? '#MainContent_StatusTypeFilter_Resource' : '#MainContent_StatusTypeFilter';
     const serviceFilterId = isResourceView ? '#MainContent_ServiceTypeFilter_Resource' : '#MainContent_ServiceTypeFilter_2';
     const searchFilterId = isResourceView ? '#searchFilterResource' : '#searchFilter';
@@ -1019,34 +1024,25 @@ function renderUnscheduledList(view = 'date') {
     const serviceFilter = $(serviceFilterId).val() || '';
     const searchFilter = $(searchFilterId).val().toLowerCase().trim() || '';
 
-    // Filter appointments
     const filteredAppointments = appointments.filter(app => {
-        // Unassigned: ResourceID is null, 0, '', or ResourceName is null, 'Unassigned', 'None', or ''
         const isUnassigned = !app.ResourceID || app.ResourceID === '0' || app.ResourceID === 0 || app.ResourceID === '' ||
             app.ResourceName === null || app.ResourceName === 'Unassigned' || app.ResourceName === 'None' || app.ResourceName === '';
-        // Status filter
         const matchesStatus = statusFilter === '' || app.AppoinmentStatus === statusFilter;
-        // Service type filter
         const matchesService = serviceFilter === '' || app.ServiceType === serviceFilter;
-        // Search filter (CustomerName and Address1, case-insensitive)
         const matchesSearch = !searchFilter ||
             (app.CustomerName && app.CustomerName.toLowerCase().includes(searchFilter)) ||
             (app.Address1 && app.Address1.toLowerCase().includes(searchFilter));
-
         return isUnassigned && matchesStatus && matchesService && matchesSearch;
     });
 
-    // Debug: Log filtered appointments
     console.log(`Rendering unscheduled list for view: ${view}`, {
         totalAppointments: appointments.length,
         filteredAppointments: filteredAppointments,
         filters: { statusFilter, serviceFilter, searchFilter }
     });
 
-    // Clear container
-    $listContainer.empty().css('display', 'block'); // Ensure container is visible
+    $listContainer.empty().css('display', 'block');
 
-    // Render appointments or empty state
     if (filteredAppointments.length === 0) {
         $listContainer.append('<div class="text-center py-4 text-muted">No unassigned appointments found. Ensure appointments have ResourceID as null, 0, or empty, or ResourceName as null, "Unassigned", "None", or empty.</div>');
         return;
@@ -1054,16 +1050,13 @@ function renderUnscheduledList(view = 'date') {
 
     filteredAppointments.forEach(app => {
         const serviceType = app.ServiceType || 'Unknown';
-        const typeClass = serviceType === 'IT Support' ? 'appt-type-it-support' :
-            serviceType === '1 Hour' ? 'appt-type-1-hour' :
-                serviceType === '2 Hour' ? 'appt-type-2-hour' : '';
         const timeSlotDisplay = app.TimeSlot || 'Not specified';
         const address = app.Address1 || 'No address';
-        const state = app.State || ''; // Use State from AppointmentModel
-        const zipCode = app.ZipCode || ''; // Use ZipCode from AppointmentModel
+        const state = app.State || '';
+        const zipCode = app.ZipCode || '';
 
         const appointmentHtml = `
-            <div class="appointment-card card mb-3 shadow-sm unscheduled-item ${typeClass} ${getEventTimeSlotClass(app)}" data-id="${app.AppoinmentId}" draggable="true">
+            <div class="appointment-card card mb-3 shadow-sm unscheduled-item" data-id="${app.AppoinmentId}" draggable="true">
                 <div class="card-body p-3">
                     <div class="d-flex justify-content-between align-items-start">
                         <h3 class="font-weight-medium fs-6 mb-0">${app.CustomerName || 'Unknown Customer'}</h3>
@@ -1073,7 +1066,7 @@ function renderUnscheduledList(view = 'date') {
                     <div class="fs-7 text-muted mt-1 line-clamp-2">${app.RequestDate || 'No date'}</div>
                     <div class="fs-7 text-muted mt-1 line-clamp-2">${formatTimeRange(timeSlotDisplay)}</div>
                     <div class="d-flex justify-content-between align-items-center mt-2">
-                        <span class="fs-7">${serviceType}</span>
+                        <span class="fs-7">${serviceType} </span>
                         <button class="btn btn-outline-secondary btn-sm" onclick="openEditModal(${app.AppoinmentId})">Schedule</button>
                     </div>
                 </div>
@@ -1082,7 +1075,6 @@ function renderUnscheduledList(view = 'date') {
         $listContainer.append(appointmentHtml);
     });
 
-    // Reinitialize drag-and-drop
     setupDragAndDrop();
 }
 
@@ -1125,6 +1117,23 @@ function setupDragAndDrop() {
             const appointment = appointments.find(a => a.AppoinmentId === appointmentId);
             if (!appointment) {
                 console.warn(`Appointment not found for ID: ${appointmentId}`);
+                return;
+            }
+
+            // Check if appointment is closed
+            if (appointment.AppoinmentStatus.toLowerCase() === "closed") {
+                showAlert({
+                    icon: 'info',
+                    title: 'Cannot Reschedule',
+                    text: 'This appointment is closed and cannot be rescheduled.',
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        popup: 'swal-custom-popup',
+                        title: 'swal-custom-title',
+                        content: 'swal-custom-content',
+                        confirmButton: 'swal-custom-button'
+                    }
+                });
                 return;
             }
 
@@ -1296,6 +1305,24 @@ function createAppointment(e) {
 function openEditModal(id, date, time, resource, confirm) {
     const a = appointments.find(x => x.AppoinmentId === id.toString());
     if (!a) return;
+
+    // Check if appointment is closed
+    if (a.AppoinmentStatus.toLowerCase() === "closed") {
+        showAlert({
+            icon: 'info',
+            title: 'Cannot Edit',
+            text: 'This appointment is closed and cannot be edited.',
+            confirmButtonText: 'OK',
+            customClass: {
+                popup: 'swal-custom-popup',
+                title: 'swal-custom-title',
+                content: 'swal-custom-content',
+                confirmButton: 'swal-custom-button'
+            }
+        });
+        return;
+    }
+
     currentEditId = id;
     const form = document.getElementById("editForm");
     form.querySelector("[name='duration']").value = a.Duration || "1 Hr";
@@ -1491,6 +1518,7 @@ function renderResourceView(date) {
     const selectedGroup = $("#dispatchGroup").val();
     const dateStr = new Date(date).toISOString().split('T')[0];
 
+
     renderDateNav("resourceNav", dateStr);
 
     const filteredResources = resources;
@@ -1564,7 +1592,7 @@ function renderResourceView(date) {
                         .filter(a => a);
 
                     html += `
-                    <div class="h-60px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
+                    <div class="h-120px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
                          data-date="${dateStr}" 
                          data-time="${time.TimeBlockSchedule}" 
                          data-resource="${resource.ResourceName}">

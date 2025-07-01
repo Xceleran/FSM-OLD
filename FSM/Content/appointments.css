@@ -1989,3 +1989,22 @@ button.btn.btn-primary.ms-2 {
         transform: translateX(0);
         opacity: 1;
     }
+.service-type-it-support {
+    background-color: #4f46e5 !important; /* Indigo */
+    color: #ffffff;
+}
+
+.service-type-1-hour {
+    background-color: #10b981 !important; /* Emerald */
+    color: #ffffff;
+}
+
+.service-type-2-hour {
+    background-color: #ea580c !important; /* Orange */
+    color: #ffffff;
+}
+
+.service-type-default {
+    background-color: #6b7280; /* Gray as fallback */
+    color: #ffffff;
+}
