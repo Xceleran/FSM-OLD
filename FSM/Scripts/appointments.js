@@ -1518,27 +1518,34 @@ function renderResourceView(date) {
     const selectedGroup = $("#dispatchGroup").val();
     const dateStr = new Date(date).toISOString().split('T')[0];
 
-
     renderDateNav("resourceNav", dateStr);
 
     const filteredResources = resources;
     const slotDurationMinutes = 30; // Enforce 30-minute intervals
+    const pixelsPerSlot = 100; // 100px per 30-minute slot
+    const eventHeight = 100; // Fixed height for events
+
+    // Validate and clean allTimeSlots to remove duplicates or invalid entries
+    const validTimeSlots = allTimeSlots.filter(slot =>
+        slot && slot.TimeBlockSchedule && !allTimeSlots.some(other => other !== slot && other.TimeBlockSchedule === slot.TimeBlockSchedule)
+    );
+    console.log('Valid TimeSlots length:', validTimeSlots.length); // Debug log
 
     getAppoinments("", "", "", dateStr, function (appointments) {
         let html = `
-            <div class="border rounded overflow-hidden">
-                <div class="calendar-grid" style="grid-template-columns: 120px repeat(${allTimeSlots.length}, 1fr);">
+            <div class="border rounded overflow-hidden" style="margin: 0; padding: 0; width: fit-content; max-width: 100%;">
+                <div class="calendar-grid" style="grid-template-columns: 120px repeat(${validTimeSlots.length}, ${pixelsPerSlot}px); margin: 0; padding: 0; width: fit-content; max-width: 100%;">
                     <div class="p-2 border-right bg-gray-50 calendar-header-cell"></div>
-                    ${allTimeSlots.map(time => `
+                    ${validTimeSlots.map(time => `
                         <div class="p-2 text-center font-weight-medium border-right last-border-right-none bg-gray-50 calendar-header-cell">
                             ${formatTimeRange(time.TimeBlockSchedule)}
                         </div>
                     `).join('')}
                 </div>
-                <div class="calendar-body">
+                <div class="calendar-body" style="margin: 0; padding: 0; width: fit-content; max-width: 100%; overflow-x: auto;">
         `;
 
-        if (!allTimeSlots.length || !resources.length) {
+        if (!validTimeSlots.length || !resources.length) {
             html += `
             <div class="text-center py-4 text-muted">
                 No resources or time slots available.
@@ -1547,19 +1554,22 @@ function renderResourceView(date) {
         } else {
             filteredResources.forEach(resource => {
                 html += `
-                    <div class="calendar-grid" style="grid-template-columns: 120px repeat(${allTimeSlots.length}, 1fr);">
-                        <div class="h-60px border-bottom last-border-bottom-none p-1 fs-7 text-center bg-gray-50 calendar-time-cell">
+                    <div class="calendar-grid" style="grid-template-columns: 120px repeat(${validTimeSlots.length}, ${pixelsPerSlot}px); margin: 0; padding: 0; width: fit-content; max-width: 100%;">
+                        <div class="h-120px border-bottom last-border-bottom-none p-1 fs-7 text-center bg-gray-50 calendar-time-cell">
                             ${resource.ResourceName}
                         </div>
                 `;
 
-                allTimeSlots.forEach((time, index) => {
+                // Track appointments to handle overlaps
+                const placedAppointments = [];
+
+                validTimeSlots.forEach((time, index) => {
                     const cellAppointments = appointments
                         .filter(a => a.ResourceName === resource.ResourceName &&
                             a.RequestDate === dateStr &&
                             a.TimeSlot)
                         .map(a => {
-                            const timeSlot = allTimeSlots.find(slot =>
+                            const timeSlot = validTimeSlots.find(slot =>
                                 slot.TimeBlockSchedule === a.TimeSlot ||
                                 slot.TimeBlock.toLowerCase() === a.TimeSlot.toLowerCase()
                             );
@@ -1567,7 +1577,7 @@ function renderResourceView(date) {
                                 console.warn(`No matching time slot for appointment ${a.AppoinmentId}: TimeSlot=${a.TimeSlot}`);
                                 return null;
                             }
-                            const startIndex = allTimeSlots.findIndex(slot => slot.TimeBlockSchedule === timeSlot.TimeBlockSchedule);
+                            const startIndex = validTimeSlots.findIndex(slot => slot.TimeBlockSchedule === timeSlot.TimeBlockSchedule);
                             if (startIndex === index) {
                                 const durationMinutes = parseDuration(a.Duration);
                                 const startTimeMinutes = parseTimeToMinutes(timeSlot.TimeBlockSchedule.split('-')[0]);
@@ -1583,9 +1593,17 @@ function renderResourceView(date) {
                                     return null;
                                 }
                                 const offsetMinutes = startTimeMinutes - slotStartTimeMinutes;
-                                const offsetPx = (offsetMinutes / slotDurationMinutes) * 50;
-                                const widthPx = (durationMinutes / slotDurationMinutes) * 50;
-                                return { appointment: a, offsetPx, widthPx };
+                                const offsetPx = (offsetMinutes / slotDurationMinutes) * pixelsPerSlot;
+                                const widthPx = (durationMinutes / slotDurationMinutes) * pixelsPerSlot;
+
+                                // Handle overlaps
+                                const overlappingAppointments = placedAppointments.filter(pa => pa.offsetPx === offsetPx);
+                                const conflictIndex = overlappingAppointments.length;
+                                const adjustedOffsetPx = offsetPx + (conflictIndex * 10); // Shift 10px per conflict
+
+                                placedAppointments.push({ appointment: a, offsetPx });
+
+                                return { appointment: a, offsetPx: adjustedOffsetPx, widthPx };
                             }
                             return null;
                         })
@@ -1595,12 +1613,16 @@ function renderResourceView(date) {
                     <div class="h-120px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
                          data-date="${dateStr}" 
                          data-time="${time.TimeBlockSchedule}" 
-                         data-resource="${resource.ResourceName}">
+                         data-resource="${resource.ResourceName}"
+                         style="position: relative; margin: 0; padding: 0; max-width: ${pixelsPerSlot}px;">
                         ${cellAppointments.map(({ appointment, offsetPx, widthPx }) => `
                             <div class="calendar-event-resource ${getEventTimeSlotClass(appointment)} cursor-move"
-                                 style="position: absolute; width: ${widthPx}px;"
+                                 style="position: absolute; left: ${offsetPx}px; width: ${Math.min(widthPx, pixelsPerSlot)}px; height: ${eventHeight}px;"
                                  data-id="${appointment.AppoinmentId}" 
-                                 draggable="true">
+                                 data-duration-width="${widthPx}"
+                                 draggable="true"
+                                 onmouseenter="this.style.width='${widthPx * 1.5}px'; this.style.zIndex='10';"
+                                 onmouseleave="this.style.width='${Math.min(widthPx, pixelsPerSlot)}px'; this.style.zIndex='1';">
                                 <div class="font-weight-medium fs-7">${appointment.CustomerName}</div>
                                 <div class="fs-7 truncate">${appointment.ServiceType} (${appointment.Duration})</div>
                                 <div class="fs-7 truncate status">${appointment.AppoinmentStatus}</div>
@@ -1617,7 +1639,6 @@ function renderResourceView(date) {
         html += `</div></div>`;
         container.html(html);
         setupDragAndDrop();
-        setupHoverEvents();
         renderUnscheduledList('resource');
     });
 }
