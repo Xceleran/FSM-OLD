@@ -471,6 +471,14 @@
                                 </select>
                             </div>
                             <div class="col-md-6">
+                                <label class="form-label">Phone</label>
+                                <input type="text" name="phone" class="form-control" readonly="readonly">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Mobile</label>
+                                <input type="text" name="mobile" class="form-control" readonly="readonly">
+                            </div>
+                            <div class="col-md-6">
                                 <label class="form-label">Date</label>
                                 <input type="date" name="date" class="form-control" id="dateInput" required onchange="updateDate(event)">
                             </div>
@@ -555,6 +563,14 @@
                                 <input type="date" name="date" class="form-control" required>
                             </div>
                             <div class="col-md-6">
+                                <label class="form-label">Phone</label>
+                                <input type="text" name="phone" class="form-control" readonly>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Mobile</label>
+                                <input type="text" name="mobile" class="form-control" readonly>
+                            </div>
+                            <div class="col-md-6">
                                 <label class="form-label">Time Slot</label>
                                 <select name="timeSlot" class="form-select" required>
                                     <option value="morning">Morning</option>
@@ -599,25 +615,25 @@
     <script>
 
 </script>
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const cecBtn = document.querySelector(".cec-btn");
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const cecBtn = document.querySelector(".cec-btn");
 
-        // Listen to Bootstrap's tab show event
-        const viewTabs = document.querySelectorAll('#viewTabs .nav-link');
+            // Listen to Bootstrap's tab show event
+            const viewTabs = document.querySelectorAll('#viewTabs .nav-link');
 
-        viewTabs.forEach(tab => {
-            tab.addEventListener('shown.bs.tab', function (event) {
-                const activatedTabId = event.target.id;
+            viewTabs.forEach(tab => {
+                tab.addEventListener('shown.bs.tab', function (event) {
+                    const activatedTabId = event.target.id;
 
-                if (activatedTabId === "map-tab") {
-                    cecBtn.style.display = "none";
-                } else {
-                    cecBtn.style.display = "flex";
-                }
+                    if (activatedTabId === "map-tab") {
+                        cecBtn.style.display = "none";
+                    } else {
+                        cecBtn.style.display = "flex";
+                    }
+                });
             });
         });
-    });
 </script>
 
 
