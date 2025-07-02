@@ -518,7 +518,18 @@
             background-size: 1rem;
             color: var(--text-gray-700);
         }
+
+        #loadingOverlay img {
+            width: 60px;
+            margin-bottom: 10px;
+        }
+
     </style>
+
+    <!-- SweetAlert2 CSS & JS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 
     <input type="hidden" id="companyId" value="" runat="server"/>
 
@@ -536,12 +547,22 @@
         </header>
         <section class="mb-4">
             <div class="row align-items-center">
-                <div class="float-start">
+                <%--<div class="float-start">
                     <p style="display: none" id="ProgressGIF">
                         <img id="imgProcess" src="images/Rolling.gif" />
                         Sync on progress....
                     </p>
+                </div>--%>
+                <div id="loadingOverlay" style="display: none; position: fixed; z-index: 9999; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(255, 255, 255, 0.8); text-align: center;">
+                    <div style="position: relative; top: 40%;">
+                        <div class="spinner-border text-success" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <h5>Syncing with QuickBooks Online...</h5>
+                        <p>Time elapsed: <span id="syncTimer">0</span> seconds</p>
+                    </div>
                 </div>
+
                 <div class="col-md-6">
                     <span class="btn btn-primary" title="QuickBooks Online Sync" runat="server" id="SyncQuickBook" onclick="SyncQuickBook()">QuickBooks Online Sync</span>
                 </div>
@@ -1048,21 +1069,69 @@
             return true;
         }
 
+        //function SyncQuickBook() {
+        //    var prgBar = document.getElementById("ProgressGIF");
+        //    prgBar.style.display = "block";
+        //    $.ajax({
+        //        type: "POST",
+        //        url: "BillableItems.aspx/SyncQBOItems",
+        //        contentType: "application/json",
+        //        dataType: "json",
+        //        success: function (msg) {
+        //            alert(msg.d);
+        //            prgBar.style.display = "none";
+        //            window.location.href = "BillableItems.aspx";
+        //        }
+        //    });
+        //}
+
         function SyncQuickBook() {
-            var prgBar = document.getElementById("ProgressGIF");
-            prgBar.style.display = "block";
+            var overlay = document.getElementById("loadingOverlay");
+            var timerText = document.getElementById("syncTimer");
+            var seconds = 0;
+            overlay.style.display = "block";
+
+            var timer = setInterval(function () {
+                seconds++;
+                timerText.textContent = seconds;
+            }, 1000);
+
             $.ajax({
                 type: "POST",
                 url: "BillableItems.aspx/SyncQBOItems",
                 contentType: "application/json",
                 dataType: "json",
                 success: function (msg) {
-                    alert(msg.d);
-                    prgBar.style.display = "none";
-                    window.location.href = "BillableItems.aspx";
+                    clearInterval(timer);
+                    overlay.style.display = "none";
+
+                    Swal.fire({
+                        icon: msg.d.includes("failed") ? 'error' : 'success',
+                        title: msg.d.includes("failed") ? 'Failed' : 'Success',
+                        text: msg.d,
+                        confirmButtonColor: '#3085d6',
+                        confirmButtonText: 'OK'
+                    }).then(() => {
+                        if (!msg.d.includes("failed")) {
+                            window.location.href = "BillableItems.aspx";
+                        }
+                    });
+                },
+                error: function (xhr, status, error) {
+                    clearInterval(timer);
+                    overlay.style.display = "none";
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Sync Error',
+                        text: 'An error occurred during the QuickBooks sync.',
+                        confirmButtonColor: '#d33'
+                    });
                 }
             });
         }
+
+
 
 
         function AddNewClicked() {

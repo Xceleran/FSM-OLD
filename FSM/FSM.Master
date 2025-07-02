@@ -170,8 +170,8 @@
         </asp:ScriptManager>
         <div class="page-container">
             <div class="right-logo">
-                <%--<img src="https://testsite.myserviceforce.com/fsm/images/FMSXceleran.png" alt="Xceleran Logo" class="right-logo-img">--%>
-                 <img src="https://central.xceleran.com/fsm/images/FMSXceleran.png" alt="Xceleran Logo" class="right-logo-img">
+                <img src="https://testsite.myserviceforce.com/fsm/images/FMSXceleran.png" alt="Xceleran Logo" class="right-logo-img">
+                <%-- <img src="https://central.xceleran.com/fsm/images/FMSXceleran.png" alt="Xceleran Logo" class="right-logo-img">--%>
             </div>
             <aside id="sidebar" class="sidebar">
                 <div class="sidebar-logo">
@@ -258,8 +258,8 @@
                 </nav>
                 <div class="sidebar-footer">
                     <h6 class="logo-title">Powered by</h6>
-                    <%--<img id="sidebar-footer-img" src="https://testsite.myserviceforce.com/fsm/images/xceleranwhite.png" alt="FMSXceleran Logo" class="sidebar-footer-img">--%>
-                    <img id="sidebar-footer-img" src="https://central.xceleran.com/fsm/images/xceleranwhite.png" alt="FMSXceleran Logo" class="sidebar-footer-img">
+                    <img id="sidebar-footer-img" src="https://testsite.myserviceforce.com/fsm/images/xceleranwhite.png" alt="FMSXceleran Logo" class="sidebar-footer-img">
+                   <%-- <img id="sidebar-footer-img" src="https://central.xceleran.com/fsm/images/xceleranwhite.png" alt="FMSXceleran Logo" class="sidebar-footer-img">--%>
                    
                 </div>
             </aside>
@@ -324,8 +324,8 @@
                 <button class="btn btn-danger" type="button" onclick="hideSidebarLogoutConfirmation()">No</button>
                 <div class="branding">
                     <h6>Powered by</h6>
-                    <%--<img id="sidebar-logout-logo" src="https://testsite.myserviceforce.com/fsm/images/xceleranwhite.png" alt="FMSXceleran Logo" class="sidebar-footer-img">--%>
-                    <img id="sidebar-logout-logo" src="https://central.xceleran.com/fsm/images/xceleranwhite.png" alt="FMSXceleran Logo" class="sidebar-footer-img">
+                    <img id="sidebar-logout-logo" src="https://testsite.myserviceforce.com/fsm/images/xceleranwhite.png" alt="FMSXceleran Logo" class="sidebar-footer-img">
+                    <%--<img id="sidebar-logout-logo" src="https://central.xceleran.com/fsm/images/xceleranwhite.png" alt="FMSXceleran Logo" class="sidebar-footer-img">--%>
                 </div>
             </div>
         </div>
@@ -482,10 +482,10 @@
                 const theme = localStorage.getItem('theme') || 'dark';
                 const logo = document.getElementById('sidebar-logout-logo');
                 logo.src = theme === 'dark'
-                    //? 'https://testsite.myserviceforce.com/fsm/images/xceleran.png'
-                    ? 'https://central.xceleran.com/fsm/images/xceleran.png'
-                    //: 'https://testsite.myserviceforce.com/fsm/images/xceleran.png';
-                    : 'https://central.xceleran.com/fsm/images/xceleran.png';
+                    ? 'https://testsite.myserviceforce.com/fsm/images/xceleran.png'
+                    /*? 'https://central.xceleran.com/fsm/images/xceleran.png'*/
+                    : 'https://testsite.myserviceforce.com/fsm/images/xceleran.png';
+                    //: 'https://central.xceleran.com/fsm/images/xceleran.png';
                 logoutModal.style.display = 'flex';
                 console.log('Sidebar logout confirmation modal displayed');
             } else {
@@ -628,23 +628,23 @@
                     themeToggleText.textContent = theme === 'dark' ? 'Dark Mode' : 'Light Mode';
                     // Update sidebar logo
                     sidebarLogoImg.src = theme === 'dark'
-                        //? 'https://testsite.myserviceforce.com/fsm/images/LHLogowhite.png'
-                        ? 'https://central.xceleran.com/fsm/images/LHLogowhite.png'
-                        //: 'https://testsite.myserviceforce.com/fsm/images/lhlogo.png';
-                        : 'https://central.xceleran.com/fsm/images/lhlogo.png';
+                        ? 'https://testsite.myserviceforce.com/fsm/images/LHLogowhite.png'
+                        /*? 'https://central.xceleran.com/fsm/images/LHLogowhite.png'*/
+                        : 'https://testsite.myserviceforce.com/fsm/images/lhlogo.png';
+                        /*: 'https://central.xceleran.com/fsm/images/lhlogo.png';*/
                     // Update sidebar footer logo
                     sidebarFooterImg.src = theme === 'dark'
-                        //? 'https://testsite.myserviceforce.com/fsm/images/xceleranwhite.png'
-                        ? 'https://central.xceleran.com/fsm/images/xceleranwhite.png'
-                            //: 'https://testsite.myserviceforce.com/fsm/images/xceleran.png';
-                        : 'https://central.xceleran.com/fsm/images/xceleran.png';
+                        ? 'https://testsite.myserviceforce.com/fsm/images/xceleranwhite.png'
+                        /*? 'https://central.xceleran.com/fsm/images/xceleranwhite.png'*/
+                            : 'https://testsite.myserviceforce.com/fsm/images/xceleran.png';
+                        /*: 'https://central.xceleran.com/fsm/images/xceleran.png';*/
                     // Update right logo
                     if (rightLogoImg) {
                         rightLogoImg.src = theme === 'dark'
-                            //? 'https://testsite.myserviceforce.com/fsm/images/FSMWhite.png'
-                            ? 'https://central.xceleran.com/fsm/images/FSMWhite.png'
-                                //: 'https://testsite.myserviceforce.com/fsm/images/FMSXceleran.png';
-                            : 'https://central.xceleran.com/fsm/images/FMSXceleran.png';
+                            ? 'https://testsite.myserviceforce.com/fsm/images/FSMWhite.png'
+                            /*? 'https://central.xceleran.com/fsm/images/FSMWhite.png'*/
+                                : 'https://testsite.myserviceforce.com/fsm/images/FMSXceleran.png';
+                            /*: 'https://central.xceleran.com/fsm/images/FMSXceleran.png';*/
                     } else {
                         console.warn('Right logo image not found');
                     }

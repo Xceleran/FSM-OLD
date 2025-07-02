@@ -155,8 +155,8 @@
                 <h1 class="page-title-mockup">Welcome to FSM</h1>
                 <p class="subtitle-mockup">Field Service Module</p>
             </div>
-            <%--<img src="https://testsite.myserviceforce.com/fsm/images/fsmmain.png" alt="Technician with Van" class="hero-image-mockup">--%>
-              <img src="https://central.xceleran.com/fsm/images/fsmmain.png" alt="Technician with Van" class="hero-image-mockup">
+            <img src="https://testsite.myserviceforce.com/fsm/images/fsmmain.png" alt="Technician with Van" class="hero-image-mockup">
+              <%--<img src="https://central.xceleran.com/fsm/images/fsmmain.png" alt="Technician with Van" class="hero-image-mockup">--%>
         </section>
     </main>
 
