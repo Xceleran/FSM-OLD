@@ -17,6 +17,7 @@
     display: flex;
     gap: 1rem;
     height: calc(100vh - 250px);
+    margin-bottom: 100px;
 }
 
 .calendar-container {
@@ -885,10 +886,11 @@ ul#viewTabs {
 
 /* Badges */
 .badge {
-    font-size: 0.75rem;
-    padding: 4px 8px;
+    font-size: 1rem;
+    padding: 7px 8px;
     border-radius: 12px;
     color: #fff;
+    font-weight: 400;
 }
 
 .bg-danger {
@@ -908,11 +910,11 @@ ul#viewTabs {
 }
 
 .bg-success {
-    background-color: #28a745;
+    background-color: #28a745 !important;
 }
 
 [data-theme="dark"] .bg-success {
-    background-color: #22c55e;
+    background-color: #22c55e !important;
 }
 
 /* Line Clamp */

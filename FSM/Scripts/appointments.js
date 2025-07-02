@@ -417,6 +417,7 @@ const cardDetailsPopup = document.createElement('div');
 cardDetailsPopup.className = 'appointment-card-details-popup';
 document.body.appendChild(cardDetailsPopup);
 // Function to populate and show the details popup
+// Replace the existing showDetailsPopup function (around lines 900-950)
 function showDetailsPopup(appointment, element, event, popup) {
     if (element.classList.contains('ui-draggable-dragging')) return; // Skip if dragging
 
@@ -458,38 +459,32 @@ function showDetailsPopup(appointment, element, event, popup) {
 
     // Position popup relative to the appointment block
     const rect = element.getBoundingClientRect();
-    const popupWidth = popup.offsetWidth || 200; // Fallback width if not yet rendered
+    const popupWidth = popup.offsetWidth || 200; // Fallback width
     const popupHeight = popup.offsetHeight || 100; // Fallback height
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
     const isResourceView = currentView === 'resource' && element.classList.contains('calendar-event-resource');
+    const allDaySection = document.querySelector('.all-day-section');
+    const allDayHeight = allDaySection ? allDaySection.getBoundingClientRect().height : 0;
+
     // Default positioning
     let left, top;
-
     if (isResourceView) {
-        // In resource view for calendar-event-resource, position below to avoid overlap with horizontal expansion
-        left = rect.left;
+        // In resource view, position below to avoid overlap with horizontal expansion
         top = rect.bottom + 10;
-        // Adjust if it overflows the bottom
-        if (top + popupHeight > viewportHeight) {
-            top = rect.top - popupHeight - 10; // Position above instead
-        }
-        // Adjust if it overflows the right
-        if (left + popupWidth > viewportWidth) {
-            left = viewportWidth - popupWidth - 10;
-        }
+        // Adjust if it overlaps "All Day" or overflows the bottom
+        if (top < allDayHeight + 10) top = allDayHeight + 10;
+        if (top + popupHeight > viewportHeight) top = rect.top - popupHeight - 10;
+        left = rect.left;
+        if (left + popupWidth > viewportWidth) left = viewportWidth - popupWidth - 10;
     } else {
         // In date views or for appointment-card, position to the right
         left = rect.right + 10;
         top = rect.top;
-        // Adjust if it overflows the right edge
-        if (left + popupWidth > viewportWidth) {
-            left = rect.left - popupWidth - 10; // Position to the left instead
-        }
-        // Adjust if it overflows the bottom
-        if (top + popupHeight > viewportHeight) {
-            top = viewportHeight - popupHeight - 10;
-        }
+        // Adjust if it overlaps "All Day" or overflows
+        if (top < allDayHeight + 10) top = allDayHeight + 10;
+        if (left + popupWidth > viewportWidth) left = rect.left - popupWidth - 10;
+        if (top + popupHeight > viewportHeight) top = viewportHeight - popupHeight - 10;
     }
 
     // Ensure it stays within the viewport
@@ -1307,7 +1302,7 @@ function openEditModal(id, date, time, resource, confirm) {
     if (!a) return;
 
     // Check if appointment is closed
-    if (a.AppoinmentStatus.toLowerCase() === "closed") {
+   if (a.AppoinmentStatus.toLowerCase() === "closed") {
         showAlert({
             icon: 'info',
             title: 'Cannot Edit',
@@ -1323,12 +1318,33 @@ function openEditModal(id, date, time, resource, confirm) {
         return;
     }
 
+    // Debug: Log the appointment object to verify Phone and Mobile properties
+    console.log('Appointment data:', a);
+
     currentEditId = id;
     const form = document.getElementById("editForm");
+    if (!form) {
+        console.error('Edit form not found in DOM');
+        return;
+    }
+
     form.querySelector("[name='duration']").value = a.Duration || "1 Hr";
     form.querySelector("[id='AppoinmentId']").value = parseInt(a.AppoinmentId);
     form.querySelector("[id='CustomerID']").value = parseInt(a.CustomerID) || '';
     form.querySelector("[name='customerName']").value = a.CustomerName || '';
+    // Populate Phone and Mobile fields with error handling
+    const phoneInput = form.querySelector("[name='phone']");
+    const mobileInput = form.querySelector("[name='mobile']");
+    if (phoneInput) {
+        phoneInput.value = a.Phone || '';
+    } else {
+        console.warn('Phone input field not found in editForm');
+    }
+    if (mobileInput) {
+        mobileInput.value = a.Mobile || '';
+    } else {
+        console.warn('Mobile input field not found in editForm');
+    }
     form.querySelector("[name='note']").value = a.Note || '';
     form.querySelector("[id='txt_StartDate']").value = a.StartDateTime || '';
     form.querySelector("[id='txt_EndDate']").value = a.EndDateTime || '';
@@ -1389,7 +1405,24 @@ function openEditModal(id, date, time, resource, confirm) {
     service_select.disabled = isClosed;
     status_select.disabled = isClosed;
     ticket_status.disabled = isClosed;
-    window.editModalInstance.show();
+
+    try {
+        window.editModalInstance.show();
+    } catch (error) {
+        console.error('Error opening editModal:', error);
+        showAlert({
+            icon: 'error',
+            title: 'Modal Error',
+            text: 'Failed to open the edit modal. Please check the console for details.',
+            confirmButtonText: 'OK',
+            customClass: {
+                popup: 'swal-custom-popup',
+                title: 'swal-custom-title',
+                content: 'swal-custom-content',
+                confirmButton: 'swal-custom-button'
+            }
+        });
+    }
 }
 
 // Update an existing appointment
