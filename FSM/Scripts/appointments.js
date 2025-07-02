@@ -1554,20 +1554,19 @@ function renderResourceView(date) {
     renderDateNav("resourceNav", dateStr);
 
     const filteredResources = resources;
-    const slotDurationMinutes = 30; // Enforce 30-minute intervals
-    const pixelsPerSlot = 100; // 100px per 30-minute slot
-    const eventHeight = 100; // Fixed height for events
+    const slotDurationMinutes = 30;
+    const pixelsPerSlot = 100;
+    const eventHeight = 100;
 
-    // Validate and clean allTimeSlots to remove duplicates or invalid entries
     const validTimeSlots = allTimeSlots.filter(slot =>
         slot && slot.TimeBlockSchedule && !allTimeSlots.some(other => other !== slot && other.TimeBlockSchedule === slot.TimeBlockSchedule)
     );
-    console.log('Valid TimeSlots length:', validTimeSlots.length); // Debug log
+    console.log('Valid TimeSlots length:', validTimeSlots.length);
 
     getAppoinments("", "", "", dateStr, function (appointments) {
         let html = `
             <div class="border rounded overflow-hidden" style="margin: 0; padding: 0; width: fit-content; max-width: 100%;">
-                <div class="calendar-grid" style="grid-template-columns: 120px repeat(${validTimeSlots.length}, ${pixelsPerSlot}px); margin: 0; padding: 0; width: fit-content; max-width: 100%;">
+                <div class="calendar-grid calendar-header" id="resource-header" style="grid-template-columns: 120px repeat(${validTimeSlots.length}, ${pixelsPerSlot}px); margin: 0; padding: 0; width: fit-content; max-width: 100%; overflow-x: hidden;">
                     <div class="p-2 border-right bg-gray-50 calendar-header-cell"></div>
                     ${validTimeSlots.map(time => `
                         <div class="p-2 text-center font-weight-medium border-right last-border-right-none bg-gray-50 calendar-header-cell">
@@ -1575,7 +1574,7 @@ function renderResourceView(date) {
                         </div>
                     `).join('')}
                 </div>
-                <div class="calendar-body" style="margin: 0; padding: 0; width: fit-content; max-width: 100%; overflow-x: auto;">
+                <div class="calendar-body" style="margin: 0; padding: 0; width: fit-content; max-width: 100%;">
         `;
 
         if (!validTimeSlots.length || !resources.length) {
@@ -1585,18 +1584,18 @@ function renderResourceView(date) {
             </div>
             `;
         } else {
-            filteredResources.forEach(resource => {
+            filteredResources.forEach((resource, index) => {
+                const rowId = `resource-row-${index}`;
                 html += `
-                    <div class="calendar-grid" style="grid-template-columns: 120px repeat(${validTimeSlots.length}, ${pixelsPerSlot}px); margin: 0; padding: 0; width: fit-content; max-width: 100%;">
+                    <div class="calendar-grid resource-row" id="${rowId}" style="grid-template-columns: 120px repeat(${validTimeSlots.length}, ${pixelsPerSlot}px); margin: 0; padding: 0; width: fit-content; max-width: 100%; overflow-x: hidden;">
                         <div class="h-120px border-bottom last-border-bottom-none p-1 fs-7 text-center bg-gray-50 calendar-time-cell">
                             ${resource.ResourceName}
                         </div>
                 `;
 
-                // Track appointments to handle overlaps
                 const placedAppointments = [];
 
-                validTimeSlots.forEach((time, index) => {
+                validTimeSlots.forEach((time, timeIndex) => {
                     const cellAppointments = appointments
                         .filter(a => a.ResourceName === resource.ResourceName &&
                             a.RequestDate === dateStr &&
@@ -1611,7 +1610,7 @@ function renderResourceView(date) {
                                 return null;
                             }
                             const startIndex = validTimeSlots.findIndex(slot => slot.TimeBlockSchedule === timeSlot.TimeBlockSchedule);
-                            if (startIndex === index) {
+                            if (startIndex === timeIndex) {
                                 const durationMinutes = parseDuration(a.Duration);
                                 const startTimeMinutes = parseTimeToMinutes(timeSlot.TimeBlockSchedule.split('-')[0]);
                                 const slotStartTimeMinutes = parseTimeToMinutes(time.TimeBlockSchedule.split('-')[0]);
@@ -1629,10 +1628,9 @@ function renderResourceView(date) {
                                 const offsetPx = (offsetMinutes / slotDurationMinutes) * pixelsPerSlot;
                                 const widthPx = (durationMinutes / slotDurationMinutes) * pixelsPerSlot;
 
-                                // Handle overlaps
                                 const overlappingAppointments = placedAppointments.filter(pa => pa.offsetPx === offsetPx);
                                 const conflictIndex = overlappingAppointments.length;
-                                const adjustedOffsetPx = offsetPx + (conflictIndex * 10); // Shift 10px per conflict
+                                const adjustedOffsetPx = offsetPx + (conflictIndex * 10);
 
                                 placedAppointments.push({ appointment: a, offsetPx });
 
@@ -1673,9 +1671,96 @@ function renderResourceView(date) {
         container.html(html);
         setupDragAndDrop();
         renderUnscheduledList('resource');
+
+        // Enable drag-to-scroll for each resource row and the header
+        const header = document.querySelector('#resource-header');
+        const rows = document.querySelectorAll('.resource-row');
+        if (header && rows.length > 0) {
+            // Initialize drag-to-scroll for header
+            enableDragToScroll('#resource-header');
+            // Initialize drag-to-scroll for rows and sync with header
+            filteredResources.forEach((_, index) => {
+                const rowSelector = `#resource-row-${index}`;
+                enableDragToScroll(rowSelector);
+                // Sync scrolling
+                const row = document.querySelector(rowSelector);
+                row.addEventListener('scroll', () => {
+                    header.scrollLeft = row.scrollLeft;
+                    rows.forEach(otherRow => {
+                        if (otherRow !== row) {
+                            otherRow.scrollLeft = row.scrollLeft;
+                        }
+                    });
+                });
+                header.addEventListener('scroll', () => {
+                    rows.forEach(r => {
+                        r.scrollLeft = header.scrollLeft;
+                    });
+                });
+            });
+        }
     });
 }
+function enableDragToScroll(containerSelector) {
+    const container = document.querySelector(containerSelector);
+    if (!container) {
+        console.warn(`Container ${containerSelector} not found for drag-to-scroll`);
+        return;
+    }
 
+    let isDragging = false;
+    let startX;
+    let scrollLeft;
+
+    const throttle = (func, limit) => {
+        let inThrottle;
+        return function (...args) {
+            if (!inThrottle) {
+                func.apply(this, args);
+                inThrottle = true;
+                setTimeout(() => (inThrottle = false), limit);
+            }
+        };
+    };
+
+    const startDragging = (e) => {
+        if (e.target.closest('.calendar-event, .calendar-event-resource, .appointment-card')) {
+            return;
+        }
+
+        isDragging = true;
+        container.style.cursor = 'grabbing';
+        startX = (e.pageX || (e.touches && e.touches[0].pageX)) - container.offsetLeft;
+        scrollLeft = container.scrollLeft;
+        container.classList.add('dragging');
+    };
+
+    const stopDragging = () => {
+        isDragging = false;
+        container.style.cursor = 'grab';
+        container.classList.remove('dragging');
+    };
+
+    const drag = throttle((e) => {
+        if (!isDragging) return;
+        e.preventDefault();
+        const x = (e.pageX || (e.touches && e.touches[0].pageX)) - container.offsetLeft;
+        const walk = (x - startX) * 2;
+        container.scrollLeft = scrollLeft - walk;
+    }, 16); // ~60fps
+
+    container.addEventListener('mousedown', startDragging);
+    container.addEventListener('mousemove', drag);
+    container.addEventListener('mouseup', stopDragging);
+    container.addEventListener('mouseleave', stopDragging);
+
+    container.addEventListener('touchstart', startDragging, { passive: false });
+    container.addEventListener('touchmove', drag, { passive: false });
+    container.addEventListener('touchend', stopDragging);
+    container.addEventListener('touchcancel', stopDragging);
+
+    container.style.cursor = 'grab';
+}
 var today = new Date().toISOString().split('T')[0];
 
 // Initialize the page

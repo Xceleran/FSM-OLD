@@ -26,7 +26,10 @@
     overflow: hidden;
     transition: flex 0.3s ease;
 }
-
+.calendar-event-resource:hover .fs-7.truncate.status {
+    font-size: 1rem;
+    margin-top: 7px;
+}
 /* Card Styles */
 .card {
     border: none;
