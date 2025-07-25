@@ -218,6 +218,19 @@
     <script type="text/javascript" src="https://cdn.datatables.net/select/3.0.0/js/dataTables.select.min.js"></script>
     <script src="Scripts/customer.js"></script>
     <script>
+        $(document).ready(function () {
+            $('#customerTable tbody').on('click', 'tr', function () {
+                $('#contact').show();
+                $('#sites').show();
+
+                // Optionally, adding 'active' class to toggle styling
+                $('#contactBtn').addClass('active');
+                $('#sitesBtn').addClass('active');
+            });
+        });
+
+    </script>
+    <script>
         // JavaScript to handle close icon functionality
         $(document).ready(function () {
             $('#closeAddCustomerIcon').on('click', function () {

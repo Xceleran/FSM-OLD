@@ -116,7 +116,10 @@ div.dt-container div.dt-layout-row {
 
 /* Customer List Container */
 .cust-list-container {
-    width: 100%;
+    /*width: 100%;*/
+    flex: 2 1 0%;
+    min-width: 0;
+    width: 66.66%;
     background: var(--bg-white);
     border-radius: 8px;
     box-shadow: var(--shadow-lg);
@@ -210,7 +213,9 @@ span.dt-column-order {
 
 /* Customer Details Container */
 .cust-details-container {
-    width: 100%;
+    /*width: 100%;*/
+    flex: 1 1 0%;
+    min-width: 0;
     background: var(--bg-white);
     border-radius: 8px;
     box-shadow: var(--shadow-lg);
