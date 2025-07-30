@@ -19,7 +19,24 @@
     <link rel="stylesheet" href="Content/appointments.css">
 
     <!-- Inline CSS for Expand/Collapse -->
+    <style>
 
+
+        .workorder-filters-row {
+            display: flex;
+            flex-direction: row;
+            gap: 18px; /* space between the filters */
+            align-items: flex-end;
+        }
+
+        /* Optional: Make them stack on mobile */
+        @media (max-width: 600px) {
+            .workorder-filters-row {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
 
 
 
@@ -28,8 +45,8 @@
         <header class="mb-4">
             <div class="row align-items-center">
                 <div class="col-12">
-                    <h1 class="page-title">Dispatch Calendar</h1>
                     <div class="cec-btn">
+                        <h1 class="page-title">Dispatch Calendar</h1>
                         <a href="https://testsite.myserviceforce.com/cec/calendar.aspx?m=3" class="custom-launch-btn" role="button" target="_blank">
                             <span>
                                 <span>CEC Appointments</span>
@@ -115,38 +132,45 @@
                             <h3 class="card-title">Unassigned Appointments</h3>
                         </div>
                         <div class="card-body">
-                            <div class="unscheduled-filters">
-                                <select runat="server" id="StatusTypeFilter" class="form-select mb-3" onchange="renderUnscheduledList()">
-                                    <option value="all">All Statuses</option>
-                                </select>
-                                <select runat="server" id="ServiceTypeFilter_2" class="form-select mb-3" onchange="renderUnscheduledList()">
-                                    <option value="all">All Types</option>
-                                    <option value="IT Support">IT Support</option>
-                                    <option value="1 Hour">1 Hour</option>
-                                    <option value="2 Hour">2 Hour</option>
-                                </select>
 
-                                <select id="ProvinceFilter" class="form-select mb-3" onchange="renderUnscheduledList()">
-                                    <option value="all">All Provinces/Territories</option>
-                                    <option value="AB">Alberta</option>
-                                    <option value="BC">British Columbia</option>
-                                    <option value="MB">Manitoba</option>
-                                    <option value="NB">New Brunswick</option>
-                                    <option value="NL">Newfoundland and Labrador</option>
-                                    <option value="NS">Nova Scotia</option>
-                                    <option value="NT">Northwest Territories</option>
-                                    <option value="NU">Nunavut</option>
-                                    <option value="ON">Ontario</option>
-                                    <option value="PE">Prince Edward Island</option>
-                                    <option value="QC">Quebec</option>
-                                    <option value="SK">Saskatchewan</option>
-                                    <option value="YT">Yukon</option>
-                                </select>
-                                <select id="PostalCodeFilter" class="form-select mb-3" onchange="renderUnscheduledList()">
-                                    <option value="all">All Postal Codes</option>
-                                    <!-- Populated dynamically via JavaScript -->
-                                </select>
-                                <input type="text" id="searchFilter" class="form-control mb-3" placeholder="Search by customer..." oninput="renderUnscheduledList()">
+                            <!--Dropdowns Under One Filter-->
+                            <div class="dropdown unscheduled-filters mb-3">
+                                <button class="btn btn-primary dropdown-toggle w-100" type="button" id="unscheduledFilterBtn" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-filter"></i>Filter
+                                </button>
+                                <div class="dropdown-menu p-3 w-100" aria-labelledby="unscheduledFilterBtn" style="min-width: 320px;">
+                                    <select runat="server" id="StatusTypeFilter" class="form-select mb-3" onchange="renderUnscheduledList()">
+                                        <option value="all">All Statuses</option>
+                                    </select>
+                                    <select runat="server" id="ServiceTypeFilter_2" class="form-select mb-3" onchange="renderUnscheduledList()">
+                                        <option value="all">All Types</option>
+                                        <option value="IT Support">IT Support</option>
+                                        <option value="1 Hour">1 Hour</option>
+                                        <option value="2 Hour">2 Hour</option>
+                                    </select>
+                                    <select id="ProvinceFilter" class="form-select mb-3" onchange="renderUnscheduledList()">
+                                        <option value="all">All Provinces/Territories</option>
+                                        <option value="AB">Alberta</option>
+                                        <option value="BC">British Columbia</option>
+                                        <option value="MB">Manitoba</option>
+                                        <option value="NB">New Brunswick</option>
+                                        <option value="NL">Newfoundland and Labrador</option>
+                                        <option value="NS">Nova Scotia</option>
+                                        <option value="NT">Northwest Territories</option>
+                                        <option value="NU">Nunavut</option>
+                                        <option value="ON">Ontario</option>
+                                        <option value="PE">Prince Edward Island</option>
+                                        <option value="QC">Quebec</option>
+                                        <option value="SK">Saskatchewan</option>
+                                        <option value="YT">Yukon</option>
+                                    </select>
+                                    <select id="PostalCodeFilter" class="form-select mb-3" onchange="renderUnscheduledList()">
+                                        <option value="all">All Postal Codes</option>
+                                        <!-- Populated dynamically via JavaScript -->
+                                    </select>
+
+                                </div>
+                                <input type="text" id="searchFilter" class="form-control mb-3" placeholder="Search by customer..." oninput="renderUnscheduledList()" style="margin-top: 10px">
                             </div>
                             <div id="unscheduledList" class="unscheduled-list"></div>
                         </div>
@@ -341,17 +365,38 @@
                             <span class="status-indicator in-route"></span>In Route
                             <span class="status-indicator arrived"></span>Arrived
                         </div>
-                        <div class="map-work-order-status mt-2">
-                            <h5>Work Order Status</h5>
-                            <select id="statusFilter" class="form-select w-200px" aria-label="Filter by work order status">
-                                <option value="all">All Statuses</option>
-                                <option value="pending">Pending</option>
-                                <option value="dispatched">Dispatched</option>
-                                <option value="inRoute">In Route</option>
-                                <option value="arrived">Arrived</option>
-                            </select>
+
+
+                        <div class="workorder-filters-row" style="margin-top: 12px;">
+                            <div class="map-work-order-status">
+                                <h6>Work Order Status</h6>
+                                <select id="statusFilter" class="form-select w-200px" aria-label="Filter by work order status">
+                                    <option value="all">All Statuses</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="dispatched">Dispatched</option>
+                                    <option value="inRoute">In Route</option>
+                                    <option value="arrived">Arrived</option>
+                                </select>
+                            </div>
+<!---------------------------------------------------Added New Resource Filter------------------------------------------->
+                            <div>
+                                <label for="ServiceTypeFilter_List" class="form-label mb-0">
+                                    <h6>Service type</h6>
+                                </label>
+                                <select name="ServiceTypeFilter_List" id="Select1" class="form-select w-200px" runat="server" onchange="renderListView()">
+                                    <option value="all">All Types</option>
+                                    <option value="IT Support">IT Support</option>
+                                    <option value="1 Hour">1 Hour</option>
+                                    <option value="2 Hour">2 Hour</option>
+                                </select>
+                            </div>
+<!--xxx------------------------------------------->
                         </div>
+
+
+
                     </div>
+
                     <div class="card-body">
                         <div class="tab-content">
                             <div class="tab-pane fade show active" id="mapLayerView" role="tabpanel">
@@ -612,11 +657,11 @@
     </div>
 
     <!-- Inline JavaScript for Expand/Collapse -->
-    <script>
 
-</script>
+
     <script>
         document.addEventListener("DOMContentLoaded", function () {
+
             const cecBtn = document.querySelector(".cec-btn");
 
             // Listen to Bootstrap's tab show event
@@ -634,9 +679,16 @@
                 });
             });
         });
-</script>
+    </script>
 
+    <script>
+
+
+  
+    </script>
 
     <script src="Scripts/appointments.js" defer></script>
+
+    
 
 </asp:Content>

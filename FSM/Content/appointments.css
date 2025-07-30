@@ -21,7 +21,7 @@
 }
 
 .calendar-container {
-    flex: 0 0 70%;
+    flex: 0 0 60%;
     height: 100%;
     overflow: hidden;
     transition: flex 0.3s ease;
@@ -429,6 +429,33 @@ th.sortable {
 }*/
 
 /* Appointment Card (Unscheduled Appointments) */
+
+/*-------------------------------------------------------------------Filter Button Styling----------------------------------------------------------------*/
+#unscheduledFilterBtn {
+    background: linear-gradient(90deg, #257cf7 60%, #4291fa 100%);
+    color: #fff !important;
+    font-weight: 600;
+    font-size: 1.07rem;
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px #257cf728;
+    padding: 12px 0 10px 0;
+    transition: background 0.18s, box-shadow 0.18s;
+    outline: none !important;
+    letter-spacing: 0.02em;
+}
+
+    #unscheduledFilterBtn:hover, #unscheduledFilterBtn:focus {
+        background: linear-gradient(90deg, #4291fa 0%, #257cf7 100%);
+        box-shadow: 0 4px 16px #257cf740;
+        color: #fff !important;
+    }
+
+    #unscheduledFilterBtn::after {
+        filter: brightness(0) invert(1); /* White dropdown arrow */
+    }
+/*-------------------------------------------------------------------End Filter Button Styling----------------------------------------------------------------*/
+
 .appointment-card {
     border: 1px solid #e2e8f0;
     border-radius: 8px;
@@ -436,7 +463,64 @@ th.sortable {
     background: #f9fafb;
     cursor: grab;
     transition: all 0.3s ease;
+
+    padding: 0 !important;
+
 }
+
+    /*-------------------------------------------------- Making appointment cards smaller ------------------------------------------------------------------*/
+    .appointment-card.card {
+        margin-bottom:10px !important; /* Less gap between cards */
+        border-radius: 10px;
+        box-shadow: 0 1px 4px rgba(100,120,200,0.05);
+        min-width: 0;
+    }
+
+    /* Reducing padding inside card */
+    .appointment-card .card-body {
+        padding: 8px 10px !important; /* Reduce vertical and horizontal padding */
+    }
+
+    /* Reducing heading and text sizes */
+    .appointment-card h3,
+    .appointment-card .fs-6 {
+        font-size: 0.95rem !important;
+        margin-bottom: 0 !important;
+    }
+
+    .appointment-card .fs-7,
+    .appointment-card .text-muted,
+    .appointment-card span {
+        font-size: 0.78rem !important;
+    }
+
+    /* Reducing badge and button size */
+    .appointment-card .badge {
+        font-size: 0.7rem !important;
+        padding: 2.5px 7px;
+        border-radius: 5px;
+    }
+
+    .appointment-card .btn-sm {
+        font-size: 0.74rem !important;
+        padding: 1.5px 8px !important;
+        border-radius: 5px;
+        height: 24px;
+        line-height: 18px;
+    }
+
+    /* Tightening up vertical gaps */
+    .appointment-card .mt-1,
+    .appointment-card .mt-2 {
+        margin-top: 2px !important;
+    }
+
+    /*  Reducing gap inside flex containers */
+    .appointment-card .d-flex {
+        gap: 2px;
+    }
+/*-------------------------------------------------- END Making appointment cards smaller ------------------------------------------------------------------*/
+
 
 [data-theme="dark"] .appointment-card {
     background: rgb(255 255 255 / 14%);
@@ -1321,7 +1405,7 @@ button.btn.btn-primary.ms-2 {
 
 /*Collapsing/Expanding Calendar*/
 .unscheduled-panel {
-    flex: 0 0 30%;
+    flex: 0 0 40%;
     height: 100%;
     overflow: hidden;
     transition: flex 0.3s ease;
@@ -1908,7 +1992,7 @@ button.btn.btn-primary.ms-2 {
 
 .cec-btn {
     display: flex;
-    justify-content: end;
+    justify-content: space-between;
     padding: 10px;
     margin-top: 10px;
 }

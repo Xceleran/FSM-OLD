@@ -9,13 +9,15 @@
     <link rel="stylesheet" href="Content/customer.css">
 
     <style>
+
+
    
     </style>
 
     <div class="cust-page-container">
         <!-- Page Header -->
-        <header class="cust-header mt-3">
-            <h1 class="cust-title">Customers</h1>
+        <header class="cust-header mt-0 mb-0">
+            <h1 class="cust-title">Customers Service Location</h1>
                 <div class="cec-btn">
      <a href="https://testsite.myserviceforce.com/cec/CustomerList.aspx?m=2" class="custom-launch-btn" role="button" target="_blank">
   <span>
@@ -37,7 +39,7 @@
 
             <div class="cust-list-container">
            <div class="mb-3 d-flex justify-content-between align-items-center">
-    <div class="mb-3 p-3">
+    <div class=" pt-3 ps-3">
         <label for="statusFilter" class="form-label">Filter by Status:</label>
         <select id="statusFilter" class="form-select w-auto">
             <option value="all">All Statuses</option>
@@ -218,6 +220,7 @@
     <script type="text/javascript" src="https://cdn.datatables.net/select/3.0.0/js/dataTables.select.min.js"></script>
     <script src="Scripts/customer.js"></script>
     <script>
+
         $(document).ready(function () {
             $('#customerTable tbody').on('click', 'tr', function () {
                 $('#contact').show();

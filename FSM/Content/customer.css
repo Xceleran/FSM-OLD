@@ -117,7 +117,7 @@ div.dt-container div.dt-layout-row {
 /* Customer List Container */
 .cust-list-container {
     /*width: 100%;*/
-    flex: 2 1 0%;
+    flex: 1 1 0%;
     min-width: 0;
     width: 66.66%;
     background: var(--bg-white);
@@ -861,6 +861,14 @@ select#dt-length-0 option {
 select.dt-input {
     outline: none;
 }
+
+/*Hiding Email from customer Table-------------------------------------------------------------------- --------*/
+#customerTable th:nth-child(3),
+#customerTable td:nth-child(3),
+#customerTable col:nth-child(3) {
+    display: none;
+}
+/*Hiding Email from customer Table-------------------------------------------------------------------- --------*/
 
 /* Responsive Adjustments */
 @media (min-width: 768px) {

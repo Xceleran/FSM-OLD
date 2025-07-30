@@ -51,6 +51,8 @@ function parseDuration(durationString) {
 }
 
 // Parse time string (e.g., "8:00 AM" or "morning") to minutes since midnight
+
+
 function parseTimeToMinutes(timeStr) {
     if (!timeStr) return 0;
 
@@ -68,6 +70,7 @@ function parseTimeToMinutes(timeStr) {
             timeStr = matchingSlot.TimeBlockSchedule.split('-')[0];
         }
     }
+
 
     const [time, period] = timeStr.trim().split(/\s+/);
     let [hours, minutes] = time.split(':').map(Number);
@@ -328,28 +331,40 @@ function renderDateNav(containerId, selectedDate) {
     let html = `
         <button class="btn btn-primary" onclick="prevPeriod('${containerId}')"><i class="fas fa-chevron-left"></i></button>
     `;
-
     if (daysToShow > 0) {
-        const selected = new Date(selectedDate);
-        const startOffset = Math.floor(daysToShow / 2);
-        const startDate = new Date(selected);
-        startDate.setDate(selected.getDate() - startOffset);
+        const startDate = new Date(selectedDate); // Start from today
 
-        html += `<div class="date-boxes">`;
+
+        // Collect date info
+        let dateArray = [];
+        let activeBox = "";
+        let otherBoxes = [];
+
         for (let i = 0; i < daysToShow; i++) {
             const d = new Date(startDate);
-            d.setDate(startDate.getDate() + i);
+            d.setDate(startDate.getDate() + i); // Go forward from today
             const dateStr = d.toISOString().split('T')[0];
             const isActive = dateStr === selectedDate ? " active" : "";
-            html += `
-                <div class="date-box${isActive}" data-date="${dateStr}" onclick="selectDate('${dateStr}', '${containerId}')">
-                    <div class="date-weekday">${d.toLocaleDateString('en-US', { weekday: 'short' })}</div>
-                    <div class="date-number">${d.getDate()}</div>
-                </div>
-            `;
+
+            const boxHtml = `
+        <div class="date-box${isActive}" data-date="${dateStr}" onclick="selectDate('${dateStr}', '${containerId}')">
+            <div class="date-weekday">${d.toLocaleDateString('en-US', { weekday: 'short' })}</div>
+            <div class="date-number">${d.getDate()}</div>
+        </div>
+    `;
+
+            if (isActive) {
+                activeBox = boxHtml; // Save today
+            } else {
+                otherBoxes.push(boxHtml); // Save others
+            }
         }
+        html += `<div class="date-boxes">`;
+        html += activeBox;
+        html += otherBoxes.join('');
         html += `</div>`;
     }
+
 
     html += `
         <button class="btn btn-primary" onclick="nextPeriod('${containerId}')"><i class="fas fa-chevron-right"></i></button>
@@ -747,7 +762,7 @@ function renderDateView(date) {
                                      data-id="${appointment.AppoinmentId}" draggable="true">
                                     <div class="font-weight-medium fs-7">${appointment.CustomerName}</div>
                                     <div class="fs-7 truncate">${appointment.ServiceType} (${appointment.Duration})</div>
-                                    <div class="fs-7 truncate status">${appointment.AppoinmentStatus}</div>
+                                    <div class="fs-7 truncate status status-${appointment.AppoinmentStatus.toLowerCase()}">${appointment.AppoinmentStatus}</div>
                                 </div>
                                 `;
                         }).join('')}
