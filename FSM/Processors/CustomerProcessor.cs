@@ -77,5 +77,56 @@ namespace FSM.Processors
 
             return customerEntity;
         }
+
+        public CustomerEntity GetCustomerDetails(string customerId, string companyId)
+        {
+            var customer = new CustomerEntity();
+            string connectionString = System.Configuration.ConfigurationManager.AppSettings["ConnStrJobs"].ToString();
+            Database db = new Database(connectionString);
+            try
+            {
+                db.Open();
+                DataTable dt = new DataTable();
+                string sql = @"SELECT * FROM [msSchedulerV3].[dbo].[tbl_Customer] WHERE CustomerID = @CustomerID AND CompanyID = @CompanyID;";
+                db.AddParameter("@CompanyID", companyId, System.Data.SqlDbType.NVarChar);
+                db.AddParameter("@CustomerID", customerId, System.Data.SqlDbType.NVarChar);
+                db.ExecuteParam(sql, out dt);
+                db.Close();
+                
+                if (dt.Rows.Count > 0)
+                {
+                    DataRow dataRow = dt.Rows[0];
+                    customer.CustomerID = customerId;
+                    customer.CompanyID = companyId;
+                    customer.CustomerGuid = dataRow.Field<string>("CustomerGuid") ?? "";
+                    customer.FirstName = dataRow.Field<string>("FirstName") ?? "";
+                    customer.LastName = dataRow.Field<string>("LastName") ?? "";
+                    customer.Phone = dataRow.Field<string>("Phone") ?? "";
+                    customer.Mobile = dataRow.Field<string>("Mobile") ?? "";
+                    customer.Email = dataRow.Field<string>("Email") ?? "";
+                    customer.Address1 = dataRow.Field<string>("Address1") ?? "";
+                    customer.Address2 = dataRow.Field<string>("Address2") ?? "";
+                    customer.City = dataRow.Field<string>("City") ?? "";
+                    customer.State = dataRow.Field<string>("State") ?? "";
+                    customer.ZipCode = dataRow.Field<string>("ZipCode") ?? "";
+                    customer.CompanyName = dataRow.Field<string>("CompanyName") ?? "";
+                    customer.BusinessName = dataRow.Field<string>("BusinessName") ?? "";
+                    customer.Title = dataRow.Field<string>("Title") ?? "";
+                    customer.JobTitle = dataRow.Field<string>("JobTitle") ?? "";
+                    customer.Notes = dataRow.Field<string>("Notes") ?? "";
+                    customer.BusinessID = dataRow.Field<int?>("BusinessID") ?? 0;
+                    customer.IsBusinessContact = dataRow.Field<bool?>("IsBusinessContact") ?? false;
+                    customer.IsPrimaryContact = dataRow.Field<bool?>("IsPrimaryContact") ?? false;
+                    customer.CreatedDateTime = dataRow.Field<DateTime?>("CreatedDateTime") ?? DateTime.Now;
+                }
+            }
+            catch (Exception ex)
+            {
+                db.Close();
+                // Return empty customer object on error
+                return customer;
+            }
+            return customer;
+        }
     }
 }

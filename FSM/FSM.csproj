@@ -204,6 +204,7 @@
     <Content Include="Content\customerdetails.css" />
     <Content Include="Content\invoice.css" />
     <Content Include="Content\Site.css" />
+    <Content Include="Content\forms.css" />
     <Content Include="Customer.aspx" />
     <Content Include="Forms.aspx" />
     <Content Include="CustomerDetails.aspx" />
@@ -244,6 +245,8 @@
     <Content Include="Content\bootstrap-grid.css.map" />
     <Content Include="Invoice.aspx" />
     <Content Include="Scripts\customer.js" />
+    <Content Include="Scripts\forms.js" />
+    <Content Include="Scripts\signature-handler.js" />
     <None Include="Scripts\jquery-3.7.1.intellisense.js" />
     <Content Include="Scripts\jquery-3.7.1.js" />
     <Content Include="Scripts\jquery-3.7.1.min.js" />
@@ -370,12 +373,14 @@
     <Compile Include="Entity\Customer\CustomerEntity.cs" />
     <Compile Include="Entity\Customer\CustomerSite.cs" />
     <Compile Include="Entity\Enums\WorkOrderStatus.cs" />
+    <Compile Include="Entity\Forms\FormTemplate.cs" />
     <Compile Include="Models\AppointmentModel\AppointmentModel.cs" />
     <Compile Include="Models\LoginModels\LoginObject.cs" />
     <Compile Include="Models\UserModels\Privelege.cs" />
     <Compile Include="Models\UserModels\UserPrivilege.cs" />
     <Compile Include="Processors\BusinessContactProcessor.cs" />
     <Compile Include="Processors\CustomerProcessor.cs" />
+    <Compile Include="Processors\FormProcessor.cs" />
     <Compile Include="Processors\LoginProcessor.cs" />
     <Compile Include="Processors\QBOManager.cs" />
     <Compile Include="Processors\UserLogProcessor.cs" />

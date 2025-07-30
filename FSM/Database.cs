@@ -189,7 +189,10 @@ public class Database
     {
         try
         {
-            this._Reader.Close();
+            if (this._Reader != null && !this._Reader.IsClosed)
+            {
+                this._Reader.Close();
+            }
         }
         catch { }
     }

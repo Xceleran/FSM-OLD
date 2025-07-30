@@ -1307,14 +1307,34 @@ function createAppointment(e) {
 
     appointments.push(newAppointment);
     saveAppointments();
+    
+    // Create form instances for selected forms
+    if (selectedForms.length > 0 && window.FormsManager) {
+        window.FormsManager.createFormInstance(selectedForms[0].id, newAppointment.AppoinmentId, newAppointment.CustomerID || '')
+            .then(() => {
+                console.log('Form instances created for new appointment');
+            })
+            .catch(error => {
+                console.error('Error creating form instances:', error);
+            });
+    }
+    
     updateAllViews();
     window.newModalInstance.hide();
+    
+    // Clear selected forms
+    selectedForms = [];
 }
 
 // Open modal to edit an appointment
 function openEditModal(id, date, time, resource, confirm) {
     const a = appointments.find(x => x.AppoinmentId === id.toString());
     if (!a) return;
+    
+    // Load forms for this appointment when opening edit modal
+    if (!confirm) {
+        loadCurrentlySelectedForms(id);
+    }
 
     // Check if appointment is closed
    if (a.AppoinmentStatus.toLowerCase() === "closed") {
@@ -2234,3 +2254,333 @@ function calculateDate(dateStr) {
     form.querySelector("[name='date']").value = date.toISOString().split('T')[0];
     calculateStartEndTime();
 }
+
+// =============================================================================
+// FORMS INTEGRATION FUNCTIONS
+// =============================================================================
+
+let currentFormsModal = null;
+let selectedForms = [];
+let currentAppointmentForms = [];
+let currentFormInstance = null;
+
+// Initialize forms integration
+function initializeFormsIntegration() {
+    // Auto-assign forms when service type changes
+    $('select[name="serviceTypeNew"], select[name="serviceTypeEdit"]').on('change', function() {
+        const serviceType = $(this).val();
+        const isNewForm = $(this).attr('name') === 'serviceTypeNew';
+        
+        if (serviceType) {
+            loadAutoAssignedForms(serviceType, isNewForm);
+        }
+    });
+}
+
+// Open forms selection modal
+function openFormsSelectionModal(mode) {
+    currentFormsModal = mode;
+    selectedForms = [];
+    
+    $('#formsSelectionModal').modal('show');
+    loadAvailableForms();
+    
+    // Load currently selected forms if editing
+    if (mode === 'edit') {
+        loadCurrentlySelectedForms();
+    }
+}
+
+// Load available forms
+function loadAvailableForms() {
+    $.ajax({
+        type: "POST",
+        url: "Forms.aspx/GetAllTemplates",
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        success: function(response) {
+            if (response.d) {
+                populateAvailableFormsList(response.d);
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('Error loading available forms:', error);
+        }
+    });
+}
+
+// Populate available forms list
+function populateAvailableFormsList(forms) {
+    const container = $('#availableFormsList');
+    container.empty();
+    
+    forms.filter(form => form.IsActive).forEach(form => {
+        const formItem = $(`
+            <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox" id="form_${form.Id}" 
+                       value="${form.Id}" onchange="toggleFormSelection(${form.Id}, '${form.TemplateName}', this.checked)">
+                <label class="form-check-label" for="form_${form.Id}">
+                    <strong>${form.TemplateName}</strong>
+                    ${form.Description ? '<br><small class="text-muted">' + form.Description + '</small>' : ''}
+                    ${form.RequireSignature ? '<br><small class="text-info"><i class="fa fa-pencil"></i> Signature Required</small>' : ''}
+                </label>
+            </div>
+        `);
+        container.append(formItem);
+    });
+}
+
+// Toggle form selection
+function toggleFormSelection(formId, formName, isSelected) {
+    if (isSelected) {
+        selectedForms.push({ id: formId, name: formName });
+    } else {
+        selectedForms = selectedForms.filter(form => form.id !== formId);
+    }
+    
+    updateSelectedFormsList();
+}
+
+// Update selected forms list
+function updateSelectedFormsList() {
+    const container = $('#selectedFormsList');
+    container.empty();
+    
+    if (selectedForms.length === 0) {
+        container.append('<p class="text-muted">No forms selected</p>');
+        return;
+    }
+    
+    selectedForms.forEach(form => {
+        const formItem = $(`
+            <div class="selected-form-item p-2 mb-2 border rounded">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span>${form.name}</span>
+                    <button type="button" class="btn btn-sm btn-outline-danger" 
+                            onclick="removeSelectedForm(${form.id})">
+                        <i class="fa fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        `);
+        container.append(formItem);
+    });
+}
+
+// Remove selected form
+function removeSelectedForm(formId) {
+    selectedForms = selectedForms.filter(form => form.id !== formId);
+    $(`#form_${formId}`).prop('checked', false);
+    updateSelectedFormsList();
+}
+
+// Load auto-assigned forms
+function loadAutoAssignedForms(serviceType, isNewForm) {
+    $.ajax({
+        type: "POST",
+        url: "Forms.aspx/GetAutoAssignedForms",
+        data: JSON.stringify({ serviceType: serviceType }),
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        success: function(response) {
+            const containerId = isNewForm ? 'selectedFormsNew' : 'selectedFormsEdit';
+            const container = $(`#${containerId}`);
+            
+            if (response.d && response.d.length > 0) {
+                container.empty();
+                response.d.forEach(form => {
+                    const formBadge = $(`
+                        <span class="badge badge-primary me-2 mb-2" data-form-id="${form.Id}">
+                            ${form.TemplateName}
+                            ${form.RequireSignature ? ' <i class="fa fa-pencil"></i>' : ''}
+                        </span>
+                    `);
+                    container.append(formBadge);
+                });
+                
+                // Auto-select these forms in selectedForms array
+                selectedForms = response.d.map(form => ({ id: form.Id, name: form.TemplateName }));
+            } else {
+                container.html('<small class="text-muted">No auto-assigned forms for this service type</small>');
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('Error loading auto-assigned forms:', error);
+        }
+    });
+}
+
+// Apply forms selection
+function applyFormsSelection() {
+    const containerId = currentFormsModal === 'new' ? 'selectedFormsNew' : 'selectedFormsEdit';
+    const container = $(`#${containerId}`);
+    
+    container.empty();
+    
+    if (selectedForms.length === 0) {
+        container.html('<small class="text-muted">No forms selected</small>');
+    } else {
+        selectedForms.forEach(form => {
+            const formBadge = $(`
+                <span class="badge badge-success me-2 mb-2" data-form-id="${form.id}">
+                    ${form.name}
+                    <button type="button" class="btn btn-sm btn-link text-white p-0 ms-1" 
+                            onclick="removeFormFromAppointment(${form.id})">
+                        <i class="fa fa-times"></i>
+                    </button>
+                </span>
+            `);
+            container.append(formBadge);
+        });
+    }
+    
+    $('#formsSelectionModal').modal('hide');
+}
+
+// Remove form from appointment
+function removeFormFromAppointment(formId) {
+    selectedForms = selectedForms.filter(form => form.id !== formId);
+    $(`.badge[data-form-id="${formId}"]`).remove();
+    
+    // Update the container if no forms left
+    const container = currentFormsModal === 'new' ? $('#selectedFormsNew') : $('#selectedFormsEdit');
+    if (selectedForms.length === 0) {
+        container.html('<small class="text-muted">No forms selected</small>');
+    }
+}
+
+// Open appointment forms modal
+function openAppointmentFormsModal() {
+    const appointmentId = $('#AppoinmentId').val();
+    if (!appointmentId) {
+        showAlert({
+            icon: 'warning',
+            title: 'No Appointment Selected',
+            text: 'Please select an appointment first.',
+            confirmButtonText: 'OK'
+        });
+        return;
+    }
+    
+    $('#appointmentFormsModal').modal('show');
+    loadAppointmentForms(appointmentId);
+}
+
+// Load appointment forms
+function loadAppointmentForms(appointmentId) {
+    $.ajax({
+        type: "POST",
+        url: "Forms.aspx/GetAppointmentForms",
+        data: JSON.stringify({ appointmentId: appointmentId }),
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        success: function(response) {
+            if (response.d) {
+                currentAppointmentForms = response.d;
+                populateAppointmentFormsList(response.d);
+            }
+        },
+        error: function(xhr, status, error) {
+            showAlert({
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to load appointment forms',
+                confirmButtonText: 'OK'
+            });
+        }
+    });
+}
+
+// Populate appointment forms list
+function populateAppointmentFormsList(forms) {
+    const container = $('#appointmentFormsList');
+    container.empty();
+    
+    if (!forms || forms.length === 0) {
+        container.append('<p class="text-muted">No forms attached to this appointment</p>');
+        return;
+    }
+    
+    forms.forEach(form => {
+        const statusClass = getFormStatusClass(form.Status);
+        const formItem = $(`
+            <div class="form-item p-3 mb-2 border rounded cursor-pointer" 
+                 onclick="openFormForFilling(${form.Id})">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <strong>${form.TemplateName}</strong>
+                        <br><small class="text-muted">Status: <span class="${statusClass}">${form.Status}</span></small>
+                        ${form.CompletedDateTime ? '<br><small class="text-muted">Completed: ' + formatDateTime(form.CompletedDateTime) + '</small>' : ''}
+                    </div>
+                    <div class="form-actions">
+                        ${form.RequireSignature ? '<i class="fa fa-pencil text-info" title="Signature Required"></i>' : ''}
+                        ${form.RequireTip ? '<i class="fa fa-dollar text-success ms-1" title="Tip Enabled"></i>' : ''}
+                    </div>
+                </div>
+            </div>
+        `);
+        container.append(formItem);
+    });
+}
+
+// Get form status CSS class
+function getFormStatusClass(status) {
+    switch (status?.toLowerCase()) {
+        case 'completed': return 'text-success';
+        case 'inprogress': return 'text-info';
+        case 'submitted': return 'text-primary';
+        default: return 'text-warning';
+    }
+}
+
+// Load currently selected forms for edit mode
+function loadCurrentlySelectedForms(appointmentId) {
+    if (!appointmentId) {
+        appointmentId = $('#AppoinmentId').val();
+    }
+    
+    if (!appointmentId) return;
+    
+    $.ajax({
+        type: "POST",
+        url: "Forms.aspx/GetAppointmentForms",
+        data: JSON.stringify({ appointmentId: appointmentId }),
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        success: function(response) {
+            if (response.d) {
+                const container = $('#selectedFormsEdit');
+                container.empty();
+                
+                if (response.d.length === 0) {
+                    container.html('<small class="text-muted">No forms attached to this appointment</small>');
+                } else {
+                    response.d.forEach(form => {
+                        const statusClass = getFormStatusClass(form.Status);
+                        const formBadge = $(`
+                            <div class="form-badge p-2 mb-2 border rounded d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>${form.TemplateName}</strong>
+                                    <br><small class="${statusClass}">Status: ${form.Status}</small>
+                                </div>
+                                <div>
+                                    ${form.RequireSignature ? '<i class="fa fa-pencil text-info" title="Signature Required"></i>' : ''}
+                                    ${form.RequireTip ? '<i class="fa fa-dollar text-success ms-1" title="Tip Enabled"></i>' : ''}
+                                </div>
+                            </div>
+                        `);
+                        container.append(formBadge);
+                    });
+                }
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('Error loading current forms:', error);
+        }
+    });
+}
+
+// Initialize forms integration when page loads
+$(document).ready(function() {
+    initializeFormsIntegration();
+});

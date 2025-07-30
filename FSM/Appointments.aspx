@@ -471,6 +471,17 @@
                                 <input type="text" name="address" class="form-control" required>
                             </div>
                             <div class="col-12">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <label class="form-label mb-0">Forms</label>
+                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="openFormsSelectionModal('new')">
+                                        <i class="fa fa-plus"></i> Select Forms
+                                    </button>
+                                </div>
+                                <div id="selectedFormsNew" class="selected-forms-container" style="min-height: 40px; border: 1px solid #dee2e6; border-radius: 0.375rem; padding: 8px;">
+                                    <small class="text-muted">Auto-assigned forms will appear here based on service type</small>
+                                </div>
+                            </div>
+                            <div class="col-12">
                                 <label class="form-label">Status</label>
                                 <select name="status" class="form-select" required>
                                     <option value="pending">Pending</option>
@@ -557,6 +568,22 @@
                             <div class="col-12">
                                 <label class="form-label">Address</label>
                                 <input type="text" name="address" class="form-control" readonly="readonly">
+                            </div>
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <label class="form-label mb-0">Forms</label>
+                                    <div>
+                                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="openFormsSelectionModal('edit')">
+                                            <i class="fa fa-plus"></i> Add Forms
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-info" onclick="openAppointmentFormsModal()">
+                                            <i class="fa fa-list"></i> View Forms
+                                        </button>
+                                    </div>
+                                </div>
+                                <div id="selectedFormsEdit" class="selected-forms-container" style="min-height: 60px; border: 1px solid #dee2e6; border-radius: 0.375rem; padding: 8px;">
+                                    <!-- Forms will be loaded here -->
+                                </div>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Appointment Status</label>
@@ -688,7 +715,111 @@
     </script>
 
     <script src="Scripts/appointments.js" defer></script>
+    <script src="Scripts/signature-handler.js" defer></script>
 
     
+
+    <!-- Forms Selection Modal -->
+    <div class="modal fade" id="formsSelectionModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Select Forms for Appointment</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Available Forms</h6>
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="autoAssignForms" checked>
+                                <label class="form-check-label" for="autoAssignForms">
+                                    Auto-assign forms based on service type
+                                </label>
+                            </div>
+                            <hr>
+                            <div id="availableFormsList" class="available-forms-list">
+                                <!-- Available forms will be loaded here -->
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Selected Forms</h6>
+                            <div id="selectedFormsList" class="selected-forms-list">
+                                <!-- Selected forms will appear here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="applyFormsSelection()">Apply Selection</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Appointment Forms Management Modal -->
+    <div class="modal fade" id="appointmentFormsModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-xl" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Appointment Forms</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h6>Forms List</h6>
+                            <div id="appointmentFormsList" class="appointment-forms-list">
+                                <!-- Appointment forms will be loaded here -->
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <div id="formViewerContainer">
+                                <div class="form-viewer-placeholder text-center p-5">
+                                    <i class="fa fa-file-text-o fa-3x text-muted mb-3"></i>
+                                    <p class="text-muted">Select a form to view or fill</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-success d-none" id="saveFormBtn" onclick="saveCurrentForm()">Save Form</button>
+                    <button type="button" class="btn btn-primary d-none" id="submitFormBtn" onclick="submitCurrentForm()">Submit Form</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Signature Capture Modal -->
+    <div class="modal fade" id="signatureModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Capture Signature</h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body text-center">
+                    <p id="signaturePrompt">Please sign below:</p>
+                    <canvas id="signaturePad" width="400" height="200" style="border: 1px solid #ccc;"></canvas>
+                    <div class="mt-3">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearSignature()">Clear</button>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveSignature()">Save Signature</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
 </asp:Content>
