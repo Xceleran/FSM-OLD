@@ -1,17 +1,22 @@
-// Forms Management JavaScript
 let currentTemplate = null;
 let formBuilder = null;
 let serviceTypes = [];
+let templateData = [];
+let usageLogData = [];
+let templateCurrentPage = 1;
+let usageLogCurrentPage = 1;
+let templatePageSize = 10;
+let usageLogPageSize = 10;
 
 // Initialize forms page
-$(document).ready(function() {
+$(document).ready(function () {
     loadServiceTypes();
     loadTemplates();
     loadUsageLog();
+    initializeTabs();
     initializeFormBuilder();
-    
-    // Auto-assign checkbox toggle
-    $('#isAutoAssignEnabled').change(function() {
+
+    $('#isAutoAssignEnabled').change(function () {
         if ($(this).is(':checked')) {
             $('#autoAssignSection').show();
             loadServiceTypesForAssignment();
@@ -19,6 +24,7 @@ $(document).ready(function() {
             $('#autoAssignSection').hide();
         }
     });
+    $('[data-bs-toggle="tooltip"]').tooltip();
 });
 
 // Load service types from appointments
@@ -28,12 +34,12 @@ function loadServiceTypes() {
         url: "Forms.aspx/GetServiceTypes",
         contentType: "application/json; charset=utf-8",
         dataType: "json",
-        success: function(response) {
+        success: function (response) {
             if (response.d) {
                 serviceTypes = response.d;
             }
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error loading service types:', error);
         }
     });
@@ -46,12 +52,16 @@ function loadTemplates() {
         url: "Forms.aspx/GetAllTemplates",
         contentType: "application/json; charset=utf-8",
         dataType: "json",
-        success: function(response) {
+        success: function (response) {
             if (response.d) {
-                populateTemplatesTable(response.d);
+                templateData = response.d;
+                populateTemplatesTable(templateData);
+
+                // Set default page size
+                $('#templatePageSize').val('10').trigger('change');
             }
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             showAlert({
                 icon: 'error',
                 title: 'Error',
@@ -66,8 +76,14 @@ function loadTemplates() {
 function populateTemplatesTable(templates) {
     const tbody = $('#templatesTableBody');
     tbody.empty();
-    
-    templates.forEach(function(template) {
+
+    const startIndex = (templateCurrentPage - 1) * templatePageSize;
+    const endIndex = startIndex + templatePageSize;
+    const paginatedTemplates = templates.slice(startIndex, endIndex);
+
+    console.log(`Displaying templates ${startIndex + 1}-${endIndex} of ${templates.length}`);
+
+    paginatedTemplates.forEach(function (template) {
         const row = `
             <tr>
                 <td>
@@ -76,44 +92,171 @@ function populateTemplatesTable(templates) {
                 </td>
                 <td>${template.Category || 'N/A'}</td>
                 <td>
-                    ${template.IsAutoAssignEnabled ? 
-                        '<span class="badge badge-success">Yes</span>' : 
-                        '<span class="badge badge-secondary">No</span>'}
+                    ${template.IsAutoAssignEnabled ?
+                '<span class="badge badge-success">Yes</span>' :
+                '<span class="badge badge-secondary">No</span>'}
                 </td>
                 <td>
-                    ${template.RequireSignature ? 
-                        '<i class="fa fa-check text-success"></i>' : 
-                        '<i class="fa fa-times text-muted"></i>'}
+                    ${template.RequireSignature ?
+                '<i class="fa fa-check text-success"></i>' :
+                '<i class="fa fa-times text-muted"></i>'}
                 </td>
                 <td>
-                    ${template.IsActive ? 
-                        '<span class="status-badge status-completed">Active</span>' : 
-                        '<span class="status-badge status-pending">Inactive</span>'}
+                    ${template.IsActive ?
+                '<span class="status-badge status-completed">Active</span>' :
+                '<span class="status-badge status-pending">Inactive</span>'}
                 </td>
                 <td>${formatDate(template.CreatedDateTime)}</td>
                 <td>
-                    <button class="btn btn-sm btn-outline-primary" onclick="editTemplate(${template.Id})">
+                    <button type="button" class="btn btn-sm btn-outline-primary" 
+                            onclick="editTemplate(${template.Id})" 
+                            data-bs-toggle="tooltip" 
+                            data-bs-placement="top" 
+                            title="Edit Template">
                         <i class="fa fa-edit"></i>
                     </button>
-                    <button class="btn btn-sm btn-outline-info" onclick="openFormBuilder(${template.Id})">
+                    <button type="button" class="btn btn-sm btn-outline-info" 
+                            onclick="openFormBuilder(${template.Id})" 
+                            data-bs-toggle="tooltip" 
+                            data-bs-placement="top" 
+                            title="Open Form Builder">
                         <i class="fa fa-cogs"></i>
                     </button>
-                    <button class="btn btn-sm btn-outline-secondary" onclick="duplicateTemplate(${template.Id})">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" 
+                            onclick="duplicateTemplate(${template.Id})" 
+                            data-bs-toggle="tooltip" 
+                            data-bs-placement="top" 
+                            title="Duplicate Template">
                         <i class="fa fa-copy"></i>
                     </button>
-                    ${template.IsActive ? 
-                        `<button class="btn btn-sm btn-outline-warning" onclick="toggleTemplateStatus(${template.Id}, false)">
+                    ${template.IsActive ?
+                `<button type="button" class="btn btn-sm btn-outline-warning"
+                                onclick="toggleTemplateStatus(${template.Id}, false)" 
+                                data-bs-toggle="tooltip" 
+                                data-bs-placement="top" 
+                                title="Deactivate Template">
                             <i class="fa fa-pause"></i>
                         </button>` :
-                        `<button class="btn btn-sm btn-outline-success" onclick="toggleTemplateStatus(${template.Id}, true)">
+                `<button type="button" class="btn btn-sm btn-outline-success"
+                                onclick="toggleTemplateStatus(${template.Id}, true)" 
+                                data-bs-toggle="tooltip" 
+                                data-bs-placement="top" 
+                                title="Activate Template">
                             <i class="fa fa-play"></i>
                         </button>`
-                    }
+            }
                 </td>
             </tr>
         `;
         tbody.append(row);
     });
+
+    // Update pagination info
+    updateTemplatePaginationInfo(templates.length);
+    $('[data-bs-toggle="tooltip"]').tooltip();
+}
+
+// Add this new function to update pagination info
+function updateTemplatePaginationInfo(totalItems) {
+    const startItem = (templateCurrentPage - 1) * templatePageSize + 1;
+    const endItem = Math.min(templateCurrentPage * templatePageSize, totalItems);
+
+    $('#templatePageInfo').text(`Showing ${startItem}-${endItem} of ${totalItems}`);
+    $('#templateRowCount').text(`${totalItems} templates`);
+
+    // Update button states
+    $('#templatePrevPage').toggleClass('disabled', templateCurrentPage === 1);
+    $('#templateNextPage').toggleClass('disabled', endItem >= totalItems);
+
+    console.log(`Pagination: Page ${templateCurrentPage}, Showing ${startItem}-${endItem} of ${totalItems}`);
+}
+
+// Setup template pagination
+function setupTemplatePagination() {
+    const totalPages = Math.ceil(templateData.length / templatePageSize);
+    const pagination = $('#templatePagination');
+    pagination.empty();
+
+    if (totalPages <= 1) return;
+
+    // Previous button
+    pagination.append(`
+        <li class="page-item ${templateCurrentPage === 1 ? 'disabled' : ''}">
+            <a class="page-link" href="#" onclick="goToTemplatePage(${templateCurrentPage - 1})">Previous</a>
+        </li>
+    `);
+
+    // Page numbers
+    for (let i = 1; i <= totalPages; i++) {
+        pagination.append(`
+            <li class="page-item ${i === templateCurrentPage ? 'active' : ''}">
+                <a class="page-link" href="#" onclick="goToTemplatePage(${i})">${i}</a>
+            </li>
+        `);
+    }
+
+    // Next button
+    pagination.append(`
+        <li class="page-item ${templateCurrentPage === totalPages ? 'disabled' : ''}">
+            <a class="page-link" href="#" onclick="goToTemplatePage(${templateCurrentPage + 1})">Next</a>
+        </li>
+    `);
+}
+
+// Go to template page
+function goToTemplatePage(page) {
+    const totalPages = Math.ceil(templateData.length / templatePageSize);
+    if (page < 1 || page > totalPages) return;
+
+    templateCurrentPage = page;
+    const filteredData = searchTemplates(true);
+    populateTemplatesTable(filteredData);
+}
+
+function changeTemplatePageSize() {
+    templatePageSize = parseInt($('#templatePageSize').val());
+    templateCurrentPage = 1;
+    const filteredData = searchTemplates(true);
+    populateTemplatesTable(filteredData);
+}
+
+function searchTemplates(returnFiltered = false) {
+    const searchTerm = $('#templateSearch').val().toLowerCase();
+    const filteredTemplates = templateData.filter(template =>
+        template.TemplateName.toLowerCase().includes(searchTerm) ||
+        (template.Description && template.Description.toLowerCase().includes(searchTerm)) ||
+        (template.Category && template.Category.toLowerCase().includes(searchTerm))
+    );
+
+    if (returnFiltered) return filteredTemplates;
+
+    templateCurrentPage = 1;
+    populateTemplatesTable(filteredTemplates);
+}
+
+// Change template page size
+function changeTemplatePageSize() {
+    templatePageSize = parseInt($('#templatePageSize').val());
+    templateCurrentPage = 1;
+    const filteredData = searchTemplates(true);
+    populateTemplatesTable(filteredData);
+    setupTemplatePagination();
+}
+
+// Search templates
+function searchTemplates(returnFiltered = false) {
+    const searchTerm = $('#templateSearch').val().toLowerCase();
+    const filteredTemplates = templateData.filter(template =>
+        template.TemplateName.toLowerCase().includes(searchTerm) ||
+        (template.Description && template.Description.toLowerCase().includes(searchTerm)) ||
+        (template.Category && template.Category.toLowerCase().includes(searchTerm))
+    );
+
+    if (returnFiltered) return filteredTemplates;
+
+    templateCurrentPage = 1;
+    populateTemplatesTable(filteredTemplates);
+    setupTemplatePagination();
 }
 
 // Load usage log
@@ -123,12 +266,14 @@ function loadUsageLog() {
         url: "Forms.aspx/GetUsageLog",
         contentType: "application/json; charset=utf-8",
         dataType: "json",
-        success: function(response) {
+        success: function (response) {
             if (response.d) {
-                populateUsageLogTable(response.d);
+                usageLogData = response.d;
+                populateUsageLogTable(usageLogData);
+                setupUsageLogPagination();
             }
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error loading usage log:', error);
         }
     });
@@ -138,8 +283,12 @@ function loadUsageLog() {
 function populateUsageLogTable(logs) {
     const tbody = $('#usageLogTableBody');
     tbody.empty();
-    
-    logs.slice(0, 20).forEach(function(log) { // Show only recent 20 entries
+
+    const startIndex = (usageLogCurrentPage - 1) * usageLogPageSize;
+    const endIndex = startIndex + usageLogPageSize;
+    const paginatedLogs = logs.slice(startIndex, endIndex);
+
+    paginatedLogs.forEach(function (log) {
         const row = `
             <tr>
                 <td>${formatDateTime(log.ActionDateTime)}</td>
@@ -153,6 +302,73 @@ function populateUsageLogTable(logs) {
         `;
         tbody.append(row);
     });
+}
+
+// Setup usage log pagination
+function setupUsageLogPagination() {
+    const totalPages = Math.ceil(usageLogData.length / usageLogPageSize);
+    const pagination = $('#usageLogPagination');
+    pagination.empty();
+
+    if (totalPages <= 1) return;
+
+    // Previous button
+    pagination.append(`
+        <li class="page-item ${usageLogCurrentPage === 1 ? 'disabled' : ''}">
+            <a class="page-link" href="#" onclick="goToUsageLogPage(${usageLogCurrentPage - 1})">Previous</a>
+        </li>
+    `);
+
+    // Page numbers
+    for (let i = 1; i <= totalPages; i++) {
+        pagination.append(`
+            <li class="page-item ${i === usageLogCurrentPage ? 'active' : ''}">
+                <a class="page-link" href="#" onclick="goToUsageLogPage(${i})">${i}</a>
+            </li>
+        `);
+    }
+
+    // Next button
+    pagination.append(`
+        <li class="page-item ${usageLogCurrentPage === totalPages ? 'disabled' : ''}">
+            <a class="page-link" href="#" onclick="goToUsageLogPage(${usageLogCurrentPage + 1})">Next</a>
+        </li>
+    `);
+}
+
+// Go to usage log page
+function goToUsageLogPage(page) {
+    if (page < 1 || page > Math.ceil(usageLogData.length / usageLogPageSize)) return;
+    usageLogCurrentPage = page;
+    const filteredData = searchUsageLog(true);
+    populateUsageLogTable(filteredData);
+    setupUsageLogPagination();
+}
+
+// Change usage log page size
+function changeUsageLogPageSize() {
+    usageLogPageSize = parseInt($('#usageLogPageSize').val());
+    usageLogCurrentPage = 1;
+    const filteredData = searchUsageLog(true);
+    populateUsageLogTable(filteredData);
+    setupUsageLogPagination();
+}
+
+// Search usage log
+function searchUsageLog(returnFiltered = false) {
+    const searchTerm = $('#usageLogSearch').val().toLowerCase();
+    const filteredLogs = usageLogData.filter(log =>
+        (log.TemplateName && log.TemplateName.toLowerCase().includes(searchTerm)) ||
+        (log.AppointmentId && log.AppointmentId.toString().includes(searchTerm)) ||
+        (log.Action && log.Action.toLowerCase().includes(searchTerm)) ||
+        (log.PerformedBy && log.PerformedBy.toLowerCase().includes(searchTerm))
+    );
+
+    if (returnFiltered) return filteredLogs;
+
+    usageLogCurrentPage = 1;
+    populateUsageLogTable(filteredLogs);
+    setupUsageLogPagination();
 }
 
 // Open new template modal
@@ -175,7 +391,7 @@ function editTemplate(templateId) {
         data: JSON.stringify({ templateId: templateId }),
         contentType: "application/json; charset=utf-8",
         dataType: "json",
-        success: function(response) {
+        success: function (response) {
             if (response.d) {
                 currentTemplate = response.d;
                 populateTemplateForm(response.d);
@@ -184,7 +400,7 @@ function editTemplate(templateId) {
                 modal.show();
             }
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             showAlert({
                 icon: 'error',
                 title: 'Error',
@@ -205,7 +421,7 @@ function populateTemplateForm(template) {
     $('#requireTip').prop('checked', template.RequireTip);
     $('#isActive').prop('checked', template.IsActive);
     $('#isAutoAssignEnabled').prop('checked', template.IsAutoAssignEnabled);
-    
+
     if (template.IsAutoAssignEnabled) {
         $('#autoAssignSection').show();
         loadServiceTypesForAssignment(template.AutoAssignServiceTypes);
@@ -216,7 +432,7 @@ function populateTemplateForm(template) {
 function loadServiceTypesForAssignment(selectedTypes) {
     const container = $('#serviceTypeCheckboxes');
     container.empty();
-    
+
     let selected = [];
     if (selectedTypes) {
         try {
@@ -225,8 +441,8 @@ function loadServiceTypesForAssignment(selectedTypes) {
             selected = [];
         }
     }
-    
-    serviceTypes.forEach(function(serviceType) {
+
+    serviceTypes.forEach(function (serviceType) {
         const isChecked = selected.includes(serviceType);
         const checkbox = `
             <div class="form-check">
@@ -251,13 +467,12 @@ function saveTemplate() {
         form.reportValidity();
         return;
     }
-    
-    // Get selected service types
+
     const selectedServiceTypes = [];
-    $('input[name="serviceTypes"]:checked').each(function() {
+    $('input[name="serviceTypes"]:checked').each(function () {
         selectedServiceTypes.push($(this).val());
     });
-    
+
     const templateData = {
         Id: parseInt($('#templateId').val()) || 0,
         TemplateName: $('#templateName').val(),
@@ -269,14 +484,14 @@ function saveTemplate() {
         IsAutoAssignEnabled: $('#isAutoAssignEnabled').is(':checked'),
         AutoAssignServiceTypes: JSON.stringify(selectedServiceTypes)
     };
-    
+
     $.ajax({
         type: "POST",
         url: "Forms.aspx/SaveTemplate",
         data: JSON.stringify({ template: templateData }),
         contentType: "application/json; charset=utf-8",
         dataType: "json",
-        success: function(response) {
+        success: function (response) {
             if (response.d && response.d > 0) {
                 showAlert({
                     icon: 'success',
@@ -295,7 +510,7 @@ function saveTemplate() {
                 });
             }
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             showAlert({
                 icon: 'error',
                 title: 'Error',
@@ -314,12 +529,12 @@ function toggleTemplateStatus(templateId, isActive) {
         data: JSON.stringify({ templateId: templateId, isActive: isActive }),
         contentType: "application/json; charset=utf-8",
         dataType: "json",
-        success: function(response) {
+        success: function (response) {
             if (response.d) {
                 loadTemplates();
             }
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             showAlert({
                 icon: 'error',
                 title: 'Error',
@@ -338,7 +553,7 @@ function duplicateTemplate(templateId) {
         data: JSON.stringify({ templateId: templateId }),
         contentType: "application/json; charset=utf-8",
         dataType: "json",
-        success: function(response) {
+        success: function (response) {
             if (response.d > 0) {
                 showAlert({
                     icon: 'success',
@@ -349,7 +564,7 @@ function duplicateTemplate(templateId) {
                 loadTemplates();
             }
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             showAlert({
                 icon: 'error',
                 title: 'Error',
@@ -368,45 +583,40 @@ function openFormBuilder(templateId) {
 }
 
 function initializeFormBuilder() {
-    // Initialize drag and drop for form builder
     initializeDragAndDrop();
 }
 
 function initializeDragAndDrop() {
-    // Field types drag start
-    $(document).on('dragstart', '.field-type', function(e) {
+    $(document).on('dragstart', '.field-type', function (e) {
         e.originalEvent.dataTransfer.setData('text/plain', $(this).data('type'));
     });
-    
-    // Form builder drop zone
-    $('#formBuilder').on('dragover', function(e) {
+
+    $('#formBuilder').on('dragover', function (e) {
         e.preventDefault();
         $(this).addClass('drag-over');
     });
-    
-    $('#formBuilder').on('dragleave', function(e) {
+
+    $('#formBuilder').on('dragleave', function (e) {
         $(this).removeClass('drag-over');
     });
-    
-    $('#formBuilder').on('drop', function(e) {
+
+    $('#formBuilder').on('drop', function (e) {
         e.preventDefault();
         $(this).removeClass('drag-over');
-        
+
         const fieldType = e.originalEvent.dataTransfer.getData('text/plain');
         addFormField(fieldType);
     });
 }
 
-// Add more form builder functions...
 function addFormField(fieldType) {
     const fieldId = 'field_' + Date.now();
     const fieldHtml = generateFieldHtml(fieldType, fieldId);
-    
-    // Remove drop zone if this is the first field
+
     if ($('#formBuilder .drop-zone').length > 0) {
         $('#formBuilder').empty();
     }
-    
+
     $('#formBuilder').append(fieldHtml);
 }
 
@@ -421,10 +631,10 @@ function generateFieldHtml(type, fieldId) {
         radio: { label: 'Radio Button', icon: 'fa-dot-circle', input: '<div class="form-check"><input type="radio" class="form-check-input" name="radio_' + fieldId + '"><label class="form-check-label">Option 1</label></div>' },
         signature: { label: 'Signature', icon: 'fa-pencil', input: '<div class="signature-pad" style="border: 1px solid #ddd; height: 150px; display: flex; align-items: center; justify-content: center;">Signature Area</div>' }
     };
-    
+
     const config = fieldConfig[type];
     if (!config) return '';
-    
+
     return `
         <div class="form-field" data-field-id="${fieldId}" data-field-type="${type}" onclick="selectField('${fieldId}')">
             <div class="field-controls">
@@ -453,10 +663,9 @@ function formatDate(dateString) {
 function formatDateTime(dateString) {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
-    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
-// showAlert function (fallback)
 function showAlert(options) {
     if (typeof Swal !== 'undefined') {
         Swal.fire(options);
@@ -465,9 +674,8 @@ function showAlert(options) {
     }
 }
 
-// Export functions for appointment integration
 window.FormsManager = {
-    getAutoAssignedForms: function(serviceType) {
+    getAutoAssignedForms: function (serviceType) {
         return new Promise((resolve, reject) => {
             $.ajax({
                 type: "POST",
@@ -475,35 +683,79 @@ window.FormsManager = {
                 data: JSON.stringify({ serviceType: serviceType }),
                 contentType: "application/json; charset=utf-8",
                 dataType: "json",
-                success: function(response) {
+                success: function (response) {
                     resolve(response.d || []);
                 },
-                error: function(xhr, status, error) {
+                error: function (xhr, status, error) {
                     reject(error);
                 }
             });
         });
     },
-    
-    createFormInstance: function(templateId, appointmentId, customerId) {
+
+    createFormInstance: function (templateId, appointmentId, customerId) {
         return new Promise((resolve, reject) => {
             $.ajax({
                 type: "POST",
                 url: "Forms.aspx/CreateFormInstance",
-                data: JSON.stringify({ 
-                    templateId: templateId, 
-                    appointmentId: appointmentId, 
-                    customerId: customerId 
+                data: JSON.stringify({
+                    templateId: templateId,
+                    appointmentId: appointmentId,
+                    customerId: customerId
                 }),
                 contentType: "application/json; charset=utf-8",
                 dataType: "json",
-                success: function(response) {
+                success: function (response) {
                     resolve(response.d);
                 },
-                error: function(xhr, status, error) {
+                error: function (xhr, status, error) {
                     reject(error);
                 }
             });
         });
     }
 };
+// Tab System
+function initializeTabs() {
+    // Set up tab click handlers
+    document.querySelectorAll('.tabs-nav__btn').forEach(button => {
+        button.addEventListener('click', function () {
+            const tabId = this.getAttribute('data-tab-target');
+            switchTab(tabId);
+        });
+    });
+
+    // Activate first tab by default
+    switchTab('templates-section');
+}
+
+function switchTab(tabId) {
+    // Update tab buttons
+    document.querySelectorAll('.tabs-nav__btn').forEach(btn => {
+        if (btn.getAttribute('data-tab-target') === tabId) {
+            btn.classList.add('is-active');
+            btn.setAttribute('aria-selected', 'true');
+        } else {
+            btn.classList.remove('is-active');
+            btn.setAttribute('aria-selected', 'false');
+        }
+    });
+
+    // Update tab content
+    document.querySelectorAll('.tabs-content').forEach(content => {
+        if (content.id === tabId) {
+            content.classList.add('is-active');
+            content.hidden = false;
+        } else {
+            content.classList.remove('is-active');
+            content.hidden = true;
+        }
+    });
+
+    // Load data if needed
+    if (tabId === 'templates-section' && templateData.length === 0) {
+        loadTemplates();
+    } else if (tabId === 'usage-log-section' && usageLogData.length === 0) {
+        loadUsageLog();
+    }
+}

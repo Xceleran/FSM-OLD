@@ -1,1 +1,257 @@
-/* Forms System CSS */\n\n/* Forms selection styling */\n.selected-forms-container {\n    background-color: #f8f9fa;\n    max-height: 120px;\n    overflow-y: auto;\n}\n\n.form-badge {\n    transition: all 0.2s ease;\n}\n\n.form-badge:hover {\n    transform: translateY(-1px);\n    box-shadow: 0 2px 8px rgba(0,0,0,0.1);\n}\n\n/* Form selection modal */\n.available-forms-list {\n    max-height: 400px;\n    overflow-y: auto;\n    border: 1px solid #dee2e6;\n    border-radius: 0.375rem;\n    padding: 15px;\n    background: #f8f9fa;\n}\n\n.selected-forms-list {\n    max-height: 400px;\n    overflow-y: auto;\n    border: 1px solid #dee2e6;\n    border-radius: 0.375rem;\n    padding: 15px;\n    background: #f1f3f4;\n}\n\n.selected-form-item {\n    background: white;\n    transition: all 0.2s ease;\n}\n\n.selected-form-item:hover {\n    box-shadow: 0 2px 4px rgba(0,0,0,0.1);\n}\n\n/* Form viewer styling */\n.form-viewer {\n    background: white;\n    border-radius: 8px;\n    box-shadow: 0 2px 10px rgba(0,0,0,0.1);\n    overflow: hidden;\n}\n\n.form-viewer .form-header {\n    background: #f8f9fa;\n    border-bottom: 1px solid #dee2e6;\n}\n\n.form-viewer .form-body {\n    max-height: 600px;\n    overflow-y: auto;\n}\n\n/* Form item styling */\n.form-item {\n    transition: all 0.2s ease;\n    cursor: pointer;\n}\n\n.form-item:hover {\n    background-color: #f8f9fa !important;\n    transform: translateY(-1px);\n    box-shadow: 0 4px 8px rgba(0,0,0,0.1);\n}\n\n.cursor-pointer {\n    cursor: pointer;\n}\n\n/* Signature display */\n.signature-preview img {\n    max-width: 100%;\n    height: auto;\n    border-radius: 4px;\n}\n\n.signature-section {\n    border-top: 1px solid #dee2e6;\n    padding-top: 20px;\n}\n\n.tip-section {\n    border-top: 1px solid #dee2e6;\n    padding-top: 20px;\n}\n\n/* Form field validation */\n.form-control.is-invalid {\n    border-color: #dc3545;\n    padding-right: calc(1.5em + 0.75rem);\n    background-image: url(\"data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%23dc3545' viewBox='0 0 12 12'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath d='m5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e\");\n    background-repeat: no-repeat;\n    background-position: right calc(0.375em + 0.1875rem) center;\n    background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);\n}\n\n/* Status badges */\n.status-badge {\n    font-size: 0.75rem;\n    padding: 0.25rem 0.5rem;\n    border-radius: 0.25rem;\n    font-weight: 600;\n    text-transform: uppercase;\n    letter-spacing: 0.025em;\n}\n\n.status-pending {\n    background-color: #fbbf24;\n    color: #92400e;\n}\n\n.status-inprogress {\n    background-color: #60a5fa;\n    color: #1e40af;\n}\n\n.status-completed {\n    background-color: #34d399;\n    color: #065f46;\n}\n\n.status-submitted {\n    background-color: #a78bfa;\n    color: #5b21b6;\n}\n\n/* Dark theme support */\n[data-theme=\"dark\"] .selected-forms-container {\n    background-color: #4a5568;\n    color: white;\n}\n\n[data-theme=\"dark\"] .available-forms-list,\n[data-theme=\"dark\"] .selected-forms-list {\n    background-color: #4a5568;\n    border-color: #4a5568;\n    color: white;\n}\n\n[data-theme=\"dark\"] .form-viewer {\n    background: #2d3748;\n    color: white;\n}\n\n[data-theme=\"dark\"] .form-viewer .form-header {\n    background: #4a5568;\n    border-color: #4a5568;\n}\n\n[data-theme=\"dark\"] .selected-form-item {\n    background: #4a5568;\n    color: white;\n    border-color: #4a5568;\n}\n\n[data-theme=\"dark\"] .form-item:hover {\n    background-color: #4a5568 !important;\n}\n\n/* Responsive adjustments */\n@media (max-width: 768px) {\n    .selected-forms-container {\n        max-height: 80px;\n    }\n    \n    .available-forms-list,\n    .selected-forms-list {\n        max-height: 300px;\n    }\n    \n    .form-viewer .form-body {\n        max-height: 400px;\n    }\n}\n\n/* Animation for form badges */\n@keyframes fadeInUp {\n    from {\n        opacity: 0;\n        transform: translateY(10px);\n    }\n    to {\n        opacity: 1;\n        transform: translateY(0);\n    }\n}\n\n.badge {\n    animation: fadeInUp 0.3s ease-out;\n}\n\n/* Loading state */\n.loading-forms {\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    padding: 20px;\n    color: #6c757d;\n}\n\n.loading-forms::after {\n    content: \"\";\n    width: 20px;\n    height: 20px;\n    border: 2px solid #f3f3f3;\n    border-top: 2px solid #007bff;\n    border-radius: 50%;\n    animation: spin 1s linear infinite;\n    margin-left: 10px;\n}\n\n@keyframes spin {\n    0% { transform: rotate(0deg); }\n    100% { transform: rotate(360deg); }\n}"
+
+.forms-page-container {
+    width: 100%;
+    padding: 20px;
+    margin: 25px auto;
+}
+
+.forms-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 15px;
+
+}
+
+.forms-content {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.page-title {
+    color: #2d3748;
+    margin: 0;
+    font-weight: 600;
+}
+
+
+.table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    border-top: none;
+}
+
+.templates-section {
+    border-bottom: 1px solid #eee;
+}
+
+
+
+.field-types {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 10px;
+    background: #f9f9f9;
+}
+
+.field-type {
+    padding: 8px 12px;
+    margin: 5px 0;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: move;
+    transition: all 0.2s;
+}
+
+    .field-type:hover {
+        background: #3f51b5;
+        color: white;
+        transform: translateY(-1px);
+    }
+
+.form-builder-area {
+    min-height: 400px;
+    border: 2px dashed #ddd;
+    border-radius: 4px;
+    padding: 20px;
+    background: #fafafa;
+}
+
+.drop-zone {
+    text-align: center;
+    color: #999;
+    font-style: italic;
+    padding: 50px;
+}
+
+.form-field {
+    margin: 10px 0;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: white;
+    position: relative;
+}
+
+    .form-field.selected {
+        border-color: #3f51b5;
+        box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+    }
+
+.field-controls {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    display: none;
+}
+
+.form-field:hover .field-controls {
+    display: block;
+}
+
+.field-properties {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 15px;
+    background: #f9f9f9;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    margin-right: 0.25rem;
+}
+
+.badge {
+    font-size: 0.75em;
+    color: black;
+}
+[data-theme="dark"] .badge {
+    color: white;
+}
+.modal-xl {
+    max-width: 1200px;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 0.25em 0.6em;
+    font-size: 75%;
+    font-weight: 700;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: 0.25rem;
+}
+
+.status-pending {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.status-completed {
+    background-color: #28a745;
+    color: white;
+}
+
+.status-inprogress {
+    background-color: #17a2b8;
+    color: white;
+}
+
+.status-submitted {
+    background-color: #6f42c1;
+    color: white;
+}
+
+
+.tabs-nav {
+    display: flex;
+    border-bottom: 1px solid #e1e1e1;
+    gap: 1rem;
+    padding: 0 1rem;
+}
+
+.tabs-nav__btn {
+    padding: 0.75rem 1rem;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    font-weight: 500;
+    color: #718096;
+    transition: all 0.2s ease;
+    position: relative;
+    margin-bottom: -1px;
+}
+
+    .tabs-nav__btn.is-active {
+        color: #3f51b5;
+        border-bottom-color: #3f51b5;
+    }
+
+.tabs-content {
+    display: none;
+    padding: 1.5rem;
+}
+
+    .tabs-content.is-active {
+        display: block;
+    }
+
+
+.table-controls {
+    margin-bottom: 1rem;
+}
+
+.pagination-controls {
+    margin-top: 1rem;
+}
+
+.pagination .page-link {
+    color: #3f51b5;
+}
+
+.pagination .page-item.active .page-link {
+    background-color: #3f51b5;
+    border-color: #3f51b5;
+}
+
+
+
+[data-theme="dark"] .forms-content {
+    background: #2d3748;
+    color: white;
+}
+
+[data-theme="dark"] .page-title {
+    color: #eff2f7;
+}
+
+[data-theme="dark"] .table {
+    color: white;
+}
+
+    [data-theme="dark"] .table th {
+        background-color: #4a5568;
+        color: white;
+    }
+
+[data-theme="dark"] .form-field {
+    background: #4a5568;
+    border-color: #4a5568;
+    color: white;
+}
+
+[data-theme="dark"] .tabs-nav {
+    border-bottom-color: #4a5568;
+}
+
+[data-theme="dark"] .tabs-nav__btn {
+    color: #e2e8f0;
+}
+
+[data-theme="dark"] .pagination .page-link {
+    color: white;
+}
+
+[data-theme="dark"] .pagination .page-item.active .page-link {
+    background-color: #ed8936;
+    border-color: #ed8936;
+}

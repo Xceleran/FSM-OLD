@@ -3,188 +3,7 @@
 <asp:Content ID="BodyContent" ContentPlaceHolderID="MainContent" runat="server">
 
     <!-- CSS Variables aligned with main site.css -->
-    <style>
-        :root {
-            --primary-color: #007bff;
-            --secondary-color: #6c757d;
-            --success-color: #28a745;
-            --danger-color: #dc3545;
-            --warning-color: #ffc107;
-            --info-color: #17a2b8;
-            --text-gray-800: #343a40;
-            --text-gray-700: #6c757d;
-        }
-
-        .forms-page-container {
-            width: 100%;
-            padding: 20px;
-            margin: 0 auto;
-        }
-
-        .forms-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid var(--primary-color);
-        }
-
-        .page-title {
-            color: var(--text-gray-800);
-            margin: 0;
-            font-weight: 600;
-        }
-
-        .forms-content {
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
-
-        .templates-section, .usage-log-section {
-            padding: 20px;
-        }
-
-        .templates-section {
-            border-bottom: 1px solid #eee;
-        }
-
-        .table th {
-            background-color: #f8f9fa;
-            font-weight: 600;
-            border-top: none;
-        }
-
-        .btn-sm {
-            padding: 0.25rem 0.5rem;
-            font-size: 0.875rem;
-            margin-right: 0.25rem;
-        }
-
-        .badge {
-            font-size: 0.75em;
-        }
-
-        /* Modal Styles */
-        .modal-xl {
-            max-width: 1200px;
-        }
-
-        .field-types {
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            padding: 10px;
-            background: #f9f9f9;
-        }
-
-        .field-type {
-            padding: 8px 12px;
-            margin: 5px 0;
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            cursor: move;
-            transition: all 0.2s;
-        }
-
-        .field-type:hover {
-            background: var(--primary-color);
-            color: white;
-            transform: translateY(-1px);
-        }
-
-        .form-builder-area {
-            min-height: 400px;
-            border: 2px dashed #ddd;
-            border-radius: 4px;
-            padding: 20px;
-            background: #fafafa;
-        }
-
-        .drop-zone {
-            text-align: center;
-            color: #999;
-            font-style: italic;
-            padding: 50px;
-        }
-
-        .form-field {
-            margin: 10px 0;
-            padding: 15px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            background: white;
-            position: relative;
-        }
-
-        .form-field.selected {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 5px rgba(0,123,255,0.3);
-        }
-
-        .field-controls {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            display: none;
-        }
-
-        .form-field:hover .field-controls {
-            display: block;
-        }
-
-        .field-properties {
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            padding: 15px;
-            background: #f9f9f9;
-            max-height: 500px;
-            overflow-y: auto;
-        }
-
-        .status-badge {
-            display: inline-block;
-            padding: 0.25em 0.6em;
-            font-size: 75%;
-            font-weight: 700;
-            line-height: 1;
-            text-align: center;
-            white-space: nowrap;
-            vertical-align: baseline;
-            border-radius: 0.25rem;
-        }
-
-        .status-pending { background-color: #ffc107; color: #212529; }
-        .status-completed { background-color: #28a745; color: white; }
-        .status-inprogress { background-color: #17a2b8; color: white; }
-        .status-submitted { background-color: #6f42c1; color: white; }
-
-        [data-theme="dark"] .forms-content {
-            background: #2d3748;
-            color: white;
-        }
-
-        [data-theme="dark"] .page-title {
-            color: var(--text-gray-700);
-        }
-
-        [data-theme="dark"] .table {
-            color: white;
-        }
-
-        [data-theme="dark"] .table th {
-            background-color: #4a5568;
-            color: white;
-        }
-
-        [data-theme="dark"] .form-field {
-            background: #4a5568;
-            border-color: #4a5568;
-            color: white;
-        }
-    </style>
+    <link rel="stylesheet" href="Content/forms.css">
 
     <!-- Page Content -->
     <div class="forms-page-container">
@@ -196,47 +15,145 @@
         </div>
 
         <div class="forms-content">
-            <!-- Forms Templates Grid -->
-            <div class="templates-section">
-                <h4>Form Templates</h4>
-                <div class="table-responsive">
-                    <table class="table table-striped" id="templatesTable">
-                        <thead>
-                            <tr>
-                                <th>Template Name</th>
-                                <th>Category</th>
-                                <th>Auto-Assign</th>
-                                <th>Signature</th>
-                                <th>Status</th>
-                                <th>Created</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="templatesTableBody">
-                            <!-- Templates will be loaded here -->
-                        </tbody>
-                    </table>
+            <div class="border-b">
+                  <nav class="tabs-nav" role="tablist">
+        <button class="tabs-nav__btn is-active" 
+                data-tab-target="templates-section" 
+                role="tab" 
+                aria-selected="true" 
+                aria-controls="templates-section">
+            Form Templates
+        </button>
+        <button class="tabs-nav__btn" 
+                data-tab-target="usage-log-section" 
+                role="tab" 
+                aria-selected="false" 
+                aria-controls="usage-log-section">
+            Recent Form Activity
+        </button>
+    </nav>
+            </div>
+
+            <!-- Form Templates Tab -->
+             <div id="templates-section" class="tabs-content is-active" role="tabpanel">
+                <div class="templates-section">
+                    <div class="table-controls mb-3">
+                        <div class="row align-items-center">
+                            <div class="col-md-6">
+                                <span id="templateRowCount" class="text-muted">0 rows selected</span>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="input-group justify-content-end">
+                                    <input type="text" id="templateSearch" class="form-control" placeholder="Search templates..." onkeyup="searchTemplates()" style="max-width: 200px;">
+                                    <span class="input-group-text">
+                                        <i class="fa fa-search"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row align-items-center mt-2">
+                            <div class="col-md-6">
+                                <span>Rows per page: </span>
+                                <select id="templatePageSize" onchange="changeTemplatePageSize(); return false;" class="form-select d-inline-block" style="width: auto;">
+    <option value="5">5</option>
+    <option value="10" selected>10</option>
+    <option value="25">25</option>
+    <option value="50">50</option>
+</select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-striped" id="templatesTable">
+                            <thead>
+                                <tr>
+                                    <th>Template Name</th>
+                                    <th>Category</th>
+                                    <th>Auto-Assign</th>
+                                    <th>Signature</th>
+                                    <th>Status</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="templatesTableBody">
+                                <!-- Templates will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                 <div class="pagination-controls mt-3 d-flex justify-content-between align-items-center">
+    <span class="text-muted" id="templatePageInfo">Loading...</span>
+    <nav aria-label="Templates pagination">
+        <ul class="pagination mb-0">
+            <li class="page-item disabled" id="templatePrevPage">
+                <a class="page-link" href="#" onclick="goToTemplatePage(templateCurrentPage - 1); return false;">Previous</a>
+            </li>
+            <li class="page-item" id="templateNextPage">
+                <a class="page-link" href="#" onclick="goToTemplatePage(templateCurrentPage + 1); return false;">Next</a>
+            </li>
+        </ul>
+    </nav>
+</div>
                 </div>
             </div>
 
-            <!-- Usage Log Section -->
-            <div class="usage-log-section mt-4">
-                <h4>Recent Form Activity</h4>
-                <div class="table-responsive">
-                    <table class="table table-sm" id="usageLogTable">
-                        <thead>
-                            <tr>
-                                <th>Date/Time</th>
-                                <th>Template</th>
-                                <th>Appointment</th>
-                                <th>Action</th>
-                                <th>Performed By</th>
-                            </tr>
-                        </thead>
-                        <tbody id="usageLogTableBody">
-                            <!-- Usage log will be loaded here -->
-                        </tbody>
-                    </table>
+            <!-- Usage Log Tab -->
+           <div id="usage-log-section" class="tabs-content" role="tabpanel" hidden>
+                <div class="usage-log-section mt-4">
+                    <div class="table-controls mb-3">
+                        <div class="row align-items-center">
+                            <div class="col-md-6">
+                                <span id="usageLogRowCount" class="text-muted">0 rows selected</span>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="input-group justify-content-end">
+                                    <input type="text" id="usageLogSearch" class="form-control" placeholder="Search activity..." onkeyup="searchUsageLog()" style="max-width: 200px;">
+                                    <span class="input-group-text">
+                                        <i class="fa fa-search"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row align-items-center mt-2">
+                            <div class="col-md-6">
+                                <span>Rows per page: </span>
+                                <select id="usageLogPageSize" onchange="changeUsageLogPageSize()" class="form-select d-inline-block" style="width: auto;">
+                                    <option value="10">10</option>
+                                    <option value="25">25</option>
+                                    <option value="50">50</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-sm" id="usageLogTable">
+                            <thead>
+                                <tr>
+                                    <th>Date/Time</th>
+                                    <th>Template</th>
+                                    <th>Appointment</th>
+                                    <th>Action</th>
+                                    <th>Performed By</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usageLogTableBody">
+                                <!-- Usage log will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="pagination-controls mt-3 d-flex justify-content-between align-items-center">
+                        <span class="text-muted" id="usageLogPageInfo"></span>
+                        <nav aria-label="Usage log pagination">
+                            <ul class="pagination mb-0">
+                                <li class="page-item" id="usageLogPrevPage">
+                                    <a class="page-link" href="#" onclick="goToUsageLogPage(usageLogCurrentPage - 1)">Previous</a>
+                                </li>
+                                <li class="page-item" id="usageLogNextPage">
+                                    <a class="page-link" href="#" onclick="goToUsageLogPage(usageLogCurrentPage + 1)">Next</a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
                 </div>
             </div>
         </div>
@@ -248,14 +165,11 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="templateModalTitle">New Form Template</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal">
-
-                    </button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <form id="templateForm">
                         <input type="hidden" id="templateId" name="templateId" value="0" />
-                        
                         <div class="row">
                             <div class="col-md-8">
                                 <div class="form-group">
@@ -277,53 +191,38 @@
                                 </div>
                             </div>
                         </div>
-
                         <div class="form-group">
                             <label for="description">Description</label>
                             <textarea class="form-control" id="description" name="description" rows="2"></textarea>
                         </div>
-
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" id="requireSignature" name="requireSignature">
-                                    <label class="form-check-label" for="requireSignature">
-                                        Require Signature
-                                    </label>
+                                    <label class="form-check-label" for="requireSignature">Require Signature</label>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" id="requireTip" name="requireTip">
-                                    <label class="form-check-label" for="requireTip">
-                                        Enable Tip Capture
-                                    </label>
+                                    <label class="form-check-label" for="requireTip">Enable Tip Capture</label>
                                 </div>
                             </div>
                         </div>
-
                         <div class="form-group mt-3">
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="isAutoAssignEnabled" name="isAutoAssignEnabled">
-                                <label class="form-check-label" for="isAutoAssignEnabled">
-                                    Auto-assign to appointment types
-                                </label>
+                                <label class="form-check-label" for="isAutoAssignEnabled">Auto-assign to appointment types</label>
                             </div>
                         </div>
-
                         <div id="autoAssignSection" class="form-group" style="display: none;">
                             <label>Service Types for Auto-Assignment</label>
-                            <div id="serviceTypeCheckboxes">
-                                <!-- Service type checkboxes will be populated here -->
-                            </div>
+                            <div id="serviceTypeCheckboxes"></div>
                         </div>
-
                         <div class="form-group">
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="isActive" name="isActive" checked>
-                                <label class="form-check-label" for="isActive">
-                                    Active
-                                </label>
+                                <label class="form-check-label" for="isActive">Active</label>
                             </div>
                         </div>
                     </form>
@@ -342,39 +241,21 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Form Builder</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal">
-
-                    </button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="row">
                         <div class="col-md-3">
                             <h6>Field Types</h6>
                             <div class="field-types">
-                                <div class="field-type" draggable="true" data-type="text">
-                                    <i class="fa fa-font"></i> Text Input
-                                </div>
-                                <div class="field-type" draggable="true" data-type="textarea">
-                                    <i class="fa fa-align-left"></i> Text Area
-                                </div>
-                                <div class="field-type" draggable="true" data-type="number">
-                                    <i class="fa fa-hashtag"></i> Number
-                                </div>
-                                <div class="field-type" draggable="true" data-type="date">
-                                    <i class="fa fa-calendar"></i> Date
-                                </div>
-                                <div class="field-type" draggable="true" data-type="dropdown">
-                                    <i class="fa fa-caret-down"></i> Dropdown
-                                </div>
-                                <div class="field-type" draggable="true" data-type="checkbox">
-                                    <i class="fa fa-check-square"></i> Checkbox
-                                </div>
-                                <div class="field-type" draggable="true" data-type="radio">
-                                    <i class="fa fa-dot-circle"></i> Radio Button
-                                </div>
-                                <div class="field-type" draggable="true" data-type="signature">
-                                    <i class="fa fa-pencil"></i> Signature
-                                </div>
+                                <div class="field-type" draggable="true" data-type="text"><i class="fa fa-font"></i> Text Input</div>
+                                <div class="field-type" draggable="true" data-type="textarea"><i class="fa fa-align-left"></i> Text Area</div>
+                                <div class="field-type" draggable="true" data-type="number"><i class="fa fa-hashtag"></i> Number</div>
+                                <div class="field-type" draggable="true" data-type="date"><i class="fa fa-calendar"></i> Date</div>
+                                <div class="field-type" draggable="true" data-type="dropdown"><i class="fa fa-caret-down"></i> Dropdown</div>
+                                <div class="field-type" draggable="true" data-type="checkbox"><i class="fa fa-check-square"></i> Checkbox</div>
+                                <div class="field-type" draggable="true" data-type="radio"><i class="fa fa-dot-circle"></i> Radio Button</div>
+                                <div class="field-type" draggable="true" data-type="signature"><i class="fa fa-pencil"></i> Signature</div>
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -414,8 +295,6 @@
             console.log('jQuery available:', typeof $ !== 'undefined');
             console.log('Bootstrap modal available:', typeof $.fn.modal !== 'undefined');
             console.log('Modal element exists:', $('#templateModal').length > 0);
-            
-            // Test opening the modal
             try {
                 openNewTemplateModal();
                 console.log('Modal opened successfully');
@@ -423,9 +302,9 @@
                 console.error('Error opening modal:', error);
             }
         }
-        
+
         // Test when page loads
-        $(document).ready(function() {
+        $(document).ready(function () {
             console.log('Forms page loaded successfully');
             console.log('Available functions:', {
                 openNewTemplateModal: typeof openNewTemplateModal,
@@ -434,5 +313,4 @@
             });
         });
     </script>
-
 </asp:Content>

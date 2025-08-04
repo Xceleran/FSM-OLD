@@ -434,12 +434,13 @@ document.body.appendChild(cardDetailsPopup);
 // Function to populate and show the details popup
 // Replace the existing showDetailsPopup function (around lines 900-950)
 function showDetailsPopup(appointment, element, event, popup) {
-    if (element.classList.contains('ui-draggable-dragging')) return; // Skip if dragging
+    if (element.classList.contains('ui-draggable-dragging')) return;
 
-    // Add expanded class to highlight the appointment block
-    element.classList.add('expanded');
+    // Only add 'expanded' class for calendar-event and appointment-card, not calendar-event-resource
+    if (!element.classList.contains('calendar-event-resource')) {
+        element.classList.add('expanded');
+    }
 
-    // Populate popup content with appointment details
     popup.innerHTML = `
         <div class="details-title">${appointment.CustomerName || 'N/A'}</div>
         <div class="details-item">
@@ -472,45 +473,45 @@ function showDetailsPopup(appointment, element, event, popup) {
         </div>
     `;
 
-    // Position popup relative to the appointment block
     const rect = element.getBoundingClientRect();
-    const popupWidth = popup.offsetWidth || 200; // Fallback width
-    const popupHeight = popup.offsetHeight || 100; // Fallback height
+    const popupWidth = popup.offsetWidth || 200;
+    const popupHeight = popup.offsetHeight || 100;
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
     const isResourceView = currentView === 'resource' && element.classList.contains('calendar-event-resource');
     const allDaySection = document.querySelector('.all-day-section');
     const allDayHeight = allDaySection ? allDaySection.getBoundingClientRect().height : 0;
 
-    // Default positioning
     let left, top;
     if (isResourceView) {
-        // In resource view, position below to avoid overlap with horizontal expansion
         top = rect.bottom + 10;
-        // Adjust if it overlaps "All Day" or overflows the bottom
         if (top < allDayHeight + 10) top = allDayHeight + 10;
         if (top + popupHeight > viewportHeight) top = rect.top - popupHeight - 10;
         left = rect.left;
         if (left + popupWidth > viewportWidth) left = viewportWidth - popupWidth - 10;
     } else {
-        // In date views or for appointment-card, position to the right
         left = rect.right + 10;
         top = rect.top;
-        // Adjust if it overlaps "All Day" or overflows
         if (top < allDayHeight + 10) top = allDayHeight + 10;
         if (left + popupWidth > viewportWidth) left = rect.left - popupWidth - 10;
         if (top + popupHeight > viewportHeight) top = viewportHeight - popupHeight - 10;
     }
 
-    // Ensure it stays within the viewport
-    left = Math.max(10, left); // Prevent going off left edge
-    top = Math.max(10, top); // Prevent going off top edge
+    left = Math.max(10, left);
+    top = Math.max(10, top);
 
     popup.style.left = `${left}px`;
     popup.style.top = `${top}px`;
 
-    // Show popup with animation
     popup.classList.add('show');
+}
+
+function hideDetailsPopup(popup) {
+    popup.classList.remove('show');
+    // Only remove 'expanded' from calendar-event and appointment-card
+    document.querySelectorAll('.calendar-event.expanded, .appointment-card.expanded').forEach(el => {
+        el.classList.remove('expanded');
+    });
 }
 // Function to hide the details popup and remove expanded state
 function hideDetailsPopup(popup) {
@@ -523,7 +524,7 @@ function hideDetailsPopup(popup) {
 
 // Add hover functionality to appointment elements
 function setupHoverEvents() {
-    document.querySelectorAll('.calendar-event, .calendar-event-resource, .appointment-card').forEach(element => {
+    document.querySelectorAll('.calendar-event, .calendar-event-resource').forEach(element => {
         // Remove existing event listeners to prevent duplicates
         element.removeEventListener('mouseenter', handleMouseEnter);
         element.removeEventListener('mouseleave', handleMouseLeave);
@@ -726,8 +727,8 @@ function renderDateView(date) {
                                         return null;
                                     }
                                     const offsetMinutes = startTimeMinutes - slotStartTimeMinutes;
-                                    const offsetPx = (offsetMinutes / slotDurationMinutes) * 60;
-                                    const heightPx = (durationMinutes / slotDurationMinutes) * 60;
+                                    const offsetPx = (offsetMinutes / slotDurationMinutes) * 40;
+                                    const heightPx = (durationMinutes / slotDurationMinutes) * 40;
                                     return { appointment: a, offsetPx, heightPx, startIndex };
                                 }
                                 return null;
@@ -780,7 +781,7 @@ function renderDateView(date) {
                 <div class="calendar-grid" style="grid-template-columns: 70px 1fr;">
                     <div class="p-2 border-right bg-gray-50 calendar-header-cell"></div>
                     <div class="p-2 text-center font-weight-medium bg-gray-50 calendar-header-cell">
-                        ${currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                       ${currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                     </div>
                 </div>
                 <div class="calendar-body">
@@ -830,8 +831,8 @@ function renderDateView(date) {
                                     return null;
                                 }
                                 const offsetMinutes = startTimeMinutes - slotStartTimeMinutes;
-                                const offsetPx = (offsetMinutes / slotDurationMinutes) * 60;
-                                const heightPx = (durationMinutes / slotDurationMinutes) * 60;
+                                const offsetPx = (offsetMinutes / slotDurationMinutes) * 40;
+                                const heightPx = (durationMinutes / slotDurationMinutes) * 40;
                                 return { appointment: a, offsetPx, heightPx };
                             }
                             return null;
@@ -1581,6 +1582,30 @@ function updateAllViews() {
 }
 
 // Render Resource View with duration-based independent positioning
+// Function to get icon based on appointment status
+const getAppointmentStatusIcon = (status) => {
+    if (!status) return '<i class="fas fa-question-circle"></i>';
+
+    const lowerStatus = status.toLowerCase();
+    switch (lowerStatus) {
+        case 'pending':
+            return '<i class="fas fa-hourglass-start"></i>'; // Pending icon
+        case 'scheduled':
+            return '<i class="fas fa-calendar-check"></i>'; // Scheduled icon
+        case 'cancelled':
+            return '<i class="fas fa-ban"></i>'; // Cancelled icon
+        case 'closed':
+            return '<i class="fas fa-lock"></i>'; // Closed icon
+        case 'installation in progress':
+            return '<i class="fas fa-cogs"></i>'; // Installation in progress icon
+        case 'completed':
+            return '<i class="fas fa-check-circle"></i>'; // Completed icon
+        default:
+            return '<i class="fas fa-question-circle"></i>'; // Default icon
+    }
+};
+
+// Render Resource View with duration-based independent positioning
 function renderResourceView(date) {
     const container = $("#resourceViewContainer").addClass('resource-view').removeClass('date-view');
     const selectedGroup = $("#dispatchGroup").val();
@@ -1589,18 +1614,17 @@ function renderResourceView(date) {
     renderDateNav("resourceNav", dateStr);
 
     const filteredResources = resources;
-    const slotDurationMinutes = 30;
-    const pixelsPerSlot = 100;
-    const eventHeight = 100;
+    const slotDurationMinutes = 30; // Base slot duration
+    const pixelsPerSlot = 100; // Base pixels per 30-minute slot
+    const eventHeight = 35; // Fixed height for events
 
     const validTimeSlots = allTimeSlots.filter(slot =>
         slot && slot.TimeBlockSchedule && !allTimeSlots.some(other => other !== slot && other.TimeBlockSchedule === slot.TimeBlockSchedule)
     );
-    console.log('Valid TimeSlots length:', validTimeSlots.length);
 
     getAppoinments("", "", "", dateStr, function (appointments) {
         let html = `
-            <div class="border rounded overflow-hidden" style="margin: 0; padding: 0; width: fit-content; max-width: 100%;">
+            <div class="border rounded overflow-hidden resizable-container" style="margin: 0; padding: 0; width: fit-content; max-width: 100%;">
                 <div class="calendar-grid calendar-header" id="resource-header" style="grid-template-columns: 120px repeat(${validTimeSlots.length}, ${pixelsPerSlot}px); margin: 0; padding: 0; width: fit-content; max-width: 100%; overflow-x: hidden;">
                     <div class="p-2 border-right bg-gray-50 calendar-header-cell"></div>
                     ${validTimeSlots.map(time => `
@@ -1621,15 +1645,18 @@ function renderResourceView(date) {
         } else {
             filteredResources.forEach((resource, index) => {
                 const rowId = `resource-row-${index}`;
+
+                // Use user icon for resources
+                const resourceIcon = '<i class="fas fa-user"></i>';
+
                 html += `
-                    <div class="calendar-grid resource-row" id="${rowId}" style="grid-template-columns: 120px repeat(${validTimeSlots.length}, ${pixelsPerSlot}px); margin: 0; padding: 0; width: fit-content; max-width: 100%; overflow-x: hidden;">
-                        <div class="h-120px border-bottom last-border-bottom-none p-1 fs-7 text-center bg-gray-50 calendar-time-cell">
-                            ${resource.ResourceName}
-                        </div>
-                `;
+        <div class="calendar-grid resource-row" id="${rowId}" style="grid-template-columns: 120px repeat(${validTimeSlots.length}, ${pixelsPerSlot}px); margin: 0; padding: 0; width: fit-content; max-width: 100%; overflow: hidden; position: relative;">
+            <div class="h-${eventHeight}px border-bottom last-border-bottom-none p-1 fs-7 text-left bg-gray-50 calendar-time-cell resource-name" style="position: sticky; left: 0; z-index: 1; padding: 7px 10px !important;">
+                ${resourceIcon} ${resource.ResourceName}
+            </div>
+    `;
 
                 const placedAppointments = [];
-
                 validTimeSlots.forEach((time, timeIndex) => {
                     const cellAppointments = appointments
                         .filter(a => a.ResourceName === resource.ResourceName &&
@@ -1647,27 +1674,21 @@ function renderResourceView(date) {
                             const startIndex = validTimeSlots.findIndex(slot => slot.TimeBlockSchedule === timeSlot.TimeBlockSchedule);
                             if (startIndex === timeIndex) {
                                 const durationMinutes = parseDuration(a.Duration);
+                                const totalHours = durationMinutes / 60;
                                 const startTimeMinutes = parseTimeToMinutes(timeSlot.TimeBlockSchedule.split('-')[0]);
                                 const slotStartTimeMinutes = parseTimeToMinutes(time.TimeBlockSchedule.split('-')[0]);
-                                if (isNaN(startTimeMinutes) || isNaN(slotStartTimeMinutes) || isNaN(durationMinutes) || slotDurationMinutes === 0) {
-                                    console.warn(`Invalid data for appointment ${a.AppoinmentId}:`, {
-                                        startTimeMinutes,
-                                        slotStartTimeMinutes,
-                                        durationMinutes,
-                                        slotDurationMinutes,
-                                        timeSlot: a.TimeSlot
-                                    });
-                                    return null;
-                                }
                                 const offsetMinutes = startTimeMinutes - slotStartTimeMinutes;
                                 const offsetPx = (offsetMinutes / slotDurationMinutes) * pixelsPerSlot;
-                                const widthPx = (durationMinutes / slotDurationMinutes) * pixelsPerSlot;
+                                const widthPx = (totalHours * (pixelsPerSlot * 2)); // 2 slots per hour
 
-                                const overlappingAppointments = placedAppointments.filter(pa => pa.offsetPx === offsetPx);
+                                const overlappingAppointments = placedAppointments.filter(pa =>
+                                    pa.offsetPx === offsetPx &&
+                                    Math.abs(pa.widthPx - widthPx) < 10
+                                );
                                 const conflictIndex = overlappingAppointments.length;
                                 const adjustedOffsetPx = offsetPx + (conflictIndex * 10);
 
-                                placedAppointments.push({ appointment: a, offsetPx });
+                                placedAppointments.push({ appointment: a, offsetPx: adjustedOffsetPx, widthPx });
 
                                 return { appointment: a, offsetPx: adjustedOffsetPx, widthPx };
                             }
@@ -1676,24 +1697,27 @@ function renderResourceView(date) {
                         .filter(a => a);
 
                     html += `
-                    <div class="h-120px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
+                    <div class="h-${eventHeight}px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
                          data-date="${dateStr}" 
                          data-time="${time.TimeBlockSchedule}" 
                          data-resource="${resource.ResourceName}"
                          style="position: relative; margin: 0; padding: 0; max-width: ${pixelsPerSlot}px;">
-                        ${cellAppointments.map(({ appointment, offsetPx, widthPx }) => `
-                            <div class="calendar-event-resource ${getEventTimeSlotClass(appointment)} cursor-move"
-                                 style="position: absolute; left: ${offsetPx}px; width: ${Math.min(widthPx, pixelsPerSlot)}px; height: ${eventHeight}px;"
+                        ${cellAppointments.map(({ appointment, offsetPx, widthPx }) => {
+                        const statusIcon = getAppointmentStatusIcon(appointment.AppoinmentStatus);
+                        return `
+                            <div class="calendar-event-resource ${getEventTimeSlotClass(appointment)}"
+                                 style="left:0px; 
+                                        width: ${Math.min(widthPx, pixelsPerSlot * validTimeSlots.length - offsetPx)}px; 
+                                        height: ${eventHeight}px; 
+                                        position: absolute;"
                                  data-id="${appointment.AppoinmentId}" 
-                                 data-duration-width="${widthPx}"
-                                 draggable="true"
-                                 onmouseenter="this.style.width='${widthPx * 1.5}px'; this.style.zIndex='10';"
-                                 onmouseleave="this.style.width='${Math.min(widthPx, pixelsPerSlot)}px'; this.style.zIndex='1';">
-                                <div class="font-weight-medium fs-7">${appointment.CustomerName}</div>
-                                <div class="fs-7 truncate">${appointment.ServiceType} (${appointment.Duration})</div>
-                                <div class="fs-7 truncate status">${appointment.AppoinmentStatus}</div>
+                                 draggable="true">
+                                <div class="event-content" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                    ${statusIcon} ${appointment.CustomerName} (${appointment.ServiceType})
+                                </div>
                             </div>
-                        `).join('')}
+                            `;
+                    }).join('')}
                     </div>
                     `;
                 });
@@ -1704,33 +1728,58 @@ function renderResourceView(date) {
 
         html += `</div></div>`;
         container.html(html);
+
+        // Setup resizable resource panel
+        const resizableContainer = container.find('.resizable-container')[0];
+        let isResizing = false;
+        let startX, startWidth;
+
+        resizableContainer.addEventListener('mousedown', (e) => {
+            if (e.offsetX > resizableContainer.offsetWidth - 10) {
+                isResizing = true;
+                startX = e.pageX;
+                startWidth = resizableContainer.offsetWidth;
+                resizableContainer.style.cursor = 'ew-resize';
+            }
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (isResizing) {
+                const width = startWidth + (e.pageX - startX);
+                resizableContainer.style.width = `${Math.max(300, width)}px`;
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isResizing) {
+                isResizing = false;
+                resizableContainer.style.cursor = 'default';
+            }
+        });
+
+        // Setup hover events like date view
+        setupHoverEvents();
+
         setupDragAndDrop();
         renderUnscheduledList('resource');
 
-        // Enable drag-to-scroll for each resource row and the header
+        // Enable drag-to-scroll
         const header = document.querySelector('#resource-header');
         const rows = document.querySelectorAll('.resource-row');
         if (header && rows.length > 0) {
-            // Initialize drag-to-scroll for header
             enableDragToScroll('#resource-header');
-            // Initialize drag-to-scroll for rows and sync with header
             filteredResources.forEach((_, index) => {
                 const rowSelector = `#resource-row-${index}`;
                 enableDragToScroll(rowSelector);
-                // Sync scrolling
                 const row = document.querySelector(rowSelector);
                 row.addEventListener('scroll', () => {
                     header.scrollLeft = row.scrollLeft;
                     rows.forEach(otherRow => {
-                        if (otherRow !== row) {
-                            otherRow.scrollLeft = row.scrollLeft;
-                        }
+                        if (otherRow !== row) otherRow.scrollLeft = row.scrollLeft;
                     });
                 });
                 header.addEventListener('scroll', () => {
-                    rows.forEach(r => {
-                        r.scrollLeft = header.scrollLeft;
-                    });
+                    rows.forEach(r => r.scrollLeft = header.scrollLeft);
                 });
             });
         }
@@ -2148,7 +2197,7 @@ function saveAppoinmentData(e) {
     appointment.Note = form.get("note");
     appointment.StartDateTime = form.get("txt_StartDate");
     appointment.EndDateTime = form.get("txt_EndDate");
-
+    appointment.AttachedForms = selectedForms.map(form => form.id);
     $.ajax({
         type: "POST",
         url: "Appointments.aspx/UpdateAppointment",
@@ -2157,6 +2206,10 @@ function saveAppoinmentData(e) {
         dataType: "json",
         success: function (response) {
             if (response.d) {
+                const updatedAppointment = appointments.find(a => a.AppoinmentId === id);
+                if (updatedAppointment) {
+                    updatedAppointment.AttachedForms = selectedForms.map(form => form.id);
+                }
                 showAlert({
                     icon: 'success',
                     title: 'Success',
@@ -2424,7 +2477,7 @@ function applyFormsSelection() {
             const formBadge = $(`
                 <span class="badge badge-success me-2 mb-2" data-form-id="${form.id}">
                     ${form.name}
-                    <button type="button" class="btn btn-sm btn-link text-white p-0 ms-1" 
+                    <button type="button" class="btn btn-sm btn-link text-dark p-0 ms-1" 
                             onclick="removeFormFromAppointment(${form.id})">
                         <i class="fa fa-times"></i>
                     </button>
@@ -2540,7 +2593,13 @@ function loadCurrentlySelectedForms(appointmentId) {
     }
     
     if (!appointmentId) return;
-    
+    // First check if we have the appointment data locally
+    const appointment = appointments.find(a => a.AppoinmentId == appointmentId);
+    if (appointment && appointment.AttachedForms) {
+        // If we have form IDs in the appointment data, use those
+        updateSelectedFormsFromIds(appointment.AttachedForms);
+        return;
+    }
     $.ajax({
         type: "POST",
         url: "Forms.aspx/GetAppointmentForms",
@@ -2555,6 +2614,11 @@ function loadCurrentlySelectedForms(appointmentId) {
                 if (response.d.length === 0) {
                     container.html('<small class="text-muted">No forms attached to this appointment</small>');
                 } else {
+                    // Update the selectedForms array
+                    selectedForms = response.d.map(form => ({
+                        id: form.Id,
+                        name: form.TemplateName
+                    }));
                     response.d.forEach(form => {
                         const statusClass = getFormStatusClass(form.Status);
                         const formBadge = $(`
@@ -2579,8 +2643,33 @@ function loadCurrentlySelectedForms(appointmentId) {
         }
     });
 }
+// Handle all modal dismissals properly
+$(document).on('hidden.bs.modal', '.modal', function () {
+    $(this).find('form').trigger('reset');
+    $(this).find('.is-invalid').removeClass('is-invalid');
+    $(this).find('.invalid-feedback').remove();
+});
 
+// Specifically handle forms modal
+$(document).on('click', '[data-dismiss="modal"]', function () {
+    const modal = $(this).closest('.modal');
+    modal.modal('hide');
+});
+
+// Handle escape key and backdrop clicks
+$(document).on('keydown', function (e) {
+    if (e.key === 'Escape') {
+        $('.modal.show').modal('hide');
+    }
+});
+
+$('.modal').on('click', function (e) {
+    if ($(e.target).hasClass('modal')) {
+        $(this).modal('hide');
+    }
+});
 // Initialize forms integration when page loads
 $(document).ready(function() {
     initializeFormsIntegration();
 });
+

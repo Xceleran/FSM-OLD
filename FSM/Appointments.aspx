@@ -3,25 +3,12 @@
 <asp:Content ID="BodyContent" ContentPlaceHolderID="MainContent" runat="server">
 
     <!-- External Libraries -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
-    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://cdn.datatables.net/responsive/3.0.2/js/dataTables.responsive.min.js"></script>
-    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/3.0.2/css/responsive.dataTables.min.css">
     <script src="Scripts/moment.js"></script>
     <!-- Local Styles and Scripts -->
     <link rel="stylesheet" href="Content/appointments.css">
 
     <!-- Inline CSS for Expand/Collapse -->
     <style>
-
-
         .workorder-filters-row {
             display: flex;
             flex-direction: row;
@@ -38,11 +25,9 @@
         }
     </style>
 
-
-
     <!-- Page Content -->
     <div class="container-fluid">
-        <header class="mb-4">
+        <header class="">
             <div class="row align-items-center">
                 <div class="col-12">
                     <div class="cec-btn">
@@ -60,10 +45,9 @@
                     </div>
                 </div>
             </div>
-
         </header>
 
-        <ul class="nav nav-tabs mb-4 gap-1" id="viewTabs" role="tablist">
+        <ul class="nav nav-tabs gap-1" id="viewTabs" role="tablist">
             <li class="nav-item">
                 <button class="nav-link active" id="date-tab" data-bs-toggle="tab" data-bs-target="#dateView" type="button" role="tab">Date View</button>
             </li>
@@ -132,45 +116,65 @@
                             <h3 class="card-title">Unassigned Appointments</h3>
                         </div>
                         <div class="card-body">
-
                             <!--Dropdowns Under One Filter-->
-                            <div class="dropdown unscheduled-filters mb-3">
-                                <button class="btn btn-primary dropdown-toggle w-100" type="button" id="unscheduledFilterBtn" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="fas fa-filter"></i>Filter
-                                </button>
-                                <div class="dropdown-menu p-3 w-100" aria-labelledby="unscheduledFilterBtn" style="min-width: 320px;">
-                                    <select runat="server" id="StatusTypeFilter" class="form-select mb-3" onchange="renderUnscheduledList()">
-                                        <option value="all">All Statuses</option>
-                                    </select>
-                                    <select runat="server" id="ServiceTypeFilter_2" class="form-select mb-3" onchange="renderUnscheduledList()">
-                                        <option value="all">All Types</option>
-                                        <option value="IT Support">IT Support</option>
-                                        <option value="1 Hour">1 Hour</option>
-                                        <option value="2 Hour">2 Hour</option>
-                                    </select>
-                                    <select id="ProvinceFilter" class="form-select mb-3" onchange="renderUnscheduledList()">
-                                        <option value="all">All Provinces/Territories</option>
-                                        <option value="AB">Alberta</option>
-                                        <option value="BC">British Columbia</option>
-                                        <option value="MB">Manitoba</option>
-                                        <option value="NB">New Brunswick</option>
-                                        <option value="NL">Newfoundland and Labrador</option>
-                                        <option value="NS">Nova Scotia</option>
-                                        <option value="NT">Northwest Territories</option>
-                                        <option value="NU">Nunavut</option>
-                                        <option value="ON">Ontario</option>
-                                        <option value="PE">Prince Edward Island</option>
-                                        <option value="QC">Quebec</option>
-                                        <option value="SK">Saskatchewan</option>
-                                        <option value="YT">Yukon</option>
-                                    </select>
-                                    <select id="PostalCodeFilter" class="form-select mb-3" onchange="renderUnscheduledList()">
-                                        <option value="all">All Postal Codes</option>
-                                        <!-- Populated dynamically via JavaScript -->
-                                    </select>
-
+                            <div class="d-flex flex-wrap align-items-center gap-3 mb-3">
+                                <!-- Filter Dropdown -->
+                                <div class="dropdown">
+                                    <button class="btn filter-btn dropdown-toggle d-flex align-items-center gap-2"
+                                        type="button"
+                                        id="unscheduledFilterBtn"
+                                        data-bs-toggle="dropdown"
+                                        aria-expanded="false">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                            <path d="M21 6H19M21 12H16M21 18H16M7 20V13.5612C7 13.3532 7 13.2492 6.97958 13.1497C6.96147 13.0615 6.93151 12.9761 6.89052 12.8958C6.84431 12.8054 6.77934 12.7242 6.64939 12.5617L3.35061 8.43826C3.22066 8.27583 3.15569 8.19461 3.10948 8.10417C3.06849 8.02393 3.03853 7.93852 3.02042 7.85026C3 7.75078 3 7.64677 3 7.43875V5.6C3 5.03995 3 4.75992 3.10899 4.54601C3.20487 4.35785 3.35785 4.20487 3.54601 4.10899C3.75992 4 4.03995 4 4.6 4H13.4C13.9601 4 14.2401 4 14.454 4.10899C14.6422 4.20487 14.7951 4.35785 14.891 4.54601C15 4.75992 15 5.03995 15 5.6V7.43875C15 7.64677 15 7.75078 14.9796 7.85026C14.9615 7.93852 14.9315 8.02393 14.8905 8.10417C14.8443 8.19461 14.7793 8.27583 14.6494 8.43826L11.3506 12.5617C11.2207 12.7242 11.1557 12.8054 11.1095 12.8958C11.0685 12.9761 11.0385 13.0615 11.0204 13.1497C11 13.2492 11 13.3532 11 13.5612V17L7 20Z"
+                                                stroke="currentColor"
+                                                stroke-width="1.5"
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round">
+                                            </path>
+                                        </svg>
+                                        Filter
+                                    </button>
+                                    <div class="dropdown-menu p-3" aria-labelledby="unscheduledFilterBtn" style="min-width: 320px;">
+                                        <select runat="server" id="StatusTypeFilter" class="form-select mb-3" onchange="renderUnscheduledList()">
+                                            <option value="all">All Statuses</option>
+                                        </select>
+                                        <select runat="server" id="ServiceTypeFilter_2" class="form-select mb-3" onchange="renderUnscheduledList()">
+                                            <option value="all">All Types</option>
+                                            <option value="IT Support">IT Support</option>
+                                            <option value="1 Hour">1 Hour</option>
+                                            <option value="2 Hour">2 Hour</option>
+                                        </select>
+                                        <select id="ProvinceFilter" class="form-select mb-3" onchange="renderUnscheduledList()">
+                                            <option value="all">All Provinces/Territories</option>
+                                            <option value="AB">Alberta</option>
+                                            <option value="BC">British Columbia</option>
+                                            <option value="MB">Manitoba</option>
+                                            <option value="NB">New Brunswick</option>
+                                            <option value="NL">Newfoundland and Labrador</option>
+                                            <option value="NS">Nova Scotia</option>
+                                            <option value="NT">Northwest Territories</option>
+                                            <option value="NU">Nunavut</option>
+                                            <option value="ON">Ontario</option>
+                                            <option value="PE">Prince Edward Island</option>
+                                            <option value="QC">Quebec</option>
+                                            <option value="SK">Saskatchewan</option>
+                                            <option value="YT">Yukon</option>
+                                        </select>
+                                        <select id="PostalCodeFilter" class="form-select mb-3" onchange="renderUnscheduledList()">
+                                            <option value="all">All Postal Codes</option>
+                                        </select>
+                                    </div>
                                 </div>
-                                <input type="text" id="searchFilter" class="form-control mb-3" placeholder="Search by customer..." oninput="renderUnscheduledList()" style="margin-top: 10px">
+                                <!-- Search Box -->
+                                <div class="ms-auto">
+                                    <div class="input-group" style="width: 250px;">
+                                        <input type="text" id="searchFilter" class="form-control" placeholder="Search..." onkeyup="renderUnscheduledList()">
+                                        <span class="input-group-text">
+                                            <i class="fas fa-search"></i>
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
                             <div id="unscheduledList" class="unscheduled-list"></div>
                         </div>
@@ -216,37 +220,65 @@
                             <h3 class="card-title">Unassigned Appointments</h3>
                         </div>
                         <div class="card-body">
-                            <div class="unscheduled-filters">
-                                <select runat="server" id="StatusTypeFilter_Resource" class="form-select mb-3" onchange="renderUnscheduledList('resource')">
-                                    <option value="all">All Statuses</option>
-                                </select>
-                                <select runat="server" id="ServiceTypeFilter_Resource" class="form-select mb-3" onchange="renderUnscheduledList('resource')">
-                                    <option value="IT Support">IT Support</option>
-                                    <option value="1 Hour">1 Hour</option>
-                                    <option value="2 Hour">2 Hour</option>
-                                </select>
-
-                                <select id="ProvinceFilterResource" class="form-select mb-3" onchange="renderUnscheduledList('resource')">
-                                    <option value="all">All Provinces/Territories</option>
-                                    <option value="AB">Alberta</option>
-                                    <option value="BC">British Columbia</option>
-                                    <option value="MB">Manitoba</option>
-                                    <option value="NB">New Brunswick</option>
-                                    <option value="NL">Newfoundland and Labrador</option>
-                                    <option value="NS">Nova Scotia</option>
-                                    <option value="NT">Northwest Territories</option>
-                                    <option value="NU">Nunavut</option>
-                                    <option value="ON">Ontario</option>
-                                    <option value="PE">Prince Edward Island</option>
-                                    <option value="QC">Quebec</option>
-                                    <option value="SK">Saskatchewan</option>
-                                    <option value="YT">Yukon</option>
-                                </select>
-                                <select id="PostalCodeFilterResource" class="form-select mb-3" onchange="renderUnscheduledList('resource')">
-                                    <option value="all">All Postal Codes</option>
-                                    <!-- Populated dynamically via JavaScript -->
-                                </select>
-                                <input type="text" id="searchFilterResource" class="form-control mb-3" placeholder="Search by customer..." oninput="renderUnscheduledList('resource')">
+                            <!--Dropdowns Under One Filter-->
+                            <div class="d-flex flex-wrap align-items-center gap-3 mb-3">
+                                <!-- Filter Dropdown -->
+                                <div class="dropdown">
+                                    <button class="btn filter-btn dropdown-toggle d-flex align-items-center gap-2"
+                                        type="button"
+                                        id="unscheduledFilterBtnResource"
+                                        data-bs-toggle="dropdown"
+                                        aria-expanded="false">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                            <path d="M21 6H19M21 12H16M21 18H16M7 20V13.5612C7 13.3532 7 13.2492 6.97958 13.1497C6.96147 13.0615 6.93151 12.9761 6.89052 12.8958C6.84431 12.8054 6.77934 12.7242 6.64939 12.5617L3.35061 8.43826C3.22066 8.27583 3.15569 8.19461 3.10948 8.10417C3.06849 8.02393 3.03853 7.93852 3.02042 7.85026C3 7.75078 3 7.64677 3 7.43875V5.6C3 5.03995 3 4.75992 3.10899 4.54601C3.20487 4.35785 3.35785 4.20487 3.54601 4.10899C3.75992 4 4.03995 4 4.6 4H13.4C13.9601 4 14.2401 4 14.454 4.10899C14.6422 4.20487 14.7951 4.35785 14.891 4.54601C15 4.75992 15 5.03995 15 5.6V7.43875C15 7.64677 15 7.75078 14.9796 7.85026C14.9615 7.93852 14.9315 8.02393 14.8905 8.10417C14.8443 8.19461 14.7793 8.27583 14.6494 8.43826L11.3506 12.5617C11.2207 12.7242 11.1557 12.8054 11.1095 12.8958C11.0685 12.9761 11.0385 13.0615 11.0204 13.1497C11 13.2492 11 13.3532 11 13.5612V17L7 20Z"
+                                                stroke="currentColor"
+                                                stroke-width="1.5"
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round">
+                                            </path>
+                                        </svg>
+                                        Filter
+                                    </button>
+                                    <div class="dropdown-menu p-3" aria-labelledby="unscheduledFilterBtnResource" style="min-width: 320px;">
+                                        <select runat="server" id="StatusTypeFilter_Resource" class="form-select mb-3" onchange="renderUnscheduledList('resource')">
+                                            <option value="all">All Statuses</option>
+                                        </select>
+                                        <select runat="server" id="ServiceTypeFilter_Resource" class="form-select mb-3" onchange="renderUnscheduledList('resource')">
+                                            <option value="all">All Types</option>
+                                            <option value="IT Support">IT Support</option>
+                                            <option value="1 Hour">1 Hour</option>
+                                            <option value="2 Hour">2 Hour</option>
+                                        </select>
+                                        <select id="ProvinceFilterResource" class="form-select mb-3" onchange="renderUnscheduledList('resource')">
+                                            <option value="all">All Provinces/Territories</option>
+                                            <option value="AB">Alberta</option>
+                                            <option value="BC">British Columbia</option>
+                                            <option value="MB">Manitoba</option>
+                                            <option value="NB">New Brunswick</option>
+                                            <option value="NL">Newfoundland and Labrador</option>
+                                            <option value="NS">Nova Scotia</option>
+                                            <option value="NT">Northwest Territories</option>
+                                            <option value="NU">Nunavut</option>
+                                            <option value="ON">Ontario</option>
+                                            <option value="PE">Prince Edward Island</option>
+                                            <option value="QC">Quebec</option>
+                                            <option value="SK">Saskatchewan</option>
+                                            <option value="YT">Yukon</option>
+                                        </select>
+                                        <select id="PostalCodeFilterResource" class="form-select mb-3" onchange="renderUnscheduledList('resource')">
+                                            <option value="all">All Postal Codes</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <!-- Search Box -->
+                                <div class="ms-auto">
+                                    <div class="input-group" style="width: 250px;">
+                                        <input type="text" id="searchFilterResource" class="form-control" placeholder="Search..." onkeyup="renderUnscheduledList('resource')">
+                                        <span class="input-group-text">
+                                            <i class="fas fa-search"></i>
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
                             <div id="unscheduledListResource" class="unscheduled-list"></div>
                         </div>
@@ -295,7 +327,6 @@
                                 <label></label>
                                 <button type="button" class="btn btn-primary ms-2" onclick="searchListView(event)">Search By Date</button>
                             </div>
-
                             <div>
                                 <button type="button" class="btn btn-secondary ms-2" onclick="clearFilterListView(event)">Clear</button>
                             </div>
@@ -365,8 +396,6 @@
                             <span class="status-indicator in-route"></span>In Route
                             <span class="status-indicator arrived"></span>Arrived
                         </div>
-
-
                         <div class="workorder-filters-row" style="margin-top: 12px;">
                             <div class="map-work-order-status">
                                 <h6>Work Order Status</h6>
@@ -378,7 +407,7 @@
                                     <option value="arrived">Arrived</option>
                                 </select>
                             </div>
-<!---------------------------------------------------Added New Resource Filter------------------------------------------->
+                            <!---------------------------------------------------Added New Resource Filter------------------------------------------->
                             <div>
                                 <label for="ServiceTypeFilter_List" class="form-label mb-0">
                                     <h6>Service type</h6>
@@ -390,13 +419,9 @@
                                     <option value="2 Hour">2 Hour</option>
                                 </select>
                             </div>
-<!--xxx------------------------------------------->
+                            <!--xxx------------------------------------------->
                         </div>
-
-
-
                     </div>
-
                     <div class="card-body">
                         <div class="tab-content">
                             <div class="tab-pane fade show active" id="mapLayerView" role="tabpanel">
@@ -474,7 +499,7 @@
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <label class="form-label mb-0">Forms</label>
                                     <button type="button" class="btn btn-sm btn-outline-primary" onclick="openFormsSelectionModal('new')">
-                                        <i class="fa fa-plus"></i> Select Forms
+                                        <i class="fa fa-plus"></i>Select Forms
                                     </button>
                                 </div>
                                 <div id="selectedFormsNew" class="selected-forms-container" style="min-height: 40px; border: 1px solid #dee2e6; border-radius: 0.375rem; padding: 8px;">
@@ -499,127 +524,210 @@
         </div>
     </div>
 
-    <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title edit-title" id="editModalLabel">Edit Appointment</h5>
-                    <h5 class="modal-title confirm-title d-none" id="confirmlLabel">Confirm Appointment Scheduling</h5>
-                    <button type="button" class="btn-close edit_close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <form id="editForm" onsubmit="updateAppointment(event)">
-                    <div class="modal-body">
-                        <input type="hidden" id="AppoinmentId" name="AppoinmentId">
-                        <input type="hidden" id="CustomerID" name="CustomerID">
-                        <input type="hidden" id="timerequired_Hour" name="timerequired_Hour">
-                        <input type="hidden" id="timerequired_Minute" name="timerequired_Minute">
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Customer Name</label>
-                                <input type="text" name="customerName" class="form-control" readonly="readonly">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Service Type</label>
-                                <select runat="server" id="ServiceTypeFilter_Edit" name="serviceTypeEdit" class="form-select" onchange="calculateTimeRequired(event)" required>
-                                    <option value="IT Support">IT Support</option>
-                                    <option value="1 Hour">1 Hour</option>
-                                    <option value="2 Hour">2 Hour</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Phone</label>
-                                <input type="text" name="phone" class="form-control" readonly="readonly">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Mobile</label>
-                                <input type="text" name="mobile" class="form-control" readonly="readonly">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Date</label>
-                                <input type="date" name="date" class="form-control" id="dateInput" required onchange="updateDate(event)">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Resource</label>
-                                <select id="resource_list" name="resource" class="form-select">
-                                    <option value="0">Unassigned</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Time Slot</label>
-                                <select id="time_slot" name="timeSlot" class="form-select" required onchange="calculateTimeRequired(event)">
-                                    <option value="morning">Morning</option>
-                                    <option value="afternoon">Afternoon</option>
-                                    <option value="emergency">Emergency</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Time Required</label>
-                                <input type="text" id="duration" name="duration" class="form-control" readonly="readonly" />
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Appointment Start Date</label>
-                                <input type="text" name="txt_StartDate" class="form-control" id="txt_StartDate" readonly="readonly">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Appointment End Date</label>
-                                <input type="text" name="txt_EndDate" class="form-control" id="txt_EndDate" readonly="readonly">
-                                <small id="customer_EndDate" style="display: none;" class="mb-3 text-warning">End date time cant be smaller than start date time.</small>
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label">Address</label>
-                                <input type="text" name="address" class="form-control" readonly="readonly">
-                            </div>
-                            <div class="col-12">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <label class="form-label mb-0">Forms</label>
-                                    <div>
-                                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="openFormsSelectionModal('edit')">
-                                            <i class="fa fa-plus"></i> Add Forms
-                                        </button>
-                                        <button type="button" class="btn btn-sm btn-outline-info" onclick="openAppointmentFormsModal()">
-                                            <i class="fa fa-list"></i> View Forms
-                                        </button>
-                                    </div>
+   <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                   <!-- Tab Navigation -->
+                    <ul class="nav nav-tabs-modal" id="editAppointmentTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link-modal active" id="appointment-tab" data-bs-toggle="tab" data-bs-target="#appointment-details" type="button" role="tab" aria-controls="appointment-details" aria-selected="true">Appointment Details</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link-modal" id="customer-tab" data-bs-toggle="tab" data-bs-target="#customer-data" type="button" role="tab" aria-controls="customer-data" aria-selected="false">Customer Data</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link-modal" id="forms-tab" data-bs-toggle="tab" data-bs-target="#forms-section" type="button" role="tab" aria-controls="forms-section" aria-selected="false">Forms</button>
+                        </li>                 
+                    </ul>
+                <h5 class="modal-title confirm-title d-none" id="confirmlLabel">Confirm Appointment Scheduling</h5>
+                <button type="button" class="btn-close edit_close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="editForm" onsubmit="updateAppointment(event)">
+                <div class="modal-body">
+                    <input type="hidden" id="AppoinmentId" name="AppoinmentId">
+                    <input type="hidden" id="CustomerID" name="CustomerID">
+                    <input type="hidden" id="timerequired_Hour" name="timerequired_Hour">
+                    <input type="hidden" id="timerequired_Minute" name="timerequired_Minute">
+                                      
+                    <!-- Tab Content -->
+                    <div class="tab-content" id="editAppointmentTabsContent">
+                        <!-- Appointment Details Tab -->
+                        <div class="tab-pane fade show active" id="appointment-details" role="tabpanel" aria-labelledby="appointment-tab">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Customer Name</label>
+                                    <input type="text" name="customerName" class="form-control" readonly="readonly">
                                 </div>
-                                <div id="selectedFormsEdit" class="selected-forms-container" style="min-height: 60px; border: 1px solid #dee2e6; border-radius: 0.375rem; padding: 8px;">
-                                    <!-- Forms will be loaded here -->
+                                <div class="col-md-6">
+                                    <label class="form-label">Service Type</label>
+                                    <select runat="server" id="ServiceTypeFilter_Edit" name="serviceTypeEdit" class="form-select" onchange="calculateTimeRequired(event)" required>
+                                        <option value="IT Support">IT Support</option>
+                                        <option value="1 Hour">1 Hour</option>
+                                        <option value="2 Hour">2 Hour</option>
+                                    </select>
                                 </div>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Appointment Status</label>
-                                <select runat="server" id="StatusTypeFilter_Edit" name="status" class="form-select" required>
-                                    <option value="all">Select</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Ticket Status</label>
-                                <select runat="server" id="TicketStatusFilter_Edit" name="status" class="form-select" required>
-                                    <option value="all">Select</option>
-                                </select>
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label">Any details</label>
-                                <textarea type="text" name="note" class="form-control"></textarea>
-
+                                <div class="col-md-6">
+                                    <label class="form-label">Phone</label>
+                                    <input type="text" name="phone" class="form-control" readonly="readonly">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Mobile</label>
+                                    <input type="text" name="mobile" class="form-control" readonly="readonly">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Date</label>
+                                    <input type="date" name="date" class="form-control" id="dateInput" required onchange="updateDate(event)">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Resource</label>
+                                    <select id="resource_list" name="resource" class="form-select">
+                                        <option value="0">Unassigned</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Time Slot</label>
+                                    <select id="time_slot" name="timeSlot" class="form-select" required onchange="calculateTimeRequired(event)">
+                                        <option value="morning">Morning</option>
+                                        <option value="afternoon">Afternoon</option>
+                                        <option value="emergency">Emergency</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Time Required</label>
+                                    <input type="text" id="duration" name="duration" class="form-control" readonly="readonly" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Appointment Start Date</label>
+                                    <input type="text" name="txt_StartDate" class="form-control" id="txt_StartDate" readonly="readonly">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Appointment End Date</label>
+                                    <input type="text" name="txt_EndDate" class="form-control" id="txt_EndDate" readonly="readonly">
+                                    <small id="customer_EndDate" style="display: none;" class="mb-3 text-warning">End date time cant be smaller than start date time.</small>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">Address</label>
+                                    <input type="text" name="address" class="form-control" readonly="readonly">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Appointment Status</label>
+                                    <select runat="server" id="StatusTypeFilter_Edit" name="status" class="form-select" required>
+                                        <option value="all">Select</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Ticket Status</label>
+                                    <select runat="server" id="TicketStatusFilter_Edit" name="status" class="form-select" required>
+                                        <option value="all">Select</option>
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">Any details</label>
+                                    <textarea type="text" name="note" class="form-control"></textarea>
+                                </div>
                             </div>
                         </div>
+                        
+                        <!-- Customer Data Tab -->
+                        <div class="tab-pane fade" id="customer-data" role="tabpanel" aria-labelledby="customer-tab">
+                             <div class="custdet-container">
+               <h2 class="h4 mb-3">Basic Information</h2>
+               <asp:Label Style="display: none;" ID="lblCustomerId" runat="server" />
+               <asp:Label Style="display: none;" ID="lblSiteId" runat="server" />
+               <asp:Label Style="display: none;" ID="lblCustomerGuid" runat="server" />
+               <div class="table-responsive">
+                   <table class="table table-bordered table-hover">
+                       <thead class="table-light">
+                           <tr>
+                               <th scope="col">Field</th>
+                               <th scope="col">Value</th>
+                           </tr>
+                       </thead>
+                       <tbody>
+                           <tr>
+                               <td>Customer Name</td>
+                               <td id="customerName">
+                                   <asp:Label ID="lblCustomerName" runat="server" /></td>
+                           </tr>
+                           <tr>
+                               <td>Site Contact</td>
+                               <td id="siteContact">
+                                   <asp:Label ID="lblContact" runat="server" /><br />
+                                   <i class="fas fa-phone me-1" style="font-size: 13px;"></i>Phone:
+                                   <asp:HyperLink ID="hlPhone" runat="server" /><br />
+                                   <i class="fas fa-mobile-alt me-1"></i>Mobile:
+                                   <asp:HyperLink ID="hlMobile" runat="server" />
+                               </td>
+                           </tr>
+                           <tr>
+                               <td>Email</td>
+                               <td id="customerEmail">
+                                   <asp:HyperLink ID="hlEmail" runat="server" />
+                               </td>
+                           </tr>
+                           <tr>
+                               <td>Address</td>
+                               <td id="siteAddress">
+                                   <asp:Label ID="lblAddress" runat="server" /></td>
+                           </tr>
+                           <tr>
+                               <td>Status</td>
+                               <td id="siteStatus">
+                                   <asp:Label ID="lblActive" runat="server" /></td>
+                           </tr>
+                           <tr>
+                               <td>Special Instructions</td>
+                               <td id="siteInstructions">
+                                   <asp:Label ID="lblNote" runat="server" /></td>
+                           </tr>
+                           <tr>
+                               <td>Created On</td>
+                               <td id="siteDescription">
+                                   <asp:Label ID="lblCreatedOn" runat="server" /></td>
+                           </tr>
+                       </tbody>
+                   </table>
+               </div>
+           </div>
+                        </div>
+                        
+                        <!-- Forms Tab -->
+                        <div class="tab-pane fade" id="forms-section" role="tabpanel" aria-labelledby="forms-tab">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6>Attached Forms</h6>
+                                <div>
+                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="openFormsSelectionModal('edit')">
+                                        <i class="fa fa-plus"></i> Add Forms
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-info" onclick="openAppointmentFormsModal()">
+                                        <i class="fa fa-list"></i> View Forms
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="selectedFormsEdit" class="selected-forms-container" style="min-height: 60px; border: 1px solid #dee2e6; border-radius: 0.375rem; padding: 8px;">
+                                <small class="text-muted">No forms attached to this appointment</small>
+                            </div>
+                        </div>
+                        
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-danger d-none" onclick="deleteAppointment()">Delete</button>
-                        <button type="button" class="btn btn-secondary d-none" onclick="unscheduleAppointment()">openEditModalUnschedule</button>
-                        <button type="button" class="btn btn-secondary edit_close" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Update</button>
-                    </div>
-                </form>
-            </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger d-none" onclick="deleteAppointment()">Delete</button>
+                    <button type="button" class="btn btn-secondary d-none" onclick="unscheduleAppointment()">openEditModalUnschedule</button>
+                    <button type="button" class="btn btn-secondary edit_close" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update</button>
+                </div>
+            </form>
         </div>
     </div>
+</div>
 
     <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="confirmModalLabel">Confirm Appointment Scheduling</h5>
+                  
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form id="confirmForm" onsubmit="confirmScheduling(event)">
@@ -684,20 +792,14 @@
     </div>
 
     <!-- Inline JavaScript for Expand/Collapse -->
-
-
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-
             const cecBtn = document.querySelector(".cec-btn");
-
             // Listen to Bootstrap's tab show event
             const viewTabs = document.querySelectorAll('#viewTabs .nav-link');
-
             viewTabs.forEach(tab => {
                 tab.addEventListener('shown.bs.tab', function (event) {
                     const activatedTabId = event.target.id;
-
                     if (activatedTabId === "map-tab") {
                         cecBtn.style.display = "none";
                     } else {
@@ -709,15 +811,10 @@
     </script>
 
     <script>
-
-
-  
-    </script>
+</script>
 
     <script src="Scripts/appointments.js" defer></script>
     <script src="Scripts/signature-handler.js" defer></script>
-
-    
 
     <!-- Forms Selection Modal -->
     <div class="modal fade" id="formsSelectionModal" tabindex="-1" role="dialog">
