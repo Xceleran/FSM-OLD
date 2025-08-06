@@ -57,6 +57,9 @@ namespace FSM.Entity.Forms
         // File storage
         public string StoredFilePath { get; set; }
         public string StoredFileName { get; set; }
+        
+        // Helper property for display purposes (not stored in database)
+        public string TemplateName { get; set; }
     }
 
     public class FormField

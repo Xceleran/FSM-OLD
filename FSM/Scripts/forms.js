@@ -375,11 +375,41 @@ function searchUsageLog(returnFiltered = false) {
 function openNewTemplateModal() {
     currentTemplate = null;
     $('#templateModalTitle').text('New Form Template');
-    $('#templateForm')[0].reset();
-    $('#templateId').val('0');
-    $('#isActive').prop('checked', true);
-    $('#autoAssignSection').hide();
-    var modal = new bootstrap.Modal(document.getElementById('templateModal'));
+    
+    // Wait for modal to be fully shown before accessing form elements
+    const modalElement = document.getElementById('templateModal');
+    const modal = new bootstrap.Modal(modalElement);
+    
+    // Listen for modal shown event
+    modalElement.addEventListener('shown.bs.modal', function () {
+        // Now the modal is fully rendered, safe to access form elements
+        const $form = $('#templateForm');
+        if ($form.length > 0) {
+            $form[0].reset();
+            $('#templateId').val('0');
+            $('#isActive').prop('checked', true);
+            $('#autoAssignSection').hide();
+            
+            // Focus on the template name field after a small delay to ensure it's rendered
+            setTimeout(() => {
+                const templateNameField = document.getElementById('templateName');
+                if (templateNameField) {
+                    templateNameField.focus();
+                }
+            }, 100);
+        } else {
+            console.error('Form still not found after modal shown event');
+        }
+    }, { once: true }); // Use once: true to ensure this only runs once
+    
+    // Handle modal hide event to clean up focus
+    modalElement.addEventListener('hidden.bs.modal', function () {
+        // Remove any lingering focus that might cause accessibility issues
+        if (document.activeElement && document.activeElement.blur) {
+            document.activeElement.blur();
+        }
+    }, { once: true });
+    
     modal.show();
 }
 
@@ -462,7 +492,45 @@ function loadServiceTypesForAssignment(selectedTypes) {
 
 // Save template
 function saveTemplate() {
-    const form = $('#templateForm')[0];
+    console.log('saveTemplate() called');
+    
+    // Try to find the form with a small delay if not found immediately
+    function tryFindForm(attempt = 1) {
+        const $modal = $('#templateModal');
+        const $form = $('#templateForm');
+        
+        console.log(`Attempt ${attempt}: Modal found:`, $modal.length > 0);
+        console.log(`Attempt ${attempt}: Form found:`, $form.length > 0);
+        console.log(`Attempt ${attempt}: Modal is visible:`, $modal.is(':visible'));
+        
+        if ($form.length === 0 && attempt < 3) {
+            // Try again after a short delay
+            setTimeout(() => tryFindForm(attempt + 1), 100);
+            return;
+        }
+        
+        if ($form.length === 0) {
+            console.error("Could not find #templateForm after multiple attempts");
+            showAlert({
+                icon: 'error',
+                title: 'Error',
+                text: 'Form not found. Please close and reopen the modal.',
+                confirmButtonText: 'OK'
+            });
+            return;
+        }
+        
+        // Continue with form processing
+        processFormSave($form);
+    }
+    
+    tryFindForm();
+}
+
+// Process the actual form save
+function processFormSave($form) {
+
+    const form = $form[0]; // Get the DOM element for validation
     if (!form.checkValidity()) {
         form.reportValidity();
         return;
@@ -521,6 +589,9 @@ function saveTemplate() {
     });
 }
 
+
+
+
 // Toggle template status
 function toggleTemplateStatus(templateId, isActive) {
     $.ajax({
@@ -578,8 +649,17 @@ function duplicateTemplate(templateId) {
 // Form Builder Functions
 function openFormBuilder(templateId) {
     currentTemplate = { Id: templateId };
-    $('#formBuilderModal').modal('show');
-    loadFormStructure(templateId);
+    
+    // Wait for modal to be fully shown before loading form structure
+    const modalElement = document.getElementById('formBuilderModal');
+    const modal = new bootstrap.Modal(modalElement);
+    
+    // Listen for modal shown event
+    modalElement.addEventListener('shown.bs.modal', function () {
+        loadFormStructure(templateId);
+    }, { once: true });
+    
+    modal.show();
 }
 
 function initializeFormBuilder() {
@@ -651,6 +731,343 @@ function generateFieldHtml(type, fieldId) {
             </div>
         </div>
     `;
+}
+
+// Load existing form structure from template
+function loadFormStructure(templateId) {
+    console.log('Loading form structure for template:', templateId);
+    
+    $.ajax({
+        type: "POST",
+        url: "Forms.aspx/GetFormStructure",
+        data: JSON.stringify({ templateId: templateId }),
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        success: function (response) {
+            try {
+                const formStructure = response.d ? JSON.parse(response.d) : {};
+                console.log('Loaded form structure:', formStructure);
+                
+                // Clear the form builder
+                $('#formBuilder').empty();
+                
+                if (formStructure.fields && formStructure.fields.length > 0) {
+                    // Load existing fields
+                    formStructure.fields.forEach(function(field) {
+                        const fieldHtml = generateFieldFromStructure(field);
+                        $('#formBuilder').append(fieldHtml);
+                    });
+                } else {
+                    // Show empty state
+                    $('#formBuilder').html('<div class="drop-zone">Drag fields here to build your form</div>');
+                }
+            } catch (error) {
+                console.error('Error parsing form structure:', error);
+                $('#formBuilder').html('<div class="drop-zone">Drag fields here to build your form</div>');
+            }
+        },
+        error: function (xhr, status, error) {
+            console.error('Error loading form structure:', error);
+            showAlert({
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to load form structure',
+                confirmButtonText: 'OK'
+            });
+            $('#formBuilder').html('<div class="drop-zone">Drag fields here to build your form</div>');
+        }
+    });
+}
+
+// Generate field HTML from saved structure
+function generateFieldFromStructure(field) {
+    const fieldId = field.id || 'field_' + Date.now();
+    const fieldType = field.type || 'text';
+    const fieldLabel = field.label || 'Untitled Field';
+    const isRequired = field.required || false;
+    
+    const fieldConfig = {
+        text: { icon: 'fa-font', input: `<input type="text" class="form-control" placeholder="${field.placeholder || 'Enter text'}" ${field.defaultValue ? 'value="' + field.defaultValue + '"' : ''}>` },
+        textarea: { icon: 'fa-align-left', input: `<textarea class="form-control" rows="3" placeholder="${field.placeholder || 'Enter text'}">${field.defaultValue || ''}</textarea>` },
+        number: { icon: 'fa-hashtag', input: `<input type="number" class="form-control" placeholder="${field.placeholder || 'Enter number'}" ${field.defaultValue ? 'value="' + field.defaultValue + '"' : ''}>` },
+        date: { icon: 'fa-calendar', input: `<input type="date" class="form-control" ${field.defaultValue ? 'value="' + field.defaultValue + '"' : ''}>` },
+        dropdown: { icon: 'fa-caret-down', input: generateDropdownHtml(field.options) },
+        checkbox: { icon: 'fa-check-square', input: `<div class="form-check"><input type="checkbox" class="form-check-input" ${field.defaultValue ? 'checked' : ''}><label class="form-check-label">${field.checkboxLabel || 'Check this option'}</label></div>` },
+        radio: { icon: 'fa-dot-circle', input: generateRadioHtml(field.options, fieldId) },
+        signature: { icon: 'fa-pencil', input: '<div class="signature-pad" style="border: 1px solid #ddd; height: 150px; display: flex; align-items: center; justify-content: center;">Signature Area</div>' }
+    };
+
+    const config = fieldConfig[fieldType] || fieldConfig.text;
+    
+    return `
+        <div class="form-field" data-field-id="${fieldId}" data-field-type="${fieldType}" onclick="selectField('${fieldId}')">
+            <div class="field-controls">
+                <button type="button" class="btn btn-sm btn-outline-primary" onclick="editField('${fieldId}')">
+                    <i class="fa fa-edit"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeField('${fieldId}')">
+                    <i class="fa fa-trash"></i>
+                </button>
+            </div>
+            <div class="form-group">
+                <label><i class="fa ${config.icon}"></i> ${fieldLabel}${isRequired ? ' *' : ''}</label>
+                ${config.input}
+            </div>
+        </div>
+    `;
+}
+
+// Generate dropdown HTML from options
+function generateDropdownHtml(options) {
+    if (!options || options.length === 0) {
+        return '<select class="form-control"><option>Option 1</option><option>Option 2</option></select>';
+    }
+    
+    let html = '<select class="form-control">';
+    options.forEach(option => {
+        html += `<option value="${option.value || option}">${option.label || option}</option>`;
+    });
+    html += '</select>';
+    return html;
+}
+
+// Generate radio button HTML from options
+function generateRadioHtml(options, fieldId) {
+    if (!options || options.length === 0) {
+        return `<div class="form-check"><input type="radio" class="form-check-input" name="radio_${fieldId}"><label class="form-check-label">Option 1</label></div>`;
+    }
+    
+    let html = '';
+    options.forEach((option, index) => {
+        html += `<div class="form-check">
+            <input type="radio" class="form-check-input" name="radio_${fieldId}" value="${option.value || option}">
+            <label class="form-check-label">${option.label || option}</label>
+        </div>`;
+    });
+    return html;
+}
+
+// Save form structure
+function saveFormStructure() {
+    console.log('Saving form structure...');
+    
+    if (!currentTemplate || !currentTemplate.Id) {
+        showAlert({
+            icon: 'error',
+            title: 'Error',
+            text: 'No template selected for form structure save',
+            confirmButtonText: 'OK'
+        });
+        return;
+    }
+    
+    // Collect all form fields
+    const fields = [];
+    $('#formBuilder .form-field').each(function() {
+        const $field = $(this);
+        const fieldId = $field.data('field-id');
+        const fieldType = $field.data('field-type');
+        const fieldLabel = $field.find('label').text().replace('*', '').trim();
+        
+        // Basic field structure
+        const field = {
+            id: fieldId,
+            type: fieldType,
+            label: fieldLabel,
+            required: $field.find('label').text().includes('*')
+        };
+        
+        // Add field-specific properties
+        switch(fieldType) {
+            case 'text':
+            case 'textarea':
+            case 'number':
+                const input = $field.find('input, textarea').first();
+                field.placeholder = input.attr('placeholder') || '';
+                field.defaultValue = input.val() || '';
+                break;
+            case 'date':
+                const dateInput = $field.find('input[type="date"]').first();
+                field.defaultValue = dateInput.val() || '';
+                break;
+            case 'dropdown':
+                const selectOptions = [];
+                $field.find('select option').each(function() {
+                    selectOptions.push({
+                        value: $(this).val(),
+                        label: $(this).text()
+                    });
+                });
+                field.options = selectOptions;
+                break;
+            case 'checkbox':
+                const checkbox = $field.find('input[type="checkbox"]').first();
+                field.defaultValue = checkbox.is(':checked');
+                field.checkboxLabel = $field.find('.form-check-label').text();
+                break;
+            case 'radio':
+                const radioOptions = [];
+                $field.find('input[type="radio"]').each(function() {
+                    radioOptions.push({
+                        value: $(this).val(),
+                        label: $(this).next('label').text()
+                    });
+                });
+                field.options = radioOptions;
+                break;
+        }
+        
+        fields.push(field);
+    });
+    
+    const formStructure = {
+        fields: fields,
+        version: "1.0",
+        lastModified: new Date().toISOString()
+    };
+    
+    console.log('Form structure to save:', formStructure);
+    
+    $.ajax({
+        type: "POST",
+        url: "Forms.aspx/SaveFormStructure",
+        data: JSON.stringify({ 
+            templateId: currentTemplate.Id,
+            formStructure: JSON.stringify(formStructure)
+        }),
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        success: function (response) {
+            if (response.d === true) {
+                showAlert({
+                    icon: 'success',
+                    title: 'Success',
+                    text: 'Form structure saved successfully!',
+                    timer: 2000
+                });
+                bootstrap.Modal.getInstance(document.getElementById('formBuilderModal')).hide();
+                loadTemplates(); // Refresh the templates list
+            } else {
+                showAlert({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Failed to save form structure',
+                    confirmButtonText: 'OK'
+                });
+            }
+        },
+        error: function (xhr, status, error) {
+            console.error('Error saving form structure:', error);
+            showAlert({
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to save form structure: ' + error,
+                confirmButtonText: 'OK'
+            });
+        }
+    });
+}
+
+// Field management functions
+function selectField(fieldId) {
+    // Remove previous selection
+    $('.form-field').removeClass('selected');
+    
+    // Add selection to clicked field
+    const $field = $(`[data-field-id="${fieldId}"]`);
+    $field.addClass('selected');
+    
+    // Show field properties
+    showFieldProperties(fieldId);
+}
+
+function editField(fieldId) {
+    const $field = $(`[data-field-id="${fieldId}"]`);
+    const fieldType = $field.data('field-type');
+    const currentLabel = $field.find('label').text().replace('*', '').trim();
+    
+    // Simple prompt for now - could be enhanced with a modal
+    const newLabel = prompt('Enter field label:', currentLabel);
+    if (newLabel && newLabel.trim()) {
+        const isRequired = $field.find('label').text().includes('*');
+        $field.find('label').html(`<i class="fa ${getFieldIcon(fieldType)}"></i> ${newLabel.trim()}${isRequired ? ' *' : ''}`);
+    }
+}
+
+function removeField(fieldId) {
+    if (confirm('Are you sure you want to remove this field?')) {
+        $(`[data-field-id="${fieldId}"]`).remove();
+        
+        // Show drop zone if no fields left
+        if ($('#formBuilder .form-field').length === 0) {
+            $('#formBuilder').html('<div class="drop-zone">Drag fields here to build your form</div>');
+        }
+        
+        // Clear field properties
+        $('#fieldProperties').html('<p>Select a field to edit its properties</p>');
+    }
+}
+
+function showFieldProperties(fieldId) {
+    const $field = $(`[data-field-id="${fieldId}"]`);
+    const fieldType = $field.data('field-type');
+    const fieldLabel = $field.find('label').text().replace('*', '').trim();
+    const isRequired = $field.find('label').text().includes('*');
+    
+    const propertiesHtml = `
+        <div class="field-property">
+            <label>Field Label</label>
+            <input type="text" class="form-control form-control-sm" value="${fieldLabel}" 
+                   onchange="updateFieldLabel('${fieldId}', this.value)">
+        </div>
+        <div class="field-property mt-2">
+            <div class="form-check">
+                <input type="checkbox" class="form-check-input" ${isRequired ? 'checked' : ''} 
+                       onchange="toggleFieldRequired('${fieldId}', this.checked)">
+                <label class="form-check-label">Required Field</label>
+            </div>
+        </div>
+        <div class="field-property mt-2">
+            <small class="text-muted">Field Type: ${fieldType}</small>
+        </div>
+        <div class="field-property mt-2">
+            <button type="button" class="btn btn-sm btn-danger" onclick="removeField('${fieldId}')">
+                <i class="fa fa-trash"></i> Remove Field
+            </button>
+        </div>
+    `;
+    
+    $('#fieldProperties').html(propertiesHtml);
+}
+
+function updateFieldLabel(fieldId, newLabel) {
+    const $field = $(`[data-field-id="${fieldId}"]`);
+    const fieldType = $field.data('field-type');
+    const isRequired = $field.find('label').text().includes('*');
+    
+    $field.find('label').html(`<i class="fa ${getFieldIcon(fieldType)}"></i> ${newLabel}${isRequired ? ' *' : ''}`);
+}
+
+function toggleFieldRequired(fieldId, isRequired) {
+    const $field = $(`[data-field-id="${fieldId}"]`);
+    const fieldType = $field.data('field-type');
+    const fieldLabel = $field.find('label').text().replace('*', '').trim();
+    
+    $field.find('label').html(`<i class="fa ${getFieldIcon(fieldType)}"></i> ${fieldLabel}${isRequired ? ' *' : ''}`);
+}
+
+function getFieldIcon(fieldType) {
+    const icons = {
+        text: 'fa-font',
+        textarea: 'fa-align-left',
+        number: 'fa-hashtag',
+        date: 'fa-calendar',
+        dropdown: 'fa-caret-down',
+        checkbox: 'fa-check-square',
+        radio: 'fa-dot-circle',
+        signature: 'fa-pencil'
+    };
+    return icons[fieldType] || 'fa-font';
 }
 
 // Utility functions

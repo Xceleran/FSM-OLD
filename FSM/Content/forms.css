@@ -68,6 +68,12 @@
     border-radius: 4px;
     padding: 20px;
     background: #fafafa;
+    transition: all 0.2s ease;
+}
+
+.form-builder-area.drag-over {
+    border-color: #3f51b5;
+    background: #e8eaf6;
 }
 
 .drop-zone {
@@ -98,7 +104,8 @@
     display: none;
 }
 
-.form-field:hover .field-controls {
+.form-field:hover .field-controls,
+.form-field.selected .field-controls {
     display: block;
 }
 

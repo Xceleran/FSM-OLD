@@ -708,6 +708,24 @@
                             <div id="selectedFormsEdit" class="selected-forms-container" style="min-height: 60px; border: 1px solid #dee2e6; border-radius: 0.375rem; padding: 8px;">
                                 <small class="text-muted">No forms attached to this appointment</small>
                             </div>
+                            
+                            <!-- Form Actions -->
+                            <div class="form-actions mt-3" id="formActionsContainer" style="display: none;">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">Form Actions:</small>
+                                    <div class="btn-group" role="group">
+                                        <button type="button" class="btn btn-sm btn-success" onclick="updateAttachedForms()" title="Save forms to this appointment">
+                                            <i class="fa fa-save"></i> Update Forms
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-info" onclick="sendFormsViaEmail()" title="Send forms to customer email">
+                                            <i class="fa fa-envelope"></i> Email
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-warning" onclick="sendFormsViaSMS()" title="Send forms to customer phone">
+                                            <i class="fa fa-mobile"></i> SMS
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         
                     </div>

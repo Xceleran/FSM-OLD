@@ -2485,6 +2485,11 @@ function applyFormsSelection() {
             `);
             container.append(formBadge);
         });
+        
+        // Show form actions if we're in edit mode and have forms
+        if (currentFormsModal === 'edit') {
+            $('#formActionsContainer').show();
+        }
     }
     
     $('#formsSelectionModal').modal('hide');
@@ -2499,6 +2504,10 @@ function removeFormFromAppointment(formId) {
     const container = currentFormsModal === 'new' ? $('#selectedFormsNew') : $('#selectedFormsEdit');
     if (selectedForms.length === 0) {
         container.html('<small class="text-muted">No forms selected</small>');
+        // Hide form actions if we're in edit mode and no forms left
+        if (currentFormsModal === 'edit') {
+            $('#formActionsContainer').hide();
+        }
     }
 }
 
@@ -2615,27 +2624,32 @@ function loadCurrentlySelectedForms(appointmentId) {
                     container.html('<small class="text-muted">No forms attached to this appointment</small>');
                 } else {
                     // Update the selectedForms array
-                    selectedForms = response.d.map(form => ({
-                        id: form.Id,
-                        name: form.TemplateName
-                    }));
-                    response.d.forEach(form => {
-                        const statusClass = getFormStatusClass(form.Status);
-                        const formBadge = $(`
-                            <div class="form-badge p-2 mb-2 border rounded d-flex justify-content-between align-items-center">
-                                <div>
-                                    <strong>${form.TemplateName}</strong>
-                                    <br><small class="${statusClass}">Status: ${form.Status}</small>
-                                </div>
-                                <div>
-                                    ${form.RequireSignature ? '<i class="fa fa-pencil text-info" title="Signature Required"></i>' : ''}
-                                    ${form.RequireTip ? '<i class="fa fa-dollar text-success ms-1" title="Tip Enabled"></i>' : ''}
-                                </div>
+                                    selectedForms = response.d.map(form => ({
+                    id: form.Id,
+                    name: form.TemplateName
+                }));
+                response.d.forEach(form => {
+                    const statusClass = getFormStatusClass(form.Status);
+                    const formBadge = $(`
+                        <div class="form-badge p-2 mb-2 border rounded d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>${form.TemplateName}</strong>
+                                <br><small class="${statusClass}">Status: ${form.Status}</small>
                             </div>
-                        `);
-                        container.append(formBadge);
-                    });
+                            <div>
+                                ${form.RequireSignature ? '<i class="fa fa-pencil text-info" title="Signature Required"></i>' : ''}
+                                ${form.RequireTip ? '<i class="fa fa-dollar text-success ms-1" title="Tip Enabled"></i>' : ''}
+                            </div>
+                        </div>
+                    `);
+                    container.append(formBadge);
+                });
+                
+                // Show form actions if forms are attached
+                if (response.d.length > 0) {
+                    $('#formActionsContainer').show();
                 }
+            }
             }
         },
         error: function(xhr, status, error) {
@@ -2643,6 +2657,242 @@ function loadCurrentlySelectedForms(appointmentId) {
         }
     });
 }
+
+// Update attached forms for appointment
+function updateAttachedForms() {
+    const appointmentId = $('#AppoinmentId').val();
+    
+    if (!appointmentId) {
+        showAlert({
+            icon: 'error',
+            title: 'Error',
+            text: 'No appointment selected',
+            confirmButtonText: 'OK'
+        });
+        return;
+    }
+    
+    if (selectedForms.length === 0) {
+        showAlert({
+            icon: 'warning',
+            title: 'Warning',
+            text: 'No forms selected to attach',
+            confirmButtonText: 'OK'
+        });
+        return;
+    }
+    
+    const formIds = selectedForms.map(form => form.id);
+    
+    $.ajax({
+        type: "POST",
+        url: "Appointments.aspx/UpdateAttachedForms",
+        data: JSON.stringify({ 
+            appointmentId: appointmentId,
+            formIds: formIds
+        }),
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        success: function(response) {
+            if (response.d === true) {
+                showAlert({
+                    icon: 'success',
+                    title: 'Success',
+                    text: 'Forms have been attached to the appointment successfully!',
+                    timer: 2000
+                });
+                
+                // Update the appointment data locally
+                const appointment = appointments.find(a => a.AppoinmentId == appointmentId);
+                if (appointment) {
+                    appointment.AttachedForms = formIds;
+                }
+            } else {
+                showAlert({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Failed to update attached forms',
+                    confirmButtonText: 'OK'
+                });
+            }
+        },
+        error: function(xhr, status, error) {
+            showAlert({
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to update attached forms: ' + error,
+                confirmButtonText: 'OK'
+            });
+        }
+    });
+}
+
+// Send forms via email
+function sendFormsViaEmail() {
+    const appointmentId = $('#AppoinmentId').val();
+    
+    if (!appointmentId) {
+        showAlert({
+            icon: 'error',
+            title: 'Error',
+            text: 'No appointment selected',
+            confirmButtonText: 'OK'
+        });
+        return;
+    }
+    
+    if (selectedForms.length === 0) {
+        showAlert({
+            icon: 'warning',
+            title: 'Warning',
+            text: 'No forms attached to send',
+            confirmButtonText: 'OK'
+        });
+        return;
+    }
+    
+    // Get customer email from the appointment
+    const appointment = appointments.find(a => a.AppoinmentId == appointmentId);
+    let customerEmail = appointment?.CustomerEmail || '';
+    
+    // Prompt for email if not available
+    if (!customerEmail) {
+        customerEmail = prompt('Enter customer email address:');
+        if (!customerEmail) return;
+    }
+    
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(customerEmail)) {
+        showAlert({
+            icon: 'error',
+            title: 'Invalid Email',
+            text: 'Please enter a valid email address',
+            confirmButtonText: 'OK'
+        });
+        return;
+    }
+    
+    $.ajax({
+        type: "POST",
+        url: "Appointments.aspx/SendFormsViaEmail",
+        data: JSON.stringify({ 
+            appointmentId: appointmentId,
+            customerEmail: customerEmail
+        }),
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        success: function(response) {
+            if (response.d === true) {
+                showAlert({
+                    icon: 'success',
+                    title: 'Email Sent',
+                    text: `Forms have been sent to ${customerEmail} successfully!`,
+                    timer: 3000
+                });
+            } else {
+                showAlert({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Failed to send email',
+                    confirmButtonText: 'OK'
+                });
+            }
+        },
+        error: function(xhr, status, error) {
+            showAlert({
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to send email: ' + error,
+                confirmButtonText: 'OK'
+            });
+        }
+    });
+}
+
+// Send forms via SMS
+function sendFormsViaSMS() {
+    const appointmentId = $('#AppoinmentId').val();
+    
+    if (!appointmentId) {
+        showAlert({
+            icon: 'error',
+            title: 'Error',
+            text: 'No appointment selected',
+            confirmButtonText: 'OK'
+        });
+        return;
+    }
+    
+    if (selectedForms.length === 0) {
+        showAlert({
+            icon: 'warning',
+            title: 'Warning',
+            text: 'No forms attached to send',
+            confirmButtonText: 'OK'
+        });
+        return;
+    }
+    
+    // Get customer phone from the appointment
+    const appointment = appointments.find(a => a.AppoinmentId == appointmentId);
+    let customerPhone = appointment?.CustomerPhone || appointment?.Mobile || '';
+    
+    // Prompt for phone if not available
+    if (!customerPhone) {
+        customerPhone = prompt('Enter customer phone number:');
+        if (!customerPhone) return;
+    }
+    
+    // Basic phone validation
+    const phoneRegex = /^[\+]?[1-9][\d]{3,14}$/;
+    if (!phoneRegex.test(customerPhone.replace(/[\s\-\(\)]/g, ''))) {
+        showAlert({
+            icon: 'error',
+            title: 'Invalid Phone',
+            text: 'Please enter a valid phone number',
+            confirmButtonText: 'OK'
+        });
+        return;
+    }
+    
+    $.ajax({
+        type: "POST",
+        url: "Appointments.aspx/SendFormsViaSMS",
+        data: JSON.stringify({ 
+            appointmentId: appointmentId,
+            customerPhone: customerPhone
+        }),
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        success: function(response) {
+            if (response.d === true) {
+                showAlert({
+                    icon: 'success',
+                    title: 'SMS Sent',
+                    text: `Form notification has been sent to ${customerPhone} successfully!`,
+                    timer: 3000
+                });
+            } else {
+                showAlert({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Failed to send SMS',
+                    confirmButtonText: 'OK'
+                });
+            }
+        },
+        error: function(xhr, status, error) {
+            showAlert({
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to send SMS: ' + error,
+                confirmButtonText: 'OK'
+            });
+        }
+    });
+}
+
 // Handle all modal dismissals properly
 $(document).on('hidden.bs.modal', '.modal', function () {
     $(this).find('form').trigger('reset');

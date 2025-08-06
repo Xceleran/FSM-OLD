@@ -281,7 +281,7 @@ namespace FSM.Processors
                 {
                     while (db.Reader.Read())
                     {
-                        instances.Add(new FormInstance
+                        var instance = new FormInstance
                         {
                             Id = db.GetInt("Id"),
                             CompanyID = db.GetString("CompanyID"),
@@ -299,7 +299,21 @@ namespace FSM.Processors
                             IsSynced = db.GetBoolean("IsSynced"),
                             StoredFilePath = db.GetString("StoredFilePath"),
                             StoredFileName = db.GetString("StoredFileName")
-                        });
+                        };
+                        
+                        // Try to get template name if available from joined query
+                        try
+                        {
+                            instance.TemplateName = db.GetString("TemplateName");
+                        }
+                        catch
+                        {
+                            // If TemplateName column is not available, get it separately
+                            var template = GetTemplate(instance.TemplateId, companyId);
+                            instance.TemplateName = template?.TemplateName ?? $"Form #{instance.TemplateId}";
+                        }
+                        
+                        instances.Add(instance);
                     }
                 }
             }

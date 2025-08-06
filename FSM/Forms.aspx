@@ -163,10 +163,10 @@
     <div class="modal fade" id="templateModal" tabindex="-1" role="dialog">
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="templateModalTitle">New Form Template</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
+                            <div class="modal-header">
+                <h5 class="modal-title" id="templateModalTitle">New Form Template</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
                 <div class="modal-body">
                     <form id="templateForm">
                         <input type="hidden" id="templateId" name="templateId" value="0" />
@@ -241,7 +241,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Form Builder</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="row">

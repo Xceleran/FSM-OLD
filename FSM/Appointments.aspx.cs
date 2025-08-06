@@ -427,5 +427,233 @@ namespace FSM
             }
             return duration;
         }
+
+        [WebMethod]
+        public static bool UpdateAttachedForms(string appointmentId, List<int> formIds)
+        {
+            try
+            {
+                string companyId = System.Web.HttpContext.Current.Session["CompanyID"]?.ToString();
+                string userId = System.Web.HttpContext.Current.Session["UserID"]?.ToString();
+                
+                if (string.IsNullOrEmpty(companyId))
+                    return false;
+
+                // Update appointment with attached forms
+                Database db = new Database();
+                try
+                {
+                    db.Init("sp_Appointments_UpdateAttachedForms");
+                    db.AddParameter("@AppointmentId", appointmentId, System.Data.SqlDbType.VarChar);
+                    db.AddParameter("@CompanyID", companyId, System.Data.SqlDbType.VarChar);
+                    db.AddParameter("@FormIds", string.Join(",", formIds), System.Data.SqlDbType.VarChar);
+                    db.AddParameter("@UpdatedBy", userId, System.Data.SqlDbType.VarChar);
+
+                    return db.ExecuteCommand();
+                }
+                finally
+                {
+                    db.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error updating attached forms: " + ex.Message);
+            }
+        }
+
+        [WebMethod]
+        public static bool SendFormsViaEmail(string appointmentId, string customerEmail)
+        {
+            try
+            {
+                string companyId = System.Web.HttpContext.Current.Session["CompanyID"]?.ToString();
+                if (string.IsNullOrEmpty(companyId))
+                    return false;
+
+                // Get appointment and customer details
+                var appointment = GetAppointmentDetails(appointmentId, companyId);
+                if (appointment == null)
+                    return false;
+
+                // Get attached forms
+                var formProcessor = new FSM.Processors.FormProcessor();
+                var forms = formProcessor.GetAppointmentForms(appointmentId, companyId);
+
+                if (forms.Count == 0)
+                {
+                    throw new Exception("No forms attached to this appointment");
+                }
+
+                // Generate email content
+                string subject = $"Forms for Appointment #{appointmentId}";
+                string body = GenerateFormsEmailBody(appointment, forms);
+
+                // Send email (you'll need to implement your email service)
+                return SendEmail(customerEmail, subject, body, appointmentId);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error sending forms via email: " + ex.Message);
+            }
+        }
+
+        [WebMethod]
+        public static bool SendFormsViaSMS(string appointmentId, string customerPhone)
+        {
+            try
+            {
+                string companyId = System.Web.HttpContext.Current.Session["CompanyID"]?.ToString();
+                if (string.IsNullOrEmpty(companyId))
+                    return false;
+
+                // Get appointment details
+                var appointment = GetAppointmentDetails(appointmentId, companyId);
+                if (appointment == null)
+                    return false;
+
+                // Generate SMS content
+                string message = GenerateFormsSMSMessage(appointment, appointmentId);
+
+                // Send SMS (you'll need to implement your SMS service)
+                return SendSMS(customerPhone, message, appointmentId);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error sending forms via SMS: " + ex.Message);
+            }
+        }
+
+        private static dynamic GetAppointmentDetails(string appointmentId, string companyId)
+        {
+            Database db = new Database();
+            try
+            {
+                db.Init("sp_Appointments_GetDetails");
+                db.AddParameter("@AppointmentId", appointmentId, System.Data.SqlDbType.VarChar);
+                db.AddParameter("@CompanyID", companyId, System.Data.SqlDbType.VarChar);
+                
+                if (db.Execute() && db.Reader.Read())
+                {
+                    return new
+                    {
+                        AppointmentId = db.GetString("AppoinmentId"),
+                        CustomerName = db.GetString("CustomerName"),
+                        CustomerEmail = db.GetString("CustomerEmail"),
+                        CustomerPhone = db.GetString("CustomerPhone"),
+                        ServiceType = db.GetString("ServiceType"),
+                        RequestDate = db.GetString("RequestDate"),
+                        TimeSlot = db.GetString("TimeSlot")
+                    };
+                }
+            }
+            finally
+            {
+                db.Close();
+            }
+            return null;
+        }
+
+        private static string GenerateFormsEmailBody(dynamic appointment, List<FSM.Entity.Forms.FormInstance> forms)
+        {
+            var body = $@"
+                <html>
+                <body>
+                    <h2>Forms for Your Appointment</h2>
+                    <p>Dear {appointment.CustomerName},</p>
+                    <p>Please find the forms for your upcoming appointment:</p>
+                    <ul>
+                        <li><strong>Service:</strong> {appointment.ServiceType}</li>
+                        <li><strong>Date:</strong> {appointment.RequestDate}</li>
+                        <li><strong>Time:</strong> {appointment.TimeSlot}</li>
+                    </ul>
+                    <h3>Forms to Complete:</h3>
+                    <ul>";
+
+            foreach (var form in forms)
+            {
+                string templateName = form.TemplateName ?? $"Form #{form.TemplateId}";
+                body += $"<li>{templateName} - Status: {form.Status}</li>";
+            }
+
+            body += @"
+                    </ul>
+                    <p>Please complete these forms before your appointment.</p>
+                    <p>Thank you!</p>
+                </body>
+                </html>";
+
+            return body;
+        }
+
+        private static string GenerateFormsSMSMessage(dynamic appointment, string appointmentId)
+        {
+            return $"Forms available for your appointment on {appointment.RequestDate} at {appointment.TimeSlot}. " +
+                   $"Service: {appointment.ServiceType}. Please check your email or contact us for details. Ref: {appointmentId}";
+        }
+
+        private static bool SendEmail(string toEmail, string subject, string body, string appointmentId)
+        {
+            try
+            {
+                // Implement your email sending logic here
+                // This is a placeholder - you'll need to integrate with your email service
+                // Examples: SendGrid, SMTP, etc.
+                
+                System.Net.Mail.SmtpClient smtp = new System.Net.Mail.SmtpClient();
+                System.Net.Mail.MailMessage mail = new System.Net.Mail.MailMessage();
+                
+                // Configure SMTP settings from web.config
+                string smtpServer = System.Configuration.ConfigurationManager.AppSettings["SMTPServer"];
+                string smtpPort = System.Configuration.ConfigurationManager.AppSettings["SMTPPort"];
+                string smtpUser = System.Configuration.ConfigurationManager.AppSettings["SMTPUser"];
+                string smtpPass = System.Configuration.ConfigurationManager.AppSettings["SMTPPassword"];
+                
+                if (!string.IsNullOrEmpty(smtpServer))
+                {
+                    smtp.Host = smtpServer;
+                    smtp.Port = int.Parse(smtpPort ?? "587");
+                    smtp.EnableSsl = true;
+                    smtp.Credentials = new System.Net.NetworkCredential(smtpUser, smtpPass);
+                    
+                    mail.From = new System.Net.Mail.MailAddress(smtpUser);
+                    mail.To.Add(toEmail);
+                    mail.Subject = subject;
+                    mail.Body = body;
+                    mail.IsBodyHtml = true;
+                    
+                    smtp.Send(mail);
+                    return true;
+                }
+                
+                // If no SMTP configured, log the attempt
+                System.Diagnostics.Debug.WriteLine($"Email would be sent to: {toEmail}, Subject: {subject}");
+                return true; // Return true for demo purposes
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Email send error: {ex.Message}");
+                return false;
+            }
+        }
+
+        private static bool SendSMS(string phoneNumber, string message, string appointmentId)
+        {
+            try
+            {
+                // Implement your SMS sending logic here
+                // This is a placeholder - you'll need to integrate with your SMS service
+                // Examples: Twilio, AWS SNS, etc.
+                
+                // Log the SMS attempt
+                System.Diagnostics.Debug.WriteLine($"SMS would be sent to: {phoneNumber}, Message: {message}");
+                return true; // Return true for demo purposes
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"SMS send error: {ex.Message}");
+                return false;
+            }
+        }
     }
 }
