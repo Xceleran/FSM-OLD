@@ -346,94 +346,107 @@ function simulateRealTimeUpdates() {
 // Render date navigation
 function renderDateNav(containerId, selectedDate) {
     const container = $(`#${containerId}`);
-    const view = containerId === "dateNav" ? $("#viewSelect").val() : "day";
-    let daysToShow = view === "week" ? 7 : view === "threeDay" ? 3 : 3;
-    if (view === "month") daysToShow = 0;
+    const isDateView = containerId === "dateNav";
+    const view = isDateView ? $("#viewSelect").val() : $("#resourceViewSelect").val();
+    const dateStr = new Date(selectedDate).toISOString().split('T')[0];
 
     let html = `
         <button class="btn btn-primary" onclick="prevPeriod('${containerId}')"><i class="fas fa-chevron-left"></i></button>
     `;
-    if (daysToShow > 0) {
-        const startDate = new Date(selectedDate); // Start from today
 
+    // Add date boxes for day/week/threeDay views
+    if (view !== 'month') {
+        const daysToShow = view === 'week' ? 7 : view === 'threeDay' ? 3 : 1;
+        const startDate = new Date(selectedDate);
 
-        // Collect date info
-        let dateArray = [];
-        let activeBox = "";
-        let otherBoxes = [];
-
-        for (let i = 0; i < daysToShow; i++) {
-            const d = new Date(startDate);
-            d.setDate(startDate.getDate() + i); // Go forward from today
-            const dateStr = d.toISOString().split('T')[0];
-            const isActive = dateStr === selectedDate ? " active" : "";
-
-            const boxHtml = `
-        <div class="date-box${isActive}" data-date="${dateStr}" onclick="selectDate('${dateStr}', '${containerId}')">
-            <div class="date-weekday">${d.toLocaleDateString('en-US', { weekday: 'short' })}</div>
-            <div class="date-number">${d.getDate()}</div>
-        </div>
-    `;
-
-            if (isActive) {
-                activeBox = boxHtml; // Save today
-            } else {
-                otherBoxes.push(boxHtml); // Save others
-            }
+        // Adjust start date for week view to start from Sunday
+        if (view === 'week') {
+            startDate.setDate(startDate.getDate() - startDate.getDay());
         }
+        // Adjust for threeDay view to show previous, current, and next day
+        else if (view === 'threeDay') {
+            startDate.setDate(startDate.getDate() - 1);
+        }
+
+        // Generate date boxes
         html += `<div class="date-boxes">`;
-        html += activeBox;
-        html += otherBoxes.join('');
+        for (let i = 0; i < daysToShow; i++) {
+            const currentDate = new Date(startDate);
+            currentDate.setDate(startDate.getDate() + i);
+            const currentDateStr = currentDate.toISOString().split('T')[0];
+            const isActive = currentDateStr === dateStr;
+
+            html += `
+                <div class="date-box${isActive ? ' active' : ''}" 
+                     data-date="${currentDateStr}" 
+                     onclick="selectDate('${currentDateStr}', '${containerId}')">
+                    <div class="date-weekday">${currentDate.toLocaleDateString('en-US', { weekday: 'short' })}</div>
+                    <div class="date-number">${currentDate.getDate()}</div>
+                </div>
+            `;
+        }
         html += `</div>`;
     }
 
-
+    // Add navigation buttons
     html += `
         <button class="btn btn-primary" onclick="nextPeriod('${containerId}')"><i class="fas fa-chevron-right"></i></button>
         <button class="btn btn-primary ms-2" onclick="gotoToday('${containerId}')">Today</button>
     `;
+
     container.html(html);
+
+    // Update the corresponding date picker
+    const pickerId = isDateView ? "#dayDatePicker" : "#resourceDatePicker";
+    $(pickerId).val(dateStr);
 }
 
 // Select a date
 function selectDate(date, containerId) {
-    currentDate = new Date(date);
-    const datePicker = containerId === "dateNav" ? "#dayDatePicker" : "#resourceDatePicker";
-    syncDatePickers(datePicker, date);
+    const dateStr = new Date(date).toISOString().split('T')[0];
+    currentDate = new Date(dateStr);
+
+    // Update the corresponding date picker
+    const pickerId = containerId === "dateNav" ? "#dayDatePicker" : "#resourceDatePicker";
+    syncDatePickers(pickerId, dateStr);
 }
 
-// Navigate to previous period
 function prevPeriod(containerId) {
     const view = containerId === "dateNav" ? $("#viewSelect").val() : "day";
+    const pickerId = containerId === "dateNav" ? "#dayDatePicker" : "#resourceDatePicker";
+    const currentDateStr = $(pickerId).val();
+    const currentDate = new Date(currentDateStr);
+
     if (view === 'month') {
         currentDate.setMonth(currentDate.getMonth() - 1);
     } else {
         currentDate.setDate(currentDate.getDate() - 1);
     }
-    const dateStr = currentDate.toISOString().split('T')[0];
-    const datePicker = containerId === "dateNav" ? "#dayDatePicker" : "#resourceDatePicker";
-    syncDatePickers(datePicker, dateStr);
+
+    const newDateStr = currentDate.toISOString().split('T')[0];
+    syncDatePickers(pickerId, newDateStr);
 }
 
-// Navigate to next period
 function nextPeriod(containerId) {
     const view = containerId === "dateNav" ? $("#viewSelect").val() : "day";
+    const pickerId = containerId === "dateNav" ? "#dayDatePicker" : "#resourceDatePicker";
+    const currentDateStr = $(pickerId).val();
+    const currentDate = new Date(currentDateStr);
+
     if (view === 'month') {
         currentDate.setMonth(currentDate.getMonth() + 1);
     } else {
         currentDate.setDate(currentDate.getDate() + 1);
     }
-    const dateStr = currentDate.toISOString().split('T')[0];
-    const datePicker = containerId === "dateNav" ? "#dayDatePicker" : "#resourceDatePicker";
-    syncDatePickers(datePicker, dateStr);
+
+    const newDateStr = currentDate.toISOString().split('T')[0];
+    syncDatePickers(pickerId, newDateStr);
 }
 
-// Go to today
 function gotoToday(containerId) {
-    currentDate = new Date();
-    const dateStr = currentDate.toISOString().split('T')[0];
-    const datePicker = containerId === "dateNav" ? "#dayDatePicker" : "#resourceDatePicker";
-    syncDatePickers(datePicker, dateStr);
+    const today = new Date().toISOString().split('T')[0];
+    const pickerId = containerId === "dateNav" ? "#dayDatePicker" : "#resourceDatePicker";
+    syncDatePickers(pickerId, today);
 }
 
 // Create appointment details popup for calendar events
@@ -2051,24 +2064,41 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(() => {
             console.log('TimeSlots:', allTimeSlots);
             console.log('Resources:', resources);
-            document.getElementById('dateInput').min = today;
-            $("#dayDatePicker").val(today);
-            $("#resourceDatePicker").val(today);
-            $("#listDatePicker").val(today);
-            $("#mapDatePicker").val(today);
-            renderDateView(today);
 
-            const tabs = document.querySelectorAll('#viewTabs button[data-bs-toggle="tab"]');
-            tabs.forEach(tab => {
+            // Initialize all date-related elements
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('dateInput').min = today;
+
+            // Set initial dates on all pickers
+            ['#dayDatePicker', '#resourceDatePicker', '#listDatePicker', '#mapDatePicker'].forEach(picker => {
+                $(picker).val(today).trigger('change');
+            });
+
+            // Initialize current view
+            currentView = "date";
+            renderDateView(today);
+            renderDateNav('dateNav', today);
+            renderDateNav('resourceNav', today);
+
+            // Tab switching logic
+            document.querySelectorAll('#viewTabs button[data-bs-toggle="tab"]').forEach(tab => {
                 tab.addEventListener('shown.bs.tab', function (event) {
+                    // Get the current date from the appropriate picker based on which tab is active
+                    const currentDate = event.target.id === 'resource-tab'
+                        ? $('#resourceDatePicker').val()
+                        : $('#dayDatePicker').val();
+
                     switch (event.target.id) {
                         case 'date-tab':
                             currentView = "date";
-                            renderDateView(today);
+                            renderDateView(currentDate);
+                            renderDateNav('dateNav', currentDate); // Ensure date nav is rendered
                             break;
                         case 'resource-tab':
                             currentView = "resource";
-                            renderResourceView(today);
+                            const resourceDate = $('#resourceDatePicker').val() || new Date().toISOString().split('T')[0];
+                            renderResourceView(resourceDate);
+                            renderDateNav('resourceDateNav', resourceDate);  // Make sure this is called
                             break;
                         case 'list-tab':
                             currentView = "list";
@@ -2078,79 +2108,88 @@ document.addEventListener('DOMContentLoaded', () => {
                             currentView = "map";
                             renderMapView();
                             setTimeout(() => {
-                                if (typeof mapViewInstance !== 'undefined') {
-                                    mapViewInstance.invalidateSize();
-                                }
+                                mapViewInstance?.invalidateSize();
                             }, 100);
                             break;
                     }
                 });
             });
 
-            // Add synchronized date picker event listeners
-            document.getElementById('dayDatePicker').addEventListener('change', (e) => {
-                syncDatePickers('#dayDatePicker', e.target.value);
-            });
+            // Date picker synchronization
+            const setupDatePickerSync = (pickerId) => {
+                document.getElementById(pickerId.replace('#', '')).addEventListener('change', (e) => {
+                    syncDatePickers(pickerId, e.target.value);
 
-            document.getElementById('resourceDatePicker').addEventListener('change', (e) => {
-                syncDatePickers('#resourceDatePicker', e.target.value);
-            });
+                    // Special handling for list view which might use date ranges
+                    if (pickerId === '#listDatePicker') {
+                        $("#listDatePickerFrom").val("");
+                        $("#listDatePickerTo").val("");
+                    }
+                });
+            };
 
+            ['#dayDatePicker', '#resourceDatePicker', '#mapDatePicker', '#listDatePicker'].forEach(setupDatePickerSync);
 
-
-            document.getElementById('mapDatePicker').addEventListener('change', (e) => {
-                syncDatePickers('#mapDatePicker', e.target.value);
-            });
-
-            document.getElementById('listDatePicker').addEventListener('change', (e) => {
-                syncDatePickers('#listDatePicker', e.target.value);
-            });
-
-            // Add event listeners for view and filter dropdowns
+            // View select handlers
             document.getElementById('viewSelect').addEventListener('change', (e) => {
                 renderDateView($('#dayDatePicker').val());
             });
 
             document.getElementById('resourceViewSelect').addEventListener('change', (e) => {
-                renderResourceView($('#resourceDatePicker').val());
+                const currentDate = $('#resourceDatePicker').val();
+                renderResourceView(currentDate);
+                renderDateNav('resourceNav', currentDate); // Add this line
             });
 
-            // Add event listeners for custom date range containers
-            document.getElementById('viewSelect').addEventListener('change', (e) => {
-                if (e.target.value === 'custom') {
-                    showCustomDateRangeContainer();
-                } else {
+            // Custom date range handlers
+            const handleCustomRangeToggle = (selectId, showFn, hideFn) => {
+                document.getElementById(selectId).addEventListener('change', (e) => {
+                    if (e.target.value === 'custom') {
+                        showFn();
+                    } else {
+                        hideFn();
+                    }
+                });
+            };
+
+            handleCustomRangeToggle(
+                'viewSelect',
+                showCustomDateRangeContainer,
+                () => {
                     hideCustomDateRangeContainer();
                     customDateRange.from = null;
                     customDateRange.to = null;
                 }
-            });
+            );
 
-            document.getElementById('resourceViewSelect').addEventListener('change', (e) => {
-                if (e.target.value === 'custom') {
-                    showResourceCustomDateRangeContainer();
-                } else {
+            handleCustomRangeToggle(
+                'resourceViewSelect',
+                showResourceCustomDateRangeContainer,
+                () => {
                     hideResourceCustomDateRangeContainer();
                     resourceCustomDateRange.from = null;
                     resourceCustomDateRange.to = null;
                 }
-            });
+            );
 
+            // Filter handlers
             document.getElementById('ServiceTypeFilter').addEventListener('change', (e) => {
                 renderDateView($('#dayDatePicker').val());
             });
 
+            // Map controls
             document.getElementById('statusFilter').addEventListener('change', () => {
-                renderMapMarkers(document.getElementById('mapDatePicker').value);
+                renderMapMarkers($('#mapDatePicker').val());
             });
 
             document.getElementById('mapReloadBtn').addEventListener('click', () => {
-                renderMapMarkers(document.getElementById('mapDatePicker').value);
+                renderMapMarkers($('#mapDatePicker').val());
             });
 
             document.getElementById('mapOptimizeRouteBtn').addEventListener('click', optimizeRoute);
             document.getElementById('mapAddCustomMarkerBtn').addEventListener('click', addCustomMarker);
 
+            // Map layer toggles
             document.getElementById('map-layer-tab').addEventListener('click', () => {
                 isMapView = true;
                 renderMapView();
@@ -2166,10 +2205,11 @@ document.addEventListener('DOMContentLoaded', () => {
             $("#dayCalendar").html('<div class="text-center py-4 text-muted">Failed to load data. Please try refreshing the page.</div>');
         });
 
+    // Modal dismiss handlers
     document.querySelectorAll('[data-bs-dismiss="modal"]').forEach(button => {
         button.addEventListener('click', function () {
             const modal = bootstrap.Modal.getInstance(this.closest('.modal'));
-            modal.hide();
+            modal?.hide();
         });
     });
 });
@@ -3004,45 +3044,39 @@ $(document).ready(function () {
 
 // Date synchronization function
 function syncDatePickers(changedPickerId, newDate) {
-    if (isDateSyncing) return; // Prevent infinite loops
-
-    console.log(`Syncing date pickers: ${changedPickerId} -> ${newDate}`);
+    if (isDateSyncing) return;
     isDateSyncing = true;
 
     try {
-        // Update all date pickers with the new date
-        const datePickers = ['#dayDatePicker', '#resourceDatePicker', '#mapDatePicker', '#listDatePicker'];
-
-        datePickers.forEach(pickerId => {
+        // Update all date pickers
+        ['#dayDatePicker', '#resourceDatePicker', '#mapDatePicker', '#listDatePicker'].forEach(pickerId => {
             if (pickerId !== changedPickerId) {
                 $(pickerId).val(newDate);
-                console.log(`Updated ${pickerId} to ${newDate}`);
             }
         });
 
         // Update currentDate
         currentDate = new Date(newDate);
 
-        // Re-render the appropriate view based on which picker was changed
-        if (changedPickerId === '#dayDatePicker') {
-            renderDateView(newDate);
-        } else if (changedPickerId === '#resourceDatePicker') {
-            renderResourceView(newDate);
-        } else if (changedPickerId === '#mapDatePicker') {
-            renderMapMarkers(newDate);
-        } else if (changedPickerId === '#listDatePicker') {
-            // Clear date range pickers when single date is selected
-            $("#listDatePickerFrom").val("");
-            $("#listDatePickerTo").val("");
-            renderListView();
-        }
-
-        // Update date navigation for both views
+        // Update the navigation for both views
         renderDateNav('dateNav', newDate);
-        renderDateNav('resourceDateNav', newDate);
+        renderDateNav('resourceNav', newDate);
 
-        console.log('Date synchronization completed successfully');
-
+        // Re-render the appropriate view
+        switch (currentView) {
+            case "date":
+                renderDateView(newDate);
+                break;
+            case "resource":
+                renderResourceView(newDate);
+                break;
+            case "map":
+                renderMapView();
+                break;
+            case "list":
+                renderListView();
+                break;
+        }
     } catch (error) {
         console.error('Error syncing date pickers:', error);
     } finally {
