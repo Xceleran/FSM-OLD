@@ -4,6 +4,9 @@
 
     <!-- External Libraries -->
     <script src="Scripts/moment.js"></script>
+    <!-- Leaflet Map Library -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <!-- Local Styles and Scripts -->
     <link rel="stylesheet" href="Content/appointments.css">
 
@@ -31,7 +34,20 @@
             <div class="row align-items-center">
                 <div class="col-12">
                     <div class="cec-btn">
-                        <h1 class="page-title">Dispatch Calendar</h1>
+                        <ul class="nav nav-tabs gap-1" id="viewTabs" role="tablist">
+                            <li class="nav-item">
+                                <button class="nav-link active" id="date-tab" data-bs-toggle="tab" data-bs-target="#dateView" type="button" role="tab">Date View</button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link" id="resource-tab" data-bs-toggle="tab" data-bs-target="#resourceView" type="button" role="tab">Resource View</button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link" id="list-tab" data-bs-toggle="tab" data-bs-target="#listView" type="button" role="tab">List View</button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link" id="map-tab" data-bs-toggle="tab" data-bs-target="#mapView" type="button" role="tab">Map View</button>
+                            </li>
+                        </ul>
                         <a href="https://testsite.myserviceforce.com/cec/calendar.aspx?m=3" class="custom-launch-btn" role="button" target="_blank">
                             <span>
                                 <span>CEC Appointments</span>
@@ -47,20 +63,6 @@
             </div>
         </header>
 
-        <ul class="nav nav-tabs gap-1" id="viewTabs" role="tablist">
-            <li class="nav-item">
-                <button class="nav-link active" id="date-tab" data-bs-toggle="tab" data-bs-target="#dateView" type="button" role="tab">Date View</button>
-            </li>
-            <li class="nav-item">
-                <button class="nav-link" id="resource-tab" data-bs-toggle="tab" data-bs-target="#resourceView" type="button" role="tab">Resource View</button>
-            </li>
-            <li class="nav-item">
-                <button class="nav-link" id="list-tab" data-bs-toggle="tab" data-bs-target="#listView" type="button" role="tab">List View</button>
-            </li>
-            <li class="nav-item">
-                <button class="nav-link" id="map-tab" data-bs-toggle="tab" data-bs-target="#mapView" type="button" role="tab">Map View</button>
-            </li>
-        </ul>
 
         <div class="tab-content">
             <div class="tab-pane fade show active" id="dateView" role="tabpanel">
@@ -73,14 +75,16 @@
                                         <i class="fas fa-expand"></i>
                                     </button>
                                     <label for="viewSelect" class="form-label mb-0">View:</label>
-                                    <select id="viewSelect" class="form-select w-120px" onchange="renderDateView($('#dayDatePicker').val())">
+                                    <select id="viewSelect" class="form-select w-120px">
                                         <option value="day">Day</option>
                                         <option value="week">Week</option>
                                         <option value="threeDay">Three-Day</option>
                                         <option value="month">Month</option>
+                   
                                     </select>
+                    
                                     <label for="ServiceTypeFilter" class="form-label mb-0">Filter:</label>
-                                    <select name="ServiceTypeFilter" id="ServiceTypeFilter" class="form-select w-120px" runat="server" onchange="renderDateView($('#dayDatePicker').val())">
+                                    <select name="ServiceTypeFilter" id="ServiceTypeFilter" class="form-select w-120px" runat="server">
                                         <option value="all">All Types</option>
                                         <option value="IT Support">IT Support</option>
                                         <option value="1 Hour">1 Hour</option>
@@ -94,7 +98,7 @@
                                         <option value="Installation">Installation</option>
                                     </select>--%>
                                     <label for="dayDatePicker" class="form-label mb-0 ms-3">Date:</label>
-                                    <input type="date" id="dayDatePicker" class="form-control w-200px" onchange="renderDateView(this.value)">
+                                    <input type="date" id="dayDatePicker" class="form-control w-200px">
                                 </div>
                                 <button id="toggleUnscheduledBtn" class="btn btn-sm"><i class="fas fa-chevron-right"></i></button>
                             </div>
@@ -191,8 +195,17 @@
                                     <button id="expandCalendarBtnResource" class="btn btn-outline-secondary me-2" data-bs-toggle="tooltip" title="Expand/Collapse Calendar">
                                         <i class="fas fa-expand"></i>
                                     </button>
+                                    <label for="resourceViewSelect" class="form-label mb-0">View:</label>
+                                    <select id="resourceViewSelect" class="form-select w-120px">
+                                        <option value="day">Day</option>
+                                        <option value="week">Week</option>
+                                        <option value="threeDay">Three-Day</option>
+                                        <option value="month">Month</option>
+
+                                    </select>
+                           
                                     <label for="resourceDatePicker" class="form-label mb-0">Date:</label>
-                                    <input type="date" id="resourceDatePicker" class="form-control w-200px" onchange="renderResourceView(this.value)">
+                                    <input type="date" id="resourceDatePicker" class="form-control w-200px">
                                     <%--<label for="dispatchGroup" class="form-label mb-0 ms-3">Group:</label>
                                     <select id="dispatchGroup" class="form-select w-120px" onchange="renderResourceView($('#resourceDatePicker').val())">
                                         <option value="all">All Resources</option>
@@ -213,6 +226,7 @@
                                 <div class="date-nav" id="resourceDateNav"></div>
                             </div>
                             <div id="resourceViewContainer"></div>
+
                         </div>
                     </div>
                     <div class="card unscheduled-panel">
@@ -315,6 +329,10 @@
                                     <option value="all">Select</option>
                                 </select>
                             </div>
+                              <div>
+                                <label for="listDatePicker" class="form-label mb-0">Date:</label>
+                                <input type="date" id="listDatePicker" class="form-control w-200px">
+                            </div>
                             <div>
                                 <label for="listDatePickerFrom" class="form-label mb-0">From Date:</label>
                                 <input type="date" id="listDatePickerFrom" class="form-control w-200px">
@@ -334,6 +352,11 @@
                     </div>
                     <div class="card-body">
                         <div class="list-view-table-container">
+                            <div id="listViewLoading" class="loading-overlay" style="display: none;">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
                             <table class="table list-view-table">
                                 <thead>
                                     <tr>
@@ -356,6 +379,34 @@
                                     <!-- Populated by renderListView -->
                                 </tbody>
                             </table>
+                        </div>
+
+                        <!-- Pagination Controls -->
+                        <div class="pagination-controls mt-3 d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center gap-3">
+                                <div>
+                                    <span>Rows per page: </span>
+                                    <select id="listViewPageSize" onchange="changeListViewPageSize()" class="form-select d-inline-block" style="width: auto;">
+                                        <option value="5" selected>5</option>
+                                        <option value="10">10</option>
+                                        <option value="25">25</option>
+                                        <option value="50">50</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center gap-3">
+                                <span class="text-muted" id="listViewPageInfo">Loading...</span>
+                                <nav aria-label="List view pagination">
+                                    <ul class="pagination mb-0">
+                                        <li class="page-item" id="listViewPrevPage">
+                                            <a class="page-link" href="#" onclick="goToListViewPage(listViewCurrentPage - 1); return false;">Previous</a>
+                                        </li>
+                                        <li class="page-item" id="listViewNextPage">
+                                            <a class="page-link" href="#" onclick="goToListViewPage(listViewCurrentPage + 1); return false;">Next</a>
+                                        </li>
+                                    </ul>
+                                </nav>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -524,11 +575,11 @@
         </div>
     </div>
 
-   <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                   <!-- Tab Navigation -->
+    <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <!-- Tab Navigation -->
                     <ul class="nav nav-tabs-modal" id="editAppointmentTabs" role="tablist">
                         <li class="nav-item" role="presentation">
                             <button class="nav-link-modal active" id="appointment-tab" data-bs-toggle="tab" data-bs-target="#appointment-details" type="button" role="tab" aria-controls="appointment-details" aria-selected="true">Appointment Details</button>
@@ -538,178 +589,162 @@
                         </li>
                         <li class="nav-item" role="presentation">
                             <button class="nav-link-modal" id="forms-tab" data-bs-toggle="tab" data-bs-target="#forms-section" type="button" role="tab" aria-controls="forms-section" aria-selected="false">Forms</button>
-                        </li>                 
+                        </li>
                     </ul>
-                <h5 class="modal-title confirm-title d-none" id="confirmlLabel">Confirm Appointment Scheduling</h5>
-                <button type="button" class="btn-close edit_close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form id="editForm" onsubmit="updateAppointment(event)">
-                <div class="modal-body">
-                    <input type="hidden" id="AppoinmentId" name="AppoinmentId">
-                    <input type="hidden" id="CustomerID" name="CustomerID">
-                    <input type="hidden" id="timerequired_Hour" name="timerequired_Hour">
-                    <input type="hidden" id="timerequired_Minute" name="timerequired_Minute">
-                                      
-                    <!-- Tab Content -->
-                    <div class="tab-content" id="editAppointmentTabsContent">
-                        <!-- Appointment Details Tab -->
-                        <div class="tab-pane fade show active" id="appointment-details" role="tabpanel" aria-labelledby="appointment-tab">
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label class="form-label">Customer Name</label>
-                                    <input type="text" name="customerName" class="form-control" readonly="readonly">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Service Type</label>
-                                    <select runat="server" id="ServiceTypeFilter_Edit" name="serviceTypeEdit" class="form-select" onchange="calculateTimeRequired(event)" required>
-                                        <option value="IT Support">IT Support</option>
-                                        <option value="1 Hour">1 Hour</option>
-                                        <option value="2 Hour">2 Hour</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Phone</label>
-                                    <input type="text" name="phone" class="form-control" readonly="readonly">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Mobile</label>
-                                    <input type="text" name="mobile" class="form-control" readonly="readonly">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Date</label>
-                                    <input type="date" name="date" class="form-control" id="dateInput" required onchange="updateDate(event)">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Resource</label>
-                                    <select id="resource_list" name="resource" class="form-select">
-                                        <option value="0">Unassigned</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Time Slot</label>
-                                    <select id="time_slot" name="timeSlot" class="form-select" required onchange="calculateTimeRequired(event)">
-                                        <option value="morning">Morning</option>
-                                        <option value="afternoon">Afternoon</option>
-                                        <option value="emergency">Emergency</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Time Required</label>
-                                    <input type="text" id="duration" name="duration" class="form-control" readonly="readonly" />
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Appointment Start Date</label>
-                                    <input type="text" name="txt_StartDate" class="form-control" id="txt_StartDate" readonly="readonly">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Appointment End Date</label>
-                                    <input type="text" name="txt_EndDate" class="form-control" id="txt_EndDate" readonly="readonly">
-                                    <small id="customer_EndDate" style="display: none;" class="mb-3 text-warning">End date time cant be smaller than start date time.</small>
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label">Address</label>
-                                    <input type="text" name="address" class="form-control" readonly="readonly">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Appointment Status</label>
-                                    <select runat="server" id="StatusTypeFilter_Edit" name="status" class="form-select" required>
-                                        <option value="all">Select</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Ticket Status</label>
-                                    <select runat="server" id="TicketStatusFilter_Edit" name="status" class="form-select" required>
-                                        <option value="all">Select</option>
-                                    </select>
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label">Any details</label>
-                                    <textarea type="text" name="note" class="form-control"></textarea>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Customer Data Tab -->
-                        <div class="tab-pane fade" id="customer-data" role="tabpanel" aria-labelledby="customer-tab">
-                             <div class="custdet-container">
-               <h2 class="h4 mb-3">Basic Information</h2>
-               <asp:Label Style="display: none;" ID="lblCustomerId" runat="server" />
-               <asp:Label Style="display: none;" ID="lblSiteId" runat="server" />
-               <asp:Label Style="display: none;" ID="lblCustomerGuid" runat="server" />
-               <div class="table-responsive">
-                   <table class="table table-bordered table-hover">
-                       <thead class="table-light">
-                           <tr>
-                               <th scope="col">Field</th>
-                               <th scope="col">Value</th>
-                           </tr>
-                       </thead>
-                       <tbody>
-                           <tr>
-                               <td>Customer Name</td>
-                               <td id="customerName">
-                                   <asp:Label ID="lblCustomerName" runat="server" /></td>
-                           </tr>
-                           <tr>
-                               <td>Site Contact</td>
-                               <td id="siteContact">
-                                   <asp:Label ID="lblContact" runat="server" /><br />
-                                   <i class="fas fa-phone me-1" style="font-size: 13px;"></i>Phone:
-                                   <asp:HyperLink ID="hlPhone" runat="server" /><br />
-                                   <i class="fas fa-mobile-alt me-1"></i>Mobile:
-                                   <asp:HyperLink ID="hlMobile" runat="server" />
-                               </td>
-                           </tr>
-                           <tr>
-                               <td>Email</td>
-                               <td id="customerEmail">
-                                   <asp:HyperLink ID="hlEmail" runat="server" />
-                               </td>
-                           </tr>
-                           <tr>
-                               <td>Address</td>
-                               <td id="siteAddress">
-                                   <asp:Label ID="lblAddress" runat="server" /></td>
-                           </tr>
-                           <tr>
-                               <td>Status</td>
-                               <td id="siteStatus">
-                                   <asp:Label ID="lblActive" runat="server" /></td>
-                           </tr>
-                           <tr>
-                               <td>Special Instructions</td>
-                               <td id="siteInstructions">
-                                   <asp:Label ID="lblNote" runat="server" /></td>
-                           </tr>
-                           <tr>
-                               <td>Created On</td>
-                               <td id="siteDescription">
-                                   <asp:Label ID="lblCreatedOn" runat="server" /></td>
-                           </tr>
-                       </tbody>
-                   </table>
-               </div>
-           </div>
-                        </div>
-                        
-                        <!-- Forms Tab -->
-                        <div class="tab-pane fade" id="forms-section" role="tabpanel" aria-labelledby="forms-tab">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h6>Attached Forms</h6>
-                                <div>
-                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="openFormsSelectionModal('edit')">
-                                        <i class="fa fa-plus"></i> Add Forms
-                                    </button>
-                                    <button type="button" class="btn btn-sm btn-outline-info" onclick="openAppointmentFormsModal()">
-                                        <i class="fa fa-list"></i> View Forms
-                                    </button>
+                    <h5 class="modal-title confirm-title d-none" id="confirmlLabel">Confirm Appointment Scheduling</h5>
+                    <button type="button" class="btn-close edit_close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="editForm" onsubmit="updateAppointment(event)">
+                    <div class="modal-body">
+                        <input type="hidden" id="AppoinmentId" name="AppoinmentId">
+                        <input type="hidden" id="CustomerID" name="CustomerID">
+                        <input type="hidden" id="timerequired_Hour" name="timerequired_Hour">
+                        <input type="hidden" id="timerequired_Minute" name="timerequired_Minute">
+
+                        <!-- Tab Content -->
+                        <div class="tab-content" id="editAppointmentTabsContent">
+                            <!-- Appointment Details Tab -->
+                            <div class="tab-pane fade show active" id="appointment-details" role="tabpanel" aria-labelledby="appointment-tab">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Customer Name</label>
+                                        <input type="text" name="customerName" class="form-control" readonly="readonly">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Service Type</label>
+                                        <select runat="server" id="ServiceTypeFilter_Edit" name="serviceTypeEdit" class="form-select" onchange="calculateTimeRequired(event)" required>
+                                            <option value="IT Support">IT Support</option>
+                                            <option value="1 Hour">1 Hour</option>
+                                            <option value="2 Hour">2 Hour</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Phone</label>
+                                        <input type="text" name="phone" class="form-control" readonly="readonly">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Mobile</label>
+                                        <input type="text" name="mobile" class="form-control" readonly="readonly">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Date</label>
+                                        <input type="date" name="date" class="form-control" id="dateInput" required onchange="updateDate(event)">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Resource</label>
+                                        <select id="resource_list" name="resource" class="form-select">
+                                            <option value="0">Unassigned</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Time Slot</label>
+                                        <select id="time_slot" name="timeSlot" class="form-select" required onchange="calculateTimeRequired(event)">
+                                            <option value="morning">Morning</option>
+                                            <option value="afternoon">Afternoon</option>
+                                            <option value="emergency">Emergency</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Time Required</label>
+                                        <input type="text" id="duration" name="duration" class="form-control" readonly="readonly" />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Appointment Start Date</label>
+                                        <input type="text" name="txt_StartDate" class="form-control" id="txt_StartDate" readonly="readonly">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Appointment End Date</label>
+                                        <input type="text" name="txt_EndDate" class="form-control" id="txt_EndDate" readonly="readonly">
+                                        <small id="customer_EndDate" style="display: none;" class="mb-3 text-warning">End date time cant be smaller than start date time.</small>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label">Address</label>
+                                        <input type="text" name="address" class="form-control" readonly="readonly">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Appointment Status</label>
+                                        <select runat="server" id="StatusTypeFilter_Edit" name="status" class="form-select" required>
+                                            <option value="all">Select</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Ticket Status</label>
+                                        <select runat="server" id="TicketStatusFilter_Edit" name="status" class="form-select" required>
+                                            <option value="all">Select</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label">Any details</label>
+                                        <textarea type="text" name="note" class="form-control"></textarea>
+                                    </div>
                                 </div>
                             </div>
-                            <div id="selectedFormsEdit" class="selected-forms-container" style="min-height: 60px; border: 1px solid #dee2e6; border-radius: 0.375rem; padding: 8px;">
-                                <small class="text-muted">No forms attached to this appointment</small>
+
+                            <!-- Customer Data Tab -->
+                            <div class="tab-pane fade" id="customer-data" role="tabpanel" aria-labelledby="customer-tab">
+                                <div class="custdet-container">
+                                    <h2 class="h4 mb-3">Basic Information</h2>
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-hover">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th scope="col">Field</th>
+                                                    <th scope="col">Value</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>Customer Name</td>
+                                                    <td id="customerName">Loading...</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Site Contact</td>
+                                                    <td id="siteContact">Loading...</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Email</td>
+                                                    <td id="customerEmail">Loading...</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Address</td>
+                                                    <td id="siteAddress">Loading...</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Status</td>
+                                                    <td id="siteStatus">Loading...</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Special Instructions</td>
+                                                    <td id="siteInstructions">Loading...</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Created On</td>
+                                                    <td id="siteDescription">Loading...</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
                             </div>
-                            
-                            <!-- Form Actions -->
+
+                            <!-- Forms Tab -->
+                            <div class="tab-pane fade" id="forms-section" role="tabpanel" aria-labelledby="forms-tab">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h6>Attached Forms</h6>
+                                    <div>
+                                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="openFormsSelectionModal('edit')">
+                                            <i class="fa fa-plus"></i>Add Forms
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-info" onclick="openAppointmentFormsModal()">
+                                            <i class="fa fa-list"></i>View Forms
+                                        </button>
+                                    </div>
+                                </div>
+                                <div id="selectedFormsEdit" class="selected-forms-container" style="min-height: 60px; border: 1px solid #dee2e6; border-radius: 0.375rem; padding: 8px;">
+                                    <small class="text-muted">No forms attached to this appointment</small>
+                                </div>
+                                 <!-- Form Actions -->
+
                             <div class="form-actions mt-3" id="formActionsContainer" style="display: none;">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <small class="text-muted">Form Actions:</small>
@@ -726,26 +761,25 @@
                                     </div>
                                 </div>
                             </div>
+                            </div>
                         </div>
-                        
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-danger d-none" onclick="deleteAppointment()">Delete</button>
-                    <button type="button" class="btn btn-secondary d-none" onclick="unscheduleAppointment()">openEditModalUnschedule</button>
-                    <button type="button" class="btn btn-secondary edit_close" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Update</button>
-                </div>
-            </form>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-danger d-none" onclick="deleteAppointment()">Delete</button>
+                        <button type="button" class="btn btn-secondary d-none" onclick="unscheduleAppointment()">openEditModalUnschedule</button>
+                        <button type="button" class="btn btn-secondary edit_close" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Update</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
-</div>
 
     <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                  
+
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form id="confirmForm" onsubmit="confirmScheduling(event)">
@@ -815,10 +849,11 @@
             const cecBtn = document.querySelector(".cec-btn");
             // Listen to Bootstrap's tab show event
             const viewTabs = document.querySelectorAll('#viewTabs .nav-link');
-            viewTabs.forEach(tab => {
+            tabs.forEach(tab => {
                 tab.addEventListener('shown.bs.tab', function (event) {
-                    const activatedTabId = event.target.id;
-                    if (activatedTabId === "map-tab") {
+                    const cecBtn = document.querySelector(".cec-btn");
+                    // Show/hide CEC button based on active tab
+                    if (event.target.id === 'map-tab') {
                         cecBtn.style.display = "none";
                     } else {
                         cecBtn.style.display = "flex";

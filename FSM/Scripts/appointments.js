@@ -8,6 +8,21 @@ let routeLayer = null;
 let customMarkers = [];
 let isMapView = true; // true for Map, false for Satellite
 
+// Add a flag to prevent infinite loops during date synchronization
+let isDateSyncing = false;
+
+// Pagination variables for list view
+let listViewCurrentPage = 1;
+let listViewPageSize = 5;
+let listViewTotalPages = 1;
+let listViewFilteredAppointments = [];
+
+// Pagination variables for resource view
+let resourceViewCurrentPage = 1;
+let resourceViewPageSize = 5;
+let resourceViewTotalPages = 1;
+let resourceViewFilteredAppointments = [];
+
 const technicianGroups = {
     "electricians": ["Jim", "Bob"],
     "plumbers": ["Team1"]
@@ -71,15 +86,14 @@ function parseTimeToMinutes(timeStr) {
         }
     }
 
-
-    const [time, period] = timeStr.trim().split(/\s+/);
+    // Remove AM/PM and parse as 24-hour format
+    timeStr = timeStr.replace(/\s*(AM|PM)\s*/gi, '');
+    const [time] = timeStr.trim().split(/\s+/);
     let [hours, minutes] = time.split(':').map(Number);
     if (isNaN(hours) || isNaN(minutes)) {
         console.warn(`Invalid time format: ${timeStr}`);
         return 0; // Fallback to 0 if parsing fails
     }
-    if (period && period.toUpperCase() === 'PM' && hours !== 12) hours += 12;
-    if (period && period.toUpperCase() === 'AM' && hours === 12) hours = 0;
     return hours * 60 + minutes;
 }
 
@@ -171,9 +185,15 @@ function getEventTimeSlotClass(appointment) {
 // Initialize the Map View
 function initMapView(date) {
     const container = document.getElementById('mapViewContainer');
+
+
     if (mapViewInstance) {
         mapViewInstance.remove();
     }
+
+    // Ensure container has proper dimensions
+    container.style.height = '400px';
+    container.style.width = '100%';
 
     mapViewInstance = L.map('mapViewContainer', {
         zoomControl: true,
@@ -306,6 +326,8 @@ function optimizeRoute() {
 // Render Map View
 function renderMapView() {
     const selectedDate = $("#mapDatePicker").val();
+
+
     initMapView(selectedDate);
 }
 
@@ -377,9 +399,7 @@ function renderDateNav(containerId, selectedDate) {
 function selectDate(date, containerId) {
     currentDate = new Date(date);
     const datePicker = containerId === "dateNav" ? "#dayDatePicker" : "#resourceDatePicker";
-    $(datePicker).val(date);
-    if (containerId === "dateNav") renderDateView(date);
-    else renderResourceView(date);
+    syncDatePickers(datePicker, date);
 }
 
 // Navigate to previous period
@@ -392,9 +412,7 @@ function prevPeriod(containerId) {
     }
     const dateStr = currentDate.toISOString().split('T')[0];
     const datePicker = containerId === "dateNav" ? "#dayDatePicker" : "#resourceDatePicker";
-    $(datePicker).val(dateStr);
-    if (containerId === "dateNav") renderDateView(dateStr);
-    else renderResourceView(dateStr);
+    syncDatePickers(datePicker, dateStr);
 }
 
 // Navigate to next period
@@ -407,9 +425,7 @@ function nextPeriod(containerId) {
     }
     const dateStr = currentDate.toISOString().split('T')[0];
     const datePicker = containerId === "dateNav" ? "#dayDatePicker" : "#resourceDatePicker";
-    $(datePicker).val(dateStr);
-    if (containerId === "dateNav") renderDateView(dateStr);
-    else renderResourceView(dateStr);
+    syncDatePickers(datePicker, dateStr);
 }
 
 // Go to today
@@ -417,9 +433,7 @@ function gotoToday(containerId) {
     currentDate = new Date();
     const dateStr = currentDate.toISOString().split('T')[0];
     const datePicker = containerId === "dateNav" ? "#dayDatePicker" : "#resourceDatePicker";
-    $(datePicker).val(dateStr);
-    if (containerId === "dateNav") renderDateView(dateStr);
-    else renderResourceView(dateStr);
+    syncDatePickers(datePicker, dateStr);
 }
 
 // Create appointment details popup for calendar events
@@ -638,9 +652,9 @@ function renderDateView(date) {
                             ${filteredAppointments.filter(a => a.RequestDate === dayDate).map(a => `
                                 <div class="calendar-event ${getEventTimeSlotClass(a)} fs-7 p-1 cursor-move" 
                                      data-id="${a.AppoinmentId}" draggable="true">
-                                    ${a.CustomerName} 
+                                    ${getAppointmentStatusIcon(a.AppoinmentStatus)} ${a.CustomerName} 
                                     <div class="fs-7 truncate">${a.ServiceType} (${a.Duration})</div>                                
-                                    <div class="fs-7 truncate status">${a.AppoinmentStatus}</div>
+                                    <div class="fs-7 truncate status status-${a.AppoinmentStatus.toLowerCase()}">${a.AppoinmentStatus}</div>
                                 </div>
                             `).join('')}
                         </div>
@@ -778,7 +792,7 @@ function renderDateView(date) {
         } else {
             html += `
             <div class="border rounded overflow-hidden">
-                <div class="calendar-grid" style="grid-template-columns: 70px 1fr;">
+                <div class="calendar-grid" style="grid-template-columns: 80px 1fr;">
                     <div class="p-2 border-right bg-gray-50 calendar-header-cell"></div>
                     <div class="p-2 text-center font-weight-medium bg-gray-50 calendar-header-cell">
                        ${currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
@@ -798,8 +812,8 @@ function renderDateView(date) {
 
                 allTimeSlots.forEach((time, index) => {
                     html += `
-                    <div class="calendar-grid" style="grid-template-columns: 70px 1fr;">
-                        <div class="h-60px border-bottom last-border-bottom-none p-1 fs-7 text-right pr-2 bg-gray-50 calendar-time-cell">
+                    <div class="calendar-grid" style="grid-template-columns: 80px 1fr;">
+                        <div class="h-60px border-bottom last-border-bottom-none p-1 fs-7 text-left pr-2 bg-gray-50 calendar-time-cell">
                             ${formatTimeRange(time.TimeBlockSchedule)}
                         </div>
                     `;
@@ -831,8 +845,8 @@ function renderDateView(date) {
                                     return null;
                                 }
                                 const offsetMinutes = startTimeMinutes - slotStartTimeMinutes;
-                                const offsetPx = (offsetMinutes / slotDurationMinutes) * 40;
-                                const heightPx = (durationMinutes / slotDurationMinutes) * 40;
+                                const offsetPx = (offsetMinutes / slotDurationMinutes) * 25;
+                                const heightPx = (durationMinutes / slotDurationMinutes) * 25;
                                 return { appointment: a, offsetPx, heightPx };
                             }
                             return null;
@@ -863,11 +877,11 @@ function renderDateView(date) {
                         renderedAppointments.add(appointment.AppoinmentId);
                         return `
                                 <div class="calendar-event ${getEventTimeSlotClass(appointment)} cursor-move fs-7 truncate"
-                                     style="position: absolute; height: ${heightPx}px; width: 150px;"
+                                     style="position: absolute; height: ${heightPx}px; width: 200px;"
                                      data-id="${appointment.AppoinmentId}" draggable="true">
-                                    <div class="font-weight-medium fs-7">${appointment.CustomerName}</div>
-                                    <div class="fs-7 truncate">${appointment.ServiceType} (${appointment.Duration})</div>
-                                    <div class="fs-7 truncate status">${appointment.AppoinmentStatus}</div>
+                                    <div class="font-weight-medium fs-7">${getAppointmentStatusIcon(appointment.AppoinmentStatus)} ${appointment.CustomerName}</div>
+                                    <div class="truncate">${appointment.ServiceType} (${appointment.Duration})</div>
+                                    <div class=" truncate status status-${appointment.AppoinmentStatus.toLowerCase()}">${appointment.AppoinmentStatus}</div>
                                 </div>
                                 `;
                     }).join('')}
@@ -890,13 +904,16 @@ function renderDateView(date) {
 
 function searchListView(e) {
     e.preventDefault();
+    const selectedDate = $("#listDatePicker").val();
     const selectedDateFrom = $("#listDatePickerFrom").val();
     const selectedDateTo = $("#listDatePickerTo").val();
-    if (!selectedDateFrom || !selectedDateTo) {
+
+    // Check if either single date or date range is provided
+    if (!selectedDate && (!selectedDateFrom || !selectedDateTo)) {
         showAlert({
             icon: 'warning',
             title: 'Missing Dates',
-            text: 'Please select both from date and to date.',
+            text: 'Please select either a single date or both from date and to date.',
             confirmButtonText: 'OK',
             customClass: {
                 popup: 'swal-custom-popup',
@@ -907,26 +924,37 @@ function searchListView(e) {
         });
         return;
     }
+
+    // Reset pagination when searching
+    listViewCurrentPage = 1;
     renderListView();
 }
 
 function clearFilterListView(e) {
     e.preventDefault();
+    const selectedDate = $("#listDatePicker").val();
     const selectedDateFrom = $("#listDatePickerFrom").val();
     const selectedDateTo = $("#listDatePickerTo").val();
     const statusFilter = $("#MainContent_StatusTypeFilter_List").val();
     const typeFilter = $("#MainContent_ServiceTypeFilter_List").val();
     const searchTerm = $("#search_term").val().trim().toLowerCase();
 
-    if (selectedDateFrom == "" && selectedDateTo == "" && statusFilter == "" && typeFilter == "" && searchTerm == "") {
+    if (selectedDate == "" && selectedDateFrom == "" && selectedDateTo == "" && statusFilter == "" && typeFilter == "" && searchTerm == "") {
         return;
     }
 
+    $("#listDatePicker").val("");
     $("#listDatePickerFrom").val("");
     $("#listDatePickerTo").val("");
     $("#MainContent_StatusTypeFilter_List").val("");
     $("#MainContent_ServiceTypeFilter_List").val("");
     $("#search_term").val("");
+
+    // Reset pagination and sorting
+    listViewCurrentPage = 1;
+    currentSort = { key: '', direction: 'asc' };
+    $('th.sortable').removeClass('sort-asc sort-desc');
+
     renderListView();
 }
 
@@ -945,11 +973,27 @@ $(document).off('click', 'th.sortable').on('click', 'th.sortable', function () {
     }
     $('th.sortable').removeClass('sort-asc sort-desc');
     $(this).addClass(currentSort.direction === 'asc' ? 'sort-asc' : 'sort-desc');
-    renderListView();
+
+    // Apply sorting to filtered appointments and re-render
+    if (currentSort.key) {
+        listViewFilteredAppointments.sort((a, b) => {
+            const valA = a[currentSort.key] ? a[currentSort.key].toString().toLowerCase() : '';
+            const valB = b[currentSort.key] ? b[currentSort.key].toString().toLowerCase() : '';
+            if (valA < valB) return currentSort.direction === 'asc' ? -1 : 1;
+            if (valA > valB) return currentSort.direction === 'asc' ? 1 : -1;
+            return 0;
+        });
+    }
+
+    // Reset to first page when sorting
+    listViewCurrentPage = 1;
+    renderListViewTable();
+    updateListViewPagination();
 });
 
 // Render List View
 function renderListView() {
+    const selectedDate = $("#listDatePicker").val() || "";
     const selectedDateFrom = $("#listDatePickerFrom").val() || "";
     const selectedDateTo = $("#listDatePickerTo").val() || "";
     const statusFilter = $("#MainContent_StatusTypeFilter_List").val();
@@ -957,9 +1001,19 @@ function renderListView() {
     const typeFilter = $("#MainContent_ServiceTypeFilter_List").val();
     const searchTerm = $("#search_term").val().trim().toLowerCase() || "";
 
-    const tbody = $("#listTableBody");
-    getAppoinments(searchTerm, selectedDateFrom, selectedDateTo, "", function (appointments) {
-        var filteredAppointments = appointments.filter(item => {
+    // Use single date if set, otherwise use date range
+    let fromDate = selectedDateFrom;
+    let toDate = selectedDateTo;
+    if (selectedDate) {
+        fromDate = selectedDate;
+        toDate = selectedDate;
+    }
+
+    // Show loading indicator
+    $("#listViewLoading").show();
+
+    getAppoinments(searchTerm, fromDate, toDate, "", function (appointments) {
+        listViewFilteredAppointments = appointments.filter(item => {
             const matchesType = typeFilter === '' ||
                 (item.ServiceType === typeFilter);
             const matchesStatus = statusFilter === '' ||
@@ -980,7 +1034,7 @@ function renderListView() {
         });
 
         if (currentSort.key) {
-            filteredAppointments.sort((a, b) => {
+            listViewFilteredAppointments.sort((a, b) => {
                 const valA = a[currentSort.key] ? a[currentSort.key].toString().toLowerCase() : '';
                 const valB = b[currentSort.key] ? b[currentSort.key].toString().toLowerCase() : '';
                 if (valA < valB) return currentSort.direction === 'asc' ? -1 : 1;
@@ -989,36 +1043,15 @@ function renderListView() {
             });
         }
 
-        tbody.html(filteredAppointments.length === 0 ? '<tr><td colspan="13" class="text-center">No appointments for this date.</td></tr>' :
-            filteredAppointments.map(a => {
-                const timeSlot = a.TimeSlot ? a.TimeSlot.charAt(0).toUpperCase() + a.TimeSlot.slice(1) : 'N/A';
-                return `
-        <tr data-id="${a.AppoinmentId}">
-            <td data-label="View">
-                <button class="btn btn-sm btn-outline-primary view-appointment" data-id="${a.AppoinmentId}">
-                    <i class="fas fa-eye"></i>
-                </button>
-            </td>
-            <td data-label="Customer">${a.CustomerName || 'N/A'}</td>
-            <td data-label="Business Name">${a.BusinessName || 'N/A'}</td>
-            <td data-label="Address">${a.Address1 || 'N/A'}</td>
-            <td data-label="Request Date">${a.RequestDate || 'N/A'}</td>
-            <td data-label="Time Slot">${formatTimeRange(timeSlot) || 'N/A'}</td>
-            <td data-label="Service Type">${a.ServiceType || 'N/A'}</td>
-            <td data-label="Email" class="custom-link">${a.Email ? `<a href="mailto:${a.Email}">${a.Email}</a>` : 'N/A'}</td>
-            <td data-label="Mobile" class="custom-link">${a.Mobile ? `<a href="tel:${a.Mobile}">${a.Mobile}</a>` : 'N/A'}</td>
-            <td data-label="Phone" class="custom-link">${a.Phone ? `<a href="tel:${a.Phone}">${a.Phone}</a>` : 'N/A'}</td>
-            <td data-label="Appointment Status">${a.AppoinmentStatus || 'N/A'}</td>
-            <td data-label="Resource">${a.ResourceName || 'N/A'}</td>
-            <td data-label="Ticket Status">${a.TicketStatus || 'N/A'}</td>
-        </tr>
-        `;
-            }).join(''));
+        // Reset to first page when filtering
+        listViewCurrentPage = 1;
 
-        $(document).off('click', '.view-appointment').on('click', '.view-appointment', function () {
-            const appointmentId = $(this).data("id");
-            openEditModal(appointmentId);
-        });
+        // Render the table and update pagination
+        renderListViewTable();
+        updateListViewPagination();
+
+        // Hide loading indicator
+        $("#listViewLoading").hide();
     });
 }
 
@@ -1308,7 +1341,7 @@ function createAppointment(e) {
 
     appointments.push(newAppointment);
     saveAppointments();
-    
+
     // Create form instances for selected forms
     if (selectedForms.length > 0 && window.FormsManager) {
         window.FormsManager.createFormInstance(selectedForms[0].id, newAppointment.AppoinmentId, newAppointment.CustomerID || '')
@@ -1319,10 +1352,10 @@ function createAppointment(e) {
                 console.error('Error creating form instances:', error);
             });
     }
-    
+
     updateAllViews();
     window.newModalInstance.hide();
-    
+
     // Clear selected forms
     selectedForms = [];
 }
@@ -1331,14 +1364,16 @@ function createAppointment(e) {
 function openEditModal(id, date, time, resource, confirm) {
     const a = appointments.find(x => x.AppoinmentId === id.toString());
     if (!a) return;
-    
+
     // Load forms for this appointment when opening edit modal
     if (!confirm) {
         loadCurrentlySelectedForms(id);
+        // Load customer data for the modal
+        loadCustomerDataForModal(id);
     }
 
     // Check if appointment is closed
-   if (a.AppoinmentStatus.toLowerCase() === "closed") {
+    if (a.AppoinmentStatus.toLowerCase() === "closed") {
         showAlert({
             icon: 'info',
             title: 'Cannot Edit',
@@ -1613,6 +1648,12 @@ function renderResourceView(date) {
 
     renderDateNav("resourceNav", dateStr);
 
+    // Always show pagination controls for resource view
+    const paginationControls = document.querySelector('#resourceView .pagination-controls');
+    if (paginationControls) {
+        paginationControls.style.display = 'flex';
+    }
+
     const filteredResources = resources;
     const slotDurationMinutes = 30; // Base slot duration
     const pixelsPerSlot = 100; // Base pixels per 30-minute slot
@@ -1762,6 +1803,11 @@ function renderResourceView(date) {
 
         setupDragAndDrop();
         renderUnscheduledList('resource');
+
+        // Update pagination for resource view
+        resourceViewFilteredAppointments = filteredResources;
+        resourceViewCurrentPage = 1;
+        updateResourceViewPagination();
 
         // Enable drag-to-scroll
         const header = document.querySelector('#resource-header');
@@ -2041,8 +2087,57 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             });
 
+            // Add synchronized date picker event listeners
+            document.getElementById('dayDatePicker').addEventListener('change', (e) => {
+                syncDatePickers('#dayDatePicker', e.target.value);
+            });
+
+            document.getElementById('resourceDatePicker').addEventListener('change', (e) => {
+                syncDatePickers('#resourceDatePicker', e.target.value);
+            });
+
+
+
             document.getElementById('mapDatePicker').addEventListener('change', (e) => {
-                renderMapMarkers(e.target.value);
+                syncDatePickers('#mapDatePicker', e.target.value);
+            });
+
+            document.getElementById('listDatePicker').addEventListener('change', (e) => {
+                syncDatePickers('#listDatePicker', e.target.value);
+            });
+
+            // Add event listeners for view and filter dropdowns
+            document.getElementById('viewSelect').addEventListener('change', (e) => {
+                renderDateView($('#dayDatePicker').val());
+            });
+
+            document.getElementById('resourceViewSelect').addEventListener('change', (e) => {
+                renderResourceView($('#resourceDatePicker').val());
+            });
+
+            // Add event listeners for custom date range containers
+            document.getElementById('viewSelect').addEventListener('change', (e) => {
+                if (e.target.value === 'custom') {
+                    showCustomDateRangeContainer();
+                } else {
+                    hideCustomDateRangeContainer();
+                    customDateRange.from = null;
+                    customDateRange.to = null;
+                }
+            });
+
+            document.getElementById('resourceViewSelect').addEventListener('change', (e) => {
+                if (e.target.value === 'custom') {
+                    showResourceCustomDateRangeContainer();
+                } else {
+                    hideResourceCustomDateRangeContainer();
+                    resourceCustomDateRange.from = null;
+                    resourceCustomDateRange.to = null;
+                }
+            });
+
+            document.getElementById('ServiceTypeFilter').addEventListener('change', (e) => {
+                renderDateView($('#dayDatePicker').val());
             });
 
             document.getElementById('statusFilter').addEventListener('change', () => {
@@ -2146,6 +2241,7 @@ function formatTimeRange(str) {
     return str.replace(/[()]/g, '')
         .trim()
         .replace(/\s{2,}/g, ' ')
+        .replace(/\s*(AM|PM)\s*/gi, '') // Remove AM/PM
         .trim();
 }
 
@@ -2289,7 +2385,8 @@ function calculateStartEndTime() {
         let hours = date.getHours();
         const minutes = date.getMinutes().toString().padStart(2, '0');
         const ampm = hours >= 12 ? 'PM' : 'AM';
-        hours = hours % 12 || 12;
+        hours = hours % 12;
+        hours = hours ? hours : 12; // the hour '0' should be '12'
         return `${hours}:${minutes} ${ampm}`;
     };
 
@@ -2320,10 +2417,10 @@ let currentFormInstance = null;
 // Initialize forms integration
 function initializeFormsIntegration() {
     // Auto-assign forms when service type changes
-    $('select[name="serviceTypeNew"], select[name="serviceTypeEdit"]').on('change', function() {
+    $('select[name="serviceTypeNew"], select[name="serviceTypeEdit"]').on('change', function () {
         const serviceType = $(this).val();
         const isNewForm = $(this).attr('name') === 'serviceTypeNew';
-        
+
         if (serviceType) {
             loadAutoAssignedForms(serviceType, isNewForm);
         }
@@ -2334,10 +2431,10 @@ function initializeFormsIntegration() {
 function openFormsSelectionModal(mode) {
     currentFormsModal = mode;
     selectedForms = [];
-    
+
     $('#formsSelectionModal').modal('show');
     loadAvailableForms();
-    
+
     // Load currently selected forms if editing
     if (mode === 'edit') {
         loadCurrentlySelectedForms();
@@ -2351,12 +2448,12 @@ function loadAvailableForms() {
         url: "Forms.aspx/GetAllTemplates",
         contentType: "application/json; charset=utf-8",
         dataType: "json",
-        success: function(response) {
+        success: function (response) {
             if (response.d) {
                 populateAvailableFormsList(response.d);
             }
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error loading available forms:', error);
         }
     });
@@ -2366,7 +2463,7 @@ function loadAvailableForms() {
 function populateAvailableFormsList(forms) {
     const container = $('#availableFormsList');
     container.empty();
-    
+
     forms.filter(form => form.IsActive).forEach(form => {
         const formItem = $(`
             <div class="form-check mb-2">
@@ -2390,7 +2487,7 @@ function toggleFormSelection(formId, formName, isSelected) {
     } else {
         selectedForms = selectedForms.filter(form => form.id !== formId);
     }
-    
+
     updateSelectedFormsList();
 }
 
@@ -2398,12 +2495,12 @@ function toggleFormSelection(formId, formName, isSelected) {
 function updateSelectedFormsList() {
     const container = $('#selectedFormsList');
     container.empty();
-    
+
     if (selectedForms.length === 0) {
         container.append('<p class="text-muted">No forms selected</p>');
         return;
     }
-    
+
     selectedForms.forEach(form => {
         const formItem = $(`
             <div class="selected-form-item p-2 mb-2 border rounded">
@@ -2435,10 +2532,10 @@ function loadAutoAssignedForms(serviceType, isNewForm) {
         data: JSON.stringify({ serviceType: serviceType }),
         contentType: "application/json; charset=utf-8",
         dataType: "json",
-        success: function(response) {
+        success: function (response) {
             const containerId = isNewForm ? 'selectedFormsNew' : 'selectedFormsEdit';
             const container = $(`#${containerId}`);
-            
+
             if (response.d && response.d.length > 0) {
                 container.empty();
                 response.d.forEach(form => {
@@ -2450,14 +2547,14 @@ function loadAutoAssignedForms(serviceType, isNewForm) {
                     `);
                     container.append(formBadge);
                 });
-                
+
                 // Auto-select these forms in selectedForms array
                 selectedForms = response.d.map(form => ({ id: form.Id, name: form.TemplateName }));
             } else {
                 container.html('<small class="text-muted">No auto-assigned forms for this service type</small>');
             }
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error loading auto-assigned forms:', error);
         }
     });
@@ -2467,11 +2564,12 @@ function loadAutoAssignedForms(serviceType, isNewForm) {
 function applyFormsSelection() {
     const containerId = currentFormsModal === 'new' ? 'selectedFormsNew' : 'selectedFormsEdit';
     const container = $(`#${containerId}`);
-    
+
     container.empty();
-    
+
     if (selectedForms.length === 0) {
         container.html('<small class="text-muted">No forms selected</small>');
+
     } else {
         selectedForms.forEach(form => {
             const formBadge = $(`
@@ -2485,13 +2583,11 @@ function applyFormsSelection() {
             `);
             container.append(formBadge);
         });
-        
         // Show form actions if we're in edit mode and have forms
         if (currentFormsModal === 'edit') {
             $('#formActionsContainer').show();
         }
     }
-    
     $('#formsSelectionModal').modal('hide');
 }
 
@@ -2499,7 +2595,7 @@ function applyFormsSelection() {
 function removeFormFromAppointment(formId) {
     selectedForms = selectedForms.filter(form => form.id !== formId);
     $(`.badge[data-form-id="${formId}"]`).remove();
-    
+
     // Update the container if no forms left
     const container = currentFormsModal === 'new' ? $('#selectedFormsNew') : $('#selectedFormsEdit');
     if (selectedForms.length === 0) {
@@ -2523,7 +2619,7 @@ function openAppointmentFormsModal() {
         });
         return;
     }
-    
+
     $('#appointmentFormsModal').modal('show');
     loadAppointmentForms(appointmentId);
 }
@@ -2536,13 +2632,13 @@ function loadAppointmentForms(appointmentId) {
         data: JSON.stringify({ appointmentId: appointmentId }),
         contentType: "application/json; charset=utf-8",
         dataType: "json",
-        success: function(response) {
+        success: function (response) {
             if (response.d) {
                 currentAppointmentForms = response.d;
                 populateAppointmentFormsList(response.d);
             }
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             showAlert({
                 icon: 'error',
                 title: 'Error',
@@ -2557,12 +2653,12 @@ function loadAppointmentForms(appointmentId) {
 function populateAppointmentFormsList(forms) {
     const container = $('#appointmentFormsList');
     container.empty();
-    
+
     if (!forms || forms.length === 0) {
         container.append('<p class="text-muted">No forms attached to this appointment</p>');
         return;
     }
-    
+
     forms.forEach(form => {
         const statusClass = getFormStatusClass(form.Status);
         const formItem = $(`
@@ -2600,7 +2696,7 @@ function loadCurrentlySelectedForms(appointmentId) {
     if (!appointmentId) {
         appointmentId = $('#AppoinmentId').val();
     }
-    
+
     if (!appointmentId) return;
     // First check if we have the appointment data locally
     const appointment = appointments.find(a => a.AppoinmentId == appointmentId);
@@ -2615,25 +2711,25 @@ function loadCurrentlySelectedForms(appointmentId) {
         data: JSON.stringify({ appointmentId: appointmentId }),
         contentType: "application/json; charset=utf-8",
         dataType: "json",
-        success: function(response) {
+        success: function (response) {
             if (response.d) {
                 const container = $('#selectedFormsEdit');
                 container.empty();
-                
+
                 if (response.d.length === 0) {
                     container.html('<small class="text-muted">No forms attached to this appointment</small>');
                 } else {
                     // Update the selectedForms array
-                                    selectedForms = response.d.map(form => ({
-                    id: form.Id,
-                    name: form.TemplateName
-                }));
-                response.d.forEach(form => {
-                    const statusClass = getFormStatusClass(form.Status);
-                    const formBadge = $(`
+                    selectedForms = response.d.map(form => ({
+                        id: form.Id,
+                        name: form.TemplateName
+                    }));
+                    response.d.forEach(form => {
+                        const statusClass = getFormStatusClass(form.Status);
+                        const formBadge = $(`
                         <div class="form-badge p-2 mb-2 border rounded d-flex justify-content-between align-items-center">
                             <div>
-                                <strong>${form.TemplateName}</strong>
+                               <strong>${form.TemplateName}</strong>
                                 <br><small class="${statusClass}">Status: ${form.Status}</small>
                             </div>
                             <div>
@@ -2642,17 +2738,16 @@ function loadCurrentlySelectedForms(appointmentId) {
                             </div>
                         </div>
                     `);
-                    container.append(formBadge);
-                });
-                
-                // Show form actions if forms are attached
-                if (response.d.length > 0) {
-                    $('#formActionsContainer').show();
+                        container.append(formBadge);
+                    });
+                    // Show form actions if forms are attached
+                    if (response.d.length > 0) {
+                        $('#formActionsContainer').show();
+                    }
                 }
             }
-            }
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             console.error('Error loading current forms:', error);
         }
     });
@@ -2661,7 +2756,6 @@ function loadCurrentlySelectedForms(appointmentId) {
 // Update attached forms for appointment
 function updateAttachedForms() {
     const appointmentId = $('#AppoinmentId').val();
-    
     if (!appointmentId) {
         showAlert({
             icon: 'error',
@@ -2671,7 +2765,6 @@ function updateAttachedForms() {
         });
         return;
     }
-    
     if (selectedForms.length === 0) {
         showAlert({
             icon: 'warning',
@@ -2681,19 +2774,17 @@ function updateAttachedForms() {
         });
         return;
     }
-    
     const formIds = selectedForms.map(form => form.id);
-    
     $.ajax({
         type: "POST",
         url: "Appointments.aspx/UpdateAttachedForms",
-        data: JSON.stringify({ 
+        data: JSON.stringify({
             appointmentId: appointmentId,
             formIds: formIds
         }),
         contentType: "application/json; charset=utf-8",
         dataType: "json",
-        success: function(response) {
+        success: function (response) {
             if (response.d === true) {
                 showAlert({
                     icon: 'success',
@@ -2701,7 +2792,6 @@ function updateAttachedForms() {
                     text: 'Forms have been attached to the appointment successfully!',
                     timer: 2000
                 });
-                
                 // Update the appointment data locally
                 const appointment = appointments.find(a => a.AppoinmentId == appointmentId);
                 if (appointment) {
@@ -2716,7 +2806,7 @@ function updateAttachedForms() {
                 });
             }
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             showAlert({
                 icon: 'error',
                 title: 'Error',
@@ -2730,7 +2820,6 @@ function updateAttachedForms() {
 // Send forms via email
 function sendFormsViaEmail() {
     const appointmentId = $('#AppoinmentId').val();
-    
     if (!appointmentId) {
         showAlert({
             icon: 'error',
@@ -2740,7 +2829,7 @@ function sendFormsViaEmail() {
         });
         return;
     }
-    
+
     if (selectedForms.length === 0) {
         showAlert({
             icon: 'warning',
@@ -2750,17 +2839,15 @@ function sendFormsViaEmail() {
         });
         return;
     }
-    
     // Get customer email from the appointment
     const appointment = appointments.find(a => a.AppoinmentId == appointmentId);
     let customerEmail = appointment?.CustomerEmail || '';
-    
     // Prompt for email if not available
     if (!customerEmail) {
         customerEmail = prompt('Enter customer email address:');
         if (!customerEmail) return;
     }
-    
+
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(customerEmail)) {
@@ -2772,17 +2859,16 @@ function sendFormsViaEmail() {
         });
         return;
     }
-    
     $.ajax({
         type: "POST",
         url: "Appointments.aspx/SendFormsViaEmail",
-        data: JSON.stringify({ 
+        data: JSON.stringify({
             appointmentId: appointmentId,
             customerEmail: customerEmail
         }),
         contentType: "application/json; charset=utf-8",
         dataType: "json",
-        success: function(response) {
+        success: function (response) {
             if (response.d === true) {
                 showAlert({
                     icon: 'success',
@@ -2799,7 +2885,7 @@ function sendFormsViaEmail() {
                 });
             }
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             showAlert({
                 icon: 'error',
                 title: 'Error',
@@ -2813,7 +2899,6 @@ function sendFormsViaEmail() {
 // Send forms via SMS
 function sendFormsViaSMS() {
     const appointmentId = $('#AppoinmentId').val();
-    
     if (!appointmentId) {
         showAlert({
             icon: 'error',
@@ -2823,7 +2908,6 @@ function sendFormsViaSMS() {
         });
         return;
     }
-    
     if (selectedForms.length === 0) {
         showAlert({
             icon: 'warning',
@@ -2833,17 +2917,14 @@ function sendFormsViaSMS() {
         });
         return;
     }
-    
     // Get customer phone from the appointment
     const appointment = appointments.find(a => a.AppoinmentId == appointmentId);
     let customerPhone = appointment?.CustomerPhone || appointment?.Mobile || '';
-    
     // Prompt for phone if not available
     if (!customerPhone) {
         customerPhone = prompt('Enter customer phone number:');
         if (!customerPhone) return;
     }
-    
     // Basic phone validation
     const phoneRegex = /^[\+]?[1-9][\d]{3,14}$/;
     if (!phoneRegex.test(customerPhone.replace(/[\s\-\(\)]/g, ''))) {
@@ -2855,17 +2936,16 @@ function sendFormsViaSMS() {
         });
         return;
     }
-    
     $.ajax({
         type: "POST",
         url: "Appointments.aspx/SendFormsViaSMS",
-        data: JSON.stringify({ 
+        data: JSON.stringify({
             appointmentId: appointmentId,
             customerPhone: customerPhone
         }),
         contentType: "application/json; charset=utf-8",
         dataType: "json",
-        success: function(response) {
+        success: function (response) {
             if (response.d === true) {
                 showAlert({
                     icon: 'success',
@@ -2882,7 +2962,7 @@ function sendFormsViaSMS() {
                 });
             }
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
             showAlert({
                 icon: 'error',
                 title: 'Error',
@@ -2892,7 +2972,6 @@ function sendFormsViaSMS() {
         }
     });
 }
-
 // Handle all modal dismissals properly
 $(document).on('hidden.bs.modal', '.modal', function () {
     $(this).find('form').trigger('reset');
@@ -2919,7 +2998,302 @@ $('.modal').on('click', function (e) {
     }
 });
 // Initialize forms integration when page loads
-$(document).ready(function() {
+$(document).ready(function () {
     initializeFormsIntegration();
 });
+
+// Date synchronization function
+function syncDatePickers(changedPickerId, newDate) {
+    if (isDateSyncing) return; // Prevent infinite loops
+
+    console.log(`Syncing date pickers: ${changedPickerId} -> ${newDate}`);
+    isDateSyncing = true;
+
+    try {
+        // Update all date pickers with the new date
+        const datePickers = ['#dayDatePicker', '#resourceDatePicker', '#mapDatePicker', '#listDatePicker'];
+
+        datePickers.forEach(pickerId => {
+            if (pickerId !== changedPickerId) {
+                $(pickerId).val(newDate);
+                console.log(`Updated ${pickerId} to ${newDate}`);
+            }
+        });
+
+        // Update currentDate
+        currentDate = new Date(newDate);
+
+        // Re-render the appropriate view based on which picker was changed
+        if (changedPickerId === '#dayDatePicker') {
+            renderDateView(newDate);
+        } else if (changedPickerId === '#resourceDatePicker') {
+            renderResourceView(newDate);
+        } else if (changedPickerId === '#mapDatePicker') {
+            renderMapMarkers(newDate);
+        } else if (changedPickerId === '#listDatePicker') {
+            // Clear date range pickers when single date is selected
+            $("#listDatePickerFrom").val("");
+            $("#listDatePickerTo").val("");
+            renderListView();
+        }
+
+        // Update date navigation for both views
+        renderDateNav('dateNav', newDate);
+        renderDateNav('resourceDateNav', newDate);
+
+        console.log('Date synchronization completed successfully');
+
+    } catch (error) {
+        console.error('Error syncing date pickers:', error);
+    } finally {
+        isDateSyncing = false;
+    }
+}
+
+// Load customer data for appointment modal
+function loadCustomerDataForModal(appointmentId) {
+    const appointment = appointments.find(a => a.AppoinmentId === appointmentId.toString());
+    if (!appointment || !appointment.CustomerID) {
+        console.warn('No customer data found for appointment:', appointmentId);
+        return;
+    }
+
+    // Get the site ID from the appointment data or use a default
+    const siteId = appointment.SiteID || 1; // Default to site 1 if not specified
+
+    $.ajax({
+        type: "POST",
+        url: "Appointments.aspx/GetCustomerDetailsForModal",
+        data: JSON.stringify({
+            customerId: appointment.CustomerID.toString(),
+            siteId: siteId.toString()
+        }),
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        success: function (response) {
+            if (response.d && response.d.Success) {
+                const customerData = response.d;
+                populateCustomerDataTab(customerData);
+            } else {
+                console.error('Failed to load customer data:', response.d?.Error || 'Unknown error');
+            }
+        },
+        error: function (xhr, status, error) {
+            console.error('Error loading customer data:', error);
+        }
+    });
+}
+
+// Populate customer data tab in the modal
+function populateCustomerDataTab(customerData) {
+    // Update the customer data tab content
+    const customerDataTab = document.getElementById('customer-data');
+    if (!customerDataTab) {
+        console.error('Customer data tab not found');
+        return;
+    }
+
+    // Update the table content
+    const customerNameCell = customerDataTab.querySelector('#customerName');
+    const siteContactCell = customerDataTab.querySelector('#siteContact');
+    const customerEmailCell = customerDataTab.querySelector('#customerEmail');
+    const siteAddressCell = customerDataTab.querySelector('#siteAddress');
+    const siteStatusCell = customerDataTab.querySelector('#siteStatus');
+    const siteInstructionsCell = customerDataTab.querySelector('#siteInstructions');
+    const siteDescriptionCell = customerDataTab.querySelector('#siteDescription');
+
+    if (customerNameCell) {
+        customerNameCell.innerHTML = customerData.CustomerName || 'N/A';
+    }
+
+    if (siteContactCell) {
+        const contactHtml = `
+            ${customerData.Contact || 'N/A'}<br />
+            <i class="fas fa-phone me-1" style="font-size: 13px;"></i>Phone:
+            <a href="${customerData.PhoneLink || '#'}">${customerData.Phone || 'N/A'}</a><br />
+            <i class="fas fa-mobile-alt me-1"></i>Mobile:
+            <a href="${customerData.MobileLink || '#'}">${customerData.Mobile || 'N/A'}</a>
+        `;
+        siteContactCell.innerHTML = contactHtml;
+    }
+
+    if (customerEmailCell) {
+        const emailHtml = `<a href="${customerData.EmailLink || '#'}">${customerData.Email || 'N/A'}</a>`;
+        customerEmailCell.innerHTML = emailHtml;
+    }
+
+    if (siteAddressCell) {
+        siteAddressCell.innerHTML = customerData.Address || 'N/A';
+    }
+
+    if (siteStatusCell) {
+        siteStatusCell.innerHTML = customerData.Status || 'N/A';
+    }
+
+    if (siteInstructionsCell) {
+        siteInstructionsCell.innerHTML = customerData.Note || 'N/A';
+    }
+
+    if (siteDescriptionCell) {
+        siteDescriptionCell.innerHTML = customerData.CreatedOn || 'N/A';
+    }
+}
+
+// Pagination functions for list view
+function updateListViewPagination() {
+    const totalItems = listViewFilteredAppointments.length;
+    listViewTotalPages = Math.ceil(totalItems / listViewPageSize);
+
+    // Ensure current page is within bounds
+    if (listViewCurrentPage > listViewTotalPages) {
+        listViewCurrentPage = listViewTotalPages || 1;
+    }
+
+    // Update pagination controls
+    const pageInfo = document.getElementById('listViewPageInfo');
+    const prevBtn = document.getElementById('listViewPrevPage');
+    const nextBtn = document.getElementById('listViewNextPage');
+    const pageSizeSelect = document.getElementById('listViewPageSize');
+
+    if (pageInfo) {
+        const startItem = (listViewCurrentPage - 1) * listViewPageSize + 1;
+        const endItem = Math.min(listViewCurrentPage * listViewPageSize, totalItems);
+        pageInfo.textContent = `Showing ${startItem}-${endItem} of ${totalItems} appointments`;
+    }
+
+    if (prevBtn) {
+        prevBtn.classList.toggle('disabled', listViewCurrentPage <= 1);
+    }
+
+    if (nextBtn) {
+        nextBtn.classList.toggle('disabled', listViewCurrentPage >= listViewTotalPages);
+    }
+
+    if (pageSizeSelect) {
+        pageSizeSelect.value = listViewPageSize;
+    }
+}
+
+function goToListViewPage(page) {
+    if (page < 1 || page > listViewTotalPages) return;
+
+    listViewCurrentPage = page;
+    renderListViewTable();
+    updateListViewPagination();
+}
+
+function changeListViewPageSize() {
+    const pageSizeSelect = document.getElementById('listViewPageSize');
+    if (pageSizeSelect) {
+        listViewPageSize = parseInt(pageSizeSelect.value);
+        listViewCurrentPage = 1; // Reset to first page
+        renderListViewTable();
+        updateListViewPagination();
+    }
+}
+
+function renderListViewTable() {
+    const tbody = $("#listTableBody");
+    const startIndex = (listViewCurrentPage - 1) * listViewPageSize;
+    const endIndex = startIndex + listViewPageSize;
+    const pageAppointments = listViewFilteredAppointments.slice(startIndex, endIndex);
+
+    if (pageAppointments.length === 0) {
+        tbody.html('<tr><td colspan="13" class="text-center">No appointments found.</td></tr>');
+        return;
+    }
+
+    tbody.html(pageAppointments.map(a => {
+        const timeSlot = a.TimeSlot ? a.TimeSlot.charAt(0).toUpperCase() + a.TimeSlot.slice(1) : 'N/A';
+        return `
+            <tr data-id="${a.AppoinmentId}">
+                <td data-label="View">
+                    <button class="btn btn-sm btn-outline-primary view-appointment" data-id="${a.AppoinmentId}">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </td>
+                <td data-label="Customer">${a.CustomerName || 'N/A'}</td>
+                <td data-label="Business Name">${a.BusinessName || 'N/A'}</td>
+                <td data-label="Address">${a.Address1 || 'N/A'}</td>
+                <td data-label="Request Date">${a.RequestDate || 'N/A'}</td>
+                <td data-label="Time Slot">${formatTimeRange(timeSlot) || 'N/A'}</td>
+                <td data-label="Service Type">${a.ServiceType || 'N/A'}</td>
+                <td data-label="Email" class="custom-link">${a.Email ? `<a href="mailto:${a.Email}">${a.Email}</a>` : 'N/A'}</td>
+                <td data-label="Mobile" class="custom-link">${a.Mobile ? `<a href="tel:${a.Mobile}">${a.Mobile}</a>` : 'N/A'}</td>
+                <td data-label="Phone" class="custom-link">${a.Phone ? `<a href="tel:${a.Phone}">${a.Phone}</a>` : 'N/A'}</td>
+                <td data-label="Appointment Status">${a.AppoinmentStatus || 'N/A'}</td>
+                <td data-label="Resource">${a.ResourceName || 'N/A'}</td>
+                <td data-label="Ticket Status">${a.TicketStatus || 'N/A'}</td>
+            </tr>
+        `;
+    }).join(''));
+
+    // Rebind click handlers
+    $(document).off('click', '.view-appointment').on('click', '.view-appointment', function () {
+        const appointmentId = $(this).data("id");
+        openEditModal(appointmentId);
+    });
+}
+
+// Pagination functions for resource view
+function updateResourceViewPagination() {
+    const totalItems = resourceViewFilteredAppointments.length;
+    resourceViewTotalPages = Math.ceil(totalItems / resourceViewPageSize);
+
+    // Ensure current page is within bounds
+    if (resourceViewCurrentPage > resourceViewTotalPages) {
+        resourceViewCurrentPage = resourceViewTotalPages || 1;
+    }
+
+    // Update pagination controls
+    const pageInfo = document.getElementById('resourceViewPageInfo');
+    const prevBtn = document.getElementById('resourceViewPrevPage');
+    const nextBtn = document.getElementById('resourceViewNextPage');
+    const pageSizeSelect = document.getElementById('resourceViewPageSize');
+
+    if (pageInfo) {
+        const startItem = (resourceViewCurrentPage - 1) * resourceViewPageSize + 1;
+        const endItem = Math.min(resourceViewCurrentPage * resourceViewPageSize, totalItems);
+        pageInfo.textContent = `Showing ${startItem}-${endItem} of ${totalItems} resources`;
+    }
+
+    if (prevBtn) {
+        prevBtn.classList.toggle('disabled', resourceViewCurrentPage <= 1);
+    }
+
+    if (nextBtn) {
+        nextBtn.classList.toggle('disabled', resourceViewCurrentPage >= resourceViewTotalPages);
+    }
+
+    if (pageSizeSelect) {
+        pageSizeSelect.value = resourceViewPageSize;
+    }
+}
+
+function goToResourceViewPage(page) {
+    if (page < 1 || page > resourceViewTotalPages) return;
+
+    resourceViewCurrentPage = page;
+    renderResourceViewTable();
+    updateResourceViewPagination();
+}
+
+function changeResourceViewPageSize() {
+    const pageSizeSelect = document.getElementById('resourceViewPageSize');
+    if (pageSizeSelect) {
+        resourceViewPageSize = parseInt(pageSizeSelect.value);
+        resourceViewCurrentPage = 1; // Reset to first page
+        renderResourceViewTable();
+        updateResourceViewPagination();
+    }
+}
+
+function renderResourceViewTable() {
+    const startIndex = (resourceViewCurrentPage - 1) * resourceViewPageSize;
+    const endIndex = startIndex + resourceViewPageSize;
+    const pageResources = resourceViewFilteredAppointments.slice(startIndex, endIndex);
+
+    // Re-render the resource view with paginated data
+    renderResourceView($("#resourceDatePicker").val());
+}
 

@@ -1,45 +1,18 @@
 ﻿/* CSS Variables aligned with main site.css */
-:root {
-    --bg-gray-100: rgb(243, 244, 246);
-    --text-gray-800: rgb(31, 41, 55);
-    --text-gray-700: rgb(55, 65, 81);
-    --text-gray-600: rgb(75, 85, 99);
-    --text-orange-700: rgb(38, 85, 152);
-    --bg-orange-200: rgb(185, 215, 244);
-    --text-orange-500: rgb(28, 29, 96);
-    --bg-slate-200: rgb(226, 232, 240);
-    --bg-white: rgb(255, 255, 255);
-    --bg-gray-300: rgb(209, 213, 219);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
-}
-
-[data-theme="dark"] {
-    --bg-gray-100: rgb(28, 29, 96);
-    --text-gray-800: rgb(198, 200, 204);
-    --text-gray-700: rgb(239, 242, 247);
-    --text-gray-600: rgb(75, 85, 99);
-    --text-orange-700: rgb(38, 85, 152);
-    --bg-orange-200: rgb(185, 215, 244);
-    --text-orange-500: rgb(28, 29, 96);
-    --bg-slate-200: rgb(226, 232, 240);
-    --bg-white: rgb(255, 255, 255);
-    --bg-gray-300: rgb(209, 213, 219);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -4px rgba(0, 0, 0, 0.2);
-}
 
 /* Customer Page Container */
 .cust-page-container {
     width: 100%;
-    padding: 0 25px;
+    padding: 0 12px;
     margin: 0 auto;
-    margin-top: 50px;
+    margin-top: 10px;
 }
 
 /* Header */
 .cust-header {
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: end;
     margin-bottom: 20px;
 }
 
@@ -1294,8 +1267,6 @@ tr.selected .cust-table-edit-btn {
     font-family: sans-serif;
     font-weight: normal;
     color: #ffffff;
-    background: #fff;
-    border: 1px solid #0d6efd;
     border-radius: 10px;
     position: relative;
     display: inline-block;
@@ -1306,12 +1277,12 @@ tr.selected .cust-table-edit-btn {
 
     .custom-launch-btn > span {
         display: grid;
-        padding: 10px 10px;
-        background: #0d6efd;
-        border-radius: 7px;
+        padding: 5px 8px;
+        background: #818cf8;
+        border-radius: 5px;
         overflow: hidden;
         align-items: center;
-        grid-template-columns: 1fr 0px; /* initial arrow hidden */
+        grid-template-columns: 1fr 0px;
         transition: grid-template-columns 0.28s;
     }
 

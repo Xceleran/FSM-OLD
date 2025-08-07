@@ -8,7 +8,6 @@
     <!-- Page Content -->
     <div class="forms-page-container">
         <div class="forms-header">
-            <h2 class="page-title">Forms Management</h2>
             <button type="button" class="btn btn-primary" onclick="openNewTemplateModal()">
                 <i class="fa fa-plus"></i> New Template
             </button>
@@ -16,33 +15,33 @@
 
         <div class="forms-content">
             <div class="border-b">
-                  <nav class="tabs-nav" role="tablist">
-        <button class="tabs-nav__btn is-active" 
-                data-tab-target="templates-section" 
-                role="tab" 
-                aria-selected="true" 
-                aria-controls="templates-section">
-            Form Templates
-        </button>
-        <button class="tabs-nav__btn" 
-                data-tab-target="usage-log-section" 
-                role="tab" 
-                aria-selected="false" 
-                aria-controls="usage-log-section">
-            Recent Form Activity
-        </button>
-    </nav>
+                <nav class="tabs-nav" role="tablist">
+                    <button class="tabs-nav__btn is-active" 
+                            data-tab-target="templates-section" 
+                            role="tab" 
+                            aria-selected="true" 
+                            aria-controls="templates-section">
+                        Form Templates
+                    </button>
+                    <button class="tabs-nav__btn" 
+                            data-tab-target="usage-log-section" 
+                            role="tab" 
+                            aria-selected="false" 
+                            aria-controls="usage-log-section">
+                        Recent Form Activity
+                    </button>
+                </nav>
             </div>
 
             <!-- Form Templates Tab -->
-             <div id="templates-section" class="tabs-content is-active" role="tabpanel">
+            <div id="templates-section" class="tabs-content is-active" role="tabpanel">
                 <div class="templates-section">
                     <div class="table-controls mb-3">
                         <div class="row align-items-center">
-                            <div class="col-md-6">
+                            <div class="col-md-6 col-12">
                                 <span id="templateRowCount" class="text-muted">0 rows selected</span>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-6 col-12">
                                 <div class="input-group justify-content-end">
                                     <input type="text" id="templateSearch" class="form-control" placeholder="Search templates..." onkeyup="searchTemplates()" style="max-width: 200px;">
                                     <span class="input-group-text">
@@ -52,14 +51,14 @@
                             </div>
                         </div>
                         <div class="row align-items-center mt-2">
-                            <div class="col-md-6">
+                            <div class="col-md-6 col-12">
                                 <span>Rows per page: </span>
-                                <select id="templatePageSize" onchange="changeTemplatePageSize(); return false;" class="form-select d-inline-block" style="width: auto;">
-    <option value="5">5</option>
-    <option value="10" selected>10</option>
-    <option value="25">25</option>
-    <option value="50">50</option>
-</select>
+                                <select id="templatePageSize" onchange="changeTemplatePageSize()" class="form-select d-inline-block" style="width: auto;">
+                                    <option value="5">5</option>
+                                    <option value="10" selected>10</option>
+                                    <option value="25">25</option>
+                                    <option value="50">50</option>
+                                </select>
                             </div>
                         </div>
                     </div>
@@ -81,31 +80,31 @@
                             </tbody>
                         </table>
                     </div>
-                 <div class="pagination-controls mt-3 d-flex justify-content-between align-items-center">
-    <span class="text-muted" id="templatePageInfo">Loading...</span>
-    <nav aria-label="Templates pagination">
-        <ul class="pagination mb-0">
-            <li class="page-item disabled" id="templatePrevPage">
-                <a class="page-link" href="#" onclick="goToTemplatePage(templateCurrentPage - 1); return false;">Previous</a>
-            </li>
-            <li class="page-item" id="templateNextPage">
-                <a class="page-link" href="#" onclick="goToTemplatePage(templateCurrentPage + 1); return false;">Next</a>
-            </li>
-        </ul>
-    </nav>
-</div>
+                    <div class="pagination-controls mt-3 d-flex justify-content-between align-items-center">
+                        <span class="text-muted" id="templatePageInfo">Loading...</span>
+                        <nav aria-label="Templates pagination">
+                            <ul class="pagination mb-0">
+                                <li class="page-item disabled" id="templatePrevPage">
+                                    <a class="page-link" href="#" onclick="goToTemplatePage(templateCurrentPage - 1); return false;">Previous</a>
+                                </li>
+                                <li class="page-item" id="templateNextPage">
+                                    <a class="page-link" href="#" onclick="goToTemplatePage(templateCurrentPage + 1); return false;">Next</a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
                 </div>
             </div>
 
             <!-- Usage Log Tab -->
-           <div id="usage-log-section" class="tabs-content" role="tabpanel" hidden>
+            <div id="usage-log-section" class="tabs-content" role="tabpanel" hidden>
                 <div class="usage-log-section mt-4">
                     <div class="table-controls mb-3">
                         <div class="row align-items-center">
-                            <div class="col-md-6">
+                            <div class="col-md-6 col-12">
                                 <span id="usageLogRowCount" class="text-muted">0 rows selected</span>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-6 col-12">
                                 <div class="input-group justify-content-end">
                                     <input type="text" id="usageLogSearch" class="form-control" placeholder="Search activity..." onkeyup="searchUsageLog()" style="max-width: 200px;">
                                     <span class="input-group-text">
@@ -115,7 +114,7 @@
                             </div>
                         </div>
                         <div class="row align-items-center mt-2">
-                            <div class="col-md-6">
+                            <div class="col-md-6 col-12">
                                 <span>Rows per page: </span>
                                 <select id="usageLogPageSize" onchange="changeUsageLogPageSize()" class="form-select d-inline-block" style="width: auto;">
                                     <option value="10">10</option>
@@ -163,21 +162,21 @@
     <div class="modal fade" id="templateModal" tabindex="-1" role="dialog">
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
-                            <div class="modal-header">
-                <h5 class="modal-title" id="templateModalTitle">New Form Template</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
+                <div class="modal-header">
+                    <h5 class="modal-title" id="templateModalTitle">New Form Template</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
                 <div class="modal-body">
                     <form id="templateForm">
                         <input type="hidden" id="templateId" name="templateId" value="0" />
                         <div class="row">
-                            <div class="col-md-8">
+                            <div class="col-md-8 col-12">
                                 <div class="form-group">
                                     <label for="templateName">Template Name *</label>
                                     <input type="text" class="form-control" id="templateName" name="templateName" required>
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-4 col-12">
                                 <div class="form-group">
                                     <label for="category">Category</label>
                                     <select class="form-control" id="category" name="category">
@@ -196,13 +195,13 @@
                             <textarea class="form-control" id="description" name="description" rows="2"></textarea>
                         </div>
                         <div class="row">
-                            <div class="col-md-6">
+                            <div class="col-md-6 col-12">
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" id="requireSignature" name="requireSignature">
                                     <label class="form-check-label" for="requireSignature">Require Signature</label>
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-6 col-12">
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" id="requireTip" name="requireTip">
                                     <label class="form-check-label" for="requireTip">Enable Tip Capture</label>
@@ -245,7 +244,7 @@
                 </div>
                 <div class="modal-body">
                     <div class="row">
-                        <div class="col-md-3">
+                        <div class="col-12 col-md-4 col-lg-3">
                             <h6>Field Types</h6>
                             <div class="field-types">
                                 <div class="field-type" draggable="true" data-type="text"><i class="fa fa-font"></i> Text Input</div>
@@ -256,15 +255,20 @@
                                 <div class="field-type" draggable="true" data-type="checkbox"><i class="fa fa-check-square"></i> Checkbox</div>
                                 <div class="field-type" draggable="true" data-type="radio"><i class="fa fa-dot-circle"></i> Radio Button</div>
                                 <div class="field-type" draggable="true" data-type="signature"><i class="fa fa-pencil"></i> Signature</div>
+                                <div class="field-type" draggable="true" data-type="richtext"><i class="fa fa-text-height"></i> Rich Text</div>
+                                <div class="field-type" draggable="true" data-type="image"><i class="fa fa-image"></i> Image/Logo</div>
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-12 col-md-8 col-lg-6">
                             <h6>Form Preview</h6>
+                            <div class="d-flex justify-content-between mb-2">
+                                <button type="button" class="btn btn-sm btn-outline-info" onclick="togglePreviewMode()">Toggle Preview Mode</button>
+                            </div>
                             <div id="formBuilder" class="form-builder-area">
                                 <div class="drop-zone">Drag fields here to build your form</div>
                             </div>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-12 col-md-12 col-lg-3">
                             <h6>Field Properties</h6>
                             <div id="fieldProperties" class="field-properties">
                                 <p>Select a field to edit its properties</p>
@@ -285,6 +289,15 @@
     
     <!-- Include Signature Pad Library -->
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+    
+    <!-- Include jQuery UI for sortable and resizable -->
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    
+    <!-- Include Quill.js for rich text editing -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+    
     <script src="Scripts/forms.js"></script>
     <script src="Scripts/signature-handler.js"></script>
     

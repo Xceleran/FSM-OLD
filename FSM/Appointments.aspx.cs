@@ -379,7 +379,107 @@ namespace FSM
             }
             return success;
         }
+        [WebMethod]
+        [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
+        public static object GetCustomerDetailsForModal(string customerId, string siteId)
+        {
+            try
+            {
+                var customer = GetCustomerDetails(customerId);
+                var site = GetCustomerSitebyId(customerId, Convert.ToInt32(siteId));
 
+                return new
+                {
+                    Success = true,
+                    CustomerName = $"{customer?.FirstName} {customer?.LastName}",
+                    CustomerGuid = customer?.CustomerGuid ?? "",
+                    Address = site?.Address ?? "",
+                    Contact = site?.Contact ?? "",
+                    CustomerId = customerId,
+                    SiteId = siteId,
+                    Status = site?.IsActive == true ? "Active" : "Disabled",
+                    Note = site?.Note ?? "",
+                    CreatedOn = site?.CreatedDateTime?.ToString("yyyy-MM-dd") ?? "",
+                    SiteName = site?.SiteName ?? "",
+                    Phone = customer?.Phone ?? "",
+                    PhoneLink = $"tel:{customer?.Phone ?? ""}",
+                    Mobile = customer?.Mobile ?? "",
+                    MobileLink = $"tel:{customer?.Mobile ?? ""}",
+                    Email = customer?.Email ?? "",
+                    EmailLink = $"mailto:{customer?.Email ?? ""}"
+                };
+            }
+            catch (Exception ex)
+            {
+                return new { Success = false, Error = ex.Message };
+            }
+        }
+
+        public static CustomerEntity GetCustomerDetails(string customerId)
+        {
+            var customer = new CustomerEntity();
+            string companyid = HttpContext.Current.Session["CompanyID"].ToString();
+            Database db = new Database();
+            try
+            {
+                db.Open();
+                DataTable dt = new DataTable();
+                string sql = @"SELECT * FROM [msSchedulerV3].[dbo].[tbl_Customer] WHERE CustomerID = @CustomerID AND CompanyID = @CompanyID;";
+                db.AddParameter("@CompanyID", companyid, SqlDbType.NVarChar);
+                db.AddParameter("@CustomerID", customerId, SqlDbType.NVarChar);
+                db.ExecuteParam(sql, out dt);
+                db.Close();
+                if (dt.Rows.Count > 0)
+                {
+                    DataRow dataRow = dt.Rows[0];
+                    customer.CustomerGuid = dataRow.Field<string>("CustomerGuid") ?? "";
+                    customer.FirstName = dataRow.Field<string>("FirstName") ?? "";
+                    customer.LastName = dataRow.Field<string>("LastName") ?? "";
+                    customer.Phone = dataRow.Field<string>("Phone") ?? "";
+                    customer.Mobile = dataRow.Field<string>("Mobile") ?? "";
+                    customer.Email = dataRow.Field<string>("Email") ?? "";
+                }
+            }
+            catch (Exception ex)
+            {
+                db.Close();
+                return customer;
+            }
+            return customer;
+        }
+
+        public static CustomerSite GetCustomerSitebyId(string customerId, int siteId)
+        {
+            var site = new CustomerSite();
+            Database db = new Database();
+            DataTable dt = new DataTable();
+            try
+            {
+                db.Open();
+                string strSQL = @"SELECT * FROM [msSchedulerV3].dbo.tbl_CustomerSite WHERE Id ='" + siteId + "' AND CustomerID='" + customerId + "';";
+                db.Execute(strSQL, out dt);
+                if (dt.Rows.Count > 0)
+                {
+                    DataRow dataRow = dt.Rows[0];
+                    site.Id = dataRow.Field<int?>("Id") ?? 0;
+                    site.SiteName = dataRow.Field<string>("SiteName") ?? "";
+                    site.Address = dataRow.Field<string>("Address") ?? "";
+                    site.Contact = dataRow.Field<string>("Contact") ?? "";
+                    site.Note = dataRow.Field<string>("Note") ?? "";
+                    site.IsActive = dataRow.Field<bool?>("IsActive") ?? false;
+                    site.CreatedDateTime = Convert.ToDateTime(dataRow["CreatedDateTime"]);
+                }
+            }
+            catch (Exception ex)
+            {
+                return site;
+            }
+            finally
+            {
+                db.Close();
+            }
+            return site;
+        }
 
         [WebMethod]
         [ScriptMethod(ResponseFormat = ResponseFormat.Json)]

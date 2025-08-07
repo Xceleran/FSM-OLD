@@ -17,7 +17,6 @@
     <div class="cust-page-container">
         <!-- Page Header -->
         <header class="cust-header mt-0 mb-0">
-            <h1 class="cust-title">Customers Service Location</h1>
                 <div class="cec-btn">
      <a href="https://testsite.myserviceforce.com/cec/CustomerList.aspx?m=2" class="custom-launch-btn" role="button" target="_blank">
   <span>

@@ -84,7 +84,7 @@ h6.right-logo-title {
 }
 
 img.right-logo-img {
-    width: 190px;
+    width: 135px;
 }
 
 /* Layout */
@@ -317,33 +317,30 @@ img.right-logo-img {
 }
 
 .toggle-btn {
-    padding: 8px;
-    background-color: var(--bg-gray-300);
-    color: var(--text-orange-700);
+    padding: 2px 8px;
+    background-color: #818cf8;
+    color: rgb(250 252 252);
     align-self: flex-start;
-    margin: 8px;
+    margin: 5px;
     border-radius: 4px;
-    position: absolute;
-    top: 10px;
-    left: calc(256px + 10px);
     z-index: 1006;
     transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 [data-theme="dark"] .toggle-btn {
-    background: rgba(209, 213, 219, 0.3);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    color: var(--bg-orange-200);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 2px 8px;
+    background-color: #818cf8;
+    color: rgb(250 252 252);
+    align-self: flex-start;
+    margin: 5px;
+    border-radius: 4px;
+    z-index: 1006;
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.toggle-btn.collapsed {
-    left: calc(80px + 10px);
-}
 
 .toggle-btn:hover {
-    background-color: var(--bg-orange-200);
+    background-color: rgb(85 93 168);
 }
 
 [data-theme="dark"] .toggle-btn:hover {
@@ -530,4 +527,47 @@ input:checked + .slider {
 
 .tooltip.bs-tooltip-end .tooltip-arrow::before {
     border-right-color: #343a40;
+}
+.advance-settings {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+/* Styles for toggle button and page header */
+.header-container {
+    display: flex;
+    align-items: center;
+    position: absolute;
+    top: 20px;
+    left: 260px; /* Matches sidebar-expanded width (~260px + margin) */
+    transition: left 0.3s ease-in-out;
+    z-index: 1000;
+}
+
+    .header-container.collapsed {
+        left: 80px; /* Matches sidebar-collapsed width (~60px + margin) */
+    }
+
+    .header-container.hidden {
+        left: 20px; /* Matches sidebar-hidden on mobile */
+    }
+
+.page-header {
+    font-size: 24px;
+    font-weight: 500;
+    color: #333; /* Adjust for theme in Site.css if needed */
+    margin-left: 10px; /* Space between toggle button and page name */
+}
+[data-theme="dark"] .page-header {
+    color: #ffffff;
+}
+@media (max-width: 849px) {
+    .header-container {
+        left: 20px; /* Default when sidebar is hidden */
+    }
+
+        .header-container.visible {
+            left: 280px; /* When sidebar is visible on mobile */
+        }
 }

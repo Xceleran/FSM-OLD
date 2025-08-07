@@ -3,51 +3,7 @@
 <asp:Content ID="BodyContent" ContentPlaceHolderID="MainContent" runat="server">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
-        :root {
-            --bg-gray-100: rgb(243, 244, 246);
-            --text-gray-800: rgb(31, 41, 55);
-            --text-gray-700: rgb(55, 65, 81);
-            --text-gray-600: rgb(75, 85, 99);
-            --text-orange-700: rgb(38, 85, 152);
-            --bg-orange-200: rgb(185, 215, 244);
-            --text-orange-500: rgb(28, 29, 96);
-            --bg-slate-200: rgb(226, 232, 240);
-            --bg-white: rgb(255, 255, 255);
-            --bg-gray-300: rgb(209, 213, 219);
-            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
-            --bg-card: rgb(255, 255, 255);
-            --text-primary: rgb(31, 41, 55);
-            --input-bg: rgb(255, 255, 255);
-            --input-border: rgb(209, 213, 219);
-            --input-text: rgb(31, 41, 55);
-            --table-bg: rgb(255, 255, 255);
-            --table-border: rgb(209, 213, 219);
-            --table-text: rgb(0, 0, 0);
-        }
-
-        /* Dark Mode Variables */
-        [data-theme="dark"] {
-            --bg-gray-100: rgb(28, 29, 96);
-            --text-gray-800: rgb(198, 200, 204);
-            --text-gray-700: rgb(239, 242, 247);
-            --text-gray-600: rgb(75, 85, 99);
-            --text-orange-700: rgb(38, 85, 152);
-            --bg-orange-200: rgb(185, 215, 244);
-            --text-orange-500: rgb(28, 29, 96);
-            --bg-slate-200: rgb(226, 232, 240);
-            --bg-white: rgb(255, 255, 255);
-            --bg-gray-300: rgb(209, 213, 219);
-            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -4px rgba(0, 0, 0, 0.2);
-            --bg-card: #091935;
-            --text-primary: rgb(239, 242, 247);
-            --input-bg: rgba(255, 255, 255, 0.12);
-            --input-border: rgba(255, 255, 255, 0.1);
-            --input-text: rgb(239, 242, 247);
-            --table-bg: rgba(255, 255, 255, 0.12);
-            --table-border: rgba(255, 255, 255, 0.1);
-            --table-text: rgb(239, 242, 247);
-        }
-
+       
         /* Main Invoice Container */
         .invoice-container {
             padding: 20px;
