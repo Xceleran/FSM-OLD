@@ -10,7 +10,7 @@ let isMapView = true; // true for Map, false for Satellite
 
 // Add a flag to prevent infinite loops during date synchronization
 let isDateSyncing = false;
-
+ 
 // Pagination variables for list view
 let listViewCurrentPage = 1;
 let listViewPageSize = 5;
@@ -37,6 +37,7 @@ var allTimeSlots = [];
 var resources = [];
 var timerequired_Hour = 0;
 var timerequired_Minute = 0;
+var resourceCustomDateRange = { from: null, to: null };
 
 // Fallback function for SweetAlert2
 const showAlert = (options) => {
@@ -354,21 +355,34 @@ function renderDateNav(containerId, selectedDate) {
         <button class="btn btn-primary" onclick="prevPeriod('${containerId}')"><i class="fas fa-chevron-left"></i></button>
     `;
 
-    // Add date boxes for day/week/threeDay views
     if (view !== 'month') {
-        const daysToShow = view === 'week' ? 7 : view === 'threeDay' ? 3 : 1;
-        const startDate = new Date(selectedDate);
+        let daysToShow;
+        let startDate = new Date(selectedDate);
 
-        // Adjust start date for week view to start from Sunday
-        if (view === 'week') {
-            startDate.setDate(startDate.getDate() - startDate.getDay());
-        }
-        // Adjust for threeDay view to show previous, current, and next day
-        else if (view === 'threeDay') {
-            startDate.setDate(startDate.getDate() - 1);
+        if (isDateView) {
+            daysToShow = view === 'week' ? 7 : view === 'threeDay' ? 3 : 1;
+            if (view === 'week') {
+                startDate.setDate(startDate.getDate() - startDate.getDay());
+            } else if (view === 'threeDay') {
+                startDate.setDate(startDate.getDate() - 1);
+            }
+        } else {
+            // Resource view
+            if (view === 'custom' && resourceCustomDateRange.from && resourceCustomDateRange.to) {
+                const fromDate = new Date(resourceCustomDateRange.from);
+                const toDate = new Date(resourceCustomDateRange.to);
+                daysToShow = Math.ceil((toDate - fromDate) / (1000 * 60 * 60 * 24)) + 1;
+                startDate = fromDate;
+            } else {
+                daysToShow = view === 'week' ? 7 : view === 'threeDay' ? 3 : 1;
+                if (view === 'week') {
+                    startDate.setDate(startDate.getDate() - startDate.getDay());
+                } else if (view === 'threeDay') {
+                    startDate.setDate(startDate.getDate() - 1);
+                }
+            }
         }
 
-        // Generate date boxes
         html += `<div class="date-boxes">`;
         for (let i = 0; i < daysToShow; i++) {
             const currentDate = new Date(startDate);
@@ -388,7 +402,6 @@ function renderDateNav(containerId, selectedDate) {
         html += `</div>`;
     }
 
-    // Add navigation buttons
     html += `
         <button class="btn btn-primary" onclick="nextPeriod('${containerId}')"><i class="fas fa-chevron-right"></i></button>
         <button class="btn btn-primary ms-2" onclick="gotoToday('${containerId}')">Today</button>
@@ -396,31 +409,22 @@ function renderDateNav(containerId, selectedDate) {
 
     container.html(html);
 
-    // Update the corresponding date picker
     const pickerId = isDateView ? "#dayDatePicker" : "#resourceDatePicker";
     $(pickerId).val(dateStr);
 }
-
 // Select a date
-function selectDate(date, containerId) {
-    const dateStr = new Date(date).toISOString().split('T')[0];
-    currentDate = new Date(dateStr);
-
-    // Update the corresponding date picker
-    const pickerId = containerId === "dateNav" ? "#dayDatePicker" : "#resourceDatePicker";
-    syncDatePickers(pickerId, dateStr);
-}
-
 function prevPeriod(containerId) {
-    const view = containerId === "dateNav" ? $("#viewSelect").val() : "day";
-    const pickerId = containerId === "dateNav" ? "#dayDatePicker" : "#resourceDatePicker";
+    const isDateView = containerId === "dateNav";
+    const view = isDateView ? $("#viewSelect").val() : $("#resourceViewSelect").val();
+    const pickerId = isDateView ? "#dayDatePicker" : "#resourceDatePicker";
     const currentDateStr = $(pickerId).val();
     const currentDate = new Date(currentDateStr);
 
-    if (view === 'month') {
+    if (isDateView && view === 'month') {
         currentDate.setMonth(currentDate.getMonth() - 1);
     } else {
-        currentDate.setDate(currentDate.getDate() - 1);
+        const daysToMove = view === 'week' ? 7 : view === 'threeDay' ? 3 : 1;
+        currentDate.setDate(currentDate.getDate() - daysToMove);
     }
 
     const newDateStr = currentDate.toISOString().split('T')[0];
@@ -428,25 +432,36 @@ function prevPeriod(containerId) {
 }
 
 function nextPeriod(containerId) {
-    const view = containerId === "dateNav" ? $("#viewSelect").val() : "day";
-    const pickerId = containerId === "dateNav" ? "#dayDatePicker" : "#resourceDatePicker";
+    const isDateView = containerId === "dateNav";
+    const view = isDateView ? $("#viewSelect").val() : $("#resourceViewSelect").val();
+    const pickerId = isDateView ? "#dayDatePicker" : "#resourceDatePicker";
     const currentDateStr = $(pickerId).val();
     const currentDate = new Date(currentDateStr);
 
-    if (view === 'month') {
+    if (isDateView && view === 'month') {
         currentDate.setMonth(currentDate.getMonth() + 1);
     } else {
-        currentDate.setDate(currentDate.getDate() + 1);
+        const daysToMove = view === 'week' ? 7 : view === 'threeDay' ? 3 : 1;
+        currentDate.setDate(currentDate.getDate() + daysToMove);
     }
 
     const newDateStr = currentDate.toISOString().split('T')[0];
     syncDatePickers(pickerId, newDateStr);
 }
 
+function selectDate(dateStr, containerId) {
+    const isDateView = containerId === "dateNav";
+    const pickerId = isDateView ? "#dayDatePicker" : "#resourceDatePicker";
+    console.log(`Selecting date: ${dateStr} for ${containerId}`);
+    syncDatePickers(pickerId, dateStr);
+}
+
 function gotoToday(containerId) {
-    const today = new Date().toISOString().split('T')[0];
-    const pickerId = containerId === "dateNav" ? "#dayDatePicker" : "#resourceDatePicker";
-    syncDatePickers(pickerId, today);
+    const isDateView = containerId === "dateNav";
+    const pickerId = isDateView ? "#dayDatePicker" : "#resourceDatePicker";
+    const todayStr = new Date().toISOString().split('T')[0];
+    console.log(`Going to today: ${todayStr} for ${containerId}`);
+    syncDatePickers(pickerId, todayStr);
 }
 
 // Create appointment details popup for calendar events
@@ -1177,7 +1192,6 @@ function setupDragAndDrop() {
                 return;
             }
 
-            // Check if appointment is closed
             if (appointment.AppoinmentStatus.toLowerCase() === "closed") {
                 showAlert({
                     icon: 'info',
@@ -1194,8 +1208,7 @@ function setupDragAndDrop() {
                 return;
             }
 
-            // Check for conflicts
-            if (hasConflict(appointment, time, resource, date, appointmentId)) {
+            if (hasConflict(appointment, time || appointment.TimeSlot, resource, date, appointmentId)) {
                 showAlert({
                     icon: 'error',
                     title: 'Scheduling Conflict',
@@ -1211,8 +1224,7 @@ function setupDragAndDrop() {
                 return;
             }
 
-            // Open edit modal with pre-filled values
-            openEditModal(appointmentId, date, time, resource, true);
+            openEditModal(appointmentId, date, time || appointment.TimeSlot, resource, true);
         }
     });
     $("#unscheduledList, #unscheduledListResource").droppable({
@@ -1657,11 +1669,12 @@ const getAppointmentStatusIcon = (status) => {
 function renderResourceView(date) {
     const container = $("#resourceViewContainer").addClass('resource-view').removeClass('date-view');
     const selectedGroup = $("#dispatchGroup").val();
+    const view = $("#resourceViewSelect").val();
     const dateStr = new Date(date).toISOString().split('T')[0];
 
     renderDateNav("resourceNav", dateStr);
 
-    // Always show pagination controls for resource view
+    // Always show pagination controls
     const paginationControls = document.querySelector('#resourceView .pagination-controls');
     if (paginationControls) {
         paginationControls.style.display = 'flex';
@@ -1669,8 +1682,37 @@ function renderResourceView(date) {
 
     const filteredResources = resources;
     const slotDurationMinutes = 30; // Base slot duration
-    const pixelsPerSlot = 100; // Base pixels per 30-minute slot
+    const pixelsPerSlot = 100; // Pixels per 30-minute slot
     const eventHeight = 35; // Fixed height for events
+
+    // Determine date range based on view
+    let dates = [dateStr];
+    if (view === 'week') {
+        const startDate = new Date(date);
+        startDate.setDate(startDate.getDate() - startDate.getDay()); // Start from Sunday
+        dates = Array.from({ length: 7 }, (_, i) => {
+            const d = new Date(startDate);
+            d.setDate(startDate.getDate() + i);
+            return d.toISOString().split('T')[0];
+        });
+    } else if (view === 'threeDay') {
+        const startDate = new Date(date);
+        startDate.setDate(startDate.getDate() - 1); // Show previous, current, next day
+        dates = Array.from({ length: 3 }, (_, i) => {
+            const d = new Date(startDate);
+            d.setDate(startDate.getDate() + i);
+            return d.toISOString().split('T')[0];
+        });
+    } else if (view === 'custom' && resourceCustomDateRange.from && resourceCustomDateRange.to) {
+        const fromDate = new Date(resourceCustomDateRange.from);
+        const toDate = new Date(resourceCustomDateRange.to);
+        if (fromDate <= toDate) {
+            dates = [];
+            for (let d = new Date(fromDate); d <= toDate; d.setDate(d.getDate() + 1)) {
+                dates.push(new Date(d).toISOString().split('T')[0]);
+            }
+        }
+    }
 
     const validTimeSlots = allTimeSlots.filter(slot =>
         slot && slot.TimeBlockSchedule && !allTimeSlots.some(other => other !== slot && other.TimeBlockSchedule === slot.TimeBlockSchedule)
@@ -1678,105 +1720,181 @@ function renderResourceView(date) {
 
     getAppoinments("", "", "", dateStr, function (appointments) {
         let html = `
-            <div class="border rounded overflow-hidden resizable-container" style="margin: 0; padding: 0; width: fit-content; max-width: 100%;">
-                <div class="calendar-grid calendar-header" id="resource-header" style="grid-template-columns: 120px repeat(${validTimeSlots.length}, ${pixelsPerSlot}px); margin: 0; padding: 0; width: fit-content; max-width: 100%; overflow-x: hidden;">
-                    <div class="p-2 border-right bg-gray-50 calendar-header-cell"></div>
-                    ${validTimeSlots.map(time => `
-                        <div class="p-2 text-center font-weight-medium border-right last-border-right-none bg-gray-50 calendar-header-cell">
-                            ${formatTimeRange(time.TimeBlockSchedule)}
-                        </div>
-                    `).join('')}
-                </div>
-                <div class="calendar-body" style="margin: 0; padding: 0; width: fit-content; max-width: 100%;">
+           <div class="border rounded overflow-hidden resizable-container" style="margin: 0; padding: 0; width: fit-content; max-width: 100%;">
         `;
+
+        // Render header based on view
+        if (view === 'day') {
+            html += `
+        <div class="calendar-grid calendar-header" id="resource-header" style="grid-template-columns: 120px repeat(${validTimeSlots.length}, ${pixelsPerSlot}px);">
+            <div class="p-2 border-right bg-gray-50 calendar-header-cell"></div>
+            ${validTimeSlots.map(time => `
+                <div class="p-2 text-center font-weight-medium border-right last-border-right-none bg-gray-50 calendar-header-cell">
+                    ${formatTimeRange(time.TimeBlockSchedule)}
+                </div>
+            `).join('')}
+        </div>
+    `;
+        } else {
+            html += `
+        <div class="calendar-grid calendar-header" id="resource-header" style="grid-template-columns: 120px repeat(${dates.length}, minmax(150px, 1fr));">
+            <div class="p-2 border-right bg-gray-50 calendar-header-cell"></div>
+            ${dates.map(day => `
+                <div class="p-2 text-center font-weight-medium border-right last-border-right-none bg-gray-50 calendar-header-cell">
+                    <div>${new Date(day).toLocaleDateString('en-US', { weekday: 'short' })}</div>
+                    <div>${new Date(day).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+        }
+
+        html += `
+            <div class="calendar-body" style="margin: 0; padding: 0; width: fit-content; max-width: 100%;">
+        `;
+
 
         if (!validTimeSlots.length || !resources.length) {
             html += `
-            <div class="text-center py-4 text-muted">
-                No resources or time slots available.
-            </div>
+                <div class="text-center py-4 text-muted">
+                    No resources or time slots available.
+                </div>
             `;
         } else {
             filteredResources.forEach((resource, index) => {
                 const rowId = `resource-row-${index}`;
-
-                // Use user icon for resources
                 const resourceIcon = '<i class="fas fa-user"></i>';
 
-                html += `
-        <div class="calendar-grid resource-row" id="${rowId}" style="grid-template-columns: 120px repeat(${validTimeSlots.length}, ${pixelsPerSlot}px); margin: 0; padding: 0; width: fit-content; max-width: 100%; overflow: hidden; position: relative;">
-            <div class="h-${eventHeight}px border-bottom last-border-bottom-none p-1 fs-7 text-left bg-gray-50 calendar-time-cell resource-name" style="position: sticky; left: 0; z-index: 1; padding: 7px 10px !important;">
-                ${resourceIcon} ${resource.ResourceName}
-            </div>
-    `;
+                if (view === 'day') {
+                    html += `
+                        <div class="calendar-grid resource-row" id="${rowId}" style="grid-template-columns: 120px repeat(${validTimeSlots.length}, ${pixelsPerSlot}px); margin: 0; padding: 0; width: fit-content; max-width: 100%; overflow: hidden; position: relative;">
+                            <div class="h-${eventHeight}px border-bottom last-border-bottom-none p-1 fs-7 text-left bg-gray-50 calendar-time-cell resource-name" style="position: sticky; left: 0; z-index: 1; padding: 7px 10px !important;">
+                                ${resourceIcon} ${resource.ResourceName}
+                            </div>
+                    `;
 
-                const placedAppointments = [];
-                validTimeSlots.forEach((time, timeIndex) => {
-                    const cellAppointments = appointments
-                        .filter(a => a.ResourceName === resource.ResourceName &&
-                            a.RequestDate === dateStr &&
-                            a.TimeSlot)
-                        .map(a => {
-                            const timeSlot = validTimeSlots.find(slot =>
-                                slot.TimeBlockSchedule === a.TimeSlot ||
-                                slot.TimeBlock.toLowerCase() === a.TimeSlot.toLowerCase()
-                            );
-                            if (!timeSlot) {
-                                console.warn(`No matching time slot for appointment ${a.AppoinmentId}: TimeSlot=${a.TimeSlot}`);
+                    const placedAppointments = [];
+                    validTimeSlots.forEach((time, timeIndex) => {
+                        const cellAppointments = appointments
+                            .filter(a => a.ResourceName === resource.ResourceName &&
+                                a.RequestDate === dateStr &&
+                                a.TimeSlot)
+                            .map(a => {
+                                const timeSlot = validTimeSlots.find(slot =>
+                                    slot.TimeBlockSchedule === a.TimeSlot ||
+                                    slot.TimeBlock.toLowerCase() === a.TimeSlot.toLowerCase()
+                                );
+                                if (!timeSlot) {
+                                    console.warn(`No matching time slot for appointment ${a.AppoinmentId}: TimeSlot=${a.TimeSlot}`);
+                                    return null;
+                                }
+                                const startIndex = validTimeSlots.findIndex(slot => slot.TimeBlockSchedule === timeSlot.TimeBlockSchedule);
+                                if (startIndex === timeIndex) {
+                                    const durationMinutes = parseDuration(a.Duration);
+                                    const totalHours = durationMinutes / 60;
+                                    const startTimeMinutes = parseTimeToMinutes(timeSlot.TimeBlockSchedule.split('-')[0]);
+                                    const slotStartTimeMinutes = parseTimeToMinutes(time.TimeBlockSchedule.split('-')[0]);
+                                    const offsetMinutes = startTimeMinutes - slotStartTimeMinutes;
+                                    const offsetPx = (offsetMinutes / slotDurationMinutes) * pixelsPerSlot;
+                                    const widthPx = (totalHours * (pixelsPerSlot * 2)); // 2 slots per hour
+
+                                    const overlappingAppointments = placedAppointments.filter(pa =>
+                                        pa.offsetPx === offsetPx &&
+                                        Math.abs(pa.widthPx - widthPx) < 10
+                                    );
+                                    const conflictIndex = overlappingAppointments.length;
+                                    const adjustedOffsetPx = offsetPx + (conflictIndex * 10);
+
+                                    placedAppointments.push({ appointment: a, offsetPx: adjustedOffsetPx, widthPx });
+
+                                    return { appointment: a, offsetPx: adjustedOffsetPx, widthPx };
+                                }
                                 return null;
-                            }
-                            const startIndex = validTimeSlots.findIndex(slot => slot.TimeBlockSchedule === timeSlot.TimeBlockSchedule);
-                            if (startIndex === timeIndex) {
+                            })
+                            .filter(a => a);
+
+                        html += `
+                            <div class="h-${eventHeight}px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
+                                 data-date="${dateStr}" 
+                                 data-time="${time.TimeBlockSchedule}" 
+                                 data-resource="${resource.ResourceName}"
+                                 style="position: relative; margin: 0; padding: 0; max-width: ${pixelsPerSlot}px;">
+                                ${cellAppointments.map(({ appointment, offsetPx, widthPx }) => {
+                            const statusIcon = getAppointmentStatusIcon(appointment.AppoinmentStatus);
+                            return `
+                                        <div class="calendar-event-resource ${getEventTimeSlotClass(appointment)}"
+                                             style="left:0px; 
+                                                    width: ${Math.min(widthPx, pixelsPerSlot * validTimeSlots.length - offsetPx)}px; 
+                                                    height: ${eventHeight}px; 
+                                                    position: absolute;"
+                                             data-id="${appointment.AppoinmentId}" 
+                                             draggable="true">
+                                            <div class="event-content" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                                ${statusIcon} ${appointment.CustomerName} (${appointment.ServiceType})
+                                            </div>
+                                        </div>
+                                    `;
+                        }).join('')}
+                            </div>
+                        `;
+                    });
+                    html += `</div>`;
+                } else {
+                    // Multi-day view (threeDay, week, custom)
+                    html += `
+                         <div class="calendar-grid resource-row" id="${rowId}" style="grid-template-columns: 120px repeat(${dates.length}, minmax(150px, 1fr)); margin: 0; padding: 0; width: fit-content; max-width: 100%; overflow: hidden; position: relative;">
+                            <div class="h-${eventHeight}px border-bottom last-border-bottom-none p-1 fs-7 text-left bg-gray-50 calendar-time-cell resource-name" style="position: sticky; left: 0; z-index: 1; padding: 7px 10px !important;">
+                                ${resourceIcon} ${resource.ResourceName}
+                            </div>
+                    `;
+
+                    dates.forEach((day, dayIndex) => {
+                        const cellAppointments = appointments
+                            .filter(a => a.ResourceName === resource.ResourceName &&
+                                a.RequestDate === day &&
+                                a.TimeSlot)
+                            .map(a => {
+                                const timeSlot = validTimeSlots.find(slot =>
+                                    slot.TimeBlockSchedule === a.TimeSlot ||
+                                    slot.TimeBlock.toLowerCase() === a.TimeSlot.toLowerCase()
+                                );
+                                if (!timeSlot) {
+                                    console.warn(`No matching time slot for appointment ${a.AppoinmentId}: TimeSlot=${a.TimeSlot}`);
+                                    return null;
+                                }
                                 const durationMinutes = parseDuration(a.Duration);
                                 const totalHours = durationMinutes / 60;
-                                const startTimeMinutes = parseTimeToMinutes(timeSlot.TimeBlockSchedule.split('-')[0]);
-                                const slotStartTimeMinutes = parseTimeToMinutes(time.TimeBlockSchedule.split('-')[0]);
-                                const offsetMinutes = startTimeMinutes - slotStartTimeMinutes;
-                                const offsetPx = (offsetMinutes / slotDurationMinutes) * pixelsPerSlot;
-                                const widthPx = (totalHours * (pixelsPerSlot * 2)); // 2 slots per hour
+                                const widthPx = (totalHours * (pixelsPerSlot * 2)); // Maintain hour-based width
+                                return { appointment: a, widthPx };
+                            })
+                            .filter(a => a);
 
-                                const overlappingAppointments = placedAppointments.filter(pa =>
-                                    pa.offsetPx === offsetPx &&
-                                    Math.abs(pa.widthPx - widthPx) < 10
-                                );
-                                const conflictIndex = overlappingAppointments.length;
-                                const adjustedOffsetPx = offsetPx + (conflictIndex * 10);
-
-                                placedAppointments.push({ appointment: a, offsetPx: adjustedOffsetPx, widthPx });
-
-                                return { appointment: a, offsetPx: adjustedOffsetPx, widthPx };
-                            }
-                            return null;
-                        })
-                        .filter(a => a);
-
-                    html += `
-                    <div class="h-${eventHeight}px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
-                         data-date="${dateStr}" 
-                         data-time="${time.TimeBlockSchedule}" 
-                         data-resource="${resource.ResourceName}"
-                         style="position: relative; margin: 0; padding: 0; max-width: ${pixelsPerSlot}px;">
-                        ${cellAppointments.map(({ appointment, offsetPx, widthPx }) => {
-                        const statusIcon = getAppointmentStatusIcon(appointment.AppoinmentStatus);
-                        return `
-                            <div class="calendar-event-resource ${getEventTimeSlotClass(appointment)}"
-                                 style="left:0px; 
-                                        width: ${Math.min(widthPx, pixelsPerSlot * validTimeSlots.length - offsetPx)}px; 
-                                        height: ${eventHeight}px; 
-                                        position: absolute;"
-                                 data-id="${appointment.AppoinmentId}" 
-                                 draggable="true">
-                                <div class="event-content" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                                    ${statusIcon} ${appointment.CustomerName} (${appointment.ServiceType})
-                                </div>
+                        html += `
+                            <div class="h-${eventHeight}px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
+                                 data-date="${day}" 
+                                 data-resource="${resource.ResourceName}"
+                                 style="position: relative; margin: 0; padding: 0;">
+                                ${cellAppointments.map(({ appointment, widthPx }, idx) => {
+                            const statusIcon = getAppointmentStatusIcon(appointment.AppoinmentStatus);
+                            return `
+                                        <div class="calendar-event-resource ${getEventTimeSlotClass(appointment)}"
+                                             style="left: ${idx * 10}px; 
+                                                    width: ${Math.min(widthPx, pixelsPerSlot - (idx * 10))}px; 
+                                                    height: ${eventHeight}px; 
+                                                    position: absolute;"
+                                             data-id="${appointment.AppoinmentId}" 
+                                             draggable="true">
+                                            <div class="event-content" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                                ${statusIcon} ${appointment.CustomerName} (${appointment.ServiceType})
+                                            </div>
+                                        </div>
+                                    `;
+                        }).join('')}
                             </div>
-                            `;
-                    }).join('')}
-                    </div>
-                    `;
-                });
-
-                html += `</div>`;
+                        `;
+                    });
+                    html += `</div>`;
+                }
             });
         }
 
@@ -1811,35 +1929,46 @@ function renderResourceView(date) {
             }
         });
 
-        // Setup hover events like date view
         setupHoverEvents();
-
         setupDragAndDrop();
         renderUnscheduledList('resource');
 
-        // Update pagination for resource view
         resourceViewFilteredAppointments = filteredResources;
         resourceViewCurrentPage = 1;
         updateResourceViewPagination();
 
-        // Enable drag-to-scroll
+        // Improved scroll synchronization code
         const header = document.querySelector('#resource-header');
         const rows = document.querySelectorAll('.resource-row');
         if (header && rows.length > 0) {
+            // Remove existing scroll event listeners to prevent duplicates
+            header.removeEventListener('scroll', syncScrollFromHeader);
+            rows.forEach(row => row.removeEventListener('scroll', syncScrollFromRow));
+
+            // Define scroll synchronization functions
+            function syncScrollFromHeader() {
+                rows.forEach(row => {
+                    row.scrollLeft = header.scrollLeft;
+                });
+            }
+
+            function syncScrollFromRow(e) {
+                const scrolledRow = e.target;
+                header.scrollLeft = scrolledRow.scrollLeft;
+                rows.forEach(row => {
+                    if (row !== scrolledRow) {
+                        row.scrollLeft = scrolledRow.scrollLeft;
+                    }
+                });
+            }
+
+            // Enable drag-to-scroll and bind scroll events
             enableDragToScroll('#resource-header');
-            filteredResources.forEach((_, index) => {
-                const rowSelector = `#resource-row-${index}`;
-                enableDragToScroll(rowSelector);
-                const row = document.querySelector(rowSelector);
-                row.addEventListener('scroll', () => {
-                    header.scrollLeft = row.scrollLeft;
-                    rows.forEach(otherRow => {
-                        if (otherRow !== row) otherRow.scrollLeft = row.scrollLeft;
-                    });
-                });
-                header.addEventListener('scroll', () => {
-                    rows.forEach(r => r.scrollLeft = header.scrollLeft);
-                });
+            header.addEventListener('scroll', syncScrollFromHeader, { passive: true });
+
+            rows.forEach((row, index) => {
+                enableDragToScroll(`#resource-row-${index}`);
+                row.addEventListener('scroll', syncScrollFromRow, { passive: true });
             });
         }
     });
@@ -2135,11 +2264,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderDateView($('#dayDatePicker').val());
             });
 
+            // Inside document.addEventListener('DOMContentLoaded', ...)
             document.getElementById('resourceViewSelect').addEventListener('change', (e) => {
                 const currentDate = $('#resourceDatePicker').val();
-                renderResourceView(currentDate);
-                renderDateNav('resourceNav', currentDate); // Add this line
+                if (e.target.value === 'custom') {
+                    showResourceCustomDateRangeContainer();
+                } else {
+                    hideResourceCustomDateRangeContainer();
+                    resourceCustomDateRange.from = null;
+                    resourceCustomDateRange.to = null;
+                    renderResourceView(currentDate);
+                    renderDateNav('resourceNav', currentDate);
+                }
             });
+
+            // Add search button handler
+            document.getElementById('resourceCustomDateSearch').addEventListener('click', searchResourceCustomDateRange);
 
             // Custom date range handlers
             const handleCustomRangeToggle = (selectId, showFn, hideFn) => {
@@ -2171,7 +2311,54 @@ document.addEventListener('DOMContentLoaded', () => {
                     resourceCustomDateRange.to = null;
                 }
             );
+            function showResourceCustomDateRangeContainer() {
+                $("#resourceCustomDateRangeContainer").removeClass('d-none');
+            }
 
+            function hideResourceCustomDateRangeContainer() {
+                $("#resourceCustomDateRangeContainer").addClass('d-none');
+            }
+
+            function searchResourceCustomDateRange() {
+                const fromDate = $("#resourceDatePickerFrom").val();
+                const toDate = $("#resourceDatePickerTo").val();
+
+                if (!fromDate || !toDate) {
+                    showAlert({
+                        icon: 'warning',
+                        title: 'Missing Dates',
+                        text: 'Please select both from and to dates.',
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            popup: 'swal-custom-popup',
+                            title: 'swal-custom-title',
+                            content: 'swal-custom-content',
+                            confirmButton: 'swal-custom-button'
+                        }
+                    });
+                    return;
+                }
+
+                if (new Date(toDate) < new Date(fromDate)) {
+                    showAlert({
+                        icon: 'error',
+                        title: 'Invalid Date Range',
+                        text: 'To date must be after or equal to from date.',
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            popup: 'swal-custom-popup',
+                            title: 'swal-custom-title',
+                            content: 'swal-custom-content',
+                            confirmButton: 'swal-custom-button'
+                        }
+                    });
+                    return;
+                }
+
+                resourceCustomDateRange.from = fromDate;
+                resourceCustomDateRange.to = toDate;
+                renderResourceView(fromDate);
+            }
             // Filter handlers
             document.getElementById('ServiceTypeFilter').addEventListener('change', (e) => {
                 renderDateView($('#dayDatePicker').val());
@@ -3044,43 +3231,58 @@ $(document).ready(function () {
 
 // Date synchronization function
 function syncDatePickers(changedPickerId, newDate) {
-    if (isDateSyncing) return;
+    if (isDateSyncing) {
+        console.log('Date syncing already in progress, skipping...');
+        return;
+    }
     isDateSyncing = true;
 
     try {
-        // Update all date pickers
+        if (!newDate || isNaN(new Date(newDate))) {
+            console.warn('Invalid date in syncDatePickers, using today');
+            newDate = new Date().toISOString().split('T')[0];
+        }
+        console.log(`Syncing date pickers: changedPickerId=${changedPickerId}, newDate=${newDate}`);
+
         ['#dayDatePicker', '#resourceDatePicker', '#mapDatePicker', '#listDatePicker'].forEach(pickerId => {
             if (pickerId !== changedPickerId) {
                 $(pickerId).val(newDate);
+                console.log(`Updated ${pickerId} to ${newDate}`);
             }
         });
 
-        // Update currentDate
         currentDate = new Date(newDate);
+        console.log(`Current date updated to: ${currentDate}`);
 
-        // Update the navigation for both views
         renderDateNav('dateNav', newDate);
-        renderDateNav('resourceNav', newDate);
+        renderDateNav('resourceDateNav', newDate);
+        console.log('Date navigation rendered for both views');
 
-        // Re-render the appropriate view
         switch (currentView) {
             case "date":
+                console.log('Rendering Date View');
                 renderDateView(newDate);
                 break;
             case "resource":
+                console.log('Rendering Resource View');
                 renderResourceView(newDate);
                 break;
             case "map":
-                renderMapView();
+                console.log('Rendering Map View');
+                renderMapView(newDate);
                 break;
             case "list":
-                renderListView();
+                console.log('Rendering List View');
+                renderListView(newDate);
                 break;
+            default:
+                console.warn(`Unknown currentView: ${currentView}`);
         }
     } catch (error) {
         console.error('Error syncing date pickers:', error);
     } finally {
         isDateSyncing = false;
+        console.log('Date syncing completed');
     }
 }
 

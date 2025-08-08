@@ -255,15 +255,10 @@
                                 <div class="field-type" draggable="true" data-type="checkbox"><i class="fa fa-check-square"></i> Checkbox</div>
                                 <div class="field-type" draggable="true" data-type="radio"><i class="fa fa-dot-circle"></i> Radio Button</div>
                                 <div class="field-type" draggable="true" data-type="signature"><i class="fa fa-pencil"></i> Signature</div>
-                                <div class="field-type" draggable="true" data-type="richtext"><i class="fa fa-text-height"></i> Rich Text</div>
-                                <div class="field-type" draggable="true" data-type="image"><i class="fa fa-image"></i> Image/Logo</div>
                             </div>
                         </div>
                         <div class="col-12 col-md-8 col-lg-6">
-                            <h6>Form Preview</h6>
-                            <div class="d-flex justify-content-between mb-2">
-                                <button type="button" class="btn btn-sm btn-outline-info" onclick="togglePreviewMode()">Toggle Preview Mode</button>
-                            </div>
+                            <h6>Form Preview</h6>                         
                             <div id="formBuilder" class="form-builder-area">
                                 <div class="drop-zone">Drag fields here to build your form</div>
                             </div>
@@ -284,19 +279,9 @@
         </div>
     </div>
 
-    <!-- Include Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    
     <!-- Include Signature Pad Library -->
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
     
-    <!-- Include jQuery UI for sortable and resizable -->
-    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
-    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
-    
-    <!-- Include Quill.js for rich text editing -->
-    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
     
     <script src="Scripts/forms.js"></script>
     <script src="Scripts/signature-handler.js"></script>

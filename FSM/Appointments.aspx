@@ -80,9 +80,9 @@
                                         <option value="week">Week</option>
                                         <option value="threeDay">Three-Day</option>
                                         <option value="month">Month</option>
-                   
+
                                     </select>
-                    
+
                                     <label for="ServiceTypeFilter" class="form-label mb-0">Filter:</label>
                                     <select name="ServiceTypeFilter" id="ServiceTypeFilter" class="form-select w-120px" runat="server">
                                         <option value="all">All Types</option>
@@ -190,31 +190,45 @@
                 <div class="date-view-container">
                     <div class="card calendar-container resource-view">
                         <div class="card-header">
-                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                                <div class="d-flex flex-wrap gap-2 align-items-center">
-                                    <button id="expandCalendarBtnResource" class="btn btn-outline-secondary me-2" data-bs-toggle="tooltip" title="Expand/Collapse Calendar">
-                                        <i class="fas fa-expand"></i>
-                                    </button>
-                                    <label for="resourceViewSelect" class="form-label mb-0">View:</label>
-                                    <select id="resourceViewSelect" class="form-select w-120px">
-                                        <option value="day">Day</option>
-                                        <option value="week">Week</option>
-                                        <option value="threeDay">Three-Day</option>
-                                        <option value="month">Month</option>
+<div class="d-flex align-items-center flex-wrap gap-2">
+    <!-- Expand/Collapse Button -->
+    <button id="expandCalendarBtnResource" class="btn btn-outline-secondary" data-bs-toggle="tooltip" title="Expand/Collapse Calendar">
+        <i class="fas fa-expand"></i>
+    </button>
 
-                                    </select>
-                           
-                                    <label for="resourceDatePicker" class="form-label mb-0">Date:</label>
-                                    <input type="date" id="resourceDatePicker" class="form-control w-200px">
-                                    <%--<label for="dispatchGroup" class="form-label mb-0 ms-3">Group:</label>
-                                    <select id="dispatchGroup" class="form-select w-120px" onchange="renderResourceView($('#resourceDatePicker').val())">
-                                        <option value="all">All Resources</option>
-                                        <option value="electricians">Electricians</option>
-                                        <option value="plumbers">Plumbers</option>
-                                    </select>--%>
-                                </div>
-                                <button id="toggleUnscheduledBtnResource" class="btn btn-sm" style="display: block;"><i class="fas fa-chevron-right"></i></button>
-                            </div>
+    <!-- View Selector -->
+    <div class="d-flex align-items-center gap-1">
+        <label for="resourceViewSelect" class="form-label mb-0">View:</label>
+        <select id="resourceViewSelect" class="form-select form-select-sm w-auto">
+            <option value="day">Day</option>
+            <option value="threeDay">Three Day</option>
+            <option value="week">Week</option>
+            <option value="custom">Custom</option>
+        </select>
+    </div>
+
+    <!-- Custom Date Range (visible only if custom view selected) -->
+    <div id="resourceCustomDateRangeContainer" class="custom-date-range-container d-none d-flex align-items-center gap-2">
+        <div class="d-flex align-items-center gap-1">
+            <label for="resourceDatePickerFrom" class="form-label mb-0" style="font-size: 12px;">From:</label>
+            <input type="date" id="resourceDatePickerFrom" class="form-control form-control-sm" min="${new Date().toISOString().split('T')[0]}" />
+        </div>
+        <div class="d-flex align-items-center gap-1">
+            <label for="resourceDatePickerTo" class="form-label mb-0" style="font-size: 12px;">To:</label>
+            <input type="date" id="resourceDatePickerTo" class="form-control form-control-sm" min="${new Date().toISOString().split('T')[0]}" />
+        </div>
+        <button id="resourceCustomDateSearch" class="btn btn-primary btn-sm">Search</button>
+    </div>
+
+    <!-- Date Picker -->
+    <div class="d-flex align-items-center gap-1 ms-2">
+        <label for="resourceDatePicker" class="form-label mb-0">Date:</label>
+        <input type="date" id="resourceDatePicker" class="form-control form-control-sm w-auto">
+    </div>
+
+    <!-- Toggle Unscheduled Button -->
+    <button id="toggleUnscheduledBtnResource" class="btn btn-sm"><i class="fas fa-chevron-right"></i></button>
+</div>
                             <div class="appt-type-indicators">
                                 <span class="appt-type-indicator appt-type-it-support"></span>IT Support
                                 <span class="appt-type-indicator appt-type-1-hour"></span>1 Hour
@@ -329,7 +343,7 @@
                                     <option value="all">Select</option>
                                 </select>
                             </div>
-                              <div>
+                            <div>
                                 <label for="listDatePicker" class="form-label mb-0">Date:</label>
                                 <input type="date" id="listDatePicker" class="form-control w-200px">
                             </div>
@@ -743,24 +757,24 @@
                                 <div id="selectedFormsEdit" class="selected-forms-container" style="min-height: 60px; border: 1px solid #dee2e6; border-radius: 0.375rem; padding: 8px;">
                                     <small class="text-muted">No forms attached to this appointment</small>
                                 </div>
-                                 <!-- Form Actions -->
+                                <!-- Form Actions -->
 
-                            <div class="form-actions mt-3" id="formActionsContainer" style="display: none;">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <small class="text-muted">Form Actions:</small>
-                                    <div class="btn-group" role="group">
-                                        <button type="button" class="btn btn-sm btn-success" onclick="updateAttachedForms()" title="Save forms to this appointment">
-                                            <i class="fa fa-save"></i> Update Forms
-                                        </button>
-                                        <button type="button" class="btn btn-sm btn-info" onclick="sendFormsViaEmail()" title="Send forms to customer email">
-                                            <i class="fa fa-envelope"></i> Email
-                                        </button>
-                                        <button type="button" class="btn btn-sm btn-warning" onclick="sendFormsViaSMS()" title="Send forms to customer phone">
-                                            <i class="fa fa-mobile"></i> SMS
-                                        </button>
+                                <div class="form-actions mt-3" id="formActionsContainer" style="display: none;">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">Form Actions:</small>
+                                        <div class="btn-group" role="group">
+                                            <button type="button" class="btn btn-sm btn-success" onclick="updateAttachedForms()" title="Save forms to this appointment">
+                                                <i class="fa fa-save"></i>Update Forms
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-info" onclick="sendFormsViaEmail()" title="Send forms to customer email">
+                                                <i class="fa fa-envelope"></i>Email
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-warning" onclick="sendFormsViaSMS()" title="Send forms to customer phone">
+                                                <i class="fa fa-mobile"></i>SMS
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
                             </div>
                         </div>
                     </div>

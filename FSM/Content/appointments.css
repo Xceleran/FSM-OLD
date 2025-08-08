@@ -180,15 +180,7 @@
     background: rgba(0, 0, 0, 0.8);
 }
 
-/* Custom date range container styles */
-#customDateRangeContainer,
-#resourceCustomDateRangeContainer {
-    transition: all 0.3s ease;
-    padding: 8px;
-    border-radius: 6px;
-    background: #f8f9fa;
-    border: 1px solid #e9ecef;
-}
+
 
 [data-theme="dark"] #customDateRangeContainer,
 [data-theme="dark"] #resourceCustomDateRangeContainer {
@@ -1232,6 +1224,7 @@ ul#viewTabs {
     border-bottom: 2px solid transparent;
     background: #cdcdcd;
     border-radius: 4px 4px 0 0;
+    padding: 5px 15px;
 }
 
 [data-theme="dark"] .nav-tabs .nav-link {
@@ -2252,6 +2245,17 @@ button.btn.btn-primary.ms-2 {
     border-radius: 2px;
     font-weight: 500;
 }
+
+#resource-header, .resource-row {
+    overflow-x: auto;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+}
+
+    #resource-header::-webkit-scrollbar,
+    .resource-row::-webkit-scrollbar {
+        display: none; /* Chrome, Safari, Opera */
+    }
 
 [data-theme="dark"] .status-pending {
     color: #fbbf24;
