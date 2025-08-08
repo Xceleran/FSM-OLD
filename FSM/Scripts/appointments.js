@@ -936,12 +936,28 @@ function searchListView(e) {
     const selectedDateFrom = $("#listDatePickerFrom").val();
     const selectedDateTo = $("#listDatePickerTo").val();
 
-    // Check if either single date or date range is provided
+    // Validate inputs
     if (!selectedDate && (!selectedDateFrom || !selectedDateTo)) {
         showAlert({
             icon: 'warning',
             title: 'Missing Dates',
-            text: 'Please select either a single date or both from date and to date.',
+            text: 'Please select either a single date or both from and to dates.',
+            confirmButtonText: 'OK',
+            customClass: {
+                popup: 'swal-custom-popup',
+                title: 'swal-custom-title',
+                content: 'swal-custom-content',
+                confirmButton: 'swal-custom-button'
+            }
+        });
+        return;
+    }
+
+    if (selectedDateFrom && selectedDateTo && new Date(selectedDateTo) < new Date(selectedDateFrom)) {
+        showAlert({
+            icon: 'error',
+            title: 'Invalid Date Range',
+            text: 'To date must be after or equal to from date.',
             confirmButtonText: 'OK',
             customClass: {
                 popup: 'swal-custom-popup',
@@ -1029,12 +1045,30 @@ function renderListView() {
     const typeFilter = $("#MainContent_ServiceTypeFilter_List").val();
     const searchTerm = $("#search_term").val().trim().toLowerCase() || "";
 
-    // Use single date if set, otherwise use date range
+    // Determine date range: prioritize custom range if both from and to are set
     let fromDate = selectedDateFrom;
     let toDate = selectedDateTo;
-    if (selectedDate) {
+    if (!selectedDateFrom || !selectedDateTo) {
+        // Fallback to single date if no range is specified
         fromDate = selectedDate;
         toDate = selectedDate;
+    }
+
+    // Validate date range
+    if (fromDate && toDate && new Date(toDate) < new Date(fromDate)) {
+        showAlert({
+            icon: 'error',
+            title: 'Invalid Date Range',
+            text: 'To date must be after or equal to from date.',
+            confirmButtonText: 'OK',
+            customClass: {
+                popup: 'swal-custom-popup',
+                title: 'swal-custom-title',
+                content: 'swal-custom-content',
+                confirmButton: 'swal-custom-button'
+            }
+        });
+        return;
     }
 
     // Show loading indicator
@@ -1687,9 +1721,14 @@ function renderResourceView(date) {
 
     // Determine date range based on view
     let dates = [dateStr];
+    let fromDate, toDate;
     if (view === 'week') {
         const startDate = new Date(date);
         startDate.setDate(startDate.getDate() - startDate.getDay()); // Start from Sunday
+        fromDate = startDate.toISOString().split('T')[0];
+        toDate = new Date(startDate);
+        toDate.setDate(startDate.getDate() + 6);
+        toDate = toDate.toISOString().split('T')[0];
         dates = Array.from({ length: 7 }, (_, i) => {
             const d = new Date(startDate);
             d.setDate(startDate.getDate() + i);
@@ -1698,27 +1737,37 @@ function renderResourceView(date) {
     } else if (view === 'threeDay') {
         const startDate = new Date(date);
         startDate.setDate(startDate.getDate() - 1); // Show previous, current, next day
+        fromDate = startDate.toISOString().split('T')[0];
+        toDate = new Date(startDate);
+        toDate.setDate(startDate.getDate() + 2);
+        toDate = toDate.toISOString().split('T')[0];
         dates = Array.from({ length: 3 }, (_, i) => {
             const d = new Date(startDate);
             d.setDate(startDate.getDate() + i);
             return d.toISOString().split('T')[0];
         });
     } else if (view === 'custom' && resourceCustomDateRange.from && resourceCustomDateRange.to) {
-        const fromDate = new Date(resourceCustomDateRange.from);
-        const toDate = new Date(resourceCustomDateRange.to);
-        if (fromDate <= toDate) {
+        fromDate = resourceCustomDateRange.from;
+        toDate = resourceCustomDateRange.to;
+        const startDate = new Date(fromDate);
+        const endDate = new Date(toDate);
+        if (startDate <= endDate) {
             dates = [];
-            for (let d = new Date(fromDate); d <= toDate; d.setDate(d.getDate() + 1)) {
+            for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
                 dates.push(new Date(d).toISOString().split('T')[0]);
             }
         }
+    } else {
+        fromDate = dateStr;
+        toDate = dateStr;
     }
 
     const validTimeSlots = allTimeSlots.filter(slot =>
         slot && slot.TimeBlockSchedule && !allTimeSlots.some(other => other !== slot && other.TimeBlockSchedule === slot.TimeBlockSchedule)
     );
 
-    getAppoinments("", "", "", dateStr, function (appointments) {
+    // Fetch appointments for the entire date range
+    getAppoinments("", fromDate, toDate, view === 'day' ? dateStr : "", function (appointments) {
         let html = `
            <div class="border rounded overflow-hidden resizable-container" style="margin: 0; padding: 0; width: fit-content; max-width: 100%;">
         `;
@@ -1752,7 +1801,6 @@ function renderResourceView(date) {
         html += `
             <div class="calendar-body" style="margin: 0; padding: 0; width: fit-content; max-width: 100%;">
         `;
-
 
         if (!validTimeSlots.length || !resources.length) {
             html += `
@@ -1937,38 +1985,23 @@ function renderResourceView(date) {
         resourceViewCurrentPage = 1;
         updateResourceViewPagination();
 
-        // Improved scroll synchronization code
         const header = document.querySelector('#resource-header');
         const rows = document.querySelectorAll('.resource-row');
         if (header && rows.length > 0) {
-            // Remove existing scroll event listeners to prevent duplicates
-            header.removeEventListener('scroll', syncScrollFromHeader);
-            rows.forEach(row => row.removeEventListener('scroll', syncScrollFromRow));
-
-            // Define scroll synchronization functions
-            function syncScrollFromHeader() {
-                rows.forEach(row => {
-                    row.scrollLeft = header.scrollLeft;
-                });
-            }
-
-            function syncScrollFromRow(e) {
-                const scrolledRow = e.target;
-                header.scrollLeft = scrolledRow.scrollLeft;
-                rows.forEach(row => {
-                    if (row !== scrolledRow) {
-                        row.scrollLeft = scrolledRow.scrollLeft;
-                    }
-                });
-            }
-
-            // Enable drag-to-scroll and bind scroll events
             enableDragToScroll('#resource-header');
-            header.addEventListener('scroll', syncScrollFromHeader, { passive: true });
-
-            rows.forEach((row, index) => {
-                enableDragToScroll(`#resource-row-${index}`);
-                row.addEventListener('scroll', syncScrollFromRow, { passive: true });
+            filteredResources.forEach((_, index) => {
+                const rowSelector = `#resource-row-${index}`;
+                enableDragToScroll(rowSelector);
+                const row = document.querySelector(rowSelector);
+                row.addEventListener('scroll', () => {
+                    header.scrollLeft = row.scrollLeft;
+                    rows.forEach(otherRow => {
+                        if (otherRow !== row) otherRow.scrollLeft = row.scrollLeft;
+                    });
+                });
+                header.addEventListener('scroll', () => {
+                    rows.forEach(r => r.scrollLeft = header.scrollLeft);
+                });
             });
         }
     });
@@ -2198,10 +2231,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('dateInput').min = today;
 
-            // Set initial dates on all pickers
-            ['#dayDatePicker', '#resourceDatePicker', '#listDatePicker', '#mapDatePicker'].forEach(picker => {
+            // Set initial dates on pickers, respecting custom range
+            ['#dayDatePicker', '#resourceDatePicker', '#mapDatePicker'].forEach(picker => {
                 $(picker).val(today).trigger('change');
             });
+            // Only set #listDatePicker if no custom range is set
+            if (!$("#listDatePickerFrom").val() && !$("#listDatePickerTo").val()) {
+                $("#listDatePicker").val(today).trigger('change');
+            }
 
             // Initialize current view
             currentView = "date";

@@ -74,7 +74,7 @@
                                     <button id="expandCalendarBtn" class="btn btn-outline-secondary me-2" data-bs-toggle="tooltip" title="Expand/Collapse Calendar">
                                         <i class="fas fa-expand"></i>
                                     </button>
-                                    <label for="viewSelect" class="form-label mb-0">View:</label>
+
                                     <select id="viewSelect" class="form-select w-120px">
                                         <option value="day">Day</option>
                                         <option value="week">Week</option>
@@ -84,7 +84,7 @@
                                     </select>
 
                                     <label for="ServiceTypeFilter" class="form-label mb-0">Filter:</label>
-                                    <select name="ServiceTypeFilter" id="ServiceTypeFilter" class="form-select w-120px" runat="server">
+                                    <select name="ServiceTypeFilter" id="ServiceTypeFilter" class="form-select w-200px" runat="server">
                                         <option value="all">All Types</option>
                                         <option value="IT Support">IT Support</option>
                                         <option value="1 Hour">1 Hour</option>
@@ -97,7 +97,7 @@
                                         <option value="Maintenance">Maintenance</option>
                                         <option value="Installation">Installation</option>
                                     </select>--%>
-                                    <label for="dayDatePicker" class="form-label mb-0 ms-3">Date:</label>
+                                    <label for="dayDatePicker" class="form-label mb-0">Date:</label>
                                     <input type="date" id="dayDatePicker" class="form-control w-200px">
                                 </div>
                                 <button id="toggleUnscheduledBtn" class="btn btn-sm"><i class="fas fa-chevron-right"></i></button>
@@ -190,45 +190,44 @@
                 <div class="date-view-container">
                     <div class="card calendar-container resource-view">
                         <div class="card-header">
-<div class="d-flex align-items-center flex-wrap gap-2">
-    <!-- Expand/Collapse Button -->
-    <button id="expandCalendarBtnResource" class="btn btn-outline-secondary" data-bs-toggle="tooltip" title="Expand/Collapse Calendar">
-        <i class="fas fa-expand"></i>
-    </button>
+                            <div class="d-flex align-items-center flex-wrap gap-2">
+                                <!-- Expand/Collapse Button -->
+                                <button id="expandCalendarBtnResource" class="btn btn-outline-secondary" data-bs-toggle="tooltip" title="Expand/Collapse Calendar">
+                                    <i class="fas fa-expand"></i>
+                                </button>
 
-    <!-- View Selector -->
-    <div class="d-flex align-items-center gap-1">
-        <label for="resourceViewSelect" class="form-label mb-0">View:</label>
-        <select id="resourceViewSelect" class="form-select form-select-sm w-auto">
-            <option value="day">Day</option>
-            <option value="threeDay">Three Day</option>
-            <option value="week">Week</option>
-            <option value="custom">Custom</option>
-        </select>
-    </div>
+                                <!-- View Selector -->
+                                <div class="d-flex align-items-center gap-1">
+                                    <select id="resourceViewSelect" class="form-select form-select-sm w-auto">
+                                        <option value="day">Day</option>
+                                        <option value="threeDay">Three Day</option>
+                                        <option value="week">Week</option>
+                                        <option value="custom">Custom</option>
+                                    </select>
+                                </div>
 
-    <!-- Custom Date Range (visible only if custom view selected) -->
-    <div id="resourceCustomDateRangeContainer" class="custom-date-range-container d-none d-flex align-items-center gap-2">
-        <div class="d-flex align-items-center gap-1">
-            <label for="resourceDatePickerFrom" class="form-label mb-0" style="font-size: 12px;">From:</label>
-            <input type="date" id="resourceDatePickerFrom" class="form-control form-control-sm" min="${new Date().toISOString().split('T')[0]}" />
-        </div>
-        <div class="d-flex align-items-center gap-1">
-            <label for="resourceDatePickerTo" class="form-label mb-0" style="font-size: 12px;">To:</label>
-            <input type="date" id="resourceDatePickerTo" class="form-control form-control-sm" min="${new Date().toISOString().split('T')[0]}" />
-        </div>
-        <button id="resourceCustomDateSearch" class="btn btn-primary btn-sm">Search</button>
-    </div>
+                                <!-- Custom Date Range (visible only if custom view selected) -->
+                                <div id="resourceCustomDateRangeContainer" class="custom-date-range-container d-none d-flex align-items-center gap-2">
+                                    <div class="d-flex align-items-center gap-1">
+                                        <label for="resourceDatePickerFrom" class="form-label mb-0" style="font-size: 12px;">From:</label>
+                                        <input type="date" id="resourceDatePickerFrom" class="form-control form-control-sm" min="${new Date().toISOString().split('T')[0]}" />
+                                    </div>
+                                    <div class="d-flex align-items-center gap-1">
+                                        <label for="resourceDatePickerTo" class="form-label mb-0" style="font-size: 12px;">To:</label>
+                                        <input type="date" id="resourceDatePickerTo" class="form-control form-control-sm" min="${new Date().toISOString().split('T')[0]}" />
+                                    </div>
+                                    <button id="resourceCustomDateSearch" class="btn btn-primary btn-sm">Search</button>
+                                </div>
 
-    <!-- Date Picker -->
-    <div class="d-flex align-items-center gap-1 ms-2">
-        <label for="resourceDatePicker" class="form-label mb-0">Date:</label>
-        <input type="date" id="resourceDatePicker" class="form-control form-control-sm w-auto">
-    </div>
+                                <!-- Date Picker -->
+                                <div class="d-flex align-items-center gap-1 ms-2">
+                                    <label for="resourceDatePicker" class="form-label mb-0">Date:</label>
+                                    <input type="date" id="resourceDatePicker" class="form-control form-control-sm w-auto">
+                                </div>
 
-    <!-- Toggle Unscheduled Button -->
-    <button id="toggleUnscheduledBtnResource" class="btn btn-sm"><i class="fas fa-chevron-right"></i></button>
-</div>
+                                <!-- Toggle Unscheduled Button -->
+                                <button id="toggleUnscheduledBtnResource" class="btn btn-sm"><i class="fas fa-chevron-right"></i></button>
+                            </div>
                             <div class="appt-type-indicators">
                                 <span class="appt-type-indicator appt-type-it-support"></span>IT Support
                                 <span class="appt-type-indicator appt-type-1-hour"></span>1 Hour
@@ -877,8 +876,28 @@
         });
     </script>
 
-    <script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const resourceFrom = document.getElementById("resourceDatePickerFrom");
+        const resourceTo = document.getElementById("resourceDatePickerTo");
+        const listFrom = document.getElementById("listDatePickerFrom");
+        const listTo = document.getElementById("listDatePickerTo");
+
+        // Helper: sync values between pairs
+        function syncDates(source, target) {
+            source.addEventListener("change", () => {
+                target.value = source.value;
+            });
+        }
+
+        // Sync both directions
+        syncDates(resourceFrom, listFrom);
+        syncDates(listFrom, resourceFrom);
+        syncDates(resourceTo, listTo);
+        syncDates(listTo, resourceTo);
+    });
 </script>
+
 
     <script src="Scripts/appointments.js" defer></script>
     <script src="Scripts/signature-handler.js" defer></script>

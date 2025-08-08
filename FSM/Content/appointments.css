@@ -10,13 +10,8 @@
 
 /* Layout */
 .date-view-container {
-    /* display: grid;
-    grid-template-columns: 3fr 1fr;
-    gap: 20px;
-    transition: grid-template-columns 0.3s ease;*/
     display: flex;
     gap: 1rem;
-    height: calc(100vh - 250px);
     margin-bottom: 100px;
 }
 
