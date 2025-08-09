@@ -1769,7 +1769,7 @@ function renderResourceView(date) {
     // Fetch appointments for the entire date range
     getAppoinments("", fromDate, toDate, view === 'day' ? dateStr : "", function (appointments) {
         let html = `
-           <div class="border rounded overflow-hidden resizable-container" style="margin: 0; padding: 0; width: fit-content; max-width: 100%;">
+           <div class="border rounded overflow-hidden resizable-container" style="margin: 0; padding: 0; max-width: 100%;">
         `;
 
         // Render header based on view
@@ -1799,7 +1799,7 @@ function renderResourceView(date) {
         }
 
         html += `
-            <div class="calendar-body" style="margin: 0; padding: 0; width: fit-content; max-width: 100%;">
+            <div class="calendar-body" style="margin: 0; padding: 0; max-width: 100%;">
         `;
 
         if (!validTimeSlots.length || !resources.length) {
@@ -1815,7 +1815,7 @@ function renderResourceView(date) {
 
                 if (view === 'day') {
                     html += `
-                        <div class="calendar-grid resource-row" id="${rowId}" style="grid-template-columns: 120px repeat(${validTimeSlots.length}, ${pixelsPerSlot}px); margin: 0; padding: 0; width: fit-content; max-width: 100%; overflow: hidden; position: relative;">
+                        <div class="calendar-grid resource-row" id="${rowId}" style="grid-template-columns: 120px repeat(${validTimeSlots.length}, ${pixelsPerSlot}px); margin: 0; padding: 0;  max-width: 100%; overflow: hidden; position: relative;">
                             <div class="h-${eventHeight}px border-bottom last-border-bottom-none p-1 fs-7 text-left bg-gray-50 calendar-time-cell resource-name" style="position: sticky; left: 0; z-index: 1; padding: 7px 10px !important;">
                                 ${resourceIcon} ${resource.ResourceName}
                             </div>
@@ -1890,7 +1890,7 @@ function renderResourceView(date) {
                 } else {
                     // Multi-day view (threeDay, week, custom)
                     html += `
-                         <div class="calendar-grid resource-row" id="${rowId}" style="grid-template-columns: 120px repeat(${dates.length}, minmax(150px, 1fr)); margin: 0; padding: 0; width: fit-content; max-width: 100%; overflow: hidden; position: relative;">
+                         <div class="calendar-grid resource-row" id="${rowId}" style="grid-template-columns: 120px repeat(${dates.length}, minmax(150px, 1fr)); margin: 0; padding: 0; max-width: 100%; overflow: hidden; position: relative;">
                             <div class="h-${eventHeight}px border-bottom last-border-bottom-none p-1 fs-7 text-left bg-gray-50 calendar-time-cell resource-name" style="position: sticky; left: 0; z-index: 1; padding: 7px 10px !important;">
                                 ${resourceIcon} ${resource.ResourceName}
                             </div>
