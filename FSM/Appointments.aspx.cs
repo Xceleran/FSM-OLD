@@ -13,6 +13,7 @@ using System.Web.Services;
 using System.Web.UI;
 using System.Web.UI.WebControls;
 using FSM.Models.AppoinmentModel;
+using System.Configuration;
 
 namespace FSM
 {
@@ -535,12 +536,15 @@ namespace FSM
             {
                 string companyId = System.Web.HttpContext.Current.Session["CompanyID"]?.ToString();
                 string userId = System.Web.HttpContext.Current.Session["UserID"]?.ToString();
+          
                 
                 if (string.IsNullOrEmpty(companyId))
                     return false;
-
+           
                 // Update appointment with attached forms
                 Database db = new Database();
+                string connectionString = ConfigurationManager.AppSettings["ConnStrJobs"].ToString();
+                db = new Database(connectionString);
                 try
                 {
                     db.Init("sp_Appointments_UpdateAttachedForms");

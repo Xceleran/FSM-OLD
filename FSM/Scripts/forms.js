@@ -372,25 +372,76 @@ function searchUsageLog(returnFiltered = false) {
 }
 
 // Open new template modal
+//function openNewTemplateModal() {
+//    currentTemplate = null;
+//    $('#templateModalTitle').text('New Form Template');
+
+//    // Wait for modal to be fully shown before accessing form elements
+//    const modalElement = document.getElementById('templateModal');
+//    const modal = new bootstrap.Modal(modalElement);
+
+//    // Listen for modal shown event
+//    modalElement.addEventListener('shown.bs.modal', function () {
+//        // Now the modal is fully rendered, safe to access form elements
+//        const $form = $('#templateForm');
+//        if ($form.length > 0) {
+//            $form[0].reset();
+//            $('#templateId').val('0');
+//            $('#isActive').prop('checked', true);
+//            $('#autoAssignSection').hide();
+
+//            // Focus on the template name field after a small delay to ensure it's rendered
+//            setTimeout(() => {
+//                const templateNameField = document.getElementById('templateName');
+//                if (templateNameField) {
+//                    templateNameField.focus();
+//                }
+//            }, 100);
+//        } else {
+//            console.error('Form still not found after modal shown event');
+//        }
+//    }, { once: true }); // Use once: true to ensure this only runs once
+
+//    // Handle modal hide event to clean up focus
+//    modalElement.addEventListener('hidden.bs.modal', function () {
+//        // Remove any lingering focus that might cause accessibility issues
+//        if (document.activeElement && document.activeElement.blur) {
+//            document.activeElement.blur();
+//        }
+//    }, { once: true });
+
+//    modal.show();
+//}
+
 function openNewTemplateModal() {
     currentTemplate = null;
     $('#templateModalTitle').text('New Form Template');
-    
-    // Wait for modal to be fully shown before accessing form elements
+
     const modalElement = document.getElementById('templateModal');
     const modal = new bootstrap.Modal(modalElement);
-    
-    // Listen for modal shown event
+
     modalElement.addEventListener('shown.bs.modal', function () {
-        // Now the modal is fully rendered, safe to access form elements
         const $form = $('#templateForm');
         if ($form.length > 0) {
+            // Reset form fields
             $form[0].reset();
+
+            // Explicitly clear inputs, selects, and textareas
+            $form.find('input[type="text"], textarea').val('');
+            $form.find('select').val('');
+            $form.find('input[type="checkbox"]').prop('checked', false);
+
+            // Reset hidden fields
             $('#templateId').val('0');
+
+            // Set default active
             $('#isActive').prop('checked', true);
+
+            // Clear dynamically generated section
+            $('#serviceTypeCheckboxes').empty();
             $('#autoAssignSection').hide();
-            
-            // Focus on the template name field after a small delay to ensure it's rendered
+
+            // Focus after rendering
             setTimeout(() => {
                 const templateNameField = document.getElementById('templateName');
                 if (templateNameField) {
@@ -400,19 +451,16 @@ function openNewTemplateModal() {
         } else {
             console.error('Form still not found after modal shown event');
         }
-    }, { once: true }); // Use once: true to ensure this only runs once
-    
-    // Handle modal hide event to clean up focus
+    }, { once: true });
+
     modalElement.addEventListener('hidden.bs.modal', function () {
-        // Remove any lingering focus that might cause accessibility issues
         if (document.activeElement && document.activeElement.blur) {
             document.activeElement.blur();
         }
     }, { once: true });
-    
+
     modal.show();
 }
-
 // Edit template
 function editTemplate(templateId) {
     $.ajax({
@@ -491,50 +539,52 @@ function loadServiceTypesForAssignment(selectedTypes) {
 }
 
 // Save template
-function saveTemplate() {
-    console.log('saveTemplate() called');
+//function saveTemplate() {
+//        const $modal = $('#templateModal');
+//        const $form = $('#templateForm');
+//    console.log('saveTemplate() called');
     
-    // Try to find the form with a small delay if not found immediately
-    function tryFindForm(attempt = 1) {
-        const $modal = $('#templateModal');
-        const $form = $('#templateForm');
+//    // Try to find the form with a small delay if not found immediately
+//    function tryFindForm(attempt = 1) {
+//        const $modal = $('#templateModal');
+//        const $form = $('#templateForm');
         
-        console.log(`Attempt ${attempt}: Modal found:`, $modal.length > 0);
-        console.log(`Attempt ${attempt}: Form found:`, $form.length > 0);
-        console.log(`Attempt ${attempt}: Modal is visible:`, $modal.is(':visible'));
+//        console.log(`Attempt ${attempt}: Modal found:`, $modal.length > 0);
+//        console.log(`Attempt ${attempt}: Form found:`, $form.length > 0);
+//        console.log(`Attempt ${attempt}: Modal is visible:`, $modal.is(':visible'));
         
-        if ($form.length === 0 && attempt < 3) {
-            // Try again after a short delay
-            setTimeout(() => tryFindForm(attempt + 1), 100);
-            return;
-        }
+//        if ($form.length === 0 && attempt < 3) {
+//            // Try again after a short delay
+//            setTimeout(() => tryFindForm(attempt + 1), 100);
+//            return;
+//        }
         
-        if ($form.length === 0) {
-            console.error("Could not find #templateForm after multiple attempts");
-            showAlert({
-                icon: 'error',
-                title: 'Error',
-                text: 'Form not found. Please close and reopen the modal.',
-                confirmButtonText: 'OK'
-            });
-            return;
-        }
+//        if ($form.length === 0) {
+//            console.error("Could not find #templateForm after multiple attempts");
+//            showAlert({
+//                icon: 'error',
+//                title: 'Error',
+//                text: 'Form not found. Please close and reopen the modal.',
+//                confirmButtonText: 'OK'
+//            });
+//            return;
+//        }
         
-        // Continue with form processing
-        processFormSave($form);
-    }
+//         Continue with form processing
+//        processFormSave($form);
+//    }
     
-    tryFindForm();
-}
+//    tryFindForm();
+//}
 
 // Process the actual form save
-function processFormSave($form) {
+function saveTemplate() {
 
-    const form = $form[0]; // Get the DOM element for validation
-    if (!form.checkValidity()) {
-        form.reportValidity();
-        return;
-    }
+    //const form = $form[0]; // Get the DOM element for validation
+    //if (!form.checkValidity()) {
+    //    form.reportValidity();
+    //    return;
+    //}
 
     const selectedServiceTypes = [];
     $('input[name="serviceTypes"]:checked').each(function () {
