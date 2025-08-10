@@ -2948,21 +2948,52 @@ function openFormForFilling(templateId) {
 
     $.ajax({
         type: "POST",
-        url: "Forms.aspx/GetFormStructure",
+        url: "Appointments.aspx/GetFormStructure",
         data: JSON.stringify({ templateId: templateId }),
         contentType: "application/json; charset=utf-8",
         dataType: "json",
         success: function (response) {
             try {
-                const formStructure = response.d ? JSON.parse(response.d) : {};
-                console.log('Loaded form structure:', formStructure);
+                let formStructure = {};
+                if (response && response.d !== undefined && response.d !== null) {
+                    if (typeof response.d === "string") {
+                        // try to parse string
+                        try {
+                            formStructure = JSON.parse(response.d);
+                        } catch (parseErr) {
+                            console.error("Failed to JSON.parse(response.d):", parseErr, "response.d:", response.d);
+                            $('#formViewerContainer').html('<div class="drop-zone">Invalid form structure received from server</div>');
+                            return;
+                        }
+                    } else {
+                        // already an object
+                        formStructure = response.d;
+                    }
+                } else {
+                    console.warn("Empty response.d:", response);
+                }
 
-                // Clear the form builder
+                console.log("Parsed formStructure:", formStructure);
+
+            
+                var formTemplateData = formStructure.FormStructure;
+
+              
+                if (typeof formTemplateData === "string") {
+                    try {
+                        formTemplateData = JSON.parse(formTemplateData);
+                    } catch (e) {
+                        console.error("Failed to parse FormStructure:", e);
+                        formTemplateData = {};
+                    }
+                }
                 $('#formViewerContainer').empty();
-
-                if (formStructure.fields && formStructure.fields.length > 0) {
+                $("#formName").text(formStructure.TemplateName);
+                if (formTemplateData.fields && formTemplateData.fields.length > 0) {
+                    
                     // Load existing fields
-                    formStructure.fields.forEach(function (field) {
+                    formTemplateData.fields.forEach(function (field) {
+                       
                         const fieldHtml = generateFieldFromStructure(field);
                         $('#formViewerContainer').append(fieldHtml);
                     });

@@ -177,6 +177,7 @@
     <Content Include="Appointments.aspx" />
     <Content Include="QboConnection.aspx" />
     <Content Include="BillableItems.aspx" />
+    <Content Include="FormResponse.aspx" />
     <Content Include="Content\appointments.css" />
     <Content Include="Content\customer.css" />
     <Content Include="Content\customerdetails.css" />
@@ -196,6 +197,7 @@
     <Content Include="Invoice.aspx" />
     <Content Include="Scripts\customer.js" />
     <Content Include="Scripts\forms.js" />
+    <Content Include="Scripts\form-response.js" />
     <Content Include="Scripts\signature-handler.js" />
     <Content Include="Scripts\modernizr-2.8.3.js" />
     <Content Include="Scripts\WebForms\DetailsView.js" />
@@ -270,6 +272,13 @@
     </Compile>
     <Compile Include="CustomerDetails.aspx.designer.cs">
       <DependentUpon>CustomerDetails.aspx</DependentUpon>
+    </Compile>
+      <Compile Include="FormResponse.aspx.cs">
+      <DependentUpon>FormResponse.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="FormResponse.aspx.designer.cs">
+      <DependentUpon>FormResponse.aspx</DependentUpon>
     </Compile>
     <Compile Include="AuthVerify.aspx.cs">
       <DependentUpon>AuthVerify.aspx</DependentUpon>

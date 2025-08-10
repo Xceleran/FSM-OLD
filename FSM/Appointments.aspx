@@ -962,6 +962,7 @@
                             </div>
                         </div>
                         <div class="col-md-8">
+                            <h3 id="formName"></h3>
                             <div id="formViewerContainer">
                                 <div class="form-viewer-placeholder text-center p-5">
                                     <i class="fa fa-file-text-o fa-3x text-muted mb-3"></i>

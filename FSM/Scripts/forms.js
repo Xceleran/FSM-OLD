@@ -414,6 +414,8 @@ function searchUsageLog(returnFiltered = false) {
 //}
 
 function openNewTemplateModal() {
+    alert("Temporary Unavailable !!");
+    return;
     currentTemplate = null;
     $('#templateModalTitle').text('New Form Template');
 
@@ -668,6 +670,8 @@ function toggleTemplateStatus(templateId, isActive) {
 
 // Duplicate template
 function duplicateTemplate(templateId) {
+    alert("Temporary Unavailable !!");
+    return;
     $.ajax({
         type: "POST",
         url: "Forms.aspx/DuplicateTemplate",

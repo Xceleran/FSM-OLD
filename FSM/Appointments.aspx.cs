@@ -14,6 +14,8 @@ using System.Web.UI;
 using System.Web.UI.WebControls;
 using FSM.Models.AppoinmentModel;
 using System.Configuration;
+using FSM.Processors;
+using FSM.Entity.Forms;
 
 namespace FSM
 {
@@ -757,6 +759,29 @@ namespace FSM
             {
                 System.Diagnostics.Debug.WriteLine($"SMS send error: {ex.Message}");
                 return false;
+            }
+        }
+        [WebMethod]
+        public static FormTemplate GetFormStructure(int templateId)
+        {
+            try
+            {
+                var forObj= new FormTemplate();
+                string companyId = System.Web.HttpContext.Current.Session["CompanyID"]?.ToString();
+                if (string.IsNullOrEmpty(companyId))
+                    return forObj;
+
+                var processor = new FormProcessor();
+                var template = processor.GetTemplate(templateId, companyId);
+                if(template != null)
+                {
+                    forObj = template;
+                }
+                return forObj;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error retrieving form structure: " + ex.Message);
             }
         }
     }
