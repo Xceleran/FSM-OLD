@@ -89,27 +89,7 @@
                     <div class="cust-section-block">
                         <button class="cust-section-toggle" data-section="sites" id="sitesBtn">Sites & Locations</button>
                         <div class="cust-section-content" id="sites">
-                            <div class="cust-site-card" data-site-id="1">
-                                <h3 class="cust-site-title">Main Residence</h3>
-                                <p class="cust-site-info" id="address-1">Address: 123 Elm St, City, ST 12345</p>
-                                <p class="cust-site-info">Contact: Jane Smith (555-987-6543)</p>
-                                <div class="cust-site-actions">
-                                    <button class="cust-site-edit-btn" data-site-id="1">Edit</button>
-                                    <a href="CustomerDetails.aspx?siteId=1" class="cust-site-view-link">View Details</a>
-                                </div>
-                            </div>
-                            <div class="cust-site-card" data-site-id="2">
-                                <h3 class="cust-site-title">Vacation Home</h3>
-                                <p class="cust-site-info" id="address-2">Address: 456 Oak Rd, City, ST 12345</p>
-                                <p class="cust-site-info">Contact: Bob Johnson (555-456-7890)</p>
-                                <div class="cust-site-actions">
-                                    <button class="cust-site-edit-btn" data-site-id="2">Edit</button>
-                                    <a href="CustomerDetails.aspx?siteId=2" class="cust-site-view-link">View Details</a>
-                                </div>
-                            </div>
-                            <div class="d-flex justify-content-end mb-3">
-                                <button class="btn btn-primary" id="addSiteBtn">+ Add Site</button>
-                            </div>
+                        
                         </div>
                     </div>
                 </div>

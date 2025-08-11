@@ -206,38 +206,6 @@
                                     </select>
                                 </div>
 
-                                <!-- Region Filter -->
-                                <div>
-                                    <select id="RegionFilter" class="form-select w-auto" onchange="renderUnscheduledList()">
-                                        <option value="all">All Provinces/Territories</option>
-                                        <option value="AB">Alberta</option>
-                                        <option value="BC">British Columbia</option>
-                                        <option value="MB">Manitoba</option>
-                                        <option value="NB">New Brunswick</option>
-                                        <option value="NL">Newfoundland and Labrador</option>
-                                        <option value="NS">Nova Scotia</option>
-                                        <option value="NT">Northwest Territories</option>
-                                        <option value="NU">Nunavut</option>
-                                        <option value="ON">Ontario</option>
-                                        <option value="PE">Prince Edward Island</option>
-                                        <option value="QC">Quebec</option>
-                                        <option value="SK">Saskatchewan</option>
-                                        <option value="YT">Yukon</option>
-                                    </select>
-                                </div>
-
-                                <!-- Skills Filter -->
-                                <div>
-                                    <select id="dispatchGroup" class="form-select w-auto" onchange="renderResourceView($('#resourceDatePicker').val())">
-                                        <option value="all">All Resources</option>
-                                        <option value="electricians">Electricians</option>
-                                        <option value="plumbers">Plumbers</option>
-                                        <option value="carpenters">Carpenters</option>
-                                    </select>
-                                </div>
-
-
-
 
                                 <!-- Custom Date Range (visible only if custom view selected) -->
                                 <div id="resourceCustomDateRangeContainer" class="custom-date-range-container d-none d-flex align-items-center gap-2">
@@ -251,7 +219,15 @@
                                     </div>
                                     <button id="resourceCustomDateSearch" class="btn btn-primary btn-sm">Search</button>
                                 </div>
-
+  <!-- Skills Filter -->
+                             <div>
+                                 <select id="dispatchGroup" class="form-select w-auto" onchange="renderResourceView($('#resourceDatePicker').val())">
+                                     <option value="all">All Resources</option>
+                                     <option value="electricians">Electricians</option>
+                                     <option value="plumbers">Plumbers</option>
+                                     <option value="carpenters">Carpenters</option>
+                                 </select>
+                             </div>
                                 <!-- Date Picker -->
                                 <div class="d-flex align-items-center gap-1 ms-2">
                                     <label for="resourceDatePicker" class="form-label mb-0">Date:</label>
@@ -271,7 +247,14 @@
                         <div class="datepicker">
                             <div class="date-nav" id="resourceDateNav"></div>
                         </div>
-                        <div id="resourceViewContainer"></div>
+                 <div id="resourceViewContainer">
+    <div id="resourceLoading" class="loading-overlay" style="display: none;">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+
+</div>
 
                     </div>
                 </div>
@@ -728,49 +711,65 @@
 
                             <!-- Customer Data Tab -->
                             <div class="tab-pane fade" id="customer-data" role="tabpanel" aria-labelledby="customer-tab">
-                                <div class="custdet-container">
-                                    <h2 class="h4 mb-3">Basic Information</h2>
-                                    <div class="table-responsive">
-                                        <table class="table table-bordered table-hover">
-                                            <thead class="table-light">
-                                                <tr>
-                                                    <th scope="col">Field</th>
-                                                    <th scope="col">Value</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <tr>
-                                                    <td>Customer Name</td>
-                                                    <td id="customerName">Loading...</td>
-                                                </tr>
-                                                <tr>
-                                                    <td>Site Contact</td>
-                                                    <td id="siteContact">Loading...</td>
-                                                </tr>
-                                                <tr>
-                                                    <td>Email</td>
-                                                    <td id="customerEmail">Loading...</td>
-                                                </tr>
-                                                <tr>
-                                                    <td>Address</td>
-                                                    <td id="siteAddress">Loading...</td>
-                                                </tr>
-                                                <tr>
-                                                    <td>Status</td>
-                                                    <td id="siteStatus">Loading...</td>
-                                                </tr>
-                                                <tr>
-                                                    <td>Special Instructions</td>
-                                                    <td id="siteInstructions">Loading...</td>
-                                                </tr>
-                                                <tr>
-                                                    <td>Created On</td>
-                                                    <td id="siteDescription">Loading...</td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
+                            <div class="custdet-container">
+             <h2 class="h4 mb-3">Basic Information</h2>
+             <asp:Label Style="display: none;" ID="lblCustomerId" runat="server" />
+             <asp:Label Style="display: none;" ID="lblSiteId" runat="server" />
+             <asp:Label Style="display: none;" ID="lblCustomerGuid" runat="server" />
+             <div class="table-responsive">
+                 <table class="table table-bordered table-hover">
+                     <thead class="table-light">
+                         <tr>
+                             <th scope="col">Field</th>
+                             <th scope="col">Value</th>
+                         </tr>
+                     </thead>
+                     <tbody>
+                         <tr>
+                             <td>Customer Name</td>
+                             <td id="customerName">
+                                 <asp:Label ID="lblCustomerName" runat="server" /></td>
+                         </tr>
+                         <tr>
+                             <td>Site Contact</td>
+                             <td id="siteContact">
+                                 <asp:Label ID="lblContact" runat="server" /><br />
+                                 <i class="fas fa-phone me-1" style="font-size: 13px;"></i>Phone:
+                                 <asp:HyperLink ID="hlPhone" runat="server" /><br />
+                                 <i class="fas fa-mobile-alt me-1"></i>Mobile:
+                                 <asp:HyperLink ID="hlMobile" runat="server" />
+                             </td>
+                         </tr>
+                         <tr>
+                             <td>Email</td>
+                             <td id="customerEmail">
+                                 <asp:HyperLink ID="hlEmail" runat="server" />
+                             </td>
+                         </tr>
+                         <tr>
+                             <td>Address</td>
+                             <td id="siteAddress">
+                                 <asp:Label ID="lblAddress" runat="server" /></td>
+                         </tr>
+                         <tr>
+                             <td>Status</td>
+                             <td id="siteStatus">
+                                 <asp:Label ID="lblActive" runat="server" /></td>
+                         </tr>
+                         <tr>
+                             <td>Special Instructions</td>
+                             <td id="siteInstructions">
+                                 <asp:Label ID="lblNote" runat="server" /></td>
+                         </tr>
+                         <tr>
+                             <td>Created On</td>
+                             <td id="siteDescription">
+                                 <asp:Label ID="lblCreatedOn" runat="server" /></td>
+                         </tr>
+                     </tbody>
+                 </table>
+             </div>
+         </div>
                             </div>
 
                             <!-- Forms Tab -->

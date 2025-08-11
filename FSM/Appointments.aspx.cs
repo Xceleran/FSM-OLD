@@ -28,9 +28,34 @@ namespace FSM
             {
                 Response.Redirect("Dashboard.aspx");
             }
+            string customerId = Request.QueryString["custId"];
+            string siteId = Request.QueryString["siteId"];
+
             if (!IsPostBack)
             {
-                CompanyID = Session["CompanyID"].ToString();
+                var customer = GetCustomerDetails(customerId);
+                var site = GetCustomerSitebyId(customerId, Convert.ToInt32(siteId));
+
+                // Setting values for the Basic Information table
+                lblCustomerName.Text = customer?.FirstName + " " + customer?.LastName;
+                lblCustomerGuid.Text = customer?.CustomerGuid;
+                lblAddress.Text = site?.Address;
+                lblContact.Text = site?.Contact;
+                lblCustomerId.Text = customerId;
+                lblSiteId.Text = siteId;
+                lblActive.Text = site?.IsActive == true ? "Active" : "Disabled";
+                lblNote.Text = site?.Note;
+                lblCreatedOn.Text = site?.CreatedDateTime?.ToString("yyyy-MM-dd");
+
+                hlPhone.Text = customer?.Phone;
+                hlPhone.NavigateUrl = "tel:" + customer?.Phone;
+
+                hlMobile.Text = customer?.Mobile;
+                hlMobile.NavigateUrl = "tel:" + customer?.Mobile;
+
+                hlEmail.Text = customer?.Email;
+                hlEmail.NavigateUrl = "mailto:" + customer?.Email;
+
                 LoadData();
             }
         }
@@ -427,11 +452,13 @@ namespace FSM
             {
                 db.Open();
                 DataTable dt = new DataTable();
-                string sql = @"SELECT * FROM [msSchedulerV3].[dbo].[tbl_Customer] WHERE CustomerID = @CustomerID AND CompanyID = @CompanyID;";
+                string sql = @"SELECT * FROM [msSchedulerV3].[dbo].[tbl_Customer] 
+                               WHERE CustomerID = @CustomerID AND CompanyID = @CompanyID;";
                 db.AddParameter("@CompanyID", companyid, SqlDbType.NVarChar);
                 db.AddParameter("@CustomerID", customerId, SqlDbType.NVarChar);
                 db.ExecuteParam(sql, out dt);
                 db.Close();
+
                 if (dt.Rows.Count > 0)
                 {
                     DataRow dataRow = dt.Rows[0];
@@ -443,13 +470,14 @@ namespace FSM
                     customer.Email = dataRow.Field<string>("Email") ?? "";
                 }
             }
-            catch (Exception ex)
+            catch
             {
                 db.Close();
                 return customer;
             }
             return customer;
         }
+
 
         public static CustomerSite GetCustomerSitebyId(string customerId, int siteId)
         {
@@ -459,7 +487,8 @@ namespace FSM
             try
             {
                 db.Open();
-                string strSQL = @"SELECT * FROM [msSchedulerV3].dbo.tbl_CustomerSite WHERE Id ='" + siteId + "' AND CustomerID='" + customerId + "';";
+                string strSQL = @"SELECT * FROM [msSchedulerV3].dbo.tbl_CustomerSite 
+                                  WHERE Id ='" + siteId + "' AND CustomerID='" + customerId + "';";
                 db.Execute(strSQL, out dt);
                 if (dt.Rows.Count > 0)
                 {
@@ -473,7 +502,7 @@ namespace FSM
                     site.CreatedDateTime = Convert.ToDateTime(dataRow["CreatedDateTime"]);
                 }
             }
-            catch (Exception ex)
+            catch
             {
                 return site;
             }
