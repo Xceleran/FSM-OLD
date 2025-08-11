@@ -762,7 +762,7 @@ function generateFieldHtml(type, fieldId) {
         date: { label: 'Date', icon: 'fa-calendar', input: '<input type="date" class="form-control">' },
         dropdown: { label: 'Dropdown', icon: 'fa-caret-down', input: '<select class="form-control"><option>Option 1</option><option>Option 2</option></select>' },
         checkbox: { label: 'Checkbox', icon: 'fa-check-square', input: '<div class="form-check"><input type="checkbox" class="form-check-input"><label class="form-check-label">Check this option</label></div>' },
-        radio: { label: 'Radio Button', icon: 'fa-dot-circle', input: '<div class="form-check"><input type="radio" class="form-check-input" name="radio_' + fieldId + '"><label class="form-check-label">Option 1</label></div>' },
+        radio: { label: 'Radio Button', icon: 'fa-dot-circle', input: generateRadioHtml(null, fieldId) },  // Use generateRadioHtml for consistency
         signature: { label: 'Signature', icon: 'fa-pencil', input: '<div class="signature-pad" style="border: 1px solid #ddd; height: 150px; display: flex; align-items: center; justify-content: center;">Signature Area</div>' }
     };
 
@@ -780,8 +780,8 @@ function generateFieldHtml(type, fieldId) {
                 </button>
             </div>
             <div class="form-group">
-                <label><i class="fa ${config.icon}"></i> ${config.label}</label>
-                ${config.input}
+                <label class="field-label"><i class="fa ${config.icon}"></i> ${config.label}</label>
+                <div class="field-options">${config.input}</div>  <!-- Wrap input/options in .field-options for isolation -->
             </div>
         </div>
     `;
@@ -839,7 +839,7 @@ function generateFieldFromStructure(field) {
     const fieldType = field.type || 'text';
     const fieldLabel = field.label || 'Untitled Field';
     const isRequired = field.required || false;
-    
+
     const fieldConfig = {
         text: { icon: 'fa-font', input: `<input type="text" class="form-control" placeholder="${field.placeholder || 'Enter text'}" ${field.defaultValue ? 'value="' + field.defaultValue + '"' : ''}>` },
         textarea: { icon: 'fa-align-left', input: `<textarea class="form-control" rows="3" placeholder="${field.placeholder || 'Enter text'}">${field.defaultValue || ''}</textarea>` },
@@ -852,7 +852,7 @@ function generateFieldFromStructure(field) {
     };
 
     const config = fieldConfig[fieldType] || fieldConfig.text;
-    
+
     return `
         <div class="form-field" data-field-id="${fieldId}" data-field-type="${fieldType}" onclick="selectField('${fieldId}')">
             <div class="field-controls">
@@ -864,8 +864,8 @@ function generateFieldFromStructure(field) {
                 </button>
             </div>
             <div class="form-group">
-                <label><i class="fa ${config.icon}"></i> ${fieldLabel}${isRequired ? ' *' : ''}</label>
-                ${config.input}
+                <label class="field-label"><i class="fa ${config.icon}"></i> ${fieldLabel}${isRequired ? ' *' : ''}</label>
+                <div class="field-options">${config.input}</div>  <!-- Isolate options -->
             </div>
         </div>
     `;
@@ -886,17 +886,102 @@ function generateDropdownHtml(options) {
 }
 
 // Generate radio button HTML from options
+// Updated generateFieldHtml: Add 'field-label' class to main label and wrap options for radio
+function generateFieldHtml(type, fieldId) {
+    const fieldConfig = {
+        text: { label: 'Text Input', icon: 'fa-font', input: '<input type="text" class="form-control" placeholder="Enter text">' },
+        textarea: { label: 'Text Area', icon: 'fa-align-left', input: '<textarea class="form-control" rows="3" placeholder="Enter text"></textarea>' },
+        number: { label: 'Number', icon: 'fa-hashtag', input: '<input type="number" class="form-control" placeholder="Enter number">' },
+        date: { label: 'Date', icon: 'fa-calendar', input: '<input type="date" class="form-control">' },
+        dropdown: { label: 'Dropdown', icon: 'fa-caret-down', input: '<select class="form-control"><option>Option 1</option><option>Option 2</option></select>' },
+        checkbox: { label: 'Checkbox', icon: 'fa-check-square', input: '<div class="form-check"><input type="checkbox" class="form-check-input"><label class="form-check-label">Check this option</label></div>' },
+        radio: { label: 'Radio Button', icon: 'fa-dot-circle', input: generateRadioHtml(null, fieldId) },  // Use generateRadioHtml for consistency
+        signature: { label: 'Signature', icon: 'fa-pencil', input: '<div class="signature-pad" style="border: 1px solid #ddd; height: 150px; display: flex; align-items: center; justify-content: center;">Signature Area</div>' }
+    };
+
+    const config = fieldConfig[type];
+    if (!config) return '';
+
+    return `
+        <div class="form-field" data-field-id="${fieldId}" data-field-type="${type}" onclick="selectField('${fieldId}')">
+            <div class="field-controls">
+                <button type="button" class="btn btn-sm btn-outline-primary" onclick="editField('${fieldId}')">
+                    <i class="fa fa-edit"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeField('${fieldId}')">
+                    <i class="fa fa-trash"></i>
+                </button>
+            </div>
+            <div class="form-group">
+                <label class="field-label"><i class="fa ${config.icon}"></i> ${config.label}</label>
+                <div class="field-options">${config.input}</div>  <!-- Wrap input/options in .field-options for isolation -->
+            </div>
+        </div>
+    `;
+}
+
+// Updated generateFieldFromStructure: Add 'field-label' and .field-options
+function generateFieldFromStructure(field) {
+    const fieldId = field.id || 'field_' + Date.now();
+    const fieldType = field.type || 'text';
+    const fieldLabel = field.label || 'Untitled Field';
+    const isRequired = field.required || false;
+
+    const fieldConfig = {
+        text: { icon: 'fa-font', input: `<input type="text" class="form-control" placeholder="${field.placeholder || 'Enter text'}" ${field.defaultValue ? 'value="' + field.defaultValue + '"' : ''}>` },
+        textarea: { icon: 'fa-align-left', input: `<textarea class="form-control" rows="3" placeholder="${field.placeholder || 'Enter text'}">${field.defaultValue || ''}</textarea>` },
+        number: { icon: 'fa-hashtag', input: `<input type="number" class="form-control" placeholder="${field.placeholder || 'Enter number'}" ${field.defaultValue ? 'value="' + field.defaultValue + '"' : ''}>` },
+        date: { icon: 'fa-calendar', input: `<input type="date" class="form-control" ${field.defaultValue ? 'value="' + field.defaultValue + '"' : ''}>` },
+        dropdown: { icon: 'fa-caret-down', input: generateDropdownHtml(field.options) },
+        checkbox: { icon: 'fa-check-square', input: `<div class="form-check"><input type="checkbox" class="form-check-input" ${field.defaultValue ? 'checked' : ''}><label class="form-check-label">${field.checkboxLabel || 'Check this option'}</label></div>` },
+        radio: { icon: 'fa-dot-circle', input: generateRadioHtml(field.options, fieldId) },
+        signature: { icon: 'fa-pencil', input: '<div class="signature-pad" style="border: 1px solid #ddd; height: 150px; display: flex; align-items: center; justify-content: center;">Signature Area</div>' }
+    };
+
+    const config = fieldConfig[fieldType] || fieldConfig.text;
+
+    return `
+        <div class="form-field" data-field-id="${fieldId}" data-field-type="${fieldType}" onclick="selectField('${fieldId}')">
+            <div class="field-controls">
+                <button type="button" class="btn btn-sm btn-outline-primary" onclick="editField('${fieldId}')">
+                    <i class="fa fa-edit"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeField('${fieldId}')">
+                    <i class="fa fa-trash"></i>
+                </button>
+            </div>
+            <div class="form-group">
+                <label class="field-label"><i class="fa ${config.icon}"></i> ${fieldLabel}${isRequired ? ' *' : ''}</label>
+                <div class="field-options">${config.input}</div>  <!-- Isolate options -->
+            </div>
+        </div>
+    `;
+}
+
+// Updated generateRadioHtml: Add spacing and IDs
 function generateRadioHtml(options, fieldId) {
-    if (!options || options.length === 0) {
-        return `<div class="form-check"><input type="radio" class="form-check-input" name="radio_${fieldId}"><label class="form-check-label">Option 1</label></div>`;
-    }
-    
     let html = '';
+    if (!options || options.length === 0) {
+        html += `
+            <div class="form-check" style="margin-bottom: 8px;">
+                <input type="radio" class="form-check-input" id="radio_${fieldId}_1" name="radio_${fieldId}">
+                <label class="form-check-label" for="radio_${fieldId}_1">Option 1</label>
+            </div>
+            <div class="form-check" style="margin-bottom: 8px;">
+                <input type="radio" class="form-check-input" id="radio_${fieldId}_2" name="radio_${fieldId}">
+                <label class="form-check-label" for="radio_${fieldId}_2">Option 2</label>
+            </div>
+        `;
+        return html;
+    }
+
     options.forEach((option, index) => {
-        html += `<div class="form-check">
-            <input type="radio" class="form-check-input" name="radio_${fieldId}" value="${option.value || option}">
-            <label class="form-check-label">${option.label || option}</label>
-        </div>`;
+        html += `
+            <div class="form-check" style="margin-bottom: 8px;">
+                <input type="radio" class="form-check-input" id="radio_${fieldId}_${index + 1}" name="radio_${fieldId}" value="${option.value || option}">
+                <label class="form-check-label" for="radio_${fieldId}_${index + 1}">${option.label || option}</label>
+            </div>
+        `;
     });
     return html;
 }
@@ -904,7 +989,7 @@ function generateRadioHtml(options, fieldId) {
 // Save form structure
 function saveFormStructure() {
     console.log('Saving form structure...');
-    
+    const fieldLabel = $field.find('.field-label').text().replace('*', '').trim();
     if (!currentTemplate || !currentTemplate.Id) {
         showAlert({
             icon: 'error',
@@ -1038,16 +1123,14 @@ function selectField(fieldId) {
 function editField(fieldId) {
     const $field = $(`[data-field-id="${fieldId}"]`);
     const fieldType = $field.data('field-type');
-    const currentLabel = $field.find('label').text().replace('*', '').trim();
-    
-    // Simple prompt for now - could be enhanced with a modal
+    const currentLabel = $field.find('.field-label').text().replace('*', '').trim();
+
     const newLabel = prompt('Enter field label:', currentLabel);
     if (newLabel && newLabel.trim()) {
-        const isRequired = $field.find('label').text().includes('*');
-        $field.find('label').html(`<i class="fa ${getFieldIcon(fieldType)}"></i> ${newLabel.trim()}${isRequired ? ' *' : ''}`);
+        const isRequired = $field.find('.field-label').text().includes('*');
+        $field.find('.field-label').html(`<i class="fa ${getFieldIcon(fieldType)}"></i> ${newLabel.trim()}${isRequired ? ' *' : ''}`);
     }
 }
-
 function removeField(fieldId) {
     if (confirm('Are you sure you want to remove this field?')) {
         $(`[data-field-id="${fieldId}"]`).remove();
@@ -1065,9 +1148,9 @@ function removeField(fieldId) {
 function showFieldProperties(fieldId) {
     const $field = $(`[data-field-id="${fieldId}"]`);
     const fieldType = $field.data('field-type');
-    const fieldLabel = $field.find('label').text().replace('*', '').trim();
-    const isRequired = $field.find('label').text().includes('*');
-    
+    const fieldLabel = $field.find('.field-label').text().replace('*', '').trim();
+    const isRequired = $field.find('.field-label').text().includes('*');
+
     const propertiesHtml = `
         <div class="field-property">
             <label>Field Label</label>
@@ -1090,24 +1173,26 @@ function showFieldProperties(fieldId) {
             </button>
         </div>
     `;
-    
+
     $('#fieldProperties').html(propertiesHtml);
 }
 
+// Updated updateFieldLabel: Target .field-label
 function updateFieldLabel(fieldId, newLabel) {
     const $field = $(`[data-field-id="${fieldId}"]`);
     const fieldType = $field.data('field-type');
-    const isRequired = $field.find('label').text().includes('*');
-    
-    $field.find('label').html(`<i class="fa ${getFieldIcon(fieldType)}"></i> ${newLabel}${isRequired ? ' *' : ''}`);
+    const isRequired = $field.find('.field-label').text().includes('*');
+
+    $field.find('.field-label').html(`<i class="fa ${getFieldIcon(fieldType)}"></i> ${newLabel}${isRequired ? ' *' : ''}`);
 }
 
+// Updated toggleFieldRequired: Target .field-label
 function toggleFieldRequired(fieldId, isRequired) {
     const $field = $(`[data-field-id="${fieldId}"]`);
     const fieldType = $field.data('field-type');
-    const fieldLabel = $field.find('label').text().replace('*', '').trim();
-    
-    $field.find('label').html(`<i class="fa ${getFieldIcon(fieldType)}"></i> ${fieldLabel}${isRequired ? ' *' : ''}`);
+    const fieldLabel = $field.find('.field-label').text().replace('*', '').trim();
+
+    $field.find('.field-label').html(`<i class="fa ${getFieldIcon(fieldType)}"></i> ${fieldLabel}${isRequired ? ' *' : ''}`);
 }
 
 function getFieldIcon(fieldType) {

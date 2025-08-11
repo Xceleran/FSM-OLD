@@ -637,7 +637,7 @@
                             <button class="nav-link-modal" id="forms-tab" data-bs-toggle="tab" data-bs-target="#forms-section" type="button" role="tab" aria-controls="forms-section" aria-selected="false">Forms</button>
                         </li>
                     </ul>
-                    <h5 class="modal-title confirm-title d-none" id="confirmlLabel">Confirm Appointment Scheduling</h5>
+
                     <button type="button" class="btn-close edit_close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form id="editForm" onsubmit="updateAppointment(event)">

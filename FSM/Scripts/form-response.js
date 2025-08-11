@@ -97,9 +97,16 @@ function generateFieldFromStructure(field) {
     return `
         <div class="form-field" data-field-id="${fieldId}" data-field-type="${fieldType}" onclick="selectField('${fieldId}')">
             <div class="form-group">
-                <label><i class="fa ${config.icon}"></i> ${fieldLabel}${isRequired ? ' *' : ''}</label>
+               <label style="margin-bottom: 7px;"<i class="fa ${config.icon}"></i> ${fieldLabel}${isRequired ? ' *' : ''}</label>
                 ${config.input}
             </div>
         </div>
     `;
+}
+function selectField(fieldId) {
+    document.querySelectorAll('.form-field').forEach(el => el.classList.remove('selected'));
+    const field = document.querySelector(`[data-field-id="${fieldId}"]`);
+    if (field) {
+        field.classList.add('selected');
+    }
 }
