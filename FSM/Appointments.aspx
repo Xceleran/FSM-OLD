@@ -206,6 +206,39 @@
                                     </select>
                                 </div>
 
+                                <!-- Region Filter -->
+                                <div>
+                                    <select id="RegionFilter" class="form-select w-auto" onchange="renderUnscheduledList()">
+                                        <option value="all">All Provinces/Territories</option>
+                                        <option value="AB">Alberta</option>
+                                        <option value="BC">British Columbia</option>
+                                        <option value="MB">Manitoba</option>
+                                        <option value="NB">New Brunswick</option>
+                                        <option value="NL">Newfoundland and Labrador</option>
+                                        <option value="NS">Nova Scotia</option>
+                                        <option value="NT">Northwest Territories</option>
+                                        <option value="NU">Nunavut</option>
+                                        <option value="ON">Ontario</option>
+                                        <option value="PE">Prince Edward Island</option>
+                                        <option value="QC">Quebec</option>
+                                        <option value="SK">Saskatchewan</option>
+                                        <option value="YT">Yukon</option>
+                                    </select>
+                                </div>
+
+                                <!-- Skills Filter -->
+                                <div>
+                                    <select id="dispatchGroup" class="form-select w-auto" onchange="renderResourceView($('#resourceDatePicker').val())">
+                                        <option value="all">All Resources</option>
+                                        <option value="electricians">Electricians</option>
+                                        <option value="plumbers">Plumbers</option>
+                                        <option value="carpenters">Carpenters</option>
+                                    </select>
+                                </div>
+
+
+
+
                                 <!-- Custom Date Range (visible only if custom view selected) -->
                                 <div id="resourceCustomDateRangeContainer" class="custom-date-range-container d-none d-flex align-items-center gap-2">
                                     <div class="d-flex align-items-center gap-1">
@@ -228,274 +261,274 @@
                                 <!-- Toggle Unscheduled Button -->
                                 <button id="toggleUnscheduledBtnResource" class="btn btn-sm"><i class="fas fa-chevron-right"></i></button>
                             </div>
-                            <div class="appt-type-indicators">
-                                <span class="appt-type-indicator appt-type-it-support"></span>IT Support
+                        <div class="appt-type-indicators">
+                            <span class="appt-type-indicator appt-type-it-support"></span>IT Support
                                 <span class="appt-type-indicator appt-type-1-hour"></span>1 Hour
                                 <span class="appt-type-indicator appt-type-2-hour"></span>2 Hour
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="datepicker">
-                                <div class="date-nav" id="resourceDateNav"></div>
-                            </div>
-                            <div id="resourceViewContainer"></div>
-
-                        </div>
-                    </div>
-                    <div class="card unscheduled-panel">
-                        <div class="card-header">
-                            <h3 class="card-title">Unassigned Appointments</h3>
-                        </div>
-                        <div class="card-body">
-                            <!--Dropdowns Under One Filter-->
-                            <div class="d-flex flex-wrap align-items-center gap-3 mb-3">
-                                <!-- Filter Dropdown -->
-                                <div class="dropdown">
-                                    <button class="btn filter-btn dropdown-toggle d-flex align-items-center gap-2"
-                                        type="button"
-                                        id="unscheduledFilterBtnResource"
-                                        data-bs-toggle="dropdown"
-                                        aria-expanded="false">
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                                            <path d="M21 6H19M21 12H16M21 18H16M7 20V13.5612C7 13.3532 7 13.2492 6.97958 13.1497C6.96147 13.0615 6.93151 12.9761 6.89052 12.8958C6.84431 12.8054 6.77934 12.7242 6.64939 12.5617L3.35061 8.43826C3.22066 8.27583 3.15569 8.19461 3.10948 8.10417C3.06849 8.02393 3.03853 7.93852 3.02042 7.85026C3 7.75078 3 7.64677 3 7.43875V5.6C3 5.03995 3 4.75992 3.10899 4.54601C3.20487 4.35785 3.35785 4.20487 3.54601 4.10899C3.75992 4 4.03995 4 4.6 4H13.4C13.9601 4 14.2401 4 14.454 4.10899C14.6422 4.20487 14.7951 4.35785 14.891 4.54601C15 4.75992 15 5.03995 15 5.6V7.43875C15 7.64677 15 7.75078 14.9796 7.85026C14.9615 7.93852 14.9315 8.02393 14.8905 8.10417C14.8443 8.19461 14.7793 8.27583 14.6494 8.43826L11.3506 12.5617C11.2207 12.7242 11.1557 12.8054 11.1095 12.8958C11.0685 12.9761 11.0385 13.0615 11.0204 13.1497C11 13.2492 11 13.3532 11 13.5612V17L7 20Z"
-                                                stroke="currentColor"
-                                                stroke-width="1.5"
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round">
-                                            </path>
-                                        </svg>
-                                        Filter
-                                    </button>
-                                    <div class="dropdown-menu p-3" aria-labelledby="unscheduledFilterBtnResource" style="min-width: 320px;">
-                                        <select runat="server" id="StatusTypeFilter_Resource" class="form-select mb-3" onchange="renderUnscheduledList('resource')">
-                                            <option value="all">All Statuses</option>
-                                        </select>
-                                        <select runat="server" id="ServiceTypeFilter_Resource" class="form-select mb-3" onchange="renderUnscheduledList('resource')">
-                                            <option value="all">All Types</option>
-                                            <option value="IT Support">IT Support</option>
-                                            <option value="1 Hour">1 Hour</option>
-                                            <option value="2 Hour">2 Hour</option>
-                                        </select>
-                                        <select id="ProvinceFilterResource" class="form-select mb-3" onchange="renderUnscheduledList('resource')">
-                                            <option value="all">All Provinces/Territories</option>
-                                            <option value="AB">Alberta</option>
-                                            <option value="BC">British Columbia</option>
-                                            <option value="MB">Manitoba</option>
-                                            <option value="NB">New Brunswick</option>
-                                            <option value="NL">Newfoundland and Labrador</option>
-                                            <option value="NS">Nova Scotia</option>
-                                            <option value="NT">Northwest Territories</option>
-                                            <option value="NU">Nunavut</option>
-                                            <option value="ON">Ontario</option>
-                                            <option value="PE">Prince Edward Island</option>
-                                            <option value="QC">Quebec</option>
-                                            <option value="SK">Saskatchewan</option>
-                                            <option value="YT">Yukon</option>
-                                        </select>
-                                        <select id="PostalCodeFilterResource" class="form-select mb-3" onchange="renderUnscheduledList('resource')">
-                                            <option value="all">All Postal Codes</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <!-- Search Box -->
-                                <div class="ms-auto">
-                                    <div class="input-group" style="width: 250px;">
-                                        <input type="text" id="searchFilterResource" class="form-control" placeholder="Search..." onkeyup="renderUnscheduledList('resource')">
-                                        <span class="input-group-text">
-                                            <i class="fas fa-search"></i>
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div id="unscheduledListResource" class="unscheduled-list"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="tab-pane fade" id="listView" role="tabpanel">
-                <div class="card calendar-container">
-                    <div class="card-header">
-                        <div class="d-flex flex-wrap gap-2 align-items-end">
-                            <div>
-                                <label for="search_term" class="form-label mb-0">Search</label>
-                                <input placeholder="Search anything" type="text" id="search_term" class="form-control w-200px" oninput="renderListView()">
-                            </div>
-                            <div>
-                                <label for="ServiceTypeFilter_List" class="form-label mb-0">Service type:</label>
-                                <select name="ServiceTypeFilter_List" id="ServiceTypeFilter_List" class="form-select" runat="server" onchange="renderListView()">
-                                    <option value="all">All Types</option>
-                                    <option value="IT Support">IT Support</option>
-                                    <option value="1 Hour">1 Hour</option>
-                                    <option value="2 Hour">2 Hour</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label for="StatusTypeFilter_List" class="form-label mb-0">Appointment Status:</label>
-                                <select runat="server" id="StatusTypeFilter_List" class="form-select" onchange="renderListView()">
-                                    <option value="all">Select</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label for="TicketStatusFilter_List" class="form-label mb-0">Ticket Status:</label>
-                                <select runat="server" id="TicketStatusFilter_List" class="form-select" onchange="renderListView()">
-                                    <option value="all">Select</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label for="listDatePicker" class="form-label mb-0">Date:</label>
-                                <input type="date" id="listDatePicker" class="form-control w-200px">
-                            </div>
-                            <div>
-                                <label for="listDatePickerFrom" class="form-label mb-0">From Date:</label>
-                                <input type="date" id="listDatePickerFrom" class="form-control w-200px">
-                            </div>
-                            <div>
-                                <label for="listDatePickerTo" class="form-label mb-0">To Date:</label>
-                                <input type="date" id="listDatePickerTo" class="form-control w-200px">
-                            </div>
-                            <div>
-                                <label></label>
-                                <button type="button" class="btn btn-primary ms-2" onclick="searchListView(event)">Search By Date</button>
-                            </div>
-                            <div>
-                                <button type="button" class="btn btn-secondary ms-2" onclick="clearFilterListView(event)">Clear</button>
-                            </div>
                         </div>
                     </div>
                     <div class="card-body">
-                        <div class="list-view-table-container">
-                            <div id="listViewLoading" class="loading-overlay" style="display: none;">
-                                <div class="spinner-border text-primary" role="status">
-                                    <span class="visually-hidden">Loading...</span>
-                                </div>
-                            </div>
-                            <table class="table list-view-table">
-                                <thead>
-                                    <tr>
-                                        <th>View</th>
-                                        <th data-key="CustomerName" class="sortable">Customer</th>
-                                        <th data-key="BusinessName" class="sortable">Business Name</th>
-                                        <th data-key="Address1" class="sortable">Address</th>
-                                        <th data-key="RequestDate" class="sortable">Request Date</th>
-                                        <th data-key="TimeSlot" class="sortable">Time Slot</th>
-                                        <th data-key="ServiceType" class="sortable">Service Type</th>
-                                        <th data-key="Email" class="sortable">Email</th>
-                                        <th data-key="Mobile" class="sortable">Mobile</th>
-                                        <th data-key="Phone" class="sortable">Phone</th>
-                                        <th data-key="AppoinmentStatus" class="sortable">Appointment Status</th>
-                                        <th data-key="ResourceName" class="sortable">Resource</th>
-                                        <th data-key="TicketStatus" class="sortable">Ticket Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="listTableBody">
-                                    <!-- Populated by renderListView -->
-                                </tbody>
-                            </table>
+                        <div class="datepicker">
+                            <div class="date-nav" id="resourceDateNav"></div>
                         </div>
+                        <div id="resourceViewContainer"></div>
 
-                        <!-- Pagination Controls -->
-                        <div class="pagination-controls mt-3 d-flex justify-content-between align-items-center">
-                            <div class="d-flex align-items-center gap-3">
-                                <div>
-                                    <span>Rows per page: </span>
-                                    <select id="listViewPageSize" onchange="changeListViewPageSize()" class="form-select d-inline-block" style="width: auto;">
-                                        <option value="5" selected>5</option>
-                                        <option value="10">10</option>
-                                        <option value="25">25</option>
-                                        <option value="50">50</option>
+                    </div>
+                </div>
+                <div class="card unscheduled-panel">
+                    <div class="card-header">
+                        <h3 class="card-title">Unassigned Appointments</h3>
+                    </div>
+                    <div class="card-body">
+                        <!--Dropdowns Under One Filter-->
+                        <div class="d-flex flex-wrap align-items-center gap-3 mb-3">
+                            <!-- Filter Dropdown -->
+                            <div class="dropdown">
+                                <button class="btn filter-btn dropdown-toggle d-flex align-items-center gap-2"
+                                    type="button"
+                                    id="unscheduledFilterBtnResource"
+                                    data-bs-toggle="dropdown"
+                                    aria-expanded="false">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                        <path d="M21 6H19M21 12H16M21 18H16M7 20V13.5612C7 13.3532 7 13.2492 6.97958 13.1497C6.96147 13.0615 6.93151 12.9761 6.89052 12.8958C6.84431 12.8054 6.77934 12.7242 6.64939 12.5617L3.35061 8.43826C3.22066 8.27583 3.15569 8.19461 3.10948 8.10417C3.06849 8.02393 3.03853 7.93852 3.02042 7.85026C3 7.75078 3 7.64677 3 7.43875V5.6C3 5.03995 3 4.75992 3.10899 4.54601C3.20487 4.35785 3.35785 4.20487 3.54601 4.10899C3.75992 4 4.03995 4 4.6 4H13.4C13.9601 4 14.2401 4 14.454 4.10899C14.6422 4.20487 14.7951 4.35785 14.891 4.54601C15 4.75992 15 5.03995 15 5.6V7.43875C15 7.64677 15 7.75078 14.9796 7.85026C14.9615 7.93852 14.9315 8.02393 14.8905 8.10417C14.8443 8.19461 14.7793 8.27583 14.6494 8.43826L11.3506 12.5617C11.2207 12.7242 11.1557 12.8054 11.1095 12.8958C11.0685 12.9761 11.0385 13.0615 11.0204 13.1497C11 13.2492 11 13.3532 11 13.5612V17L7 20Z"
+                                            stroke="currentColor"
+                                            stroke-width="1.5"
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round">
+                                        </path>
+                                    </svg>
+                                    Filter
+                                </button>
+                                <div class="dropdown-menu p-3" aria-labelledby="unscheduledFilterBtnResource" style="min-width: 320px;">
+                                    <select runat="server" id="StatusTypeFilter_Resource" class="form-select mb-3" onchange="renderUnscheduledList('resource')">
+                                        <option value="all">All Statuses</option>
+                                    </select>
+                                    <select runat="server" id="ServiceTypeFilter_Resource" class="form-select mb-3" onchange="renderUnscheduledList('resource')">
+                                        <option value="all">All Types</option>
+                                        <option value="IT Support">IT Support</option>
+                                        <option value="1 Hour">1 Hour</option>
+                                        <option value="2 Hour">2 Hour</option>
+                                    </select>
+                                    <select id="ProvinceFilterResource" class="form-select mb-3" onchange="renderUnscheduledList('resource')">
+                                        <option value="all">All Provinces/Territories</option>
+                                        <option value="AB">Alberta</option>
+                                        <option value="BC">British Columbia</option>
+                                        <option value="MB">Manitoba</option>
+                                        <option value="NB">New Brunswick</option>
+                                        <option value="NL">Newfoundland and Labrador</option>
+                                        <option value="NS">Nova Scotia</option>
+                                        <option value="NT">Northwest Territories</option>
+                                        <option value="NU">Nunavut</option>
+                                        <option value="ON">Ontario</option>
+                                        <option value="PE">Prince Edward Island</option>
+                                        <option value="QC">Quebec</option>
+                                        <option value="SK">Saskatchewan</option>
+                                        <option value="YT">Yukon</option>
+                                    </select>
+                                    <select id="PostalCodeFilterResource" class="form-select mb-3" onchange="renderUnscheduledList('resource')">
+                                        <option value="all">All Postal Codes</option>
                                     </select>
                                 </div>
                             </div>
-                            <div class="d-flex align-items-center gap-3">
-                                <span class="text-muted" id="listViewPageInfo">Loading...</span>
-                                <nav aria-label="List view pagination">
-                                    <ul class="pagination mb-0">
-                                        <li class="page-item" id="listViewPrevPage">
-                                            <a class="page-link" href="#" onclick="goToListViewPage(listViewCurrentPage - 1); return false;">Previous</a>
-                                        </li>
-                                        <li class="page-item" id="listViewNextPage">
-                                            <a class="page-link" href="#" onclick="goToListViewPage(listViewCurrentPage + 1); return false;">Next</a>
-                                        </li>
-                                    </ul>
-                                </nav>
+                            <!-- Search Box -->
+                            <div class="ms-auto">
+                                <div class="input-group" style="width: 250px;">
+                                    <input type="text" id="searchFilterResource" class="form-control" placeholder="Search..." onkeyup="renderUnscheduledList('resource')">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-search"></i>
+                                    </span>
+                                </div>
                             </div>
                         </div>
+                        <div id="unscheduledListResource" class="unscheduled-list"></div>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Enhanced Map View Tab -->
-            <div class="tab-pane fade" id="mapView" role="tabpanel">
-                <div class="card calendar-container map-view-container">
-                    <div class="card-header">
-                        <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
-                            <div class="d-flex flex-wrap gap-2 align-items-center">
-                                <label for="mapDatePicker" class="form-label mb-0">Date:</label>
-                                <input type="date" id="mapDatePicker" class="form-control w-200px">
-                                <label for="mapDispatchGroup" class="form-label mb-0 d-none">Group:</label>
-                                <select id="mapDispatchGroup" class="form-select w-120px d-none">
-                                    <option value="all">All Technicians</option>
-                                    <option value="electricians">Electricians</option>
-                                    <option value="plumbers">Plumbers</option>
-                                </select>
-                                <button id="mapReloadBtn" class="btn btn-outline-secondary ms-2">Reload</button>
-                            </div>
-                            <ul class="nav nav-tabs map-view-tabs" id="mapViewTabs" role="tablist">
-                                <li class="nav-item">
-                                    <button class="nav-link active" id="map-layer-tab" data-bs-toggle="tab" data-bs-target="#mapLayerView" type="button" role="tab">Map</button>
-                                </li>
-                                <li class="nav-item">
-                                    <button class="nav-link" id="satellite-layer-tab" data-bs-toggle="tab" data-bs-target="#mapLayerView" type="button" role="tab">Satellite</button>
-                                </li>
-                            </ul>
+        <div class="tab-pane fade" id="listView" role="tabpanel">
+            <div class="card calendar-container">
+                <div class="card-header">
+                    <div class="d-flex flex-wrap gap-2 align-items-end">
+                        <div>
+                            <label for="search_term" class="form-label mb-0">Search</label>
+                            <input placeholder="Search anything" type="text" id="search_term" class="form-control w-200px" oninput="renderListView()">
                         </div>
-                        <div class="map-controls mt-2 ">
-                            <button id="mapOptimizeRouteBtn" class="btn btn-primary mb-3">Optimize Route</button>
-                            <button id="mapAddCustomMarkerBtn" class="btn btn-primary mb-3">Add Custom Marker</button>
+                        <div>
+                            <label for="ServiceTypeFilter_List" class="form-label mb-0">Service type:</label>
+                            <select name="ServiceTypeFilter_List" id="ServiceTypeFilter_List" class="form-select" runat="server" onchange="renderListView()">
+                                <option value="all">All Types</option>
+                                <option value="IT Support">IT Support</option>
+                                <option value="1 Hour">1 Hour</option>
+                                <option value="2 Hour">2 Hour</option>
+                            </select>
                         </div>
-                        <div class="map-status-legend mt-2">
-                            <span class="status-indicator pending"></span>Pending
-                            <span class="status-indicator dispatched"></span>Dispatched
-                            <span class="status-indicator in-route"></span>In Route
-                            <span class="status-indicator arrived"></span>Arrived
+                        <div>
+                            <label for="StatusTypeFilter_List" class="form-label mb-0">Appointment Status:</label>
+                            <select runat="server" id="StatusTypeFilter_List" class="form-select" onchange="renderListView()">
+                                <option value="all">Select</option>
+                            </select>
                         </div>
-                        <div class="workorder-filters-row" style="margin-top: 12px;">
-                            <div class="map-work-order-status">
-                                <h6>Work Order Status</h6>
-                                <select id="statusFilter" class="form-select w-200px" aria-label="Filter by work order status">
-                                    <option value="all">All Statuses</option>
-                                    <option value="pending">Pending</option>
-                                    <option value="dispatched">Dispatched</option>
-                                    <option value="inRoute">In Route</option>
-                                    <option value="arrived">Arrived</option>
-                                </select>
-                            </div>
-                            <!---------------------------------------------------Added New Resource Filter------------------------------------------->
-                            <div>
-                                <label for="ServiceTypeFilter_List" class="form-label mb-0">
-                                    <h6>Service type</h6>
-                                </label>
-                                <select name="ServiceTypeFilter_List" id="Select1" class="form-select w-200px" runat="server" onchange="renderListView()">
-                                    <option value="all">All Types</option>
-                                    <option value="IT Support">IT Support</option>
-                                    <option value="1 Hour">1 Hour</option>
-                                    <option value="2 Hour">2 Hour</option>
-                                </select>
-                            </div>
-                            <!--xxx------------------------------------------->
+                        <div>
+                            <label for="TicketStatusFilter_List" class="form-label mb-0">Ticket Status:</label>
+                            <select runat="server" id="TicketStatusFilter_List" class="form-select" onchange="renderListView()">
+                                <option value="all">Select</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="listDatePicker" class="form-label mb-0">Date:</label>
+                            <input type="date" id="listDatePicker" class="form-control w-200px">
+                        </div>
+                        <div>
+                            <label for="listDatePickerFrom" class="form-label mb-0">From Date:</label>
+                            <input type="date" id="listDatePickerFrom" class="form-control w-200px">
+                        </div>
+                        <div>
+                            <label for="listDatePickerTo" class="form-label mb-0">To Date:</label>
+                            <input type="date" id="listDatePickerTo" class="form-control w-200px">
+                        </div>
+                        <div>
+                            <label></label>
+                            <button type="button" class="btn btn-primary ms-2" onclick="searchListView(event)">Search By Date</button>
+                        </div>
+                        <div>
+                            <button type="button" class="btn btn-secondary ms-2" onclick="clearFilterListView(event)">Clear</button>
                         </div>
                     </div>
-                    <div class="card-body">
-                        <div class="tab-content">
-                            <div class="tab-pane fade show active" id="mapLayerView" role="tabpanel">
-                                <div id="mapViewContainer" style="height: 500px; width: 100%;"></div>
+                </div>
+                <div class="card-body">
+                    <div class="list-view-table-container">
+                        <div id="listViewLoading" class="loading-overlay" style="display: none;">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
                             </div>
+                        </div>
+                        <table class="table list-view-table">
+                            <thead>
+                                <tr>
+                                    <th>View</th>
+                                    <th data-key="CustomerName" class="sortable">Customer</th>
+                                    <th data-key="BusinessName" class="sortable">Business Name</th>
+                                    <th data-key="Address1" class="sortable">Address</th>
+                                    <th data-key="RequestDate" class="sortable">Request Date</th>
+                                    <th data-key="TimeSlot" class="sortable">Time Slot</th>
+                                    <th data-key="ServiceType" class="sortable">Service Type</th>
+                                    <th data-key="Email" class="sortable">Email</th>
+                                    <th data-key="Mobile" class="sortable">Mobile</th>
+                                    <th data-key="Phone" class="sortable">Phone</th>
+                                    <th data-key="AppoinmentStatus" class="sortable">Appointment Status</th>
+                                    <th data-key="ResourceName" class="sortable">Resource</th>
+                                    <th data-key="TicketStatus" class="sortable">Ticket Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="listTableBody">
+                                <!-- Populated by renderListView -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination Controls -->
+                    <div class="pagination-controls mt-3 d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center gap-3">
+                            <div>
+                                <span>Rows per page: </span>
+                                <select id="listViewPageSize" onchange="changeListViewPageSize()" class="form-select d-inline-block" style="width: auto;">
+                                    <option value="5" selected>5</option>
+                                    <option value="10">10</option>
+                                    <option value="25">25</option>
+                                    <option value="50">50</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="text-muted" id="listViewPageInfo">Loading...</span>
+                            <nav aria-label="List view pagination">
+                                <ul class="pagination mb-0">
+                                    <li class="page-item" id="listViewPrevPage">
+                                        <a class="page-link" href="#" onclick="goToListViewPage(listViewCurrentPage - 1); return false;">Previous</a>
+                                    </li>
+                                    <li class="page-item" id="listViewNextPage">
+                                        <a class="page-link" href="#" onclick="goToListViewPage(listViewCurrentPage + 1); return false;">Next</a>
+                                    </li>
+                                </ul>
+                            </nav>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- Enhanced Map View Tab -->
+        <div class="tab-pane fade" id="mapView" role="tabpanel">
+            <div class="card calendar-container map-view-container">
+                <div class="card-header">
+                    <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
+                        <div class="d-flex flex-wrap gap-2 align-items-center">
+                            <label for="mapDatePicker" class="form-label mb-0">Date:</label>
+                            <input type="date" id="mapDatePicker" class="form-control w-200px">
+                            <label for="mapDispatchGroup" class="form-label mb-0 d-none">Group:</label>
+                            <select id="mapDispatchGroup" class="form-select w-120px d-none">
+                                <option value="all">All Technicians</option>
+                                <option value="electricians">Electricians</option>
+                                <option value="plumbers">Plumbers</option>
+                            </select>
+                            <button id="mapReloadBtn" class="btn btn-outline-secondary ms-2">Reload</button>
+                        </div>
+                        <ul class="nav nav-tabs map-view-tabs" id="mapViewTabs" role="tablist">
+                            <li class="nav-item">
+                                <button class="nav-link active" id="map-layer-tab" data-bs-toggle="tab" data-bs-target="#mapLayerView" type="button" role="tab">Map</button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link" id="satellite-layer-tab" data-bs-toggle="tab" data-bs-target="#mapLayerView" type="button" role="tab">Satellite</button>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="map-controls mt-2 ">
+                        <button id="mapOptimizeRouteBtn" class="btn btn-primary mb-3">Optimize Route</button>
+                        <button id="mapAddCustomMarkerBtn" class="btn btn-primary mb-3">Add Custom Marker</button>
+                    </div>
+                    <div class="map-status-legend mt-2">
+                        <span class="status-indicator pending"></span>Pending
+                            <span class="status-indicator dispatched"></span>Dispatched
+                            <span class="status-indicator in-route"></span>In Route
+                            <span class="status-indicator arrived"></span>Arrived
+                    </div>
+                    <div class="workorder-filters-row" style="margin-top: 12px;">
+                        <div class="map-work-order-status">
+                            <h6>Work Order Status</h6>
+                            <select id="statusFilter" class="form-select w-200px" aria-label="Filter by work order status">
+                                <option value="all">All Statuses</option>
+                                <option value="pending">Pending</option>
+                                <option value="dispatched">Dispatched</option>
+                                <option value="inRoute">In Route</option>
+                                <option value="arrived">Arrived</option>
+                            </select>
+                        </div>
+                        <!---------------------------------------------------Added New Resource Filter------------------------------------------->
+                        <div>
+                            <label for="ServiceTypeFilter_List" class="form-label mb-0">
+                                <h6>Service type</h6>
+                            </label>
+                            <select name="ServiceTypeFilter_List" id="Select1" class="form-select w-200px" runat="server" onchange="renderListView()">
+                                <option value="all">All Types</option>
+                                <option value="IT Support">IT Support</option>
+                                <option value="1 Hour">1 Hour</option>
+                                <option value="2 Hour">2 Hour</option>
+                            </select>
+                        </div>
+                        <!--xxx------------------------------------------->
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="tab-content">
+                        <div class="tab-pane fade show active" id="mapLayerView" role="tabpanel">
+                            <div id="mapViewContainer" style="height: 500px; width: 100%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     </div>
 
     <!-- Modals -->
@@ -876,27 +909,27 @@
         });
     </script>
 
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const resourceFrom = document.getElementById("resourceDatePickerFrom");
-        const resourceTo = document.getElementById("resourceDatePickerTo");
-        const listFrom = document.getElementById("listDatePickerFrom");
-        const listTo = document.getElementById("listDatePickerTo");
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const resourceFrom = document.getElementById("resourceDatePickerFrom");
+            const resourceTo = document.getElementById("resourceDatePickerTo");
+            const listFrom = document.getElementById("listDatePickerFrom");
+            const listTo = document.getElementById("listDatePickerTo");
 
-        // Helper: sync values between pairs
-        function syncDates(source, target) {
-            source.addEventListener("change", () => {
-                target.value = source.value;
-            });
-        }
+            // Helper: sync values between pairs
+            function syncDates(source, target) {
+                source.addEventListener("change", () => {
+                    target.value = source.value;
+                });
+            }
 
-        // Sync both directions
-        syncDates(resourceFrom, listFrom);
-        syncDates(listFrom, resourceFrom);
-        syncDates(resourceTo, listTo);
-        syncDates(listTo, resourceTo);
-    });
-</script>
+            // Sync both directions
+            syncDates(resourceFrom, listFrom);
+            syncDates(listFrom, resourceFrom);
+            syncDates(resourceTo, listTo);
+            syncDates(listTo, resourceTo);
+        });
+    </script>
 
 
     <script src="Scripts/appointments.js" defer></script>

@@ -92,7 +92,6 @@ div.dt-container div.dt-layout-row {
     /*width: 100%;*/
     flex: 1 1 0%;
     min-width: 0;
-    width: 66.66%;
     background: var(--bg-white);
     border-radius: 8px;
     box-shadow: var(--shadow-lg);
@@ -864,9 +863,7 @@ select.dt-input {
         flex-direction: row;
     }
 
-    .cust-list-container, .cust-details-container {
-        width: 66.66%;
-    }
+
 
     .cust-details-header {
         flex-direction: row;
