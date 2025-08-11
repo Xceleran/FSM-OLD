@@ -680,28 +680,7 @@ th.sortable {
     background: rgba(255, 255, 255, 0.2) !important;
 }
 
-/* Unscheduled Panel */
-/*.unscheduled-panel {
-    transition: width 0.3s ease;
-    position: relative;
-    overflow: hidden;
-}*/
 
-
-.unscheduled-panel.collapsed {
-    /*   width: 0;
-        min-width: 0;
-        overflow: hidden;*/
- /*   flex: 0 0 50px;
-    overflow: hidden;*/
-}
-
-/*.unscheduled-list {
-    height: 500px;
-    overflow-y: scroll;
-    transition: opacity 0.3s ease;
-    padding: 5px;
-}*/
 
 [data-theme="dark"] .unscheduled-list {
     scrollbar-width: thin;
@@ -1403,7 +1382,6 @@ button.btn.btn-primary.ms-2 {
 /*Collapsing/Expanding Calendar*/
 .unscheduled-panel {
     flex: 0 0 30%;
-    height: 100%;
     overflow: hidden;
     transition: flex 0.3s ease;
     position: relative;

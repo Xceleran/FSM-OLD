@@ -1701,7 +1701,12 @@ const getAppointmentStatusIcon = (status) => {
 
 // Render Resource View with duration-based independent positioning
 function renderResourceView(date) {
-    const container = $("#resourceViewContainer").addClass('resource-view').removeClass('date-view');
+
+    $('#resourceLoading').show();
+    $("#resourceViewContainer").css('display', 'block');
+    $("#resourceViewContainer").html('<div id="resourceLoading" class="loading-overlay"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>');
+
+    const container = $("#resourceViewContainer");
     const selectedGroup = $("#dispatchGroup").val();
     const view = $("#resourceViewSelect").val();
     const dateStr = new Date(date).toISOString().split('T')[0];
@@ -1713,7 +1718,6 @@ function renderResourceView(date) {
     if (paginationControls) {
         paginationControls.style.display = 'flex';
     }
-
     const filteredResources = resources;
     const slotDurationMinutes = 30; // Base slot duration
     const pixelsPerSlot = 100; // Pixels per 30-minute slot
@@ -1768,6 +1772,7 @@ function renderResourceView(date) {
 
     // Fetch appointments for the entire date range
     getAppoinments("", fromDate, toDate, view === 'day' ? dateStr : "", function (appointments) {
+        $('#resourceLoading').hide();
         let html = `
            <div class="border rounded overflow-hidden resizable-container" style="margin: 0; padding: 0; max-width: 100%;">
         `;
@@ -1976,7 +1981,7 @@ function renderResourceView(date) {
                 resizableContainer.style.cursor = 'default';
             }
         });
-
+         $('#resourceLoading').hide();
         setupHoverEvents();
         setupDragAndDrop();
         renderUnscheduledList('resource');
@@ -3398,8 +3403,7 @@ $('.modal').on('click', function (e) {
 $(document).ready(function () {
     initializeFormsIntegration();
 });
-
-// Date synchronization function
+// Update the syncDatePickers function
 function syncDatePickers(changedPickerId, newDate) {
     if (isDateSyncing) {
         console.log('Date syncing already in progress, skipping...');
@@ -3414,18 +3418,43 @@ function syncDatePickers(changedPickerId, newDate) {
         }
         console.log(`Syncing date pickers: changedPickerId=${changedPickerId}, newDate=${newDate}`);
 
-        ['#dayDatePicker', '#resourceDatePicker', '#mapDatePicker', '#listDatePicker'].forEach(pickerId => {
-            if (pickerId !== changedPickerId) {
-                $(pickerId).val(newDate);
-                console.log(`Updated ${pickerId} to ${newDate}`);
+        // Special handling for list view date range changes
+        if (changedPickerId === '#listDatePickerFrom' || changedPickerId === '#listDatePickerTo') {
+            // When list view date range changes, sync to resource view and switch to custom mode
+            const fromDate = $("#listDatePickerFrom").val();
+            const toDate = $("#listDatePickerTo").val();
+
+            if (fromDate && toDate) {
+                $("#resourceDatePickerFrom").val(fromDate);
+                $("#resourceDatePickerTo").val(toDate);
+                $("#resourceViewSelect").val('custom');
+                $("#resourceCustomDateRangeContainer").removeClass('d-none');
+
+                // Set the custom date range and trigger search
+                resourceCustomDateRange.from = fromDate;
+                resourceCustomDateRange.to = toDate;
+
+                // Only trigger search if we're currently in resource view
+                if (currentView === "resource") {
+                    renderResourceView(fromDate);
+                }
             }
-        });
+        }
+        // Handle other date picker syncs normally
+        else {
+            ['#dayDatePicker', '#resourceDatePicker', '#mapDatePicker', '#listDatePicker'].forEach(pickerId => {
+                if (pickerId !== changedPickerId) {
+                    $(pickerId).val(newDate);
+                    console.log(`Updated ${pickerId} to ${newDate}`);
+                }
+            });
+        }
 
         currentDate = new Date(newDate);
         console.log(`Current date updated to: ${currentDate}`);
 
         renderDateNav('dateNav', newDate);
-        renderDateNav('resourceDateNav', newDate);
+        renderDateNav('resourceNav', newDate);
         console.log('Date navigation rendered for both views');
 
         switch (currentView) {
@@ -3443,7 +3472,7 @@ function syncDatePickers(changedPickerId, newDate) {
                 break;
             case "list":
                 console.log('Rendering List View');
-                renderListView(newDate);
+                renderListView();
                 break;
             default:
                 console.warn(`Unknown currentView: ${currentView}`);
@@ -3455,6 +3484,49 @@ function syncDatePickers(changedPickerId, newDate) {
         console.log('Date syncing completed');
     }
 }
+
+// Update the DOMContentLoaded event listener to handle the initial sync
+document.addEventListener("DOMContentLoaded", function () {
+    const resourceFrom = document.getElementById("resourceDatePickerFrom");
+    const resourceTo = document.getElementById("resourceDatePickerTo");
+    const listFrom = document.getElementById("listDatePickerFrom");
+    const listTo = document.getElementById("listDatePickerTo");
+
+    // Helper function to sync dates and trigger appropriate actions
+    function syncDates(source, target, isFromDate) {
+        source.addEventListener("change", () => {
+            // Update the corresponding field
+            target.value = source.value;
+
+            // If we're updating from list view to resource view
+            if (source === listFrom || source === listTo) {
+                const fromDate = $("#listDatePickerFrom").val();
+                const toDate = $("#listDatePickerTo").val();
+
+                if (fromDate && toDate) {
+                    // Set resource view to custom mode
+                    $("#resourceViewSelect").val('custom');
+                    $("#resourceCustomDateRangeContainer").removeClass('d-none');
+
+                    // Update the resource view's custom date range
+                    resourceCustomDateRange.from = fromDate;
+                    resourceCustomDateRange.to = toDate;
+
+                    // If we're in resource view, trigger the search
+                    if (currentView === "resource") {
+                        renderResourceView(fromDate);
+                    }
+                }
+            }
+        });
+    }
+
+    // Sync both directions
+    syncDates(resourceFrom, listFrom, true);
+    syncDates(listFrom, resourceFrom, true);
+    syncDates(resourceTo, listTo, false);
+    syncDates(listTo, resourceTo, false);
+});
 
 // Load customer data for appointment modal
 function loadCustomerDataForModal(appointmentId) {
