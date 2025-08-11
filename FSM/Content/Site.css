@@ -488,11 +488,7 @@ input:checked + .slider {
         width: 64%;
     }
 
-    .toggle-btn {
-        position: fixed;
-        left: 10px;
-        top: 10px;
-    }
+  
 
     .content-wrapper {
         margin-left: 0;
