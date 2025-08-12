@@ -110,3 +110,69 @@ function selectField(fieldId) {
         field.classList.add('selected');
     }
 }
+
+function submitResponse() {
+    let formData = [];
+
+    $('#formViewerContainer .form-field').each(function () {
+        const fieldId = $(this).data('field-id');
+        const fieldType = $(this).data('field-type');
+        const label = $(this).find('label').text().replace('*', '').trim();
+        let value = null;
+
+        switch (fieldType) {
+            case 'text':
+            case 'number':
+            case 'date':
+                value = $(this).find('input').val();
+                break;
+            case 'textarea':
+                value = $(this).find('textarea').val();
+                break;
+            case 'dropdown':
+                value = $(this).find('select').val();
+                break;
+            case 'checkbox':
+                value = $(this).find('input[type="checkbox"]').is(':checked');
+                break;
+            case 'radio':
+                value = $(this).find('input[type="radio"]:checked').val();
+                break;
+            case 'signature':
+                // For now just placeholder text — integrate your signature pad later
+                value = "Signature Captured";
+                break;
+            default:
+                value = $(this).find('input').val();
+        }
+
+        formData.push({
+            fieldId: fieldId,
+            label: label,
+            type: fieldType,
+            value: value
+        });
+    });
+
+    console.log("Collected Form Data:", formData);
+
+    let formDataString = JSON.stringify(formData);
+    $.ajax({
+        type: "POST",
+        url: "FormResponse.aspx/SaveFormResponse",
+        data: JSON.stringify({ responses: formDataString }), 
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        success: function (response) {
+            if (response.d && response.d > 0) {
+                alert("Thank You For Your Response");
+                
+            } else {
+                alert("Error");
+            }
+        },
+        error: function (xhr, status, error) {
+            alert(error);
+        }
+    });
+}
