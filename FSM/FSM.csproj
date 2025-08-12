@@ -340,6 +340,7 @@
     <Compile Include="Processors\QBOManager.cs" />
     <Compile Include="Processors\UserLogProcessor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Models\FormResponseModel\FormResponseModel.cs" />
     <Compile Include="FSM.Master.cs">
       <DependentUpon>FSM.Master</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
