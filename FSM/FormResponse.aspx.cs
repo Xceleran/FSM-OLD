@@ -9,6 +9,7 @@ using System.Web.Services;
 using System.Web.Script.Services;
 using System.Web.UI;
 using System.Web.UI.WebControls;
+using FSM.Processors;
 
 namespace FSM
 {
@@ -16,7 +17,25 @@ namespace FSM
     {
         protected void Page_Load(object sender, EventArgs e)
         {
-            
+        }
+        [WebMethod(EnableSession = true)]
+        [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
+       public static string GetFormStructure(int templateId)
+        {
+            try
+            {
+                string companyId = System.Web.HttpContext.Current.Session["CompanyID"]?.ToString();
+                if (string.IsNullOrEmpty(companyId))
+                    return "{}";
+
+                var processor = new FormProcessor();
+                var template = processor.GetTemplate(templateId, companyId);
+                return template?.FormStructure ?? "{}";
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error retrieving form structure: " + ex.Message);
+            }
         }
 
         [WebMethod(EnableSession = true)]

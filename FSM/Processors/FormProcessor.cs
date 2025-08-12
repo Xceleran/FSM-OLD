@@ -270,7 +270,9 @@ namespace FSM.Processors
         public List<FormInstance> GetAppointmentForms(string appointmentId, string companyId)
         {
             var instances = new List<FormInstance>();
-            
+
+            string connectionString = ConfigurationManager.AppSettings["ConnStrJobs"].ToString();
+            db = new Database(connectionString);
             try
             {
                 db.Init("sp_Forms_GetAppointmentForms");

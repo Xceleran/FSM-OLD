@@ -662,6 +662,9 @@ namespace FSM
         private static dynamic GetAppointmentDetails(string appointmentId, string companyId)
         {
             Database db = new Database();
+
+            string connectionString = ConfigurationManager.AppSettings["ConnStrJobs"].ToString();
+            db = new Database(connectionString);
             try
             {
                 db.Init("sp_Appointments_GetDetails");
@@ -672,7 +675,7 @@ namespace FSM
                 {
                     return new
                     {
-                        AppointmentId = db.GetString("AppoinmentId"),
+                        AppointmentId = db.GetString("AppointmentId"),
                         CustomerName = db.GetString("CustomerName"),
                         CustomerEmail = db.GetString("CustomerEmail"),
                         CustomerPhone = db.GetString("CustomerPhone"),
@@ -708,7 +711,14 @@ namespace FSM
             foreach (var form in forms)
             {
                 string templateName = form.TemplateName ?? $"Form #{form.TemplateId}";
-                body += $"<li>{templateName} - Status: {form.Status}</li>";
+                string templateId = HttpUtility.UrlEncode(form.TemplateId.ToString());
+                string customerId = HttpUtility.UrlEncode(form.CustomerID ?? "");
+                string apptID = HttpUtility.UrlEncode(appointment.AppointmentId);
+                string companyId = System.Web.HttpContext.Current.Session["CompanyID"]?.ToString();
+                // Build URL with encoded parameters
+                string link = $"http://localhost:62934/FormResponse.aspx?templateId={templateId}&companyId={companyId}&cId={customerId}&apptId={apptID}";
+                body += $"<li>{templateName} - Status: {form.Status} -> " +
+                $"<a href='{link}' target='_blank'>Click here to submit response</a></li>";
             }
 
             body += @"
@@ -739,9 +749,9 @@ namespace FSM
                 System.Net.Mail.MailMessage mail = new System.Net.Mail.MailMessage();
                 
                 // Configure SMTP settings from web.config
-                string smtpServer = System.Configuration.ConfigurationManager.AppSettings["SMTPServer"];
-                string smtpPort = System.Configuration.ConfigurationManager.AppSettings["SMTPPort"];
-                string smtpUser = System.Configuration.ConfigurationManager.AppSettings["SMTPUser"];
+                string smtpServer = System.Configuration.ConfigurationManager.AppSettings["SMTP"];
+                string smtpPort = System.Configuration.ConfigurationManager.AppSettings["Port"];
+                string smtpUser = System.Configuration.ConfigurationManager.AppSettings["SmtpUser"];
                 string smtpPass = System.Configuration.ConfigurationManager.AppSettings["SMTPPassword"];
                 
                 if (!string.IsNullOrEmpty(smtpServer))
