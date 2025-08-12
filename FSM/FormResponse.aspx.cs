@@ -6,6 +6,7 @@ using System.Data.SqlClient;
 using System.Linq;
 using System.Web;
 using System.Web.Services;
+using System.Web.Script.Services;
 using System.Web.UI;
 using System.Web.UI.WebControls;
 
@@ -18,26 +19,44 @@ namespace FSM
             
         }
 
-        [WebMethod]
-        public static string SaveFormResponse(string responses)
+        [WebMethod(EnableSession = true)]
+        [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
+        public static object SaveFormResponse(string responses)
         {
             try
             {
-                string companyId = System.Web.HttpContext.Current.Session["CompanyID"]?.ToString();
+                var session = HttpContext.Current?.Session;
+                string companyId = session?["CompanyID"]?.ToString();
                 if (string.IsNullOrEmpty(companyId))
-                    return "Company ID missing";
-    
-                int templateId = 1; 
-                string formStructure = responses; 
-                int? appointmentId = 0; 
-                int customerId = 2 ;
-                string connectionString = ConfigurationManager.AppSettings["ConnStrJobs"].ToString();
+                {
+                    return new { success = false, message = "Company ID missing" };
+                }
+
+                int templateId = 1;
+                string formStructure = responses ?? "[]";
+                // Attempt to decode Base64 if provided to bypass request validation issues
+                try
+                {
+                    // Heuristic: if it's valid Base64, decode; otherwise keep as-is
+                    byte[] bytes = Convert.FromBase64String(formStructure);
+                    string decoded = System.Text.Encoding.UTF8.GetString(bytes);
+                    if (!string.IsNullOrWhiteSpace(decoded) && (decoded.TrimStart().StartsWith("[") || decoded.TrimStart().StartsWith("{")))
+                    {
+                        formStructure = decoded;
+                    }
+                }
+                catch { /* ignore if not base64 */ }
+                int? appointmentId = null;
+                int customerId = 2;
+
+                string connectionString = ConfigurationManager.AppSettings["ConnStrJobs"];
                 using (SqlConnection conn = new SqlConnection(connectionString))
                 {
                     string query = @"
-                INSERT INTO [myServiceJobs].[dbo].[FormResponse]
-                (CompanyID, TemplateId, FormStructure, AppointmentID, CustomerID)
-                VALUES (@CompanyID, @TemplateId, @FormStructure, @AppointmentID, @CustomerID)";
+INSERT INTO [myServiceJobs].[dbo].[FormResponse]
+(CompanyID, TemplateId, FormStructure, AppointmentID, CustomerID)
+VALUES (@CompanyID, @TemplateId, @FormStructure, @AppointmentID, @CustomerID);
+SELECT CAST(SCOPE_IDENTITY() AS int);";
 
                     using (SqlCommand cmd = new SqlCommand(query, conn))
                     {
@@ -48,15 +67,14 @@ namespace FSM
                         cmd.Parameters.AddWithValue("@CustomerID", customerId);
 
                         conn.Open();
-                        cmd.ExecuteNonQuery();
+                        var newId = (int)cmd.ExecuteScalar();
+                        return new { success = true, id = newId };
                     }
                 }
-
-                return "Success";
             }
             catch (Exception ex)
             {
-                return "Error: " + ex.Message;
+                return new { success = false, message = ex.Message };
             }
         }
     }

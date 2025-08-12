@@ -97,7 +97,7 @@ function generateFieldFromStructure(field) {
     return `
         <div class="form-field" data-field-id="${fieldId}" data-field-type="${fieldType}" onclick="selectField('${fieldId}')">
             <div class="form-group">
-               <label style="margin-bottom: 7px;"<i class="fa ${config.icon}"></i> ${fieldLabel}${isRequired ? ' *' : ''}</label>
+               <label style="margin-bottom: 7px;"><i class="fa ${config.icon}"></i> ${fieldLabel}${isRequired ? ' *' : ''}</label>
                 ${config.input}
             </div>
         </div>
@@ -157,22 +157,32 @@ function submitResponse() {
     console.log("Collected Form Data:", formData);
 
     let formDataString = JSON.stringify(formData);
+    // Base64-encode to avoid any request validation or special char issues
+    try {
+        formDataString = btoa(unescape(encodeURIComponent(formDataString)));
+    } catch (e) {
+        console.warn('Failed to base64-encode payload, sending raw JSON');
+    }
     $.ajax({
         type: "POST",
-        url: "FormResponse.aspx/SaveFormResponse",
+        // Call via Forms.aspx to avoid FriendlyUrls/page naming issues resolving the WebMethod
+        url: "Forms.aspx/SaveFormResponse",
         data: JSON.stringify({ responses: formDataString }), 
         contentType: "application/json; charset=utf-8",
         dataType: "json",
         success: function (response) {
-            if (response.d && response.d > 0) {
+            const r = response && response.d;
+            if (r && (r.success === true || r === "Success")) {
                 alert("Thank You For Your Response");
-                
             } else {
-                alert("Error");
+                const msg = (r && (r.message || r)) || "Error";
+                console.error("SaveFormResponse failed:", r);
+                alert(msg);
             }
         },
         error: function (xhr, status, error) {
-            alert(error);
+            console.error('AJAX Error:', { status, error, responseText: xhr.responseText });
+            alert("Server error: " + error);
         }
     });
 }

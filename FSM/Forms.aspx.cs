@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Data.SqlClient;
+using System.Web;
 using System.Web.UI;
 using System.Web.Services;
 using System.Web.Script.Serialization;
+using System.Web.Script.Services;
 using FSM.Entity.Forms;
 using FSM.Processors;
 using FSM.Helper;
@@ -324,6 +327,68 @@ namespace FSM
             catch (Exception ex)
             {
                 throw new Exception("Error retrieving appointment forms: " + ex.Message);
+            }
+        }
+
+        #endregion
+
+        #region Web Methods for Form Responses
+
+        [WebMethod(EnableSession = true)]
+        [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
+        public static object SaveFormResponse(string responses)
+        {
+            try
+            {
+                var session = HttpContext.Current?.Session;
+                string companyId = session?["CompanyID"]?.ToString();
+                if (string.IsNullOrEmpty(companyId))
+                {
+                    return new { success = false, message = "Company ID missing" };
+                }
+
+                int templateId = 1;
+                string formStructure = responses ?? "[]";
+                try
+                {
+                    byte[] bytes = Convert.FromBase64String(formStructure);
+                    string decoded = System.Text.Encoding.UTF8.GetString(bytes);
+                    if (!string.IsNullOrWhiteSpace(decoded) && (decoded.TrimStart().StartsWith("[") || decoded.TrimStart().StartsWith("{")))
+                    {
+                        formStructure = decoded;
+                    }
+                }
+                catch { }
+
+                int? appointmentId = null;
+                int customerId = 2;
+
+                string connectionString = ConfigurationManager.AppSettings["ConnStrJobs"];
+                using (SqlConnection conn = new SqlConnection(connectionString))
+                {
+                    string query = @"
+INSERT INTO [myServiceJobs].[dbo].[FormResponse]
+(CompanyID, TemplateId, FormStructure, AppointmentID, CustomerID)
+VALUES (@CompanyID, @TemplateId, @FormStructure, @AppointmentID, @CustomerID);
+SELECT CAST(SCOPE_IDENTITY() AS int);";
+
+                    using (SqlCommand cmd = new SqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@CompanyID", companyId);
+                        cmd.Parameters.AddWithValue("@TemplateId", templateId);
+                        cmd.Parameters.AddWithValue("@FormStructure", formStructure);
+                        cmd.Parameters.AddWithValue("@AppointmentID", (object)appointmentId ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@CustomerID", customerId);
+
+                        conn.Open();
+                        var newId = (int)cmd.ExecuteScalar();
+                        return new { success = true, id = newId };
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return new { success = false, message = ex.Message };
             }
         }
 

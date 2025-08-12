@@ -168,7 +168,7 @@
 </head>
 <body runat="server" id="bodyTag">
     <form runat="server">
-        <asp:ScriptManager runat="server">
+        <asp:ScriptManager runat="server" EnablePageMethods="true">
             <Scripts>
                 <asp:ScriptReference Name="MsAjaxBundle" />
                 <asp:ScriptReference Path="~/Scripts/WebForms/WebForms.js" />
