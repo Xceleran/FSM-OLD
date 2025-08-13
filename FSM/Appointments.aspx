@@ -706,6 +706,47 @@
                                         <label class="form-label">Any details</label>
                                         <textarea type="text" name="note" class="form-control"></textarea>
                                     </div>
+
+                                    <!-- Toggle: show the Additional/Custom Fields section on click -->
+                                    <div class="col-12 mt-2">
+                                        <button type="button" class="btn btn-sm btn-outline-primary" id="btnCFAdd">
+                                            + Add Additional / Custom Field
+                                        </button>
+                                    </div>
+
+                                    <!-- Additional (Custom) Section — initially hidden -->
+                                    <div class="col-12 mt-2 d-none" id="cf_section">
+                                        <div class="card border-0">
+                                            <div class="card-header px-0 pb-1 d-flex justify-content-between align-items-center">
+                                                <strong class="p-2">Additional Information</strong>
+                                                <!--  quick hide button -->
+                                                <button type="button" class="btn btn-link btn-sm p-2" id="btnCFHide">Hide</button>
+                                            </div>
+
+                                            <div class="row g-3 p-3">
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Custom Field Name</label>
+                                                    <input type="text" id="cf_name" class="form-control" placeholder="e.g., PO Number">
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Custom Field Type</label>
+                                                    <select id="cf_type" class="form-select">
+                                                        <option value="">Select type</option>
+                                                        <option value="text">Text</option>
+                                                        <option value="number">Number</option>
+                                                        <option value="note">Note</option>
+                                                        <option value="date">Date</option>
+                                                        <option value="dropdown">Dropdown</option>
+                                                        <option value="checkbox">Checkbox</option>
+                                                    </select>
+                                                </div>
+
+                                                <!-- Value input(s) appear here based on type -->
+                                                <div class="col-12" id="cf_value_container" style="display: none;"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                 </div>
                             </div>
 
@@ -986,7 +1027,7 @@
                                 <!-- Form Actions -->
                                 <div class="form-actions mt-2" id="formActionsContainer" style="display: none;">
                                     <div class="btn-group" role="group">
-                                      <%--  <button type="button" class="btn btn-sm btn-success" onclick="updateAttachedForms()" title="Save forms to this appointment">
+                                        <%--  <button type="button" class="btn btn-sm btn-success" onclick="updateAttachedForms()" title="Save forms to this appointment">
                                             <i class="fa fa-save"></i>Update Forms
                                         </button>--%>
                                         <button type="button" class="btn btn-sm btn-info" onclick="sendFormsViaEmail()" title="Send forms to customer email">

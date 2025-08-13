@@ -1116,6 +1116,288 @@ function renderListView() {
         $("#listViewLoading").hide();
     });
 }
+/* ===== Start of Custom Field JS===== */
+const CF_MINI_KEY = "cf_mini_by_appt_v4"; 
+let CF_MINI = {};
+try { CF_MINI = JSON.parse(localStorage.getItem(CF_MINI_KEY) || "{}"); } catch { CF_MINI = {}; }
+
+function _mini(apptId) {
+    apptId = String(apptId);
+    const m = CF_MINI[apptId] || (CF_MINI[apptId] = { name: "", type: "", value: "", opts: [] });
+    if (!Array.isArray(m.opts)) m.opts = [];
+    return m;
+}
+function _saveMini() { localStorage.setItem(CF_MINI_KEY, JSON.stringify(CF_MINI)); }
+
+/* ---------- render value controls ---------- */
+function _parseOptsCSV(csv) { return (csv || "").split(",").map(s => s.trim()).filter(Boolean); }
+
+function renderCFValueField(type, value, optsArr) {
+    const $wrap = $('#cf_value_container');
+    if (!type) { $wrap.hide().empty(); return; }
+
+    let html = '';
+    switch (type) {
+        case 'text':
+            html = `<label class="form-label">Value</label>
+              <input type="text" id="cf_value_text" class="form-control" placeholder="Enter text">`;
+            break;
+        case 'number':
+            html = `<label class="form-label">Value</label>
+              <input type="number" id="cf_value_number" class="form-control" placeholder="Enter number">`;
+            break;
+        case 'note':
+            html = `<label class="form-label">Value</label>
+              <textarea id="cf_value_note" class="form-control" rows="3" placeholder="Enter note"></textarea>`;
+            break;
+        case 'date':
+            html = `<label class="form-label">Value</label>
+              <input type="date" id="cf_value_date" class="form-control">`;
+            break;
+        case 'dropdown': {
+            const opts = Array.isArray(optsArr) ? optsArr : [];
+            const optionsHtml = opts.length
+                ? opts.map(o => `<option ${String(o) === String(value) ? 'selected' : ''}>${o}</option>`).join("")
+                : `<option disabled selected value="">Add options first</option>`;
+            const optsCSV = opts.join(", ");
+            html = `<div class="row g-3">
+                <div class="col-md-7">
+                  <label class="form-label">Value</label>
+                  <select id="cf_value_dropdown" class="form-select">${optionsHtml}</select>
+                </div>
+                <div class="col-md-5">
+                  <label class="form-label">Options (comma-separated)</label>
+                  <input type="text" id="cf_value_opts" class="form-control" placeholder="e.g., option1, option2, option3" value="${optsCSV}">
+                </div>
+              </div>`;
+            break;
+        }
+        case 'checkbox': {
+            const opts = Array.isArray(optsArr) ? optsArr : [];
+            const selected = Array.isArray(value) ? value.map(String) : [];
+            const listHtml = opts.length
+                ? opts.map((o, i) => {
+                    const id = `cf_cb_${i}`;
+                    const checked = selected.includes(String(o)) ? 'checked' : '';
+                    return `<div class="form-check">
+                      <input class="form-check-input cf-opt" type="checkbox" id="${id}" value="${o}" ${checked}>
+                      <label class="form-check-label" for="${id}">${o}</label>
+                    </div>`;
+                }).join("")
+                : `<div class="text-muted">Add options to create checkboxes.</div>`;
+            const optsCSV = opts.join(", ");
+            html = `<div class="row g-3">
+                <div class="col-md-7">
+                  <label class="form-label d-block">Values</label>
+                  <div id="cf_value_checkbox_group">${listHtml}</div>
+                </div>
+                <div class="col-md-5">
+                  <label class="form-label">Options (comma-separated)</label>
+                  <input type="text" id="cf_value_opts" class="form-control" placeholder="e.g., option1, option2" value="${optsCSV}">
+                </div>
+              </div>`;
+            break;
+        }
+        default:
+            html = '';
+    }
+
+    $wrap.html(html).show();
+
+    if (type === 'text') $('#cf_value_text').val(value || '');
+    if (type === 'number') $('#cf_value_number').val(value || '');
+    if (type === 'note') $('#cf_value_note').val(value || '');
+    if (type === 'date') $('#cf_value_date').val(value || '');
+
+    if (type === 'dropdown' || type === 'checkbox') {
+        $(document).off('input.cfopts').on('input.cfopts', '#cf_value_opts', function () {
+            const arr = _parseOptsCSV($(this).val());
+            if (type === 'dropdown') {
+                const $sel = $('#cf_value_dropdown');
+                const current = $sel.val();
+                const optionsHtml = arr.length
+                    ? arr.map(o => `<option ${String(o) === String(current) ? 'selected' : ''}>${o}</option>`).join("")
+                    : `<option disabled selected value="">Add options first</option>`;
+                $sel.html(optionsHtml);
+            } else {
+                const $group = $('#cf_value_checkbox_group');
+                const prevSel = $group.find('.cf-opt:checked').map((_, el) => String($(el).val())).get();
+                const listHtml = arr.length
+                    ? arr.map((o, i) => {
+                        const id = `cf_cb_${i}`;
+                        const checked = prevSel.includes(String(o)) ? 'checked' : '';
+                        return `<div class="form-check">
+                        <input class="form-check-input cf-opt" type="checkbox" id="${id}" value="${o}" ${checked}>
+                        <label class="form-check-label" for="${id}">${o}</label>
+                      </div>`;
+                    }).join("")
+                    : `<div class="text-muted">Add options to create checkboxes.</div>`;
+                $group.html(listHtml);
+            }
+        });
+    } else {
+        $(document).off('input.cfopts');
+    }
+}
+
+/* ---------- populate / read ---------- */
+function showCFSection(show) {
+    $('#cf_section').toggleClass('d-none', !show);
+    $('#btnCFAdd').toggleClass('d-none', !!show);
+}
+function fillMiniIntoModal(apptId) {
+    const m = _mini(apptId);
+    // Only auto-show if there’s data already
+    const hasData = (m.name || m.type || (Array.isArray(m.value) ? m.value.length : m.value) || (m.opts || []).length);
+    showCFSection(!!hasData);
+    if (!hasData) return; // keep hidden until user clicks
+
+    $('#cf_name').val(m.name || '');
+    $('#cf_type').val(m.type || '');
+    renderCFValueField(m.type, m.value, m.opts);
+}
+function readMiniFromModal(apptId) {
+    // Only save if the section is visible
+    if ($('#cf_section').hasClass('d-none')) return;
+
+    const m = _mini(apptId);
+    m.name = ($('#cf_name').val() || '').trim();
+    m.type = ($('#cf_type').val() || '').trim();
+
+    switch (m.type) {
+        case 'text': m.value = ($('#cf_value_text').val() || '').trim(); break;
+        case 'number': m.value = $('#cf_value_number').val() || ''; break;
+        case 'note': m.value = ($('#cf_value_note').val() || '').trim(); break;
+        case 'date': m.value = $('#cf_value_date').val() || ''; break;
+        case 'dropdown':
+            m.opts = _parseOptsCSV($('#cf_value_opts').val());
+            m.value = $('#cf_value_dropdown').val() || '';
+            break;
+        case 'checkbox':
+            m.opts = _parseOptsCSV($('#cf_value_opts').val());
+            m.value = $('#cf_value_checkbox_group .cf-opt:checked').map((_, el) => $(el).val()).get();
+            break;
+        default:
+            m.value = '';
+    }
+
+    _saveMini();
+
+    // mirror to in-memory appointments 
+    const app = (window.appointments || []).find(a => String(a.AppoinmentId) === String(apptId));
+    if (app) {
+        app.CustomFieldName = m.name;
+        app.CustomFieldType = m.type;
+        app.CustomFieldValue = m.value;
+        app.CustomFieldOpts = m.opts;
+    }
+}
+
+/* ---------- validation (only when section is visible) ---------- */
+function cfShowAlert(msg) {
+    let $a = $('#cf_alert');
+    if (!$a.length) {
+        $('#cf_section .card-header').after('<div id="cf_alert" class="alert alert-danger py-2 px-3 d-none" role="alert"></div>');
+        $a = $('#cf_alert');
+    }
+    if (msg) { $a.html(msg).removeClass('d-none'); } else { $a.addClass('d-none').empty(); }
+}
+function cfMarkInvalid(sel, on) {
+    const $el = $(sel);
+    if (!$el.length) return;
+    $el.toggleClass('is-invalid', !!on);
+    if (on && !$el.next('.invalid-feedback').length) {
+        $el.after('<div class="invalid-feedback">Please correct this field.</div>');
+    }
+}
+function validateMiniCF() {
+    if ($('#cf_section').hasClass('d-none')) return true; 
+
+    cfShowAlert(null);
+    cfMarkInvalid('#cf_name', false);
+    cfMarkInvalid('#cf_type', false);
+    cfMarkInvalid('#cf_value_opts', false);
+
+    const name = ($('#cf_name').val() || '').trim();
+    const type = ($('#cf_type').val() || '').trim();
+    let errors = [];
+
+    if ((name && !type) || (type && !name)) {
+        errors.push('Custom Field Name and Type must both be set.');
+        if (!name) cfMarkInvalid('#cf_name', true);
+        if (!type) cfMarkInvalid('#cf_type', true);
+    }
+    if (type === 'dropdown' || type === 'checkbox') {
+        const csv = ($('#cf_value_opts').val() || '').trim();
+        const opts = _parseOptsCSV(csv);
+        if (opts.length === 0) {
+            errors.push('Please provide at least one option for the selected type.');
+            cfMarkInvalid('#cf_value_opts', true);
+        }
+    }
+
+    if (errors.length) { cfShowAlert(errors.join('<br>')); return false; }
+    return true;
+}
+
+/* ---------- events ---------- */
+// Show/hide section
+$(document).on('click', '#btnCFAdd', function () {
+    showCFSection(true);
+    // render based on current selects (empty initially)
+    renderCFValueField($('#cf_type').val(), "", []);
+});
+$(document).on('click', '#btnCFHide', function () {
+    showCFSection(false);
+    cfShowAlert(null);
+});
+
+// On modal open: load (if data exists)
+$(document).on('shown.bs.modal', '#editModal', function () {
+    const apptId = $('#AppoinmentId').val();
+    if (apptId) fillMiniIntoModal(apptId);
+});
+
+// Type change → show appropriate value field
+$(document).on('change', '#cf_type', function () {
+    const apptId = $('#AppoinmentId').val();
+    const m = _mini(apptId || '');
+    const newType = $(this).val();
+    renderCFValueField(newType, "", (newType === 'dropdown' || newType === 'checkbox') ? (m.opts || []) : []);
+});
+
+// Live-clear errors
+$(document).on('input change', '#cf_name, #cf_type, #cf_value_opts', function () {
+    cfShowAlert(null); cfMarkInvalid(this, false);
+});
+
+(function wrapUpdate() {
+    function tryWrap() {
+        const orig = window.updateAppointment;
+        if (typeof orig === 'function' && !orig.__cfToggleWrapped) {
+            window.updateAppointment = function (event) {
+                if (!validateMiniCF()) {
+                    event?.preventDefault?.(); event?.stopPropagation?.();
+                    return false;
+                }
+                // save only if visible
+                try {
+                    const apptId = $('#AppoinmentId').val();
+                    if (apptId) readMiniFromModal(apptId);
+                } catch (e) { console.warn('custom field save failed', e); }
+                return orig.apply(this, arguments);
+            };
+            window.updateAppointment.__cfToggleWrapped = true;
+            return true;
+        }
+        return false;
+    }
+    if (!tryWrap()) {
+        let tries = 0, t = setInterval(() => { if (tryWrap() || ++tries > 50) clearInterval(t); }, 100);
+    }
+})();
+//======================end of Custom field js code=============================================
+
 
 // Render Unscheduled List
 function renderUnscheduledList(view = 'date') {
