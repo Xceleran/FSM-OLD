@@ -698,20 +698,28 @@
         }
 
         function loadAppoinments(customerId) {
-            $.ajax({
-                url: 'CustomerDetails.aspx/GetCustomerAppoinmets',
-                type: "POST",
-                contentType: "application/json; charset=utf-8",
-                data: JSON.stringify({ customerId: customerId }),
-                dataType: 'json',
-                success: function (rs) {
-                    appointmentData = rs.d || [];
-                    currentPage = 1;
-                    applyFilters();
-                },
-                error: function (error) { }
-            })
-        }
+            // Get siteId from the page (already available in your code)
+            var siteId = parseInt(document.getElementById('<%= lblSiteId.ClientID %>').innerText);
+
+     $.ajax({
+         url: 'CustomerDetails.aspx/GetCustomerAppoinmets',
+         type: "POST",
+         contentType: "application/json; charset=utf-8",
+         data: JSON.stringify({
+             customerId: customerId,
+             siteId: siteId  // Add this parameter
+         }),
+         dataType: 'json',
+         success: function (rs) {
+             appointmentData = rs.d || [];
+             currentPage = 1;
+             applyFilters();
+         },
+         error: function (error) {
+             showToast("Failed to load appointments");
+         }
+     });
+ }
 
         function renderAppointments() {
             const startIndex = (currentPage - 1) * pageSize;

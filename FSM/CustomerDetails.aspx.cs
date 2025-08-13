@@ -247,7 +247,7 @@ namespace FSM
 
         [WebMethod]
         [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
-        public static List<AppointmentModel> GetCustomerAppoinmets(string customerId)
+        public static List<AppointmentModel> GetCustomerAppoinmets(string customerId, int siteId)
         {
             var appoinments = new List<AppointmentModel>();
             string companyid = HttpContext.Current.Session["CompanyID"].ToString();
@@ -257,15 +257,24 @@ namespace FSM
                 db.Open();
                 DataTable dt = new DataTable();
                 string sql = @"SELECT CONVERT(VARCHAR(10), apt.ApptDateTime, 101) AS ApptDateTimeConverted,  
-                            apt.*, rsc.Name AS ResourceName, srv.ServiceName, 
-                            CASE WHEN apt.Status = 'Deleted' THEN 'N/A' ELSE sts.StatusName END AS AppStatus, tkt.StatusName AS AppTicketStatus
-                            FROM tbl_Appointment AS apt LEFT JOIN tbl_Resources AS rsc  ON apt.ResourceID = rsc.Id AND apt.CompanyID = rsc.CompanyID
-                            LEFT JOIN tbl_ServiceType AS srv ON apt.ServiceType = srv.ServiceTypeID AND apt.CompanyID = srv.CompanyID
-                            LEFT JOIN tbl_Status AS sts ON TRY_CAST(apt.Status AS INT) = sts.StatusID AND apt.CompanyID = sts.CompanyID
-                            LEFT JOIN tbl_TicketStatus AS tkt ON apt.TicketStatus = tkt.StatusID AND apt.CompanyID = tkt.CompanyID
-                            WHERE  apt.CustomerID='" + customerId + "' and apt.CompanyID ='" + companyid + "';";
+                    apt.*, rsc.Name AS ResourceName, srv.ServiceName, 
+                    CASE WHEN apt.Status = 'Deleted' THEN 'N/A' ELSE sts.StatusName END AS AppStatus, tkt.StatusName AS AppTicketStatus
+                    FROM tbl_Appointment AS apt 
+                    LEFT JOIN tbl_Resources AS rsc ON apt.ResourceID = rsc.Id AND apt.CompanyID = rsc.CompanyID
+                    LEFT JOIN tbl_ServiceType AS srv ON apt.ServiceType = srv.ServiceTypeID AND apt.CompanyID = srv.CompanyID
+                    LEFT JOIN tbl_Status AS sts ON TRY_CAST(apt.Status AS INT) = sts.StatusID AND apt.CompanyID = sts.CompanyID
+                    LEFT JOIN tbl_TicketStatus AS tkt ON apt.TicketStatus = tkt.StatusID AND apt.CompanyID = tkt.CompanyID
+                    WHERE apt.CustomerID = @CustomerID 
+                    AND apt.SiteID = @SiteID
+                    AND apt.CompanyID = @CompanyID;";
+
+                db.AddParameter("@CustomerID", customerId, SqlDbType.NVarChar);
+                db.AddParameter("@SiteID", siteId, SqlDbType.Int);
+                db.AddParameter("@CompanyID", companyid, SqlDbType.NVarChar);
+
                 db.ExecuteParam(sql, out dt);
                 db.Close();
+
                 if (dt.Rows.Count > 0)
                 {
                     foreach (DataRow row in dt.Rows)
