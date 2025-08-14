@@ -1027,9 +1027,9 @@
                                 <!-- Form Actions -->
                                 <div class="form-actions mt-2" id="formActionsContainer" style="display: none;">
                                     <div class="btn-group" role="group">
-                                        <%--  <button type="button" class="btn btn-sm btn-success" onclick="updateAttachedForms()" title="Save forms to this appointment">
-                                            <i class="fa fa-save"></i>Update Forms
-                                        </button>--%>
+                                          <button type="button" class="btn btn-sm btn-primary" onclick="openCustomerResponseModal()" title="Save forms to this appointment">
+                                            <i class="fa fa-eye"></i>Respone
+                                        </button>
                                         <button type="button" class="btn btn-sm btn-info" onclick="sendFormsViaEmail()" title="Send forms to customer email">
                                             <i class="fa fa-envelope"></i>Email
                                         </button>
@@ -1084,4 +1084,29 @@
         </div>
     </div>
 
+    <div class="modal fade" id="customerResponseModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Customer Response</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <div id="customerResponseContainer">
+                            <div class="form-viewer-placeholder text-center p-5">
+                                <i class="fa fa-file-text-o fa-3x text-muted mb-3"></i>
+                                <p class="text-muted">Select a form to view or fill</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
 </asp:Content>

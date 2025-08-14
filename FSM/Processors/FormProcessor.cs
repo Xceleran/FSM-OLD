@@ -28,12 +28,12 @@ namespace FSM.Processors
         public List<FormTemplate> GetAllTemplates(string companyId)
         {
             var templates = new List<FormTemplate>();
-            
+
             try
             {
                 db.Init("sp_Forms_GetAllTemplates");
                 db.AddParameter("@CompanyID", companyId, SqlDbType.VarChar);
-                
+
                 if (db.Execute())
                 {
                     while (db.Reader.Read())
@@ -67,20 +67,20 @@ namespace FSM.Processors
             {
                 db.Close();
             }
-            
+
             return templates;
         }
 
         public FormTemplate GetTemplate(int templateId, string companyId)
         {
             FormTemplate template = null;
-            
+
             try
             {
                 db.Init("sp_Forms_GetTemplate");
                 db.AddParameter("@TemplateId", templateId, SqlDbType.Int);
                 db.AddParameter("@CompanyID", companyId, SqlDbType.VarChar);
-                
+
                 if (db.Execute() && db.Reader.Read())
                 {
                     template = new FormTemplate
@@ -111,7 +111,7 @@ namespace FSM.Processors
             {
                 db.Close();
             }
-            
+
             return template;
         }
 
@@ -148,7 +148,7 @@ namespace FSM.Processors
             {
                 db.Close();
             }
-            
+
             return 0;
         }
 
@@ -160,13 +160,13 @@ namespace FSM.Processors
         {
             var templates = new List<FormTemplate>();
             Database db = new Database();
-            
+
             try
             {
                 db.Init("sp_Forms_GetAutoAssignedTemplates");
                 db.AddParameter("@ServiceType", serviceType, SqlDbType.VarChar);
                 db.AddParameter("@CompanyID", companyId, SqlDbType.VarChar);
-                
+
                 if (db.Execute())
                 {
                     while (db.Reader.Read())
@@ -194,7 +194,7 @@ namespace FSM.Processors
             {
                 db.Close();
             }
-            
+
             return templates;
         }
 
@@ -219,10 +219,10 @@ namespace FSM.Processors
                 if (db.ExecuteCommand())
                 {
                     int newId = Convert.ToInt32(db.Command.Parameters["@NewId"].Value);
-                    
+
                     // Log the creation
                     LogFormUsage(newId, instance.TemplateId, instance.AppointmentId, "Created", instance.FilledBy, instance.CompanyID);
-                    
+
                     return newId;
                 }
             }
@@ -234,7 +234,7 @@ namespace FSM.Processors
             {
                 db.Close();
             }
-            
+
             return 0;
         }
 
@@ -278,7 +278,7 @@ namespace FSM.Processors
                 db.Init("sp_Forms_GetAppointmentForms");
                 db.AddParameter("@AppointmentId", appointmentId, SqlDbType.VarChar);
                 db.AddParameter("@CompanyID", companyId, SqlDbType.VarChar);
-                
+
                 if (db.Execute())
                 {
                     while (db.Reader.Read())
@@ -302,7 +302,7 @@ namespace FSM.Processors
                             StoredFilePath = db.GetString("StoredFilePath"),
                             StoredFileName = db.GetString("StoredFileName")
                         };
-                        
+
                         // Try to get template name if available from joined query
                         try
                         {
@@ -314,7 +314,7 @@ namespace FSM.Processors
                             var template = GetTemplate(instance.TemplateId, companyId);
                             instance.TemplateName = template?.TemplateName ?? $"Form #{instance.TemplateId}";
                         }
-                        
+
                         instances.Add(instance);
                     }
                 }
@@ -327,7 +327,7 @@ namespace FSM.Processors
             {
                 db.Close();
             }
-            
+
             return instances;
         }
 
@@ -356,19 +356,19 @@ namespace FSM.Processors
                 var autoFilledData = new Dictionary<string, object>();
 
                 // Auto-fill logic based on field configuration
-                if (formStructure is Dictionary<string, object> structure && 
-                    structure.ContainsKey("fields") && 
+                if (formStructure is Dictionary<string, object> structure &&
+                    structure.ContainsKey("fields") &&
                     structure["fields"] is object[] fields)
                 {
                     foreach (var fieldObj in fields)
                     {
-                        if (fieldObj is Dictionary<string, object> field && 
-                            field.ContainsKey("autoFillSource") && 
+                        if (fieldObj is Dictionary<string, object> field &&
+                            field.ContainsKey("autoFillSource") &&
                             !string.IsNullOrEmpty(field["autoFillSource"].ToString()))
                         {
                             string fieldName = field["name"].ToString();
                             string autoFillSource = field["autoFillSource"].ToString();
-                            
+
                             autoFilledData[fieldName] = GetAutoFillValue(autoFillSource, customer, appointment);
                         }
                     }
@@ -460,7 +460,7 @@ namespace FSM.Processors
                 db.Init("sp_Appointments_GetById");
                 db.AddParameter("@AppointmentId", appointmentId, SqlDbType.VarChar);
                 db.AddParameter("@CompanyID", companyId, SqlDbType.VarChar);
-                
+
                 if (db.Execute() && db.Reader.Read())
                 {
                     return new
@@ -483,7 +483,7 @@ namespace FSM.Processors
             {
                 db.Close();
             }
-            
+
             return null;
         }
 
@@ -528,21 +528,21 @@ namespace FSM.Processors
                 }
             }
             catch { }
-            
+
             return "Unknown";
         }
 
         public List<FormUsageLog> GetUsageLog(string companyId, int? templateId = null, string appointmentId = null)
         {
             var logs = new List<FormUsageLog>();
-            
+
             try
             {
                 db.Init("sp_Forms_GetUsageLog");
                 db.AddParameter("@CompanyID", companyId, SqlDbType.VarChar);
                 db.AddParameter("@TemplateId", templateId, SqlDbType.Int);
                 db.AddParameter("@AppointmentId", appointmentId, SqlDbType.VarChar);
-                
+
                 if (db.Execute())
                 {
                     while (db.Reader.Read())
@@ -571,10 +571,57 @@ namespace FSM.Processors
             {
                 db.Close();
             }
-            
+
             return logs;
         }
 
         #endregion
-    }
+
+        public string GetFormStructureFromResponse(int templateId, string companyId)
+        {
+            string formStructure = null;
+
+            try
+            {
+                string connectionString = ConfigurationManager.AppSettings["ConnStrJobs"].ToString();
+                db = new Database(connectionString);
+                using (SqlConnection conn = new SqlConnection(connectionString))
+                {
+                    string query = @"
+                        SELECT FormStructure FROM myServiceJobs.dbo.FormResponse WHERE TemplateId = @TemplateId AND CompanyID = @CompanyID";
+
+                    using (SqlCommand cmd = new SqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@TemplateId", templateId);
+                        cmd.Parameters.AddWithValue("@CompanyID", companyId);
+
+                        conn.Open();
+                        using (SqlDataReader reader = cmd.ExecuteReader())
+                        {
+                            if (reader.Read())
+                            {
+                                formStructure = reader["FormStructure"].ToString();
+                             
+                            }
+                            else
+                            {
+                                return "";
+                            }
+                        }
+                    }
+                }
+                 
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error retrieving form structure: " + ex.Message);
+            }
+            finally
+            {
+                db.Close();
+            }
+
+            return formStructure;
+        }
+    } 
 }

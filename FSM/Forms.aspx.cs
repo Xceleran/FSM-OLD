@@ -226,6 +226,24 @@ namespace FSM
                 throw new Exception("Error retrieving form structure: " + ex.Message);
             }
         }
+        [WebMethod]
+        public static string GetFormStructure(int templateId,string companyId)
+        {
+            try
+            {
+                //string companyId = System.Web.HttpContext.Current.Session["CompanyID"]?.ToString();
+                if (string.IsNullOrEmpty(companyId))
+                    return "{}";
+
+                var processor = new FormProcessor();
+                var template = processor.GetTemplate(templateId, companyId);
+                return template?.FormStructure ?? "{}";
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error retrieving form structure: " + ex.Message);
+            }
+        }
 
         [WebMethod]
         public static bool SaveFormStructure(int templateId, string formStructure)
@@ -336,21 +354,16 @@ namespace FSM
 
         [WebMethod(EnableSession = true)]
         [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
-        public static object SaveFormResponse(string responses)
+        public static object SaveFormResponse(string responses, int templateId, string companyId, int apptId, int cId)
         {
             try
             {
-                var session = HttpContext.Current?.Session;
-                string companyId = session?["CompanyID"]?.ToString();
-                if (string.IsNullOrEmpty(companyId))
-                {
-                    return new { success = false, message = "Company ID missing" };
-                }
-
-                int templateId = 1;
+               
                 string formStructure = responses ?? "[]";
+            
                 try
                 {
+                   
                     byte[] bytes = Convert.FromBase64String(formStructure);
                     string decoded = System.Text.Encoding.UTF8.GetString(bytes);
                     if (!string.IsNullOrWhiteSpace(decoded) && (decoded.TrimStart().StartsWith("[") || decoded.TrimStart().StartsWith("{")))
@@ -358,10 +371,7 @@ namespace FSM
                         formStructure = decoded;
                     }
                 }
-                catch { }
-
-                int? appointmentId = null;
-                int customerId = 2;
+                catch { /* ignore if not base64 */ }
 
                 string connectionString = ConfigurationManager.AppSettings["ConnStrJobs"];
                 using (SqlConnection conn = new SqlConnection(connectionString))
@@ -377,8 +387,8 @@ SELECT CAST(SCOPE_IDENTITY() AS int);";
                         cmd.Parameters.AddWithValue("@CompanyID", companyId);
                         cmd.Parameters.AddWithValue("@TemplateId", templateId);
                         cmd.Parameters.AddWithValue("@FormStructure", formStructure);
-                        cmd.Parameters.AddWithValue("@AppointmentID", (object)appointmentId ?? DBNull.Value);
-                        cmd.Parameters.AddWithValue("@CustomerID", customerId);
+                        cmd.Parameters.AddWithValue("@AppointmentID", (object)apptId ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@CustomerID", cId);
 
                         conn.Open();
                         var newId = (int)cmd.ExecuteScalar();

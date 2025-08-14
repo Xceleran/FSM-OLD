@@ -2,21 +2,21 @@
 
 $(document).ready(function () {
     const urlParams = new URLSearchParams(window.location.search);
-
-    const templateId = urlParams.get('templateId');
     const companyId = urlParams.get('companyId');
-    const apptId = urlParams.get('apptId');
-
-
-    loadForm(templateId, companyId, apptId)
+    const templateId = urlParams.get('templateId');
+    loadForm(templateId, companyId)
 });
 
-function loadForm(templateId, companyId, apptId) {
+function loadForm(templateId, companyId) {
 
     $.ajax({
         type: "POST",
         url: "Forms.aspx/GetFormStructure",
-        data: JSON.stringify({ templateId: templateId }),
+        data: JSON.stringify({  }), 
+        data: JSON.stringify({
+            templateId: templateId,
+            companyId: companyId 
+        }),
         contentType: "application/json; charset=utf-8",
         dataType: "json",
         success: function (response) {
@@ -120,6 +120,12 @@ function selectField(fieldId) {
 }
 
 function submitResponse() {
+    const urlParams = new URLSearchParams(window.location.search);
+
+    const templateId = urlParams.get('templateId');
+    const companyId = urlParams.get('companyId');
+    const apptId = urlParams.get('apptId');
+    const cId = urlParams.get('cId');
     let formData = [];
 
     $('#formViewerContainer .form-field').each(function () {
@@ -173,9 +179,14 @@ function submitResponse() {
     }
     $.ajax({
         type: "POST",
-        // Call via Forms.aspx to avoid FriendlyUrls/page naming issues resolving the WebMethod
         url: "Forms.aspx/SaveFormResponse",
-        data: JSON.stringify({ responses: formDataString }),
+        data: JSON.stringify({
+            responses: formDataString,
+            templateId: parseInt(templateId) || 0,
+            companyId: companyId,
+            apptId: parseInt(apptId) || 0,
+            cId: parseInt(cId) || 0
+        }),
         contentType: "application/json; charset=utf-8",
         dataType: "json",
         success: function (response) {

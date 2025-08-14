@@ -823,5 +823,28 @@ namespace FSM
                 throw new Exception("Error retrieving form structure: " + ex.Message);
             }
         }
+        [WebMethod]
+        public static string GetCustomerResponseOnForms(int templateId)
+        {
+            try
+            {
+                string formStructure = "";
+                string companyId = System.Web.HttpContext.Current.Session["CompanyID"]?.ToString();
+                if (string.IsNullOrEmpty(companyId))
+                    return formStructure;
+
+                var processor = new FormProcessor();
+                var template = processor.GetFormStructureFromResponse(templateId, companyId);
+                if (template != null)
+                {
+                    formStructure = template;
+                }
+                return formStructure;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error retrieving form structure: " + ex.Message);
+            }
+        }
     }
 }

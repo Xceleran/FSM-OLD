@@ -22,7 +22,7 @@ let resourceViewCurrentPage = 1;
 let resourceViewPageSize = 5;
 let resourceViewTotalPages = 1;
 let resourceViewFilteredAppointments = [];
-
+var GlobalTemplateId = 0;
 const technicianGroups = {
     "electricians": ["Jim", "Bob"],
     "plumbers": ["Team1"]
@@ -3232,7 +3232,7 @@ function populateAppointmentFormsList(forms) {
     });
 }
 function openFormForFilling(templateId) {
-
+    GlobalTemplateId = templateId;
     $.ajax({
         type: "POST",
         url: "Appointments.aspx/GetFormStructure",
@@ -4057,3 +4057,85 @@ function renderResourceViewTable() {
     renderResourceView($("#resourceDatePicker").val());
 }
 
+
+
+function openCustomerResponseModal() {
+
+    $('#customerResponseModal').modal('show');
+    openFormForFillingForCustomerResponse(GlobalTemplateId)
+}
+
+function openFormForFillingForCustomerResponse(templateId) {
+    GlobalTemplateId = templateId;
+    $.ajax({
+        type: "POST",
+        url: "Appointments.aspx/GetCustomerResponseOnForms",
+        data: JSON.stringify({ templateId: templateId }),
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        success: function (response) {
+            try {
+                let formStructure = {};
+                if (response && response.d !== undefined && response.d !== null) {
+                    if (typeof response.d === "string") {
+                        // try to parse string
+                        try {
+                            formStructure = JSON.parse(response.d);
+                        } catch (parseErr) {
+                            console.error("Failed to JSON.parse(response.d):", parseErr, "response.d:", response.d);
+                            $('#formViewerContainer').html('<div class="drop-zone">Invalid form structure received from server</div>');
+                            return;
+                        }
+                    } else {
+                        // already an object
+                        formStructure = response.d;
+                    }
+                } else {
+                    console.warn("Empty response.d:", response);
+                }
+
+                console.log("Parsed formStructure:", formStructure);
+
+
+                var formTemplateData = formStructure;
+
+
+                if (typeof formTemplateData === "string") {
+                    try {
+                        formTemplateData = JSON.parse(formTemplateData);
+                    } catch (e) {
+                        console.error("Failed to parse FormStructure:", e);
+                        formTemplateData = {};
+                    }
+                }
+                $('#customerResponseContainer').empty();
+                $("#formName").text(formStructure.TemplateName);
+                if (formTemplateData.fields && formTemplateData.fields.length > 0) {
+
+                    // Load existing fields
+                    formTemplateData.fields.forEach(function (field) {
+
+                        const fieldHtml = generateFieldFromStructure(field);
+                        $('#customerResponseContainer').append(fieldHtml);
+                    });
+                } else {
+                    // Show empty state
+                    $('#customerResponseContainer').html('<div class="drop-zone">Drag fields here to build your form</div>');
+                }
+            } catch (error) {
+                console.error('Error parsing form structure:', error);
+                $('#customerResponseContainer').html('<div class="drop-zone">Drag fields here to build your form</div>');
+            }
+        },
+        error: function (xhr, status, error) {
+            console.error('Error loading form structure:', error);
+            showAlert({
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to load form structure',
+                confirmButtonText: 'OK'
+            });
+            $('#customerResponseContainer').html('<div class="drop-zone">Drag fields here to build your form</div>');
+        }
+    });
+}

@@ -40,18 +40,18 @@ namespace FSM
 
         [WebMethod(EnableSession = true)]
         [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
-        public static object SaveFormResponse(string responses)
+        public static object SaveFormResponse(string responses, int templateId, string companyId, int apptId, int cId)
         {
             try
             {
-                var session = HttpContext.Current?.Session;
-                string companyId = session?["CompanyID"]?.ToString();
-                if (string.IsNullOrEmpty(companyId))
-                {
-                    return new { success = false, message = "Company ID missing" };
-                }
+                //var session = HttpContext.Current?.Session;
+                //string companyId = session?["CompanyID"]?.ToString();
+                //if (string.IsNullOrEmpty(companyId))
+                //{
+                //    return new { success = false, message = "Company ID missing" };
+                //}
 
-                int templateId = 1;
+                //int templateId = 1;
                 string formStructure = responses ?? "[]";
                 // Attempt to decode Base64 if provided to bypass request validation issues
                 try
