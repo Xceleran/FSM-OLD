@@ -1085,17 +1085,15 @@
     </div>
 
     <div class="modal fade" id="customerResponseModal" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-dialog modal-xs" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Customer Response</h5>
-                <button type="button" class="close" data-dismiss="modal">
-                    <span>&times;</span>
-                </button>
+             
             </div>
             <div class="modal-body">
                 <div class="row">
-                    <div class="col-md-8">
+                    <div class="col-md-12">
                         <div id="customerResponseContainer">
                             <div class="form-viewer-placeholder text-center p-5">
                                 <i class="fa fa-file-text-o fa-3x text-muted mb-3"></i>
@@ -1105,7 +1103,10 @@
                     </div>
                 </div>
             </div>
+              <div class="modal-footer">
 
+      <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="showAppointmentModalFromResponseClose()">Close</button>
+  </div>
         </div>
     </div>
 </div>

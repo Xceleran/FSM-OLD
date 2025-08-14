@@ -4062,7 +4062,8 @@ function renderResourceViewTable() {
 function openCustomerResponseModal() {
 
     $('#customerResponseModal').modal('show');
-    openFormForFillingForCustomerResponse(GlobalTemplateId)
+    openFormForFillingForCustomerResponse(GlobalTemplateId);
+    $('#appointmentFormsModal').modal('hide');
 }
 
 function openFormForFillingForCustomerResponse(templateId) {
@@ -4098,25 +4099,51 @@ function openFormForFillingForCustomerResponse(templateId) {
 
 
                 var formTemplateData = formStructure;
-
-
-                if (typeof formTemplateData === "string") {
-                    try {
-                        formTemplateData = JSON.parse(formTemplateData);
-                    } catch (e) {
-                        console.error("Failed to parse FormStructure:", e);
-                        formTemplateData = {};
-                    }
-                }
                 $('#customerResponseContainer').empty();
-                $("#formName").text(formStructure.TemplateName);
-                if (formTemplateData.fields && formTemplateData.fields.length > 0) {
+                if (formTemplateData && formTemplateData.length > 0) {
+                    formTemplateData.forEach(function (field) {
 
-                    // Load existing fields
-                    formTemplateData.fields.forEach(function (field) {
+                        // Generate field HTML using your existing generator
+                        const fieldHtml = generateFieldFromStructure({
+                            id: field.fieldId,
+                            type: field.type,
+                            label: field.label
+                        });
 
-                        const fieldHtml = generateFieldFromStructure(field);
+                        // Append the HTML to the container
                         $('#customerResponseContainer').append(fieldHtml);
+
+                        // Now bind the saved value
+                        const fieldWrapper = $(`[data-field-id="${field.fieldId}"]`);
+
+                        switch (field.type) {
+                            case 'text':
+                            case 'number':
+                            case 'date':
+                                fieldWrapper.find('input').val(field.value || '');
+                                break;
+
+                            case 'textarea':
+                                fieldWrapper.find('textarea').val(field.value || '');
+                                break;
+
+                            case 'dropdown':
+                                fieldWrapper.find('select').val(field.value || '');
+                                break;
+
+                            case 'checkbox':
+                                fieldWrapper.find('input[type="checkbox"]').prop('checked', field.value === true || field.value === "true");
+                                break;
+
+                            case 'radio':
+                                fieldWrapper.find(`input[type="radio"][value="${field.value}"]`).prop('checked', true);
+                                break;
+
+                            case 'signature':
+                                fieldWrapper.find('.signature-pad').text(field.value || 'Signature Area');
+                                break;
+                        }
+                    
                     });
                 } else {
                     // Show empty state
@@ -4138,4 +4165,8 @@ function openFormForFillingForCustomerResponse(templateId) {
             $('#customerResponseContainer').html('<div class="drop-zone">Drag fields here to build your form</div>');
         }
     });
+}
+function showAppointmentModalFromResponseClose() {
+    $('#appointmentFormsModal').modal('show');
+    openFormForFilling(GlobalTemplateId);
 }
