@@ -561,7 +561,7 @@ namespace FSM
         }
 
         [WebMethod]
-        public static bool UpdateAttachedForms(string appointmentId, List<int> formIds)
+        public static bool UpdateAttachedForms(string appointmentId, int customerId, List<int> formIds)
         {
             try
             {
@@ -580,6 +580,7 @@ namespace FSM
                 {
                     db.Init("sp_Appointments_UpdateAttachedForms");
                     db.AddParameter("@AppointmentId", appointmentId, System.Data.SqlDbType.VarChar);
+                    db.AddParameter("@CustomerId", customerId, System.Data.SqlDbType.Int);
                     db.AddParameter("@CompanyID", companyId, System.Data.SqlDbType.VarChar);
                     db.AddParameter("@FormIds", string.Join(",", formIds), System.Data.SqlDbType.VarChar);
                     db.AddParameter("@UpdatedBy", userId, System.Data.SqlDbType.VarChar);
@@ -598,7 +599,7 @@ namespace FSM
         }
 
         [WebMethod]
-        public static bool SendFormsViaEmail(string appointmentId, string customerEmail)
+        public static bool SendFormsViaEmail(string appointmentId, string customerEmail) 
         {
             try
             {
@@ -737,7 +738,7 @@ namespace FSM
                    $"Service: {appointment.ServiceType}. Please check your email or contact us for details. Ref: {appointmentId}";
         }
 
-        private static bool SendEmail(string toEmail, string subject, string body, string appointmentId)
+        private static bool SendEmail(string toEmail, string subject, string body, string appointmentId) 
         {
             try
             {
@@ -824,7 +825,7 @@ namespace FSM
             }
         }
         [WebMethod]
-        public static string GetCustomerResponseOnForms(int templateId)
+        public static string GetCustomerResponseOnForms(int templateId, int appointmentId, int customerId)
         {
             try
             {
@@ -834,7 +835,7 @@ namespace FSM
                     return formStructure;
 
                 var processor = new FormProcessor();
-                var template = processor.GetFormStructureFromResponse(templateId, companyId);
+                var template = processor.GetFormStructureFromResponse(templateId, companyId, appointmentId,customerId);
                 if (template != null)
                 {
                     formStructure = template;

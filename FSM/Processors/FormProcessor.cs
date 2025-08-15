@@ -577,7 +577,7 @@ namespace FSM.Processors
 
         #endregion
 
-        public string GetFormStructureFromResponse(int templateId, string companyId)
+        public string GetFormStructureFromResponse(int templateId, string companyId, int appointmentId, int customerId)
         {
             string formStructure = null;
 
@@ -588,12 +588,16 @@ namespace FSM.Processors
                 using (SqlConnection conn = new SqlConnection(connectionString))
                 {
                     string query = @"
-                        SELECT FormStructure FROM myServiceJobs.dbo.FormResponse WHERE TemplateId = @TemplateId AND CompanyID = @CompanyID";
+                        SELECT FormStructure FROM myServiceJobs.dbo.FormResponse 
+                        WHERE TemplateId = @TemplateId AND AppointmentID = @AppointmentID
+                        AND CustomerId = @CustomerId AND CompanyID = @CompanyID";
 
                     using (SqlCommand cmd = new SqlCommand(query, conn))
                     {
                         cmd.Parameters.AddWithValue("@TemplateId", templateId);
                         cmd.Parameters.AddWithValue("@CompanyID", companyId);
+                        cmd.Parameters.AddWithValue("@AppointmentID", appointmentId);
+                        cmd.Parameters.AddWithValue("@CustomerId", customerId);
 
                         conn.Open();
                         using (SqlDataReader reader = cmd.ExecuteReader())

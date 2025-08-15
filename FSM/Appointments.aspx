@@ -26,6 +26,12 @@
                 gap: 10px;
             }
         }
+        div#loader {
+            left: 50% !important;
+            position: absolute;
+            top: 45%;
+            display:none;
+        }
     </style>
 
     <!-- Page Content -->
@@ -1040,10 +1046,13 @@
                                 </div>
                             </div>
 
+                            <div id="loader">
+                                <img src="content/GearLoder.gif" alt="Loading..." />
+                            </div>
+
                             <div id="formViewerContainer">
                                 <div class="form-viewer-placeholder text-center p-5">
-                                    <i class="fa fa-file-text-o fa-3x text-muted mb-3"></i>
-                                    <p class="text-muted">Select a form to view or fill</p>
+                                 
                                 </div>
                             </div>
                         </div>
@@ -1051,7 +1060,7 @@
                 </div>
                 <div class="modal-footer">
 
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="openAppointmentModal()">Close</button>
                     <button type="button" class="btn btn-success d-none" id="saveFormBtn" onclick="saveCurrentForm()">Save Form</button>
                     <button type="button" class="btn btn-primary d-none" id="submitFormBtn" onclick="submitCurrentForm()">Submit Form</button>
                 </div>

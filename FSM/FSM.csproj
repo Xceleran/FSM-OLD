@@ -176,6 +176,7 @@
   <ItemGroup>
     <Content Include="Appointments.aspx" />
     <Content Include="Content\form-response.css" />
+    <Content Include="Content\GearLoder.gif" />
     <Content Include="QboConnection.aspx" />
     <Content Include="BillableItems.aspx" />
     <Content Include="FormResponse.aspx" />

@@ -3160,6 +3160,10 @@ function removeFormFromAppointment(formId) {
 
 // Open appointment forms modal
 function openAppointmentFormsModal() {
+    $('#formName').empty();
+    $('#formViewerContainer').empty();
+    $('#editModal').modal('hide');
+    
     const appointmentId = $('#AppoinmentId').val();
     if (!appointmentId) {
         showAlert({
@@ -3177,6 +3181,7 @@ function openAppointmentFormsModal() {
 
 // Load appointment forms
 function loadAppointmentForms(appointmentId) {
+    $("#loader").show();
     $.ajax({
         type: "POST",
         url: "Forms.aspx/GetAppointmentForms",
@@ -3185,6 +3190,7 @@ function loadAppointmentForms(appointmentId) {
         dataType: "json",
         success: function (response) {
             if (response.d) {
+                $("#loader").hide();
                 currentAppointmentForms = response.d;
                 populateAppointmentFormsList(response.d);
             }
@@ -3233,6 +3239,7 @@ function populateAppointmentFormsList(forms) {
 }
 function openFormForFilling(templateId) {
     GlobalTemplateId = templateId;
+    $("#loader").show();
     $.ajax({
         type: "POST",
         url: "Appointments.aspx/GetFormStructure",
@@ -3241,6 +3248,7 @@ function openFormForFilling(templateId) {
         dataType: "json",
         success: function (response) {
             try {
+
                 let formStructure = {};
                 if (response && response.d !== undefined && response.d !== null) {
                     if (typeof response.d === "string") {
@@ -3253,6 +3261,7 @@ function openFormForFilling(templateId) {
                             return;
                         }
                     } else {
+                        $("#loader").hide();
                         // already an object
                         formStructure = response.d;
                     }
@@ -3440,11 +3449,22 @@ function loadCurrentlySelectedForms(appointmentId) {
 // Update attached forms for appointment
 function updateAttachedForms() {
     const appointmentId = $('#AppoinmentId').val();
+    var customerId = $('#CustomerID').val();
+
     if (!appointmentId) {
         showAlert({
             icon: 'error',
             title: 'Error',
             text: 'No appointment selected',
+            confirmButtonText: 'OK'
+        });
+        return;
+    }
+    if (!customerId) {
+        showAlert({
+            icon: 'error',
+            title: 'Error',
+            text: 'No customer selected',
             confirmButtonText: 'OK'
         });
         return;
@@ -3464,6 +3484,7 @@ function updateAttachedForms() {
         url: "Appointments.aspx/UpdateAttachedForms",
         data: JSON.stringify({
             appointmentId: appointmentId,
+            customerId: customerId,
             formIds: formIds
         }),
         contentType: "application/json; charset=utf-8",
@@ -3525,7 +3546,7 @@ function sendFormsViaEmail() {
     }
     // Get customer email from the appointment
     const appointment = appointments.find(a => a.AppoinmentId == appointmentId);
-    let customerEmail = appointment?.CustomerEmail || '';
+    let customerEmail = appointment?.Email || '';
     // Prompt for email if not available
     if (!customerEmail) {
         customerEmail = prompt('Enter customer email address:');
@@ -4060,18 +4081,31 @@ function renderResourceViewTable() {
 
 
 function openCustomerResponseModal() {
-
     $('#customerResponseModal').modal('show');
     openFormForFillingForCustomerResponse(GlobalTemplateId);
     $('#appointmentFormsModal').modal('hide');
 }
 
 function openFormForFillingForCustomerResponse(templateId) {
+    if (!templateId) {
+        showAlert({
+            icon: 'warning',
+            title: 'Form Not Selected.',
+            text: 'Please select a form',
+            timer: 3000
+        });
+    }
     GlobalTemplateId = templateId;
+    var apptId =  $('#AppoinmentId').val();
+    var cId =  $('#CustomerID').val();
     $.ajax({
         type: "POST",
         url: "Appointments.aspx/GetCustomerResponseOnForms",
-        data: JSON.stringify({ templateId: templateId }),
+        data: JSON.stringify({
+            templateId: templateId,
+            appointmentId: apptId,
+            customerId: cId
+            }),
         contentType: "application/json; charset=utf-8",
         dataType: "json",
         success: function (response) {
@@ -4169,4 +4203,7 @@ function openFormForFillingForCustomerResponse(templateId) {
 function showAppointmentModalFromResponseClose() {
     $('#appointmentFormsModal').modal('show');
     openFormForFilling(GlobalTemplateId);
+}
+function openAppointmentModal() {
+    $('#editModal').modal('show');
 }
