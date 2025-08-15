@@ -1339,3 +1339,105 @@ tr.selected .cust-table-edit-btn {
         transform: translateX(0);
         opacity: 1;
     }
+   
+
+    /**Site Appointment Styling*/
+
+
+:root {
+    --cust-bg: #ffffff;
+    --cust-card: #ffffff;
+    --cust-subtle: #e5effa;
+    --cust-border: #e5e7eb;
+    --cust-text: #0f172a;
+    --cust-muted: #64748b;
+   
+    --cust-info: #0891b2; /* cyan-ish for in-progress */
+}
+
+/* Show/Hide Appointments button */
+.cust-site-appts-toggle {
+    background: var(--cust-subtle);
+    color: var(--cust-text);
+    padding: 4px 8px;
+    border-radius: 8px;
+    text-decoration: none;
+    display: inline-block;
+    margin-top: 8px;
+}
+
+    .cust-site-appts-toggle:hover {
+        background: #eef2ff;
+        border-color: #c7d2fe;
+    }
+
+/* Appointments container */
+.cust-site-appts {
+    margin-top: 6px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+}
+
+/* Appointments list: tighter rows */
+.cust-appt-list {
+    width: 100%;
+}
+
+/* Tighter, smaller appointment rows */
+.cust-appt-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap; 
+    padding: 0 6px; 
+    min-height: 24px; 
+    border-bottom: 1px solid #f1f5f9;
+}
+
+    .cust-appt-row:last-child {
+        border-bottom: 0;
+    }
+
+    .cust-appt-row .small {
+        font-size: .78rem;
+        line-height: 1.1;
+        white-space: nowrap; 
+    }
+
+        /* Columns: indicator | date | type (flex/ellipsis) | status (right) */
+        .cust-appt-row .small:nth-child(1) {
+            flex: 0 0 auto;
+        }
+        /* indicator */
+        .cust-appt-row .small:nth-child(2) {
+            flex: 0 0 auto;
+        }
+        /* date */
+        .cust-appt-row .small:nth-child(3) { /* type */
+            min-width: 120px;
+            flex: 1 1 150px; /* shrink first */
+            overflow: hidden;
+            text-overflow: ellipsis; /* trim long type */
+        }
+
+        .cust-appt-row .small:nth-child(4) { /* status */
+            flex: 0 0 auto;
+            margin-left: auto; /* push right */
+        }
+
+    /* Smaller badge  */
+    .cust-appt-row .badge {
+        font-size: .72rem;
+        padding: 2px 6px;
+        line-height: 1;
+    }
+
+/* On  narrow screens, allow wrapping to avoid overflow */
+@media (max-width: 768px) {
+    .cust-appt-row {
+        flex-wrap: wrap;
+    }
+
+        .cust-appt-row .small:nth-child(4) {
+            margin-left: 0;
+        }
+}

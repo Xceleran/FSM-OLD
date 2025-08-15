@@ -99,6 +99,24 @@
 
 var sites = [];
 
+//helper
+
+var siteAppointmentsCache = {}; 
+function escapeHTML(str) {
+    return String(str ?? '').replace(/[&<>"']/g, s => (
+        { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[s]
+    ));
+}
+
+function statusToBadgeClass(status) {
+    switch ((status || '').toLowerCase()) {
+        case 'scheduled': return 'status-scheduled';
+        case 'pending': return 'status-pending';
+        case 'closed': return 'status-closed';
+        default: return 'status-na';
+    }
+}
+
 function openModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
@@ -258,81 +276,255 @@ function generateCustomerDetails(data) {
 }
 
 function loadCustomerSiteData(customerId) {
-    if (customerId) {
-        sites = [];
-        $.ajax({
-            type: "POST",
-            url: "Customer.aspx/GetCustomerSiteData",
-            data: JSON.stringify({ customerId: customerId }),
-            contentType: "application/json; charset=utf-8",
-            dataType: "json",
-            success: function (response) {
-                console.log(response);
-                if (response.d) {
-                    sites = response.d;
+    if (!customerId) return;
 
-                    // Render Sites
-                    const sitesContainer = document.getElementById('sites');
-                    const addSiteBtn = sitesContainer.querySelector('#addSiteBtn');
-                    sitesContainer.innerHTML = '';
-                    sites.forEach(site => {
-                        const siteCard = document.createElement('div');
-                        siteCard.className = 'cust-site-card';
-                        siteCard.dataset.siteId = site.Id;
-                        siteCard.innerHTML = `
-                                <h3 class="cust-site-title">${site.SiteName}</h3>
-                                <p class="cust-site-info">Address: ${site.Address}</p>
-                                <p class="cust-site-info">Contact: ${site.Contact || '-'}</p>
-                                <p class="cust-site-active"> ${site.IsActive ? "Active" : "Disabled"}</p>
-                                <div class="cust-site-actions">
-                                <button class="cust-site-edit-btn" data-site-id="${site.Id}">Edit</button>
-                                <a href="CustomerDetails.aspx?siteId=${site.Id}&custId=${site.CustomerID}" class="cust-site-view-link">View Details</a>
-                                </div>`;
-                        sitesContainer.appendChild(siteCard);
-                        if (!site.IsActive) {
-                            $('.cust-site-view-link').addClass("d-none");
-                        }
-                    });
+    sites = [];
 
-
-
-                    sitesContainer.appendChild(addSiteBtn);
-
-
-                    // Reattach Edit Site Handlers
-                    document.querySelectorAll('.cust-site-edit-btn').forEach(btn => {
-                        btn.addEventListener('click', () => {
-                            const siteId = btn.dataset.siteId;
-                            console.log(siteId);
-                            console.log(sites);
-                            const site = sites.find(s => s.Id == siteId);
-                            console.log(site);
-                            if (site) {
-                                $('.cust-modal-title').text("Edit Site");
-                                $('.cust-modal-submit').text("Update");
-                                document.getElementById('SiteId').value = site.Id;
-                                document.getElementById('CustomerGuid').value = site.CustomerGuid;
-                                document.getElementById('CustomerID').value = site.CustomerID;
-                                document.getElementById('siteName').value = site.SiteName;
-                                document.getElementById('address').value = site.Address;
-                                document.getElementById('siteContact').value = site.Contact || '';
-                                document.getElementById('isActive').checked = site.IsActive;
-                                document.getElementById('note').value = site.Note || '';
-                                openModal('addSiteModal');
-                            }
-                        });
-                    });
-                }
-                else {
-                    alert("Something went wrong!");
-                }
-            },
-            error: function (xhr, status, error) {
-                console.error("Error loading site data: ", error);
+    $.ajax({
+        type: "POST",
+        url: "Customer.aspx/GetCustomerSiteData",
+        data: JSON.stringify({ customerId: customerId }),
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        success: function (response) {
+            if (!response.d) {
+                alert("Something went wrong!");
+                return;
             }
-        });
-    }
+
+            sites = response.d;
+
+            
+            if (typeof siteAppointmentsCache !== 'undefined') {
+                siteAppointmentsCache = {};
+            }
+
+            // Render Sites
+            const sitesContainer = document.getElementById('sites');
+            sitesContainer.innerHTML = '';
+
+            sites.forEach(site => {
+                const siteCard = document.createElement('div');
+                siteCard.className = 'cust-site-card';
+                siteCard.dataset.siteId = site.Id;
+
+                siteCard.innerHTML = `
+          <h3 class="cust-site-title">${escapeHTML(site.SiteName)}</h3>
+          <p class="cust-site-info">Address: ${escapeHTML(site.Address)}</p>
+          <p class="cust-site-info">Contact: ${escapeHTML(site.Contact || '-')}</p>
+          <p class="cust-site-active">${site.IsActive ? "Active" : "Disabled"}</p>
+
+          <div class="cust-site-actions">
+            <button class="cust-site-edit-btn" data-site-id="${site.Id}">Edit</button>
+            <a href="CustomerDetails.aspx?siteId=${site.Id}&custId=${encodeURIComponent(site.CustomerID)}" class="cust-site-view-link">View Details</a>
+          </div>
+
+          <div class="cust-site-appts-wrap">
+            <button class="cust-site-appts-toggle" data-site-id="${site.Id}">Show Appointments</button>
+            <div class="cust-site-appts" id="site-appts-${site.Id}" data-loaded="false" style="display:none;"></div>
+          </div>
+        `;
+
+                if (!site.IsActive) {
+                    siteCard.querySelector('.cust-site-view-link')?.classList.add('d-none');
+                }
+
+                sitesContainer.appendChild(siteCard);
+            });
+
+            document.querySelectorAll('.cust-site-edit-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const siteId = btn.dataset.siteId;
+                    const site = sites.find(s => String(s.Id) === String(siteId));
+                    if (!site) return;
+
+                    $('.cust-modal-title').text("Edit Site");
+                    $('.cust-modal-submit').text("Update");
+
+                    document.getElementById('SiteId').value = site.Id;
+                    document.getElementById('CustomerGuid').value = site.CustomerGuid;
+                    document.getElementById('CustomerID').value = site.CustomerID;
+
+                    document.getElementById('siteName').value = site.SiteName;
+                    document.getElementById('address').value = site.Address;
+                    document.getElementById('siteContact').value = site.Contact || '';
+                    document.getElementById('isActive').checked = !!site.IsActive;
+                    document.getElementById('note').value = site.Note || '';
+
+                    openModal('addSiteModal');
+                });
+            });
+
+            const addBtn = document.createElement('button');
+            addBtn.id = 'addSiteBtn';
+            addBtn.type = 'button';
+            addBtn.className = 'btn btn-primary mt-2';
+            addBtn.textContent = '+ Add Site';
+
+            addBtn.addEventListener('click', () => {
+                
+                const form = document.getElementById('addSiteForm');
+                if (form) form.reset();
+
+                $('.cust-modal-title').text('Add Site');
+                $('.cust-modal-submit').text('Save');
+
+                document.getElementById('SiteId').value = 0;
+               
+                const currCustomerId = document.getElementById('CustomerID')?.value || customerId;
+                const currCustomerGuid = document.getElementById('CustomerGuid')?.value || '';
+                document.getElementById('CustomerID').value = currCustomerId;
+                document.getElementById('CustomerGuid').value = currCustomerGuid;
+
+                document.getElementById('isActive').checked = true;
+
+                openModal('addSiteModal');
+            });
+
+            sitesContainer.appendChild(addBtn);
+            // -----------------------------------------------------------------------
+        },
+        error: function (xhr, status, error) {
+            console.error("Error loading site data: ", error);
+        }
+    });
 }
+
+
+
+// Toggle + load appointments per site card
+$('#sites').on('click', '.cust-site-appts-toggle', function () {
+    const siteId = parseInt($(this).data('site-id'), 10);
+    const apptsEl = document.getElementById(`site-appts-${siteId}`);
+    if (!apptsEl) return;
+
+    const isVisible = apptsEl.style.display === 'block';
+    if (isVisible) {
+        // collapse
+        apptsEl.style.display = 'none';
+        this.textContent = 'Show Appointments';
+        return;
+    }
+
+    // expand
+    this.textContent = 'Hide Appointments';
+    apptsEl.style.display = 'block';
+
+   
+    if (apptsEl.getAttribute('data-loaded') === 'true') return;
+
+    // fetch on first open
+    const customerId = document.getElementById('CustomerID')?.value;
+    if (!customerId) {
+        apptsEl.innerHTML = '<div class="text-danger small">Missing customer id.</div>';
+        return;
+    }
+
+    // show loading state
+    apptsEl.innerHTML = '<div class="text-muted small">Loading appointments…</div>';
+
+    // Use cache if present
+    if (siteAppointmentsCache[siteId]) {
+        renderSiteAppointments(siteId, siteAppointmentsCache[siteId], apptsEl);
+        apptsEl.setAttribute('data-loaded', 'true');
+        return;
+    }
+
+    $.ajax({
+        type: 'POST',
+        url: 'CustomerDetails.aspx/GetCustomerAppoinmets',
+        contentType: 'application/json; charset=utf-8',
+        dataType: 'json',
+        data: JSON.stringify({ customerId: customerId, siteId: siteId }),
+        success: function (resp) {
+            const list = resp && Array.isArray(resp.d) ? resp.d : [];
+            siteAppointmentsCache[siteId] = list; // cache
+            renderSiteAppointments(siteId, list, apptsEl);
+            apptsEl.setAttribute('data-loaded', 'true');
+        },
+        error: function (xhr) {
+            console.error('GetCustomerAppoinmets failed:', xhr?.status, xhr?.statusText, xhr?.responseText);
+            apptsEl.innerHTML = '<div class="text-danger small">Failed to load appointments.</div>';
+        }
+    });
+});
+
+
+function renderSiteAppointments(siteId, list, containerEl) {
+    if (!Array.isArray(list) || list.length === 0) {
+        containerEl.innerHTML = '<div class="text-muted small">No appointments for this site.</div>';
+        return;
+    }
+
+ 
+    const getDateStr = (item) => item.AppoinmentDate || item.RequestDate || '';
+
+    const toTs = (s) => {
+        if (!s) return NaN;
+        const m = String(s).trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+        if (m) {
+            const mm = parseInt(m[1], 10), dd = parseInt(m[2], 10), yy = parseInt(m[3], 10);
+            return new Date(yy, mm - 1, dd).getTime();
+        }
+        const t = Date.parse(s);
+        return isNaN(t) ? NaN : t;
+    };
+
+    const tsList = list.map(i => toTs(getDateStr(i)));
+    const validTs = tsList.filter(t => !isNaN(t));
+
+    let mostIdx = 0;               // default first
+    let lastIdx = list.length > 1 ? list.length - 1 : -1;
+
+    if (validTs.length > 0) {
+        const maxTs = Math.max(...validTs);
+        const minTs = Math.min(...validTs);
+        mostIdx = tsList.findIndex(t => t === maxTs);
+        lastIdx = tsList.findIndex(t => t === minTs);
+        if (mostIdx === lastIdx) lastIdx = -1; // only show "Most recent" when same
+    } else {
+        if (list.length === 1) lastIdx = -1; // single item → only "Most recent"
+    }
+
+    const rows = list.map((item, idx) => {
+        const date = escapeHTML(getDateStr(item) || '—');
+        const type = escapeHTML(item.ServiceType || '—');
+        const status = escapeHTML(item.AppoinmentStatus || 'N/A');
+
+        // Map status to existing badge classes
+        const statusClass = (function (s) {
+            switch ((s || '').toLowerCase()) {
+                case 'scheduled': return 'status-scheduled';
+                case 'pending': return 'status-pending';
+                case 'closed': return 'status-closed';
+                case 'cancelled': return 'status-na';
+                case 'inprogress':
+                case 'installation in progress': return 'status-scheduled';
+                default: return 'status-na';
+            }
+        })(status);
+
+        // Indicator first, styled like a badge
+        let indicatorHtml = '&nbsp;';
+        if (idx === mostIdx) {
+            indicatorHtml = '<span class="badge status-na">Most recent</span>';
+        } else if (idx === lastIdx) {
+            indicatorHtml = '<span class="badge status-na">Last appointment</span>';
+        }
+
+        return `
+      <div class="cust-appt-row d-flex align-items-center py-1 border-bottom">
+        <div class="small" style="min-width:140px">${indicatorHtml}</div>
+        <div class="small" style="min-width:140px"><strong>Date:</strong> ${date}</div>
+        <div class="small" style="min-width:180px"><strong>Type:</strong> ${type}</div>
+        <div class="small"><strong></strong> <span class="badge ${statusClass}">${status}</span></div>
+      </div>`;
+    }).join('');
+
+    containerEl.innerHTML = `<div class="cust-appt-list">${rows}</div>`;
+}
+
+
 
 function saveSite(event) {
     event.preventDefault();
