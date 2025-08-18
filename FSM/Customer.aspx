@@ -69,15 +69,11 @@
             <div class="cust-details-container">
                 <div class="cust-details-header">
                     <div class="cust-details-left">
-                        <button id="collapseLeftBtn" class="btn btn-outline-secondary me-2" title="Show Customer List" style="display: none;">
-                            <i class="fas fa-chevron-left"></i>
-                        </button>
+                       
                         <h2 class="cust-details-title" id="customerName">Select a Customer</h2>
                     </div>
                     <div class="cust-details-actions">
-                        <button id="expandDetailsBtn" class="btn btn-outline-secondary me-2" title="Expand Customer Details">
-                            <i class="fas fa-expand"></i>
-                        </button>
+                        
                         <button class="btn btn-primary" id="editCustomerBtn">Edit Customer</button>
                     </div>
                 </div>

@@ -524,59 +524,6 @@ function renderSiteAppointments(siteId, list, containerEl) {
     containerEl.innerHTML = `<div class="cust-appt-list">${rows}</div>`;
 }
 
-// Expand/Collapse Customer Details (minimize sidebar + list)
-(function () {
-    function measureSidebarSizes() {
-        const icon = document.querySelector('#sidebar .sidebar-icon');
-        if (icon) {
-            const cs = getComputedStyle(icon);
-            document.body.style.setProperty('--sb-icon-w', cs.width);
-            document.body.style.setProperty('--sb-icon-h', cs.height);
-        }
-        const logo = document.querySelector('#sidebar .sidebar-logo-img');
-        if (logo) {
-            const cs = getComputedStyle(logo);
-            document.body.style.setProperty('--sb-logo-w', cs.width);
-            document.body.style.setProperty('--sb-logo-h', cs.height);
-        }
-    }
-
-    function updateExpandUI(expanded) {
-        const expandBtn = document.getElementById('expandDetailsBtn');
-        if (expandBtn) {
-            const icon = expandBtn.querySelector('i');
-            if (icon) {
-                icon.classList.toggle('fa-expand', !expanded);
-                icon.classList.toggle('fa-compress', expanded);
-            }
-            expandBtn.setAttribute('aria-label', expanded ? 'Collapse customer details' : 'Expand customer details');
-            expandBtn.setAttribute('title', expanded ? 'Collapse Customer Details' : 'Expand Customer Details');
-        }
-    }
-
-    document.addEventListener('DOMContentLoaded', function () {
-        const expandBtn = document.getElementById('expandDetailsBtn');
-        const collapseLeft = document.getElementById('collapseLeftBtn');
-
-        if (expandBtn) {
-            expandBtn.addEventListener('click', function () {
-                const expanding = !document.body.classList.contains('details-expanded');
-                if (expanding) measureSidebarSizes(); 
-                document.body.classList.toggle('details-expanded', expanding);
-                updateExpandUI(expanding);
-            });
-        }
-
-        if (collapseLeft) {
-            collapseLeft.addEventListener('click', function () {
-                // Collapse back to normal, reveal the customer list & full sidebar text
-                document.body.classList.remove('details-expanded');
-                updateExpandUI(false);
-            });
-        }
-    });
-})();
-
 
 
 function saveSite(event) {
