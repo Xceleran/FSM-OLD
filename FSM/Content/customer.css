@@ -1573,3 +1573,13 @@ tr.selected .cust-table-edit-btn {
         width: var(--sb-logo-w, auto) !important;
         height: var(--sb-logo-h, auto) !important;
     }
+
+/* Hide expand + chevron buttons on tablet & mobile */
+@media (max-width: 787px) {
+    #expandDetailsBtn,
+    #collapseLeftBtn,
+    .details-expanded #expandDetailsBtn,
+    .details-expanded #collapseLeftBtn {
+        display: none !important;
+    }
+}
