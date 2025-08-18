@@ -1441,3 +1441,135 @@ tr.selected .cust-table-edit-btn {
             margin-left: 0;
         }
 }
+
+
+/* ===== Expand/Collapse Customer Details ===== */
+/* ============ Customer Details Header & Buttons ============ */
+.cust-details-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: nowrap;
+}
+
+.cust-details-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.cust-details-title {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.cust-details-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 0 0 auto;
+}
+
+
+
+#expandDetailsBtn.btn-outline-secondary,
+#collapseLeftBtn.btn-outline-secondary {
+    border-radius: 8px;
+    background-color: #818cf8;
+    border-color: #818cf8;
+    color: #fff;
+    transition: all .3s ease;
+}
+
+    #expandDetailsBtn.btn-outline-secondary:hover,
+    #collapseLeftBtn.btn-outline-secondary:hover {
+        background-color: #6366f1;
+        border-color: #6366f1;
+        color: #fff;
+    }
+
+    #expandDetailsBtn.btn-outline-secondary:focus-visible,
+    #collapseLeftBtn.btn-outline-secondary:focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(99,102,241,.35);
+    }
+
+    #expandDetailsBtn.btn-outline-secondary:active,
+    #collapseLeftBtn.btn-outline-secondary:active {
+        transform: translateY(1px);
+    }
+
+#expandDetailsBtn i, #collapseLeftBtn i,
+#expandDetailsBtn svg, #collapseLeftBtn svg {
+    color: inherit;
+    fill: currentColor;
+    stroke: currentColor;
+}
+
+.details-expanded #collapseLeftBtn {
+    display: inline-flex !important;
+}
+
+.details-expanded #expandDetailsBtn {
+    display: inline-flex !important;
+}
+
+/* ================= Expanded Layout ================= */
+.details-expanded .cust-section {
+    display: flex !important;
+    gap: 12px;
+}
+
+.details-expanded .cust-list-container {
+    flex: 0 0 3% !important; 
+    max-width: 3% !important;
+    min-width: 10px;
+    background: #f8fafc;
+    border-right: 1px solid #e5e7eb;
+    overflow: hidden;
+    pointer-events: none; 
+    position: relative;
+}
+    /* Hide the inner UI inside the sliver */
+    .details-expanded .cust-list-container > * {
+        visibility: hidden !important;
+    }
+
+.details-expanded .cust-details-container {
+    flex: 1 1 auto !important;
+    max-width: none !important;
+    min-width: 0;
+    overflow: auto;
+    min-height: calc(100vh - 16px);
+}
+
+/* ================= Sidebar (collapsed text, same icon size) ================= */
+.details-expanded #sidebar {
+    width: 80px !important;
+    min-width: 80px !important;
+    overflow: hidden !important;
+    transition: width .2s ease;
+}
+
+    .details-expanded #sidebar .sidebar-text {
+        display: none !important;
+    }
+
+    .details-expanded #sidebar .sidebar-nav-link {
+        display: flex;
+        justify-content: center;
+        padding: 10px 6px;
+    }
+
+    /* Keep original icon/logo sizes captured by JS (with safe fallbacks) */
+    .details-expanded #sidebar .sidebar-icon {
+        width: var(--sb-icon-w, auto) !important;
+        height: var(--sb-icon-h, auto) !important;
+    }
+
+    .details-expanded #sidebar .sidebar-logo-img {
+        width: var(--sb-logo-w, auto) !important;
+        height: var(--sb-logo-h, auto) !important;
+    }
