@@ -21,11 +21,13 @@
     overflow: hidden;
     transition: flex 0.3s ease;
 }
+
 .calendar-event-resource:hover .truncate.status {
     font-size: 1rem;
     margin-top: 7px;
 }
-.truncate{
+
+.truncate {
     font-size: 10px;
 }
 /* Card Styles */
@@ -122,7 +124,6 @@
 .calendar-grid {
     display: grid;
     width: 100%; /* Ensure the grid takes full container width */
-
 }
 
 .calendar-grid-month {
@@ -140,13 +141,15 @@
     min-width: 0; /* Prevent overflow issues */
     box-sizing: border-box; /* Include padding in width calculations */
 }
-    .calendar-header-cell{
-        font-size: 12px;
-    }
-    .calendar-grid-month > * {
-        background: #ffffff;
-        border: 1px solid #d1d5db;
-    }
+
+.calendar-header-cell {
+    font-size: 12px;
+}
+
+.calendar-grid-month > * {
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+}
 
 [data-theme="dark"] .calendar-grid-month > * {
     background: rgb(255 255 255 / 14%);
@@ -223,7 +226,7 @@
     display: flex;
     gap: 10px;
     height: auto;
-
+    position: relative;
 }
 
 [data-theme="dark"] .calendar-cell {
@@ -515,14 +518,12 @@ th.sortable {
     background: #f9fafb;
     cursor: grab;
     transition: all 0.3s ease;
-
     padding: 0 !important;
-
 }
 
     /*-------------------------------------------------- Making appointment cards smaller ------------------------------------------------------------------*/
     .appointment-card.card {
-        margin-bottom:10px !important; /* Less gap between cards */
+        margin-bottom: 10px !important; /* Less gap between cards */
         border-radius: 10px;
         box-shadow: 0 1px 4px rgba(100,120,200,0.05);
         min-width: 0;
@@ -1558,7 +1559,6 @@ button.btn.btn-primary.ms-2 {
     font-size: 0.9rem;
     line-height: 1.4;
     color: #333;
-
 }
 
     .appointment-details-popup .details-title {
@@ -1773,33 +1773,32 @@ button.btn.btn-primary.ms-2 {
     cursor: grabbing !important;
 }
 
-.calendar-grid.dragging .calendar-event-resource,
-.calendar-grid.dragging .calendar-event,
-.calendar-grid.dragging .appointment-card {
-    pointer-events: none;
-}
+    .calendar-grid.dragging .calendar-event-resource,
+    .calendar-grid.dragging .calendar-event,
+    .calendar-grid.dragging .appointment-card {
+        pointer-events: none;
+    }
 
 .calendar-grid:not(.dragging) {
     cursor: grab;
 }
 
-    .calendar-event-resource .customer-name {
-        font-weight: 500;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
+.calendar-event-resource .customer-name {
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 
-    .calendar-event-resource .fs-7 {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
+.calendar-event-resource .fs-7 {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 
-    .calendar-event-resource:hover {
-        z-index: 100;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* Subtle shadow on hover */
-        width: inherit; /* Preserve inline width */
-    }
+.calendar-event-resource:hover {
+    z-index: 100;
+    width: inherit; /* Preserve inline width */
+}
 
 [data-theme="dark"] .calendar-event-resource {
     border-bottom: 1px solid rgba(255, 255, 255, 0.01);
@@ -1811,6 +1810,7 @@ button.btn.btn-primary.ms-2 {
     [data-theme="dark"] .calendar-event-resource:hover {
         box-shadow: 0 2px 5px rgba(255, 255, 255, 0.1);
     }
+
 .calendar-event-resource .event-details {
     display: none;
     font-size: 0.65rem;
@@ -1823,7 +1823,6 @@ button.btn.btn-primary.ms-2 {
     height: auto;
     min-height: 30px;
     z-index: 100;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     white-space: normal;
 }
 
@@ -1850,6 +1849,7 @@ button.btn.btn-primary.ms-2 {
     box-shadow: 0 5px 15px rgba(255,255,255,0.0.1);
     border-color: #818cf8;
 }
+
 .calendar-event-resource .fs-7 {
     white-space: nowrap;
     overflow: hidden;
@@ -2039,6 +2039,7 @@ button.btn.btn-primary.ms-2 {
         transform: translateX(0);
         opacity: 1;
     }
+
 [data-theme="dark"] .service-type-it-support {
     background-color: #4f46e5 !important; /* Indigo */
     color: #ffffff;
@@ -2058,19 +2059,23 @@ button.btn.btn-primary.ms-2 {
     background-color: #6b7280; /* Gray as fallback */
     color: #ffffff;
 }
+
 .service-type-it-support {
     background-color: #c7d2fe !important; /* Light Indigo */
     color: #000000;
+    box-shadow: inset rgb(0 38 192) 0px 0px 0px 2px, rgb(199 210 254 / 43%) 0px 4px 6px -1px, rgb(255 255 255 / 13%) 0px 1px 0px inset;
 }
 
 .service-type-1-hour {
     background-color: #a7f3d0 !important; /* Ligh Emerald */
     color: #000000;
+    box-shadow: inset rgb(7 138 78) 0px 0px 0px 2px, rgb(167 243 208 / 5%) 0px 4px 6px -1px, rgb(255 255 255 / 13%) 0px 1px 0px inset;
 }
 
 .service-type-2-hour {
     background-color: #fed7aa !important; /* Ligh Orange */
     color: #000000;
+    box-shadow: inset rgb(245 131 0) 0px 0px 0px 2px, rgb(245 131 0 / 49%) 0px 4px 6px -1px, rgb(255 255 255 / 13%) 0px 1px 0px inset;
 }
 
 .service-type-default {
@@ -2153,6 +2158,7 @@ button.btn.btn-primary.ms-2 {
             justify-content: center;
         }
 }
+
 * Map Container Styles */
 #mapViewContainer {
     height: 400px;

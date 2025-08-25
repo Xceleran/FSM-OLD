@@ -12,6 +12,8 @@ namespace FSM.Entity.Customer
         public string SiteName { get; set; }
         public string Address { get; set; }
         public string Contact { get; set; }
+        public string Email { get; set; } 
+        public string PhoneNumber { get; set; } 
         public string Note { get; set; }
         public bool IsActive { get; set; }
         public DateTime? CreatedDateTime { get; set; }

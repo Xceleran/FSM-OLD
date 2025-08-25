@@ -109,9 +109,7 @@
                                 <button id="toggleUnscheduledBtn" class="btn btn-sm"><i class="fas fa-chevron-right"></i></button>
                             </div>
                             <div class="appt-type-indicators">
-                                <span class="appt-type-indicator appt-type-it-support"></span>IT Support
-                                <span class="appt-type-indicator appt-type-1-hour"></span>1 Hour
-                                <span class="appt-type-indicator appt-type-2-hour"></span>2 Hour
+                        
                             </div>
                         </div>
                         <div class="card-body">
@@ -251,7 +249,7 @@
                         </div>
                         <div class="card-body">
                             <div class="datepicker">
-                                <div class="date-nav" id="resourceDateNav"></div>
+                             <div class="date-nav" id="resourceNav"></div>
                             </div>
                             <div id="resourceViewContainer">
                                 <div id="resourceLoading" class="loading-overlay" style="display: none;">
@@ -620,7 +618,7 @@
                             <button class="nav-link-modal active" id="appointment-tab" data-bs-toggle="tab" data-bs-target="#appointment-details" type="button" role="tab" aria-controls="appointment-details" aria-selected="true">Appointment Details</button>
                         </li>
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link-modal" id="customer-tab" data-bs-toggle="tab" data-bs-target="#customer-data" type="button" role="tab" aria-controls="customer-data" aria-selected="false">Customer Data</button>
+                            <button class="nav-link-modal" id="customer-tab" data-bs-toggle="tab" data-bs-target="#customer-data" type="button" role="tab" aria-controls="customer-data" aria-selected="false">Customer Service Location</button>
                         </li>
                         <li class="nav-item" role="presentation">
                             <button class="nav-link-modal" id="forms-tab" data-bs-toggle="tab" data-bs-target="#forms-section" type="button" role="tab" aria-controls="forms-section" aria-selected="false">Forms</button>
@@ -648,9 +646,9 @@
                                     <div class="col-md-6">
                                         <label class="form-label">Service Type</label>
                                         <select runat="server" id="ServiceTypeFilter_Edit" name="serviceTypeEdit" class="form-select" onchange="calculateTimeRequired(event)" required>
-                                            <option value="IT Support">IT Support</option>
+                                           <%-- <option value="IT Support">IT Support</option>
                                             <option value="1 Hour">1 Hour</option>
-                                            <option value="2 Hour">2 Hour</option>
+                                            <option value="2 Hour">2 Hour</option>--%>
                                         </select>
                                     </div>
                                     <div class="col-md-6">
@@ -721,7 +719,7 @@
                             <!-- Customer Data Tab -->
                             <div class="tab-pane fade" id="customer-data" role="tabpanel" aria-labelledby="customer-tab">
                                 <div class="custdet-container">
-                                    <h2 class="h4 mb-3">Basic Information</h2>
+                                  <div class="d-flex justify-content-between align-items-center mb-3"> <h2 class="h4 mb-3">Basic Information</h2> <a id="viewCustomerDetailsBtn" href="#" target="_blank" class="btn btn-outline-primary btn-sm" style="display: none;">View Full Details</a></div>
                                     <asp:Label Style="display: none;" ID="lblCustomerId" runat="server" />
                                     <asp:Label Style="display: none;" ID="lblSiteId" runat="server" />
                                     <asp:Label Style="display: none;" ID="lblCustomerGuid" runat="server" />
