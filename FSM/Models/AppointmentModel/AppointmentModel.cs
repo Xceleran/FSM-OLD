@@ -14,7 +14,6 @@ namespace FSM.Models.AppoinmentModel
         public string StartDateTime { get; set; }
         public string EndDateTime { get; set; }
         public string RequestDate { get; set; }
-        public string ServiceName { get; set; }
         public string ServiceType { get; set; }
         public string ResourceName { get; set; }
         public string TimeSlot { get; set; }
@@ -27,19 +26,10 @@ namespace FSM.Models.AppoinmentModel
         public string CompanyID { get; set; }
         public string CustomerID { get; set; }
         public string CustomerGuid { get; set; }
-        public string ServiceColor { get; set; }
-        public string CalendarColor { get; set; }
+
         public Int32 BusinessID { get; set; } = 0;
         public string Address1 { get; set; }
         public string Address2 { get; set; }
-        public string SiteId { get; set; }
-        public string SiteName { get; set; }
-        public string SiteAddress { get; set; }
-        public string SiteContact { get; set; }
-        public string SiteEmail { get; set; }
-        public string SitePhoneNumber { get; set; }
-        public string SiteNote { get; set; }
-        public bool SiteIsActive { get; set; }
         public string FirstName { get; set; }
         public string FirstName2 { get; set; } = "";
         public string LastName { get; set; } = "";
@@ -58,5 +48,4 @@ namespace FSM.Models.AppoinmentModel
         public string CustomerName { get; set; }
         public bool IsBusinessContact { get; set; } = false;
     }
-
 }

@@ -285,7 +285,7 @@ namespace FSM
                         appoinment.AppoinmentStatus = row.Field<string>("AppStatus") ?? "";
                         appoinment.TicketStatus = row.Field<string>("AppTicketStatus") ?? "";
                         appoinment.ResourceName = row.Field<string>("ResourceName") ?? "";
-                        appoinment.ServiceName = row.Field<string>("ServiceName") ?? "";
+                        appoinment.ServiceType = row.Field<string>("ServiceName") ?? "";
                         appoinment.RequestDate = row.Field<string>("ApptDateTimeConverted") ?? "";
                         appoinment.TimeSlot = row.Field<string>("TimeSlot") ?? "";
                         appoinment.AppoinmentDate = row.Field<string>("ApptDateTimeConverted") ?? "";
