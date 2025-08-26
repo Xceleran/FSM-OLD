@@ -1197,7 +1197,7 @@ function renderListView() {
 function renderUnscheduledList(view = 'date') {
     const isResourceView = view === 'resource';
 
-    // Existing server-side filters
+
     const statusFilterId = isResourceView ? '#MainContent_StatusTypeFilter_Resource' : '#MainContent_StatusTypeFilter';
     const serviceFilterId = isResourceView ? '#MainContent_ServiceTypeFilter_Resource' : '#MainContent_ServiceTypeFilter_2';
     const searchFilterId = isResourceView ? '#searchFilterResource' : '#searchFilter';
@@ -1208,7 +1208,6 @@ function renderUnscheduledList(view = 'date') {
     const serviceFilter = ($(serviceFilterId).val() || '').trim();
     const searchFilter = (($(searchFilterId).val() || '').toLowerCase().trim());
 
-    // Helpers to safely read HTML 
     const getVal = (candidates, fallback = 'all') => {
         for (const sel of candidates) {
             const $el = $(sel);
@@ -1220,19 +1219,18 @@ function renderUnscheduledList(view = 'date') {
         return fallback;
     };
 
-    // Resource Type (assigned/unassigned) 
+
     const resourceTypeVal = isResourceView
         ? getVal(['#ResourceTypeFilter_Resource', '#MainContent_ResourceTypeFilter_Resource'], 'all').toLowerCase()
         : getVal(['#ResourceTypeFilter_2', '#MainContent_ResourceTypeFilter_2'], 'all').toLowerCase();
 
-    // Time Slot filter: values like "all" or "exact:570"
+
     const timeFilterValue = isResourceView
         ? getVal(['#TimeSlotFilter_Resource', '#MainContent_TimeSlotFilter_Resource'], 'all')
         : getVal(['#TimeSlotFilter_2', '#MainContent_TimeSlotFilter_2'], 'all');
 
     // ---- Filter ----
     const filteredAppointments = appointments.filter(app => {
-        // assigned/unassigned detection
         const name = (app.ResourceName || '').trim().toLowerCase();
         const hasNameAssigned = !!name && name !== 'unassigned' && name !== 'none';
 
@@ -1250,13 +1248,18 @@ function renderUnscheduledList(view = 'date') {
                     ? isUnassigned
                     : /* 'assigned' */ !isUnassigned;
 
-        const matchesStatus = !statusFilter || app.AppoinmentStatus === statusFilter;
-        const matchesService = !serviceFilter || app.ServiceType === serviceFilter;
+   
+        const matchesStatus =
+            !statusFilter || statusFilter.toLowerCase() === 'all' || app.AppoinmentStatus === statusFilter;
+
+        const matchesService =
+            !serviceFilter || serviceFilter.toLowerCase() === 'all' || app.ServiceType === serviceFilter;
+
         const matchesSearch = !searchFilter ||
             (app.CustomerName && app.CustomerName.toLowerCase().includes(searchFilter)) ||
             (app.Address1 && app.Address1.toLowerCase().includes(searchFilter));
 
-        // Time Slot filter
+
         let matchesTime = true;
         if (timeFilterValue && timeFilterValue !== 'all') {
             const appMin = parseTimeToMinutes(app?.TimeSlot);
@@ -1266,7 +1269,6 @@ function renderUnscheduledList(view = 'date') {
                 const target = parseInt(timeFilterValue.slice(6), 10);
                 matchesTime = appMin === target;
             } else {
-                // Allow plain text like "9:30 AM" if ever used
                 const selMin = parseTimeToMinutes(timeFilterValue);
                 matchesTime = Number.isFinite(selMin) ? (appMin === selMin) : true;
             }
@@ -1293,7 +1295,8 @@ function renderUnscheduledList(view = 'date') {
             ? (a?.CustomerName || '').localeCompare(b?.CustomerName || '')
             : (b?.CustomerName || '').localeCompare(a?.CustomerName || '');
     });
-    // ---- Render ----
+
+
     $listContainer.empty().css('display', 'block');
 
     if (!sortedAppointments.length) {
@@ -1307,22 +1310,36 @@ function renderUnscheduledList(view = 'date') {
         const address = app.Address1 || 'No address';
         const state = app.State || '';
         const zipCode = app.ZipCode || '';
+        const resourceName = app.ResourceName || 'Unassigned';
 
         const card = `
       <div class="appointment-card card mb-3 shadow-sm unscheduled-item" data-id="${app.AppoinmentId}" draggable="true">
         <div class="card-body p-3">
+          
+          <!-- Top Row -->
           <div class="d-flex justify-content-between align-items-start">
             <h3 class="font-weight-medium fs-6 mb-0">${app.CustomerName || 'Unknown Customer'}</h3>
+            <span class="fs-7 text-muted"><i class="fa fa-user me-1"></i>${resourceName}</span>
+          </div>
+
+          <!-- Address -->
+          <div class="fs-7 text-muted mt-1 line-clamp-2">
+            ${address}${state ? ', ' + state : ''}${zipCode ? ' ' + zipCode : ''}
+          </div>
+
+          <!-- Date + Time -->
+          <div class="fs-7 text-muted mt-1">
+            <i class="fa fa-calendar me-1"></i>${app.RequestDate || 'No date'} 
+            &nbsp;&nbsp; 
+            <i class="fa fa-clock me-1"></i>${formatTimeRange(timeSlotDisplay)}
+          </div>
+
+          <!-- Service + Status -->
+          <div class="d-flex justify-content-between align-items-center mt-2">
+            <span class="fs-7">${serviceType}</span>
             <span class="fs-7 badge bg-${(app.AppoinmentStatus || '').toLowerCase() === 'pending' ? 'warning' : 'success'}">
               ${app.AppoinmentStatus || 'N/A'}
             </span>
-          </div>
-          <div class="fs-7 text-muted mt-1 line-clamp-2">${address}${state ? ', ' + state : ''}${zipCode ? ' ' + zipCode : ''}</div>
-          <div class="fs-7 text-muted mt-1 line-clamp-2">${app.RequestDate || 'No date'}</div>
-          <div class="fs-7 text-muted mt-1 line-clamp-2">${formatTimeRange(timeSlotDisplay)}</div>
-          <div class="d-flex justify-content-between align-items-center mt-2">
-            <span class="fs-7">${serviceType}</span>
-            <button class="btn btn-outline-secondary btn-sm" onclick="openEditModal(${app.AppoinmentId})">Schedule</button>
           </div>
         </div>
       </div>`;
@@ -1331,6 +1348,8 @@ function renderUnscheduledList(view = 'date') {
 
     setupDragAndDrop();
 }
+
+
 //Custom Sorting for Appointment List
 function performCustomSort(view) {
     customSortDirection = customSortDirection === 'asc' ? 'desc' : 'asc';
