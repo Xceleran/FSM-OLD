@@ -123,9 +123,9 @@
                         <div class="card-header">
                             <div class="d-flex justify-content-between align-items-center">
                                 <h3 class="card-title mb-0">Appointment List</h3>
-                                <button id="sortUnscheduledBtn" class="btn btn-sm btn-outline-secondary" onclick="performCustomSort('date')" title="Sort by date">
+                               <%-- <button type="button" id="sortUnscheduledBtn" class="btn btn-sm btn-outline-secondary" onclick="performSort('date')" title="Sort by date">
                                     <i class="fas fa-sort-amount-up"></i>
-                                </button>
+                                </button>--%>
                             </div>
                         </div>
                         <div class="card-body">
@@ -276,10 +276,9 @@
                         <div class="card-header">
                             <div class="d-flex justify-content-between align-items-center">
                                 <h3 class="card-title mb-0">Appointment List</h3>
-                                <button id="sortUnscheduledBtnResource" class="btn btn-sm btn-outline-secondary" onclick="performCustomSort('resource')" title="Sort by date">
+                               <%-- <button type="button" id="sortUnscheduledBtnResource" class="btn btn-sm btn-outline-secondary" onclick="performSort('resource')" title="Sort by date">
                                     <i class="fas fa-sort-amount-up"></i>
-                                </button>
-
+                                </button>--%>
                             </div>
                         </div>
                         <div class="card-body">

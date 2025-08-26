@@ -1194,155 +1194,110 @@ function renderListView() {
         $("#listViewLoading").hide();
     });
 }
+
 function renderUnscheduledList(view = 'date') {
     const isResourceView = view === 'resource';
 
-
+    const resourceFilterId = isResourceView ? '#ResourceTypeFilter_Resource' : '#ResourceTypeFilter_2';
     const statusFilterId = isResourceView ? '#MainContent_StatusTypeFilter_Resource' : '#MainContent_StatusTypeFilter';
     const serviceFilterId = isResourceView ? '#MainContent_ServiceTypeFilter_Resource' : '#MainContent_ServiceTypeFilter_2';
     const searchFilterId = isResourceView ? '#searchFilterResource' : '#searchFilter';
     const listContainerId = isResourceView ? '#unscheduledListResource' : '#unscheduledList';
+    const sortBtnId = isResourceView ? '#sortUnscheduledBtnResource' : '#sortUnscheduledBtn';
 
-    const $listContainer = $(listContainerId);
-    const statusFilter = ($(statusFilterId).val() || '').trim();
-    const serviceFilter = ($(serviceFilterId).val() || '').trim();
-    const searchFilter = (($(searchFilterId).val() || '').toLowerCase().trim());
+    const resourceFilterValue = $(resourceFilterId).val() || 'all';
+    const statusFilterValue = $(statusFilterId).val() || '';
+    const serviceFilterValue = $(serviceFilterId).val() || '';
+    const searchFilter = ($(searchFilterId).val() || '').toLowerCase().trim();
 
-    const getVal = (candidates, fallback = 'all') => {
-        for (const sel of candidates) {
-            const $el = $(sel);
-            if ($el.length) {
-                const v = (String($el.val() ?? '')).trim();
-                return v === '' ? fallback : v;
-            }
-        }
-        return fallback;
-    };
+    const statusFilterText = statusFilterValue === '' ? '' : $(`${statusFilterId} option:selected`).text();
+    const serviceFilterText = serviceFilterValue === '' ? '' : $(`${serviceFilterId} option:selected`).text();
 
-
-    const resourceTypeVal = isResourceView
-        ? getVal(['#ResourceTypeFilter_Resource', '#MainContent_ResourceTypeFilter_Resource'], 'all').toLowerCase()
-        : getVal(['#ResourceTypeFilter_2', '#MainContent_ResourceTypeFilter_2'], 'all').toLowerCase();
-
-
-    const timeFilterValue = isResourceView
-        ? getVal(['#TimeSlotFilter_Resource', '#MainContent_TimeSlotFilter_Resource'], 'all')
-        : getVal(['#TimeSlotFilter_2', '#MainContent_TimeSlotFilter_2'], 'all');
-
-    // ---- Filter ----
     const filteredAppointments = appointments.filter(app => {
-        const name = (app.ResourceName || '').trim().toLowerCase();
-        const hasNameAssigned = !!name && name !== 'unassigned' && name !== 'none';
-
-        const hasIdAssigned =
-            Object.prototype.hasOwnProperty.call(app, 'ResourceID') &&
-            app.ResourceID !== null && app.ResourceID !== undefined &&
-            String(app.ResourceID).trim() !== '' && String(app.ResourceID).trim() !== '0';
-
-        const isUnassigned = !(hasNameAssigned || hasIdAssigned);
-
-        const matchesResourceType =
-            resourceTypeVal === 'all'
-                ? true
-                : resourceTypeVal === 'unassigned'
-                    ? isUnassigned
-                    : /* 'assigned' */ !isUnassigned;
-
-   
-        const matchesStatus =
-            !statusFilter || statusFilter.toLowerCase() === 'all' || app.AppoinmentStatus === statusFilter;
-
-        const matchesService =
-            !serviceFilter || serviceFilter.toLowerCase() === 'all' || app.ServiceType === serviceFilter;
-
+        const isUnassigned = !(app.ResourceName && app.ResourceName.trim() !== '' && app.ResourceName !== 'Unassigned' && app.ResourceName !== 'none');
+        let matchesResource = true;
+        if (resourceFilterValue === 'unassigned') {
+            matchesResource = isUnassigned;
+        } else if (resourceFilterValue === 'assigned') {
+            matchesResource = !isUnassigned;
+        }
+        const matchesStatus = (statusFilterValue === '') || (app.AppoinmentStatus === statusFilterText);
+        const matchesService = (serviceFilterValue === '') || (app.ServiceType === serviceFilterText);
         const matchesSearch = !searchFilter ||
             (app.CustomerName && app.CustomerName.toLowerCase().includes(searchFilter)) ||
             (app.Address1 && app.Address1.toLowerCase().includes(searchFilter));
-
-
-        let matchesTime = true;
-        if (timeFilterValue && timeFilterValue !== 'all') {
-            const appMin = parseTimeToMinutes(app?.TimeSlot);
-            if (!Number.isFinite(appMin)) {
-                matchesTime = false;
-            } else if (timeFilterValue.startsWith('exact:')) {
-                const target = parseInt(timeFilterValue.slice(6), 10);
-                matchesTime = appMin === target;
-            } else {
-                const selMin = parseTimeToMinutes(timeFilterValue);
-                matchesTime = Number.isFinite(selMin) ? (appMin === selMin) : true;
-            }
-        }
-
-        return matchesResourceType && matchesStatus && matchesService && matchesSearch && matchesTime;
+        return matchesResource && matchesStatus && matchesService && matchesSearch;
     });
 
-
+  
     const sortedAppointments = filteredAppointments.slice().sort((a, b) => {
-        const A = parseTimeToMinutes(a?.TimeSlot);
-        const B = parseTimeToMinutes(b?.TimeSlot);
-        const aBad = !isFinite(A), bBad = !isFinite(B);
-        if (aBad && bBad) return 0;
-        if (aBad) return unscheduledSortOrder === 'asc' ? 1 : -1;
-        if (bBad) return unscheduledSortOrder === 'asc' ? -1 : 1;
-        if (A !== B) return unscheduledSortOrder === 'asc' ? A - B : B - A;
+       
+        const getDate = (dateStr) => {
+            const date = new Date(dateStr);
 
-        const dA = Date.parse(a?.RequestDate) || 0;
-        const dB = Date.parse(b?.RequestDate) || 0;
-        if (dA !== dB) return unscheduledSortOrder === 'asc' ? dA - dB : dB - dA;
+            return isNaN(date) ? new Date('9999-12-31') : date;
+        };
 
-        return unscheduledSortOrder === 'asc'
-            ? (a?.CustomerName || '').localeCompare(b?.CustomerName || '')
-            : (b?.CustomerName || '').localeCompare(a?.CustomerName || '');
+        const dateA = getDate(a.RequestDate);
+        const dateB = getDate(b.RequestDate);
+        const timeA = parseTimeToMinutes(a.TimeSlot);
+        const timeB = parseTimeToMinutes(b.TimeSlot);
+
+
+        if (unscheduledSortOrder === 'asc') {
+
+            if (dateA < dateB) return -1;
+            if (dateA > dateB) return 1;
+            if (timeA < timeB) return -1;
+            if (timeA > timeB) return 1;
+            return (a.CustomerName || '').localeCompare(b.CustomerName || '');
+        } else {
+
+            if (dateA > dateB) return -1;
+            if (dateA < dateB) return 1;
+            if (timeA > timeB) return -1;
+            if (timeA < timeB) return 1;
+            return (b.CustomerName || '').localeCompare(a.CustomerName || '');
+        }
     });
 
 
-    $listContainer.empty().css('display', 'block');
+    const icon = $(`${sortBtnId} i`);
+    if (icon.length) {
+        icon.removeClass('fa-sort-amount-up fa-sort-amount-down');
+        icon.addClass(unscheduledSortOrder === 'asc' ? 'fa-sort-amount-up' : 'fa-sort-amount-down');
+    }
 
-    if (!sortedAppointments.length) {
-        $listContainer.append('<div class="text-center py-4 text-muted">No unassigned appointments found.</div>');
+
+    const $listContainer = $(listContainerId);
+    $listContainer.empty();
+
+    if (sortedAppointments.length === 0) {
+        $listContainer.append('<div class="text-center py-4 text-muted">No appointments match the filters.</div>');
         return;
     }
 
     sortedAppointments.forEach(app => {
-        const serviceType = app.ServiceType || 'Unknown';
-        const timeSlotDisplay = app.TimeSlot || 'Not specified';
-        const address = app.Address1 || 'No address';
-        const state = app.State || '';
-        const zipCode = app.ZipCode || '';
-        const resourceName = app.ResourceName || 'Unassigned';
-
         const card = `
-      <div class="appointment-card card mb-3 shadow-sm unscheduled-item" data-id="${app.AppoinmentId}" draggable="true">
-        <div class="card-body p-3">
-          
-          <!-- Top Row -->
-          <div class="d-flex justify-content-between align-items-start">
-            <h3 class="font-weight-medium fs-6 mb-0">${app.CustomerName || 'Unknown Customer'}</h3>
-            <span class="fs-7 text-muted"><i class="fa fa-user me-1"></i>${resourceName}</span>
-          </div>
+          <div class="appointment-card card mb-3 shadow-sm unscheduled-item" data-id="${app.AppoinmentId}" draggable="true">
+            <div class="card-body p-3">
+              <div class="d-flex justify-content-between align-items-start">
+                <h3 class="font-weight-medium fs-6 mb-0">${app.CustomerName || 'Unknown Customer'}</h3>
+                <span class="fs-7 text-muted"><i class="fa fa-user me-1"></i>${app.ResourceName || 'Unassigned'}</span>
+              </div>
+              <div class="fs-7 text-muted mt-1 line-clamp-2">${app.Address1 || 'No address'}</div>
+              <div class="fs-7 text-muted mt-1">
+                <i class="fa fa-calendar me-1"></i>${app.RequestDate || 'No date'} 
+                &nbsp;&nbsp; 
+                <i class="fa fa-clock me-1"></i>${formatTimeRange(app.TimeSlot)}
+              </div>
+              <div class="d-flex justify-content-between align-items-center mt-2">
+                <span class="fs-7">${app.ServiceType || 'Unknown'}</span>
+                <span class="fs-7 truncate status status-${app.AppoinmentStatus.toLowerCase().replace(/\s+/g, '-')}">${app.AppoinmentStatus || 'N/A'}</span>
 
-          <!-- Address -->
-          <div class="fs-7 text-muted mt-1 line-clamp-2">
-            ${address}${state ? ', ' + state : ''}${zipCode ? ' ' + zipCode : ''}
-          </div>
-
-          <!-- Date + Time -->
-          <div class="fs-7 text-muted mt-1">
-            <i class="fa fa-calendar me-1"></i>${app.RequestDate || 'No date'} 
-            &nbsp;&nbsp; 
-            <i class="fa fa-clock me-1"></i>${formatTimeRange(timeSlotDisplay)}
-          </div>
-
-          <!-- Service + Status -->
-          <div class="d-flex justify-content-between align-items-center mt-2">
-            <span class="fs-7">${serviceType}</span>
-            <span class="fs-7 badge bg-${(app.AppoinmentStatus || '').toLowerCase() === 'pending' ? 'warning' : 'success'}">
-              ${app.AppoinmentStatus || 'N/A'}
-            </span>
-          </div>
-        </div>
-      </div>`;
+              </div>
+            </div>
+          </div>`;
         $listContainer.append(card);
     });
 
@@ -1351,46 +1306,12 @@ function renderUnscheduledList(view = 'date') {
 
 
 //Custom Sorting for Appointment List
-function performCustomSort(view) {
-    customSortDirection = customSortDirection === 'asc' ? 'desc' : 'asc';
-    const sortBtnId = view === 'resource' ? '#sortUnscheduledBtnResource' : '#sortUnscheduledBtn';
-    const icon = document.querySelector(sortBtnId + ' i');
-    if (icon) {
-        icon.classList.remove('fa-sort-amount-up', 'fa-sort-amount-down');
-        if (customSortDirection === 'asc') {
-            icon.classList.add('fa-sort-amount-up');
-        } else {
-            icon.classList.add('fa-sort-amount-down');
-        }
-    }
-    const listContainerId = view === 'resource' ? 'unscheduledListResource' : 'unscheduledList';
-    const listContainer = document.getElementById(listContainerId);
-    if (!listContainer) return;
-    const appointmentCards = Array.from(listContainer.querySelectorAll('.appointment-card'));
-    appointmentCards.sort((cardA, cardB) => {
-
-        const appointmentA = appointments.find(a => a.AppoinmentId === cardA.dataset.id);
-        const appointmentB = appointments.find(a => a.AppoinmentId === cardB.dataset.id);
-        if (!appointmentA || !appointmentB) return 0;
-        const getDate = (dateStr) => {
-            const date = new Date(dateStr);
-            return isNaN(date) ? new Date('9999-12-31') : date;
-        };
-        const dateA = getDate(appointmentA.RequestDate);
-        const dateB = getDate(appointmentB.RequestDate);
-        if (dateA.getTime() !== dateB.getTime()) {
-            return customSortDirection === 'asc' ? dateA - dateB : dateB - dateA;
-        }
-        const timeA = typeof parseTimeToMinutes === 'function' ? parseTimeToMinutes(appointmentA.TimeSlot) : 0;
-        const timeB = typeof parseTimeToMinutes === 'function' ? parseTimeToMinutes(appointmentB.TimeSlot) : 0;
-        if (timeA !== timeB) {
-            return customSortDirection === 'asc' ? timeA - timeB : timeB - timeA;
-        }
-
-        return (appointmentA.CustomerName || '').localeCompare(appointmentB.CustomerName || '');
-    });
-    appointmentCards.forEach(card => listContainer.appendChild(card));
+function performSort(view) {
+    // This function ONLY toggles the sort direction and re-renders.
+    unscheduledSortOrder = unscheduledSortOrder === 'asc' ? 'desc' : 'asc';
+    renderUnscheduledList(view);
 }
+
 // Setup drag-and-drop functionality
 function setupDragAndDrop() {
     // Initialize draggable elements
