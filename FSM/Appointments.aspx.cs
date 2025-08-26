@@ -513,6 +513,7 @@ ORDER BY apt.ApptDateTime DESC";
             return success;
         }
 
+
         [WebMethod]
         [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
         public static object GetCustomerDetailsForModal(string customerId, string siteId)
@@ -521,33 +522,35 @@ ORDER BY apt.ApptDateTime DESC";
             {
                 var customer = GetCustomerDetails(customerId);
                 var site = GetCustomerSitebyId(customerId, Convert.ToInt32(siteId));
-
+                if (customer == null)
+                {
+                    return new { Success = false, Error = "Customer not found." };
+                }
                 return new
                 {
                     Success = true,
-                    CustomerName = $"{customer?.FirstName} {customer?.LastName}",
-                    CustomerGuid = customer?.CustomerGuid ?? "",
-                    Address = site?.Address ?? "",
-                    Contact = site?.Contact ?? "",
-                    CustomerId = customerId,
-                    SiteId = siteId,
+                    CustomerName = $"{customer.FirstName} {customer.LastName}",
+                    Address = site?.Address ?? customer.Address1 ?? "N/A", 
+                    Contact = site?.Contact ?? $"{customer.FirstName} {customer.LastName}",
                     Status = site?.IsActive == true ? "Active" : "Disabled",
-                    Note = site?.Note ?? "",
-                    CreatedOn = site?.CreatedDateTime?.ToString("yyyy-MM-dd") ?? "",
-                    SiteName = site?.SiteName ?? "",
-                    Phone = customer?.Phone ?? "",
-                    PhoneLink = $"tel:{customer?.Phone ?? ""}",
-                    Mobile = customer?.Mobile ?? "",
-                    MobileLink = $"tel:{customer?.Mobile ?? ""}",
-                    Email = customer?.Email ?? "",
-                    EmailLink = $"mailto:{customer?.Email ?? ""}"
+                    Note = site?.Note ?? "No special instructions.",
+                    CreatedOn = site?.CreatedDateTime?.ToString("yyyy-MM-dd") ?? "N/A",
+                    Phone = customer.Phone ?? "N/A",
+                    PhoneLink = $"tel:{customer.Phone}",
+                    Mobile = customer.Mobile ?? "N/A",
+                    MobileLink = $"tel:{customer.Mobile}",
+                    Email = customer.Email ?? "N/A",
+                    EmailLink = $"mailto:{customer.Email}"
                 };
             }
             catch (Exception ex)
             {
-                return new { Success = false, Error = ex.Message };
+
+                System.Diagnostics.Debug.WriteLine($"Error in GetCustomerDetailsForModal: {ex.ToString()}");
+                return new { Success = false, Error = "An error occurred while fetching customer details." };
             }
         }
+
 
         public static CustomerEntity GetCustomerDetails(string customerId)
         {

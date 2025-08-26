@@ -26,11 +26,12 @@
                 gap: 10px;
             }
         }
+
         div#loader {
             left: 50% !important;
             position: absolute;
             top: 45%;
-            display:none;
+            display: none;
         }
     </style>
 
@@ -109,7 +110,6 @@
                                 <button id="toggleUnscheduledBtn" class="btn btn-sm"><i class="fas fa-chevron-right"></i></button>
                             </div>
                             <div class="appt-type-indicators">
-                        
                             </div>
                         </div>
                         <div class="card-body">
@@ -121,7 +121,12 @@
                     </div>
                     <div class="card unscheduled-panel">
                         <div class="card-header">
-                            <h3 class="card-title">Unassigned Appointments</h3>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h3 class="card-title mb-0">Appointment List</h3>
+                                <button id="sortUnscheduledBtn" class="btn btn-sm btn-outline-secondary" onclick="performCustomSort('date')" title="Sort by date">
+                                    <i class="fas fa-sort-amount-up"></i>
+                                </button>
+                            </div>
                         </div>
                         <div class="card-body">
                             <!--Dropdowns Under One Filter-->
@@ -144,6 +149,11 @@
                                         Filter
                                     </button>
                                     <div class="dropdown-menu p-3" aria-labelledby="unscheduledFilterBtn" style="min-width: 320px;">
+                                        <select id="ResourceTypeFilter_2" class="form-select mb-3" onchange="renderUnscheduledList()">
+                                            <option value="all">All Resource Status</option>
+                                            <option value="unassigned">Unassigned</option>
+                                            <option value="assigned">Assigned</option>
+                                        </select>
                                         <select runat="server" id="StatusTypeFilter" class="form-select mb-3" onchange="renderUnscheduledList()">
                                             <option value="all">All Statuses</option>
                                         </select>
@@ -249,7 +259,7 @@
                         </div>
                         <div class="card-body">
                             <div class="datepicker">
-                             <div class="date-nav" id="resourceNav"></div>
+                                <div class="date-nav" id="resourceNav"></div>
                             </div>
                             <div id="resourceViewContainer">
                                 <div id="resourceLoading" class="loading-overlay" style="display: none;">
@@ -264,7 +274,13 @@
                     </div>
                     <div class="card unscheduled-panel">
                         <div class="card-header">
-                            <h3 class="card-title">Unassigned Appointments</h3>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h3 class="card-title mb-0">Appointment List</h3>
+                                <button id="sortUnscheduledBtnResource" class="btn btn-sm btn-outline-secondary" onclick="performCustomSort('resource')" title="Sort by date">
+                                    <i class="fas fa-sort-amount-up"></i>
+                                </button>
+
+                            </div>
                         </div>
                         <div class="card-body">
                             <!--Dropdowns Under One Filter-->
@@ -287,6 +303,12 @@
                                         Filter
                                     </button>
                                     <div class="dropdown-menu p-3" aria-labelledby="unscheduledFilterBtnResource" style="min-width: 320px;">
+                                        <select id="ResourceTypeFilter_Resource" class="form-select mb-3" onchange="renderUnscheduledList('resource')">
+                                            <option value="all">All Resource Status</option>
+
+                                            <option value="unassigned">Unassigned</option>
+                                            <option value="assigned">Assigned</option>
+                                        </select>
                                         <select runat="server" id="StatusTypeFilter_Resource" class="form-select mb-3" onchange="renderUnscheduledList('resource')">
                                             <option value="all">All Statuses</option>
                                         </select>
@@ -341,6 +363,7 @@
                                 <label for="search_term" class="form-label mb-0">Search</label>
                                 <input placeholder="Search anything" type="text" id="search_term" class="form-control w-200px" oninput="renderListView()">
                             </div>
+
                             <div>
                                 <label for="ServiceTypeFilter_List" class="form-label mb-0">Service type:</label>
                                 <select name="ServiceTypeFilter_List" id="ServiceTypeFilter_List" class="form-select" runat="server" onchange="renderListView()">
@@ -646,7 +669,7 @@
                                     <div class="col-md-6">
                                         <label class="form-label">Service Type</label>
                                         <select runat="server" id="ServiceTypeFilter_Edit" name="serviceTypeEdit" class="form-select" onchange="calculateTimeRequired(event)" required>
-                                           <%-- <option value="IT Support">IT Support</option>
+                                            <%-- <option value="IT Support">IT Support</option>
                                             <option value="1 Hour">1 Hour</option>
                                             <option value="2 Hour">2 Hour</option>--%>
                                         </select>
@@ -711,7 +734,7 @@
                                         <textarea type="text" name="note" class="form-control"></textarea>
                                     </div>
 
-                    
+
 
                                 </div>
                             </div>
@@ -719,7 +742,10 @@
                             <!-- Customer Data Tab -->
                             <div class="tab-pane fade" id="customer-data" role="tabpanel" aria-labelledby="customer-tab">
                                 <div class="custdet-container">
-                                  <div class="d-flex justify-content-between align-items-center mb-3"> <h2 class="h4 mb-3">Basic Information</h2> <a id="viewCustomerDetailsBtn" href="#" target="_blank" class="btn btn-outline-primary btn-sm" style="display: none;">View Full Details</a></div>
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h2 class="h4 mb-3">Basic Information</h2>
+                                        <a id="viewCustomerDetailsBtn" href="#" target="_blank" class="btn btn-outline-primary btn-sm" style="display: none;">View Full Details</a>
+                                    </div>
                                     <asp:Label Style="display: none;" ID="lblCustomerId" runat="server" />
                                     <asp:Label Style="display: none;" ID="lblSiteId" runat="server" />
                                     <asp:Label Style="display: none;" ID="lblCustomerGuid" runat="server" />
@@ -993,7 +1019,7 @@
                                 <!-- Form Actions -->
                                 <div class="form-actions mt-2" id="formActionsContainer" style="display: none;">
                                     <div class="btn-group" role="group">
-                                          <button type="button" class="btn btn-sm btn-primary" onclick="openCustomerResponseModal()" title="Save forms to this appointment">
+                                        <button type="button" class="btn btn-sm btn-primary" onclick="openCustomerResponseModal()" title="Save forms to this appointment">
                                             <i class="fa fa-eye"></i>Respone
                                         </button>
                                         <button type="button" class="btn btn-sm btn-info" onclick="sendFormsViaEmail()" title="Send forms to customer email">
@@ -1012,7 +1038,6 @@
 
                             <div id="formViewerContainer">
                                 <div class="form-viewer-placeholder text-center p-5">
-                                 
                                 </div>
                             </div>
                         </div>
@@ -1054,29 +1079,30 @@
     </div>
 
     <div class="modal fade" id="customerResponseModal" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-xs" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Customer Response</h5>
-             
-            </div>
-            <div class="modal-body">
-                <div class="row">
-                    <div class="col-md-12">
-                        <div id="customerResponseContainer">
-                            <div class="form-viewer-placeholder text-center p-5">
-                                <i class="fa fa-file-text-o fa-3x text-muted mb-3"></i>
-                                <p class="text-muted">Select a form to view or fill</p>
+        <div class="modal-dialog modal-xs" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Customer Response</h5>
+
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div id="customerResponseContainer">
+                                <div class="form-viewer-placeholder text-center p-5">
+                                    <i class="fa fa-file-text-o fa-3x text-muted mb-3"></i>
+                                    <p class="text-muted">Select a form to view or fill</p>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-              <div class="modal-footer">
+                <div class="modal-footer">
 
-      <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="showAppointmentModalFromResponseClose()">Close</button>
-  </div>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="showAppointmentModalFromResponseClose()">Close</button>
+                </div>
+            </div>
         </div>
     </div>
-</div>
+
 </asp:Content>

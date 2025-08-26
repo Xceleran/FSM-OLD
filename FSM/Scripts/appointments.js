@@ -7,10 +7,10 @@ let mapViewInstance = null;
 let routeLayer = null;
 let customMarkers = [];
 let isMapView = true; 
-
+let customSortDirection = 'asc';
 
 let isDateSyncing = false;
-
+let unscheduledSortOrder = 'asc';
 
 let listViewCurrentPage = 1;
 let listViewPageSize = 5;
@@ -68,37 +68,59 @@ function parseDuration(durationString) {
 }
 
 
-
-
 function parseTimeToMinutes(timeStr) {
-    if (!timeStr) return 0;
-    timeStr = timeStr.replace(/[()]/g, '').trim();
+    if (!timeStr || typeof timeStr !== 'string') return 0;
 
+    // Handle named slots like "Morning"
     const lowerTimeStr = timeStr.toLowerCase();
     if (timeSlots[lowerTimeStr]) {
         timeStr = timeSlots[lowerTimeStr].start;
     } else {
-
+        // Handle full schedule strings like "09:00 AM - 10:00 AM"
         const matchingSlot = allTimeSlots.find(slot =>
             slot.TimeBlock.toLowerCase() === lowerTimeStr ||
             slot.TimeBlockSchedule.toLowerCase() === lowerTimeStr
         );
         if (matchingSlot) {
-            timeStr = matchingSlot.TimeBlockSchedule.split('-')[0];
+            timeStr = matchingSlot.TimeBlockSchedule.split('-')[0].trim();
         }
     }
 
-    timeStr = timeStr.replace(/\s*(AM|PM)\s*/gi, '');
-    const [time] = timeStr.trim().split(/\s+/);
-    let [hours, minutes] = time.split(':').map(Number);
+    // Standardize the time string for parsing
+    let time = timeStr.toUpperCase();
+    let hours = 0;
+    let minutes = 0;
+
+    // Use a regular expression to extract hours and minutes
+    const match = time.match(/(\d{1,2}):(\d{2})/);
+    if (match) {
+        hours = parseInt(match[1], 10);
+        minutes = parseInt(match[2], 10);
+    } else {
+        // Fallback for times without minutes like "9 AM"
+        const singleHourMatch = time.match(/(\d{1,2})/);
+        if (singleHourMatch) {
+            hours = parseInt(singleHourMatch[1], 10);
+        }
+    }
+
+    // Adjust for PM
+    if (time.includes('PM') && hours < 12) {
+        hours += 12;
+    }
+    // Adjust for 12 AM (midnight)
+    if (time.includes('AM') && hours === 12) {
+        hours = 0;
+    }
 
     if (isNaN(hours) || isNaN(minutes)) {
-        console.warn(`Invalid time format: ${timeStr}`);
+        console.warn(`Could not parse time: ${timeStr}`);
         return 0;
     }
 
     return hours * 60 + minutes;
 }
+
 
 // Update getAppoinments
 function getAppoinments(searchValue, fromDate, toDate, today, callback) {
@@ -150,7 +172,7 @@ function populatePostalCodeDropdowns() {
         $postalCodeFilterResource.append(option);
     });
 }
-// Save appointments to localStorage
+
 function saveAppointments() {
     try {
         localStorage.setItem('appointments', JSON.stringify(appointments));
@@ -641,60 +663,61 @@ function setupHoverEvents() {
         element.addEventListener('mouseleave', handleMouseLeave);
     });
 }
+
 function renderDateView(date) {
     currentDate = new Date(date);
     const container = $("#dayCalendar").addClass('date-view').removeClass('resource-view');
     const view = $("#viewSelect").val();
-    const filter = $("#MainContent_ServiceTypeFilter").val();
+  const filter = $("[id$='ServiceTypeFilter']").val();
     const dateStr = currentDate.toISOString().split('T')[0];
     renderDateNav("dateNav", dateStr);
-    let fromDate, toDate, today;
+    let fromDate, toDate, todayParam;
     let fromStr, toStr;
 
     switch (view) {
         case 'month':
             fromDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-            toDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
+            toDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0); // Use last day of month
             fromStr = fromDate.toISOString().split('T')[0];
             toStr = toDate.toISOString().split('T')[0];
-            today = "";
+            todayParam = "";
             break;
         case 'week':
-  
             fromDate = new Date(currentDate);
             toDate = new Date(currentDate);
-            toDate.setDate(currentDate.getDate() + 6); 
+            toDate.setDate(currentDate.getDate() + 6);
             fromStr = fromDate.toISOString().split('T')[0];
             toStr = toDate.toISOString().split('T')[0];
-            today = "";
+            todayParam = "";
             break;
         case 'threeDay':
-  
             fromDate = new Date(currentDate);
             toDate = new Date(currentDate);
-            toDate.setDate(currentDate.getDate() + 2); 
+            toDate.setDate(currentDate.getDate() + 2);
             fromStr = fromDate.toISOString().split('T')[0];
             toStr = toDate.toISOString().split('T')[0];
-            today = "";
+            todayParam = "";
             break;
-        default:
-            fromStr = "";
-            toStr = "";
-            today = date;
+        default: // 'day' view
+            fromStr = date;
+            toStr = date;
+            todayParam = date;
             break;
     }
 
-    const slotDurationMinutes = 30; // Enforce 30-minute intervals
+    const slotDurationMinutes = 30;
 
-    getAppoinments(filter, fromStr, toStr, today, function (appointments) {
+    getAppoinments(filter, fromStr, toStr, todayParam, function (fetchedAppointments) {
+        const appointmentsInView = fetchedAppointments;
         var filteredAppointments = filter === '' ?
-            appointments :
-            appointments.filter(a => a.ServiceType === filter);
+            appointmentsInView :
+            appointmentsInView.filter(a => a.ServiceType === filter);
 
         let html = `
             <div class="custom-calendar-header d-flex justify-content-center">
                 <span>${view === 'month' ? currentDate.toLocaleString('default', { month: 'long', year: 'numeric' }) : currentDate.toLocaleDateString()}</span>
             </div>`;
+
 
         if (view === 'month') {
             const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
@@ -740,9 +763,9 @@ function renderDateView(date) {
             html += `</div>`;
         } else if (view === 'week' || view === 'threeDay') {
             const days = view === 'week' ? 7 : 3;
-            const startDate = new Date(currentDate); 
+            const startDate = new Date(currentDate);
 
-   
+
             const dayDates = Array.from({ length: days }, (_, i) => {
                 const d = new Date(startDate);
                 d.setDate(startDate.getDate() + i);
@@ -973,70 +996,50 @@ function renderDateView(date) {
         setupDragAndDrop();
         setupHoverEvents();
         updateCalendarEventColors();
-        renderUnscheduledList();
+
+        renderUnscheduledList('date', { from: fromStr, to: toStr });
     });
 }
 
 
-
 function searchListView(e) {
     e.preventDefault();
-    const selectedDate = $("#listDatePicker").val();
     const selectedDateFrom = $("#listDatePickerFrom").val();
     const selectedDateTo = $("#listDatePickerTo").val();
 
-    // Validate inputs
-    if (!selectedDate && (!selectedDateFrom || !selectedDateTo)) {
+    if (!selectedDateFrom || !selectedDateTo) {
         showAlert({
             icon: 'warning',
             title: 'Missing Dates',
-            text: 'Please select either a single date or both from and to dates.',
-            confirmButtonText: 'OK',
-            customClass: {
-                popup: 'swal-custom-popup',
-                title: 'swal-custom-title',
-                content: 'swal-custom-content',
-                confirmButton: 'swal-custom-button'
-            }
+            text: 'Please select both from and to dates for a custom range search.',
         });
         return;
     }
 
-    if (selectedDateFrom && selectedDateTo && new Date(selectedDateTo) < new Date(selectedDateFrom)) {
+    if (new Date(selectedDateTo) < new Date(selectedDateFrom)) {
         showAlert({
             icon: 'error',
             title: 'Invalid Date Range',
             text: 'To date must be after or equal to from date.',
-            confirmButtonText: 'OK',
-            customClass: {
-                popup: 'swal-custom-popup',
-                title: 'swal-custom-title',
-                content: 'swal-custom-content',
-                confirmButton: 'swal-custom-button'
-            }
         });
         return;
     }
 
-    // Reset pagination when searching
+
+    $("#listDatePicker").val("");
+
     listViewCurrentPage = 1;
     renderListView();
 }
 
+
 function clearFilterListView(e) {
     e.preventDefault();
-    const selectedDate = $("#listDatePicker").val();
-    const selectedDateFrom = $("#listDatePickerFrom").val();
-    const selectedDateTo = $("#listDatePickerTo").val();
-    const statusFilter = $("#MainContent_StatusTypeFilter_List").val();
-    const typeFilter = $("#MainContent_ServiceTypeFilter_List").val();
-    const searchTerm = $("#search_term").val().trim().toLowerCase();
 
-    if (selectedDate == "" && selectedDateFrom == "" && selectedDateTo == "" && statusFilter == "" && typeFilter == "" && searchTerm == "") {
-        return;
-    }
+    const todayStr = new Date().toISOString().split('T')[0];
 
-    $("#listDatePicker").val("");
+
+    $("#listDatePicker").val(todayStr);
     $("#listDatePickerFrom").val("");
     $("#listDatePickerTo").val("");
     $("#MainContent_StatusTypeFilter_List").val("");
@@ -1048,8 +1051,16 @@ function clearFilterListView(e) {
     currentSort = { key: '', direction: 'asc' };
     $('th.sortable').removeClass('sort-asc sort-desc');
 
+
     renderListView();
+
+
+    $("#resourceDatePicker").val(todayStr);
+    if (currentView === 'resource') {
+        renderResourceView(todayStr);
+    }
 }
+
 
 let currentSort = {
     key: '',
@@ -1067,16 +1078,31 @@ $(document).off('click', 'th.sortable').on('click', 'th.sortable', function () {
     $('th.sortable').removeClass('sort-asc sort-desc');
     $(this).addClass(currentSort.direction === 'asc' ? 'sort-asc' : 'sort-desc');
 
-    // Apply sorting to filtered appointments and re-render
-    if (currentSort.key) {
-        listViewFilteredAppointments.sort((a, b) => {
-            const valA = a[currentSort.key] ? a[currentSort.key].toString().toLowerCase() : '';
-            const valB = b[currentSort.key] ? b[currentSort.key].toString().toLowerCase() : '';
-            if (valA < valB) return currentSort.direction === 'asc' ? -1 : 1;
-            if (valA > valB) return currentSort.direction === 'asc' ? 1 : -1;
-            return 0;
-        });
-    }
+   listViewFilteredAppointments.sort((a, b) => {
+    // Primary sort: by date
+    const dateA = new Date(a.RequestDate);
+    const dateB = new Date(b.RequestDate);
+    if (dateA < dateB) return -1;
+    if (dateA > dateB) return 1;
+
+    // Secondary sort: by time slot
+    const timeA = parseTimeToMinutes(a.TimeSlot);
+    const timeB = parseTimeToMinutes(b.TimeSlot);
+    return timeA - timeB;
+});
+
+// If a user has clicked a header, apply that sort on top of the default
+if (currentSort.key) {
+    listViewFilteredAppointments.sort((a, b) => {
+        const valA = a[currentSort.key] ? a[currentSort.key].toString().toLowerCase() : '';
+        const valB = b[currentSort.key] ? b[currentSort.key].toString().toLowerCase() : '';
+
+        // Ensure consistent sorting direction
+        if (valA < valB) return currentSort.direction === 'asc' ? -1 : 1;
+        if (valA > valB) return currentSort.direction === 'asc' ? 1 : -1;
+        return 0;
+    });
+}
 
     // Reset to first page when sorting
     listViewCurrentPage = 1;
@@ -1084,7 +1110,7 @@ $(document).off('click', 'th.sortable').on('click', 'th.sortable', function () {
     updateListViewPagination();
 });
 
-// Render List View
+
 function renderListView() {
     const selectedDate = $("#listDatePicker").val() || "";
     const selectedDateFrom = $("#listDatePickerFrom").val() || "";
@@ -1094,137 +1120,258 @@ function renderListView() {
     const typeFilter = $("#MainContent_ServiceTypeFilter_List").val();
     const searchTerm = $("#search_term").val().trim().toLowerCase() || "";
 
-    // Determine date range: prioritize custom range if both from and to are set
     let fromDate = selectedDateFrom;
     let toDate = selectedDateTo;
     if (!selectedDateFrom || !selectedDateTo) {
-        // Fallback to single date if no range is specified
         fromDate = selectedDate;
         toDate = selectedDate;
     }
 
-    // Validate date range
     if (fromDate && toDate && new Date(toDate) < new Date(fromDate)) {
         showAlert({
             icon: 'error',
             title: 'Invalid Date Range',
-            text: 'To date must be after or equal to from date.',
-            confirmButtonText: 'OK',
-            customClass: {
-                popup: 'swal-custom-popup',
-                title: 'swal-custom-title',
-                content: 'swal-custom-content',
-                confirmButton: 'swal-custom-button'
-            }
+            text: 'To date must be after or equal to from date.'
         });
         return;
     }
 
-    // Show loading indicator
     $("#listViewLoading").show();
 
     getAppoinments(searchTerm, fromDate, toDate, "", function (appointments) {
+        // 1. Filter the appointments first
         listViewFilteredAppointments = appointments.filter(item => {
-            const matchesType = typeFilter === '' ||
-                (item.ServiceType === typeFilter);
-            const matchesStatus = statusFilter === '' ||
-                (item.AppoinmentStatus === statusFilter);
-            const matchesTicket = ticketFilter === '' ||
-                (item.TicketStatus === ticketFilter);
+            const matchesType = !typeFilter || (item.ServiceType === typeFilter);
+            const matchesStatus = !statusFilter || (item.AppoinmentStatus === statusFilter);
+            const matchesTicket = !ticketFilter || (item.TicketStatus === ticketFilter);
             const combinedText = [
-                item.CustomerName,
-                item.BusinessName,
-                item.ResourceName,
-                item.Email,
-                item.Mobile,
-                item.Phone,
-                item.Address1
+                item.CustomerName, item.BusinessName, item.ResourceName,
+                item.Email, item.Mobile, item.Phone, item.Address1
             ].join(' ').toLowerCase();
-            const matchesSearch = combinedText.includes(searchTerm);
+            const matchesSearch = !searchTerm || combinedText.includes(searchTerm);
             return matchesType && matchesStatus && matchesTicket && matchesSearch;
         });
 
+        // 2. Apply the sorting logic
+        listViewFilteredAppointments.sort((a, b) => {
+            // Primary Sort: RequestDate
+            const dateComparison = new Date(a.RequestDate) - new Date(b.RequestDate);
+            if (dateComparison !== 0) {
+                return dateComparison;
+            }
+
+            // Secondary Sort: TimeSlot
+            const timeComparison = parseTimeToMinutes(a.TimeSlot) - parseTimeToMinutes(b.TimeSlot);
+            if (timeComparison !== 0) {
+                return timeComparison;
+            }
+
+            // Tertiary Sort (optional, for stability): CustomerName
+            return (a.CustomerName || '').localeCompare(b.CustomerName || '');
+        });
+
+        // 3. If a column header is clicked, apply that sort *after* the default sort
         if (currentSort.key) {
             listViewFilteredAppointments.sort((a, b) => {
                 const valA = a[currentSort.key] ? a[currentSort.key].toString().toLowerCase() : '';
                 const valB = b[currentSort.key] ? b[currentSort.key].toString().toLowerCase() : '';
+
                 if (valA < valB) return currentSort.direction === 'asc' ? -1 : 1;
                 if (valA > valB) return currentSort.direction === 'asc' ? 1 : -1;
-                return 0;
+
+                // If the primary sort values are equal, fall back to the chronological sort
+                const dateComparison = new Date(a.RequestDate) - new Date(b.RequestDate);
+                if (dateComparison !== 0) return dateComparison;
+                return parseTimeToMinutes(a.TimeSlot) - parseTimeToMinutes(b.TimeSlot);
             });
         }
 
-        // Reset to first page when filtering
-        listViewCurrentPage = 1;
 
-        // Render the table and update pagination
+        // 4. Reset pagination and render
+        listViewCurrentPage = 1;
         renderListViewTable();
         updateListViewPagination();
-
-        // Hide loading indicator
         $("#listViewLoading").hide();
     });
 }
-
-
-// Render Unscheduled List
-// Replace this code
 function renderUnscheduledList(view = 'date') {
     const isResourceView = view === 'resource';
+
+    // Existing server-side filters
     const statusFilterId = isResourceView ? '#MainContent_StatusTypeFilter_Resource' : '#MainContent_StatusTypeFilter';
     const serviceFilterId = isResourceView ? '#MainContent_ServiceTypeFilter_Resource' : '#MainContent_ServiceTypeFilter_2';
     const searchFilterId = isResourceView ? '#searchFilterResource' : '#searchFilter';
     const listContainerId = isResourceView ? '#unscheduledListResource' : '#unscheduledList';
 
     const $listContainer = $(listContainerId);
-    const statusFilter = $(statusFilterId).val() || '';
-    const serviceFilter = $(serviceFilterId).val() || '';
-    const searchFilter = $(searchFilterId).val().toLowerCase().trim() || '';
+    const statusFilter = ($(statusFilterId).val() || '').trim();
+    const serviceFilter = ($(serviceFilterId).val() || '').trim();
+    const searchFilter = (($(searchFilterId).val() || '').toLowerCase().trim());
 
+    // Helpers to safely read HTML 
+    const getVal = (candidates, fallback = 'all') => {
+        for (const sel of candidates) {
+            const $el = $(sel);
+            if ($el.length) {
+                const v = (String($el.val() ?? '')).trim();
+                return v === '' ? fallback : v;
+            }
+        }
+        return fallback;
+    };
+
+    // Resource Type (assigned/unassigned) 
+    const resourceTypeVal = isResourceView
+        ? getVal(['#ResourceTypeFilter_Resource', '#MainContent_ResourceTypeFilter_Resource'], 'all').toLowerCase()
+        : getVal(['#ResourceTypeFilter_2', '#MainContent_ResourceTypeFilter_2'], 'all').toLowerCase();
+
+    // Time Slot filter: values like "all" or "exact:570"
+    const timeFilterValue = isResourceView
+        ? getVal(['#TimeSlotFilter_Resource', '#MainContent_TimeSlotFilter_Resource'], 'all')
+        : getVal(['#TimeSlotFilter_2', '#MainContent_TimeSlotFilter_2'], 'all');
+
+    // ---- Filter ----
     const filteredAppointments = appointments.filter(app => {
-        const isUnassigned = !app.ResourceID || app.ResourceID === '0' || app.ResourceID === 0 || app.ResourceID === '' ||
-            app.ResourceName === null || app.ResourceName === 'Unassigned' || app.ResourceName === 'None' || app.ResourceName === '';
-        const matchesStatus = statusFilter === '' || app.AppoinmentStatus === statusFilter;
-        const matchesService = serviceFilter === '' || app.ServiceType === serviceFilter;
+        // assigned/unassigned detection
+        const name = (app.ResourceName || '').trim().toLowerCase();
+        const hasNameAssigned = !!name && name !== 'unassigned' && name !== 'none';
+
+        const hasIdAssigned =
+            Object.prototype.hasOwnProperty.call(app, 'ResourceID') &&
+            app.ResourceID !== null && app.ResourceID !== undefined &&
+            String(app.ResourceID).trim() !== '' && String(app.ResourceID).trim() !== '0';
+
+        const isUnassigned = !(hasNameAssigned || hasIdAssigned);
+
+        const matchesResourceType =
+            resourceTypeVal === 'all'
+                ? true
+                : resourceTypeVal === 'unassigned'
+                    ? isUnassigned
+                    : /* 'assigned' */ !isUnassigned;
+
+        const matchesStatus = !statusFilter || app.AppoinmentStatus === statusFilter;
+        const matchesService = !serviceFilter || app.ServiceType === serviceFilter;
         const matchesSearch = !searchFilter ||
             (app.CustomerName && app.CustomerName.toLowerCase().includes(searchFilter)) ||
             (app.Address1 && app.Address1.toLowerCase().includes(searchFilter));
-        return isUnassigned && matchesStatus && matchesService && matchesSearch;
+
+        // Time Slot filter
+        let matchesTime = true;
+        if (timeFilterValue && timeFilterValue !== 'all') {
+            const appMin = parseTimeToMinutes(app?.TimeSlot);
+            if (!Number.isFinite(appMin)) {
+                matchesTime = false;
+            } else if (timeFilterValue.startsWith('exact:')) {
+                const target = parseInt(timeFilterValue.slice(6), 10);
+                matchesTime = appMin === target;
+            } else {
+                // Allow plain text like "9:30 AM" if ever used
+                const selMin = parseTimeToMinutes(timeFilterValue);
+                matchesTime = Number.isFinite(selMin) ? (appMin === selMin) : true;
+            }
+        }
+
+        return matchesResourceType && matchesStatus && matchesService && matchesSearch && matchesTime;
     });
 
+
+    const sortedAppointments = filteredAppointments.slice().sort((a, b) => {
+        const A = parseTimeToMinutes(a?.TimeSlot);
+        const B = parseTimeToMinutes(b?.TimeSlot);
+        const aBad = !isFinite(A), bBad = !isFinite(B);
+        if (aBad && bBad) return 0;
+        if (aBad) return unscheduledSortOrder === 'asc' ? 1 : -1;
+        if (bBad) return unscheduledSortOrder === 'asc' ? -1 : 1;
+        if (A !== B) return unscheduledSortOrder === 'asc' ? A - B : B - A;
+
+        const dA = Date.parse(a?.RequestDate) || 0;
+        const dB = Date.parse(b?.RequestDate) || 0;
+        if (dA !== dB) return unscheduledSortOrder === 'asc' ? dA - dB : dB - dA;
+
+        return unscheduledSortOrder === 'asc'
+            ? (a?.CustomerName || '').localeCompare(b?.CustomerName || '')
+            : (b?.CustomerName || '').localeCompare(a?.CustomerName || '');
+    });
+    // ---- Render ----
     $listContainer.empty().css('display', 'block');
 
-    if (filteredAppointments.length === 0) {
+    if (!sortedAppointments.length) {
         $listContainer.append('<div class="text-center py-4 text-muted">No unassigned appointments found.</div>');
         return;
     }
 
-    filteredAppointments.forEach(app => {
-        const statusClass = `status-${(app.AppoinmentStatus || '').toLowerCase().replace(/\s+/g, '-')}`;
-        const appointmentHtml = `
-            <div class="appointment-card card mb-3 shadow-sm unscheduled-item" data-id="${app.AppoinmentId}" draggable="true">
-                <div class="card-body p-3">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <h3 class="font-weight-medium fs-6 mb-0">${app.CustomerName || 'Unknown Customer'}</h3>
-                        <span class="fs-7 badge ${statusClass}">${app.AppoinmentStatus}</span>
-                    </div>
-                    <div class="fs-7 text-muted mt-1 line-clamp-2">${app.Address1 || 'No address'}</div>
-                    <div class="fs-7 text-muted mt-1 line-clamp-2">${app.RequestDate || 'No date'}</div>
-                    <div class="fs-7 text-muted mt-1 line-clamp-2">${formatTimeRange(app.TimeSlot || 'Not specified')}</div>
-                    <div classd-flex justify-content-between align-items-center mt-2">
-                        <span class="fs-7">${app.ServiceType || 'Unknown'}</span>
-       
-                    </div>
-                </div>
-            </div>
-        `;
-        $listContainer.append(appointmentHtml);
+    sortedAppointments.forEach(app => {
+        const serviceType = app.ServiceType || 'Unknown';
+        const timeSlotDisplay = app.TimeSlot || 'Not specified';
+        const address = app.Address1 || 'No address';
+        const state = app.State || '';
+        const zipCode = app.ZipCode || '';
+
+        const card = `
+      <div class="appointment-card card mb-3 shadow-sm unscheduled-item" data-id="${app.AppoinmentId}" draggable="true">
+        <div class="card-body p-3">
+          <div class="d-flex justify-content-between align-items-start">
+            <h3 class="font-weight-medium fs-6 mb-0">${app.CustomerName || 'Unknown Customer'}</h3>
+            <span class="fs-7 badge bg-${(app.AppoinmentStatus || '').toLowerCase() === 'pending' ? 'warning' : 'success'}">
+              ${app.AppoinmentStatus || 'N/A'}
+            </span>
+          </div>
+          <div class="fs-7 text-muted mt-1 line-clamp-2">${address}${state ? ', ' + state : ''}${zipCode ? ' ' + zipCode : ''}</div>
+          <div class="fs-7 text-muted mt-1 line-clamp-2">${app.RequestDate || 'No date'}</div>
+          <div class="fs-7 text-muted mt-1 line-clamp-2">${formatTimeRange(timeSlotDisplay)}</div>
+          <div class="d-flex justify-content-between align-items-center mt-2">
+            <span class="fs-7">${serviceType}</span>
+            <button class="btn btn-outline-secondary btn-sm" onclick="openEditModal(${app.AppoinmentId})">Schedule</button>
+          </div>
+        </div>
+      </div>`;
+        $listContainer.append(card);
     });
 
     setupDragAndDrop();
 }
+//Custom Sorting for Appointment List
+function performCustomSort(view) {
+    customSortDirection = customSortDirection === 'asc' ? 'desc' : 'asc';
+    const sortBtnId = view === 'resource' ? '#sortUnscheduledBtnResource' : '#sortUnscheduledBtn';
+    const icon = document.querySelector(sortBtnId + ' i');
+    if (icon) {
+        icon.classList.remove('fa-sort-amount-up', 'fa-sort-amount-down');
+        if (customSortDirection === 'asc') {
+            icon.classList.add('fa-sort-amount-up');
+        } else {
+            icon.classList.add('fa-sort-amount-down');
+        }
+    }
+    const listContainerId = view === 'resource' ? 'unscheduledListResource' : 'unscheduledList';
+    const listContainer = document.getElementById(listContainerId);
+    if (!listContainer) return;
+    const appointmentCards = Array.from(listContainer.querySelectorAll('.appointment-card'));
+    appointmentCards.sort((cardA, cardB) => {
 
+        const appointmentA = appointments.find(a => a.AppoinmentId === cardA.dataset.id);
+        const appointmentB = appointments.find(a => a.AppoinmentId === cardB.dataset.id);
+        if (!appointmentA || !appointmentB) return 0;
+        const getDate = (dateStr) => {
+            const date = new Date(dateStr);
+            return isNaN(date) ? new Date('9999-12-31') : date;
+        };
+        const dateA = getDate(appointmentA.RequestDate);
+        const dateB = getDate(appointmentB.RequestDate);
+        if (dateA.getTime() !== dateB.getTime()) {
+            return customSortDirection === 'asc' ? dateA - dateB : dateB - dateA;
+        }
+        const timeA = typeof parseTimeToMinutes === 'function' ? parseTimeToMinutes(appointmentA.TimeSlot) : 0;
+        const timeB = typeof parseTimeToMinutes === 'function' ? parseTimeToMinutes(appointmentB.TimeSlot) : 0;
+        if (timeA !== timeB) {
+            return customSortDirection === 'asc' ? timeA - timeB : timeB - timeA;
+        }
 
+        return (appointmentA.CustomerName || '').localeCompare(appointmentB.CustomerName || '');
+    });
+    appointmentCards.forEach(card => listContainer.appendChild(card));
+}
 // Setup drag-and-drop functionality
 function setupDragAndDrop() {
     // Initialize draggable elements
@@ -2289,7 +2436,15 @@ document.addEventListener('DOMContentLoaded', () => {
             toggleCalendarExpansion(view);
         }
     });
+    document.getElementById('sortUnscheduledBtn')?.addEventListener('click', () => {
+        toggleUnscheduledSort('date');
+    });
+    document.getElementById('sortUnscheduledBtnResource')?.addEventListener('click', () => {
+        toggleUnscheduledSort('resource');
+    });
 
+    $('#ResourceTypeFilter_2').on('change', () => renderUnscheduledList('date'));
+    $('#ResourceTypeFilter_Resource').on('change', () => renderUnscheduledList('resource'));
     document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
         new bootstrap.Tooltip(el, {
             trigger: 'hover'
@@ -2376,21 +2531,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
 
             });
-
-            // Date picker synchronization
             const setupDatePickerSync = (pickerId) => {
-                document.getElementById(pickerId.replace('#', '')).addEventListener('change', (e) => {
-                    syncDatePickers(pickerId, e.target.value);
+                const pickerElement = document.getElementById(pickerId.replace('#', ''));
+                if (pickerElement) {
+                    pickerElement.addEventListener('change', (e) => {
 
-                    // Special handling for list view which might use date ranges
-                    if (pickerId === '#listDatePicker') {
-                        $("#listDatePickerFrom").val("");
-                        $("#listDatePickerTo").val("");
-                    }
-                });
+                        if (pickerId === '#listDatePicker' && e.target.value) {
+                            $("#listDatePickerFrom").val("");
+                            $("#listDatePickerTo").val("");
+                        }
+                        syncDatePickers(pickerId, e.target.value);
+                    });
+                }
             };
 
             ['#dayDatePicker', '#resourceDatePicker', '#mapDatePicker', '#listDatePicker'].forEach(setupDatePickerSync);
+
 
             // View select handlers
             document.getElementById('viewSelect').addEventListener('change', (e) => {
@@ -3218,16 +3374,33 @@ function generateFieldFromStructure(field) {
     `;
 }
 
+function toggleUnscheduledSort(view) {
 
-// Get form status CSS class
-function getFormStatusClass(status) {
-    switch (status?.toLowerCase()) {
-        case 'completed': return 'text-success';
-        case 'inprogress': return 'text-info';
-        case 'submitted': return 'text-primary';
-        default: return 'text-warning';
+    unscheduledSortOrder = unscheduledSortOrder === 'asc' ? 'desc' : 'asc';
+
+
+    const sortBtnId = view === 'resource' ? '#sortUnscheduledBtnResource' : '#sortUnscheduledBtn';
+    const $sortBtn = $(sortBtnId);
+
+
+    if ($sortBtn.length) {
+        const $icon = $sortBtn.find('i');
+
+        $icon.removeClass('fa-sort-amount-up fa-sort-amount-down');
+
+
+        if (unscheduledSortOrder === 'asc') {
+            $icon.addClass('fa-sort-amount-up');
+        } else {
+            $icon.addClass('fa-sort-amount-down');
+        }
     }
+
+
+    renderUnscheduledList(view);
 }
+
+
 
 // Load currently selected forms for edit mode
 function loadCurrentlySelectedForms(appointmentId) {
@@ -3552,7 +3725,7 @@ $(document).ready(function () {
     initializeFormsIntegration();
 });
 
-// Replace the entire syncDatePickers function with this
+
 function syncDatePickers(changedPickerId, newDate) {
     if (isDateSyncing) {
         console.log('Date syncing already in progress, skipping...');
@@ -3674,23 +3847,23 @@ document.addEventListener("DOMContentLoaded", function () {
     syncDates(listTo, resourceTo, false);
 });
 
-// Load customer data for appointment modal
+
 function loadCustomerDataForModal(appointmentId) {
     const appointment = appointments.find(a => a.AppoinmentId === appointmentId.toString());
     if (!appointment || !appointment.CustomerID) {
         console.warn('No customer data found for appointment:', appointmentId);
+
+        populateCustomerDataTab(null);
         return;
     }
-
-    // Get the site ID from the appointment data or use a default
-    const siteId = appointment.SiteID || 1; // Default to site 1 if not specified
+    const siteId = appointment.SiteId || "0";
 
     $.ajax({
         type: "POST",
         url: "Appointments.aspx/GetCustomerDetailsForModal",
         data: JSON.stringify({
             customerId: appointment.CustomerID.toString(),
-            siteId: siteId.toString()
+            siteId: siteId.toString() 
         }),
         contentType: "application/json; charset=utf-8",
         dataType: "json",
@@ -3700,13 +3873,16 @@ function loadCustomerDataForModal(appointmentId) {
                 populateCustomerDataTab(customerData);
             } else {
                 console.error('Failed to load customer data:', response.d?.Error || 'Unknown error');
+                populateCustomerDataTab(null); 
             }
         },
         error: function (xhr, status, error) {
             console.error('Error loading customer data:', error);
+            populateCustomerDataTab(null); 
         }
     });
 }
+
 
 // Populate customer data tab in the modal
 function populateCustomerDataTab(customerData) {
@@ -3920,8 +4096,6 @@ function renderResourceViewTable() {
     // Re-render the resource view with paginated data
     renderResourceView($("#resourceDatePicker").val());
 }
-
-
 
 function openCustomerResponseModal() {
     $('#customerResponseModal').modal('show');
