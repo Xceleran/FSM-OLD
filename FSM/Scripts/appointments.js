@@ -1152,80 +1152,136 @@ function renderListView() {
     const selectedDate = $("#listDatePicker").val() || "";
     const selectedDateFrom = $("#listDatePickerFrom").val() || "";
     const selectedDateTo = $("#listDatePickerTo").val() || "";
-    const statusFilter = $("#MainContent_StatusTypeFilter_List").val();
-    const ticketFilter = $("#MainContent_TicketStatusFilter_List").val();
-    const typeFilter = $("#MainContent_ServiceTypeFilter_List").val();
-    const searchTerm = $("#search_term").val().trim().toLowerCase() || "";
+    const searchTerm = ($("#search_term").val() || "").trim().toLowerCase();
 
-    let fromDate = selectedDateFrom;
-    let toDate = selectedDateTo;
-    if (!selectedDateFrom || !selectedDateTo) {
-        fromDate = selectedDate;
-        toDate = selectedDate;
-    }
+    const $type = $("[id$='ServiceTypeFilter_List']");
+    const $status = $("[id$='StatusTypeFilter_List']");
+    const $ticket = $("[id$='TicketStatusFilter_List']");
+
+    const typeVal = String($type.val() ?? "").trim();
+    const typeText = String($type.find("option:selected").text() ?? "").trim();
+    const statusVal = String($status.val() ?? "").trim();
+    const statusText = String($status.find("option:selected").text() ?? "").trim();
+    const ticketVal = String($ticket.val() ?? "").trim();
+    const ticketText = String($ticket.find("option:selected").text() ?? "").trim();
+
+    const isAll = v => v === "" || /^all/i.test(v);
+    const typeIsAll = isAll(typeVal) || isAll(typeText);
+    const statusIsAll = isAll(statusVal) || isAll(statusText);
+    const ticketIsAll = isAll(ticketVal) || isAll(ticketText);
+
+    //  ID filters 
+    const typeIdSel = (!typeIsAll && /^\d+$/.test(typeVal)) ? typeVal : null;
+    const statusIdSel = (!statusIsAll && /^\d+$/.test(statusVal)) ? statusVal : null;
+    const ticketIdSel = (!ticketIsAll && /^\d+$/.test(ticketVal)) ? ticketVal : null;
+
+    const typeTextSel = typeIsAll ? "" : typeText.toLowerCase();
+    const statusTextSel = statusIsAll ? "" : statusText.toLowerCase();
+    const ticketTextSel = ticketIsAll ? "" : ticketText.toLowerCase();
+
+    let fromDate = selectedDateFrom, toDate = selectedDateTo;
+    if (!selectedDateFrom || !selectedDateTo) { fromDate = selectedDate; toDate = selectedDate; }
 
     if (fromDate && toDate && new Date(toDate) < new Date(fromDate)) {
-        showAlert({
-            icon: 'error',
-            title: 'Invalid Date Range',
-            text: 'To date must be after or equal to from date.'
-        });
+        showAlert({ icon: "error", title: "Invalid Date Range", text: "To date must be after or equal to from date." });
         return;
     }
 
     $("#listViewLoading").show();
 
     getAppoinments(searchTerm, fromDate, toDate, "", function (appointments) {
-        // 1. Filter the appointments first
-        listViewFilteredAppointments = appointments.filter(item => {
-            const matchesType = !typeFilter || (item.ServiceType === typeFilter);
-            const matchesStatus = !statusFilter || (item.AppoinmentStatus === statusFilter);
-            const matchesTicket = !ticketFilter || (item.TicketStatus === ticketFilter);
+        const norm = s => String(s ?? "").trim().toLowerCase();
+
+        // --- Filtering ---
+        listViewFilteredAppointments = (appointments || []).filter(item => {
+
+            let okType = true;
+            if (!typeIsAll) {
+                const aTypeId = item.ServiceTypeID ?? item.ServiceTypeId ?? item.serviceTypeId ?? null;
+                if (typeIdSel != null && aTypeId != null) {
+                    okType = String(aTypeId) === typeIdSel;
+                } else {
+                    const s = norm(item.ServiceType), f = typeTextSel;
+                    okType = !!s && (s === f || s.includes(f) || f.includes(s) ||
+                        (/^it\s*support$/.test(f) && /it\s*support/.test(s)) ||
+                        (/1\s*hour/.test(f) && /1\s*hour/.test(s)) ||
+                        (/2\s*hour/.test(f) && /2\s*hour/.test(s)) ||
+                        (/3\s*hour/.test(f) && /3\s*hour/.test(s)) ||
+                        (/4\s*hour/.test(f) && /4\s*hour/.test(s)));
+                }
+            }
+
+            let okStatus = true;
+            if (!statusIsAll) {
+                const aStatusId = item.StatusID ?? item.AppoinmentStatusID ?? item.AppointmentStatusID ?? null;
+                if (statusIdSel != null && aStatusId != null) {
+                    okStatus = String(aStatusId) === statusIdSel;
+                } else {
+                    const s = norm(item.AppoinmentStatus), f = statusTextSel;
+                    okStatus = !!s && (s === f || s.includes(f));
+                }
+            }
+
+            let okTicket = true;
+            if (!ticketIsAll) {
+                const aTicketId = item.TicketStatusID ?? item.TicketStatusId ?? item.ticketStatusId ?? null;
+                if (ticketIdSel != null && aTicketId != null) {
+                    okTicket = String(aTicketId) === ticketIdSel;
+                } else {
+                    const s = norm(item.TicketStatus), f = ticketTextSel;
+                    okTicket = !!s && (s === f || s.includes(f));
+                }
+            }
+
             const combinedText = [
                 item.CustomerName, item.BusinessName, item.ResourceName,
                 item.Email, item.Mobile, item.Phone, item.Address1
-            ].join(' ').toLowerCase();
-            const matchesSearch = !searchTerm || combinedText.includes(searchTerm);
-            return matchesType && matchesStatus && matchesTicket && matchesSearch;
+            ].map(norm).join(" ");
+            const okSearch = !searchTerm || combinedText.includes(searchTerm);
+
+            return okType && okStatus && okTicket && okSearch;
         });
 
-        // 2. Apply the sorting logic
+        const toMin = (typeof parseTimeToMinutes === "function")
+            ? parseTimeToMinutes
+            : (s => {
+                const m = String(s || "").match(/(\d{1,2}):(\d{2})/);
+                if (!m) return Number.POSITIVE_INFINITY;
+                const h = +m[1], mm = +m[2];
+                return h * 60 + mm;
+            });
+
+        // default chronological
         listViewFilteredAppointments.sort((a, b) => {
-            // Primary Sort: RequestDate
-            const dateComparison = new Date(a.RequestDate) - new Date(b.RequestDate);
-            if (dateComparison !== 0) {
-                return dateComparison;
-            }
-
-            // Secondary Sort: TimeSlot
-            const timeComparison = parseTimeToMinutes(a.TimeSlot) - parseTimeToMinutes(b.TimeSlot);
-            if (timeComparison !== 0) {
-                return timeComparison;
-            }
-
-            // Tertiary Sort (optional, for stability): CustomerName
-            return (a.CustomerName || '').localeCompare(b.CustomerName || '');
+            const dA = new Date(a.RequestDate).getTime() || 0;
+            const dB = new Date(b.RequestDate).getTime() || 0;
+            if (dA !== dB) return dA - dB;
+            const tA = toMin(a.TimeSlot), tB = toMin(b.TimeSlot);
+            if (tA !== tB) return tA - tB;
+            return (a.CustomerName || "").localeCompare(b.CustomerName || "");
         });
 
-        // 3. If a column header is clicked, apply that sort *after* the default sort
-        if (currentSort.key) {
+        if (window.currentSort && currentSort.key) {
+            const key = currentSort.key;
+            const dir = currentSort.direction === "asc" ? 1 : -1;
             listViewFilteredAppointments.sort((a, b) => {
-                const valA = a[currentSort.key] ? a[currentSort.key].toString().toLowerCase() : '';
-                const valB = b[currentSort.key] ? b[currentSort.key].toString().toLowerCase() : '';
-
-                if (valA < valB) return currentSort.direction === 'asc' ? -1 : 1;
-                if (valA > valB) return currentSort.direction === 'asc' ? 1 : -1;
-
-                // If the primary sort values are equal, fall back to the chronological sort
-                const dateComparison = new Date(a.RequestDate) - new Date(b.RequestDate);
-                if (dateComparison !== 0) return dateComparison;
-                return parseTimeToMinutes(a.TimeSlot) - parseTimeToMinutes(b.TimeSlot);
+                if (key === "TimeSlot") {
+                    const A = toMin(a.TimeSlot), B = toMin(b.TimeSlot);
+                    if (A !== B) return (A < B ? -1 : 1) * dir;
+                } else {
+                    const A = (a?.[key] ?? "").toString().toLowerCase();
+                    const B = (b?.[key] ?? "").toString().toLowerCase();
+                    if (A !== B) return (A < B ? -1 : 1) * dir;
+                }
+                const dA = new Date(a.RequestDate).getTime() || 0;
+                const dB = new Date(b.RequestDate).getTime() || 0;
+                if (dA !== dB) return dA - dB;
+                const tA = toMin(a.TimeSlot), tB = toMin(b.TimeSlot);
+                return tA - tB;
             });
         }
 
-
-        // 4. Reset pagination and render
-        listViewCurrentPage = 1;
+        window.listViewCurrentPage = 1; 
         renderListViewTable();
         updateListViewPagination();
         $("#listViewLoading").hide();
