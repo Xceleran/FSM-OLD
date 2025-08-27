@@ -668,7 +668,24 @@ function renderDateView(date) {
     currentDate = new Date(date);
     const container = $("#dayCalendar").addClass('date-view').removeClass('resource-view');
     const view = $("#viewSelect").val();
-  const filter = $("[id$='ServiceTypeFilter']").val();
+
+    
+    const $svc = $("[id$='ServiceTypeFilter']");
+    const selectedValue = String($svc.val() ?? '').trim();                     
+    const selectedText = String($svc.find('option:selected').text() ?? '').trim(); 
+
+   
+    const isAll = selectedValue === '' ||
+        /^all(\s+(types|services))?$/i.test(selectedValue) ||
+        /^all(\s+(types|services))?$/i.test(selectedText);
+
+  
+    const selectedId = (!isAll && /^\d+$/.test(selectedValue)) ? selectedValue : null;
+
+   
+    const selectedTextNorm = isAll ? '' : selectedText.toLowerCase();
+;
+
     const dateStr = currentDate.toISOString().split('T')[0];
     renderDateNav("dateNav", dateStr);
     let fromDate, toDate, todayParam;
@@ -707,11 +724,26 @@ function renderDateView(date) {
 
     const slotDurationMinutes = 30;
 
-    getAppoinments(filter, fromStr, toStr, todayParam, function (fetchedAppointments) {
-        const appointmentsInView = fetchedAppointments;
-        var filteredAppointments = filter === '' ?
-            appointmentsInView :
-            appointmentsInView.filter(a => a.ServiceType === filter);
+    getAppoinments('', fromStr, toStr, todayParam, function (fetchedAppointments) {
+        const norm = s => String(s ?? '').trim().toLowerCase();
+
+        const filteredAppointments = isAll ? fetchedAppointments : fetchedAppointments.filter(a => {
+            
+            const aId = a.ServiceTypeID ?? a.ServiceTypeId ?? a.serviceTypeId ?? null;
+            if (selectedId != null && aId != null && String(aId) === selectedId) return true;
+
+            
+            const s = norm(a.ServiceType);
+            const f = selectedTextNorm;
+            if (!s) return false;
+            if (s === f || s.includes(f) || f.includes(s)) return true;
+            if (/^it\s*support$/.test(f) && /it\s*support/.test(s)) return true;
+            if (/1\s*hour/.test(f) && /1\s*hour/.test(s)) return true;
+            if (/2\s*hour/.test(f) && /2\s*hour/.test(s)) return true;
+            if (/3\s*hour/.test(f) && /3\s*hour/.test(s)) return true;
+            if (/4\s*hour/.test(f) && /4\s*hour/.test(s)) return true;
+            return false;
+        });
 
         let html = `
             <div class="custom-calendar-header d-flex justify-content-center">
@@ -1001,6 +1033,11 @@ function renderDateView(date) {
     });
 }
 
+$(document).off('change.servicetype', "[id$='ServiceTypeFilter']")
+    .on('change.servicetype', "[id$='ServiceTypeFilter']", function () {
+        const d = $('#dayDatePicker').val() || new Date().toISOString().slice(0, 10);
+        renderDateView(d);
+    });
 
 function searchListView(e) {
     e.preventDefault();
