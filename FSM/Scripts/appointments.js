@@ -4056,7 +4056,7 @@ function renderListViewTable() {
                 <td data-label="Phone" class="custom-link">${a.Phone ? `<a href="tel:${a.Phone}">${a.Phone}</a>` : 'N/A'}</td>
                 <td data-label="Appointment Status">${a.AppoinmentStatus || 'N/A'}</td>
                 <td data-label="Resource">${a.ResourceName || 'N/A'}</td>
-                <td data-label="Ticket Status">${a.TicketStatus || 'N/A'}</td>
+              <td data-label="Ticket Status">${a.TicketStatus && a.TicketStatus !== 'Unknown' ? a.TicketStatus : 'N/A'}</td>
             </tr>
         `;
     }).join(''));
