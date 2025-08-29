@@ -3207,6 +3207,7 @@ function loadCurrentlySelectedForms(appointmentId) {
 
 // Update attached forms for appointment
 function updateAttachedForms() {
+    debugger;
     const appointmentId = $('#AppoinmentId').val();
     var customerId = $('#CustomerID').val();
 

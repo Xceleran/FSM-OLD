@@ -9,8 +9,40 @@
     <link rel="stylesheet" href="Content/customer.css">
 
     <style>
-   
-    </style>
+    .cust-action-btns {
+        display: flex;
+        gap: 10px; /* more space between icons */
+        align-items: center;
+    }
+
+    .cust-action-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #444;
+        font-size: 22px; /* <-- increase size (was 16px) */
+        padding: 6px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .cust-action-btn:hover {
+            background: #f0f0f0;
+            color: #007bff;
+        }
+
+    .sms-btn {
+        color: green; /* SMS icon */
+        font-size: 22px; /* ensure fa icon also bigger */
+    }
+
+    .edit-btn svg {
+        width: 22px; /* increase SVG size */
+        height: 22px;
+    }
+</style>
 
     <div class="cust-page-container">
         <!-- Page Header -->
@@ -69,11 +101,11 @@
             <div class="cust-details-container">
                 <div class="cust-details-header">
                     <div class="cust-details-left">
-                       
+
                         <h2 class="cust-details-title" id="customerName">Select a Customer</h2>
                     </div>
                     <div class="cust-details-actions">
-                        
+
                         <button class="btn btn-primary" id="editCustomerBtn">Edit Customer</button>
                     </div>
                 </div>
@@ -214,6 +246,18 @@
                 $('#sitesBtn').addClass('active');
             });
         });
+
+        function OpenCustomerChatHistory(mobile, name, customerId) {
+            if (!mobile || mobile.trim() === "") {
+                Swal.fire('Validation Error', 'Please insert phone number for this customer.', 'warning');
+                return; 
+            }
+
+            window.open('CustomerChatHistory.aspx?mobile=' + encodeURIComponent(mobile) +
+                '&name=' + encodeURIComponent(name) +
+                '&customerId=' + encodeURIComponent(customerId), '_blank');
+        }
+
 
     </script>
     <script>

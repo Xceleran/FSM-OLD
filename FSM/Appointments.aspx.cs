@@ -16,6 +16,7 @@ using FSM.Models.AppoinmentModel;
 using System.Configuration;
 using FSM.Processors;
 using FSM.Entity.Forms;
+using FSM.SMSService;
 
 namespace FSM
 {
@@ -273,7 +274,7 @@ namespace FSM
         [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
         public static List<TimeSlot> GetTimeSlots()
         {
-            string CompanyID = HttpContext.Current.Session["CompanyID"].ToString();
+            string CompanyID = HttpContext.Current.Session["CompanyID"].ToString();           
             var timeSlots = new List<TimeSlot>();
             Database db = new Database();
             try
@@ -360,6 +361,7 @@ namespace FSM
         {
             bool success = false;
             string CompanyID = HttpContext.Current.Session["CompanyID"].ToString();
+            string companyName = HttpContext.Current.Session["CompanyName"].ToString();
             Database db = new Database();
 
             try
@@ -395,6 +397,12 @@ namespace FSM
                 db.Command.Parameters.AddWithValue("@StartDateTime", appointment.StartDateTime);
                 db.Command.Parameters.AddWithValue("@EndDateTime", appointment.EndDateTime);
                 success = db.UpdateSql(strSQL);
+                if (success == true )
+                {
+                    TwilioSMSService twilioSMS = new TwilioSMSService();
+                     twilioSMS.SendAppointmentSMS(appointment.AppoinmentId, appointment.CustomerID, appointment.Status, CompanyID,companyName, appointment.RequestDate, appointment.TimeSlot, appointment.ResourceID);
+                }
+
             }
 
             catch (Exception ex)

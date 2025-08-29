@@ -136,7 +136,115 @@ function closeModal(modalId) {
 let table = null;
 loadCustomers();
 
+
 function loadCustomers() {
+    debugger;
+    table = $('#customerTable').DataTable({
+        "processing": true,
+        "serverSide": true,
+        "filter": true,
+        "ajax": {
+            "url": "Customer.aspx/LoadCustomers",
+            "type": "POST",
+            "contentType": "application/json; charset=utf-8",
+            "dataType": "json",
+            "data": function (d) {
+                return JSON.stringify({
+                    draw: d.draw,
+                    start: d.start,
+                    length: d.length,
+                    searchValue: d.search.value,
+                    sortColumn: d.columns[d.order[0].column].data,
+                    sortDirection: d.order[0].dir,
+
+                });
+            },
+            "dataSrc": function (json) {
+                console.log(json);
+                if (json.error) {
+                    alert(json.error);
+                    return [];
+                }
+                return json.data;
+            }
+        },
+        "paging": true,
+        "pageLength": 10,
+        "columns": [
+            { "data": "FirstName", "name": "First Name", "autoWidth": true },
+            { "data": "LastName", "name": "Last Name", "autoWidth": true },
+            { "data": "Email", "name": "Email", "autoWidth": true },
+            {
+                "data": "StatusName",
+                "name": "Status",
+                "autoWidth": true,
+                "render": function (data, type, row) {
+                    let statusClass;
+                    switch (data) {
+                        case 'Scheduled':
+                            statusClass = 'status-scheduled';
+                            break;
+                        case 'Pending':
+                            statusClass = 'status-pending';
+                            break;
+                        case 'Closed':
+                            statusClass = 'status-closed';
+                            break;
+                        case 'N/A':
+                        default:
+                            statusClass = 'status-na';
+                            break;
+                    }
+                    return `<span class="badge ${statusClass}">${data}</span>`;
+                }
+            },
+            {
+                "data": null,
+                "render": function (data, type, row) {
+                    //let smsBtn = '<button class="cust-action-btn sms-btn" title="Send SMS" ' +
+                    //    'onclick="window.open(\'CustomerChatHistory.aspx?mobile=' + encodeURIComponent(row.Phone) +
+                    //    '&name=' + encodeURIComponent(row.FirstName + " " + row.LastName) +
+                    //    '&customerId=' + encodeURIComponent(row.CustomerID) +
+                    //    '\', \'_blank\')">' +
+                    //    '<i class="fa fa-comment-dots"></i></button>';
+
+                    let smsBtn = '<button class="cust-action-btn sms-btn" title="Send SMS" ' +
+                        'onclick="OpenCustomerChatHistory(\'' + encodeURIComponent(row.Phone) + '\', \'' + encodeURIComponent(row.FirstName + " " + row.LastName) + '\', \'' + encodeURIComponent(row.CustomerID) + '\')">' +
+                        '<i class="fa fa-comment-dots"></i></button>';
+
+                    let editBtn = '<button class="cust-table-edit-btn" title="Edit Customer" data-customer-id="' + row.CustomerID + '">' +
+                        '<svg viewBox="0 0 20 20" width="16" height="16" xmlns="http://www.w3.org/2000/svg" fill="none">' +
+                        '<path fill="currentColor" fill-rule="evenodd" d="M15.198 3.52a1.612 1.612 0 012.223 2.336L6.346 16.421l-2.854.375 1.17-3.272L15.197 3.521zm3.725-1.322a3.612 3.612 0 00-5.102-.128L3.11 12.238a1 1 0 00-.253.388l-1.8 5.037a1 1 0 001.072 1.328l4.8-.63a1 1 0 00.56-.267L18.8 7.304a3.612 3.612 0 00.122-5.106zM12 17a1 1 0 100 2h6a1 1 0 100-2h-6z"></path>' +
+                        '</svg></button>';                   
+
+                    return '<div class="cust-action-btns">' + smsBtn + editBtn + '</div>';
+                },
+                "orderable": false,
+                "width": "15%"
+            }
+
+
+        ],
+        "select": {
+            "style": "single"
+        },
+        "drawCallback": function (settings) {
+            var api = this.api();
+            if (api.rows().count() > 0 && !$('#customerTable tbody tr').hasClass('selected')) {
+                api.row(0).select();
+                var firstRowData = api.row(0).data();
+                generateCustomerDetails(firstRowData);
+            }
+
+            applyNAFilter();
+        }
+    });
+}
+
+
+
+function loadCustomers_Backup() {
+    debugger;
     table = $('#customerTable').DataTable({
         "processing": true,
         "serverSide": true,
@@ -226,6 +334,8 @@ function loadCustomers() {
         }
     });
 }
+
+
 
 // Row click handler to load customer details
 $('#customerTable tbody').on('click', 'tr', function () {
