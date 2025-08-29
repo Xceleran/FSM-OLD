@@ -37,7 +37,7 @@ namespace FSM
                 var customer = GetCustomerDetails(customerId);
                 var site = GetCustomerSitebyId(customerId, Convert.ToInt32(siteId));
 
-                // Setting values for the Basic Information table
+
                 lblCustomerName.Text = customer?.FirstName + " " + customer?.LastName;
                 lblCustomerGuid.Text = customer?.CustomerGuid;
                 lblAddress.Text = site?.Address;
@@ -60,12 +60,11 @@ namespace FSM
                 LoadData();
             }
         }
-
         [WebMethod]
         [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
         public static List<AppointmentModel> LoadAppoinments(string searchValue,
-            string fromDate,
-            string toDate, string today)
+       string fromDate,
+       string toDate, string today)
         {
             var appoinments = new List<AppointmentModel>();
             string companyid = HttpContext.Current.Session["CompanyID"].ToString();
@@ -76,7 +75,7 @@ namespace FSM
                 if (!string.IsNullOrEmpty(searchValue))
                 {
                     whereCondition += "AND (BusinessName LIKE '%" + searchValue + "%' OR FirstName LIKE '%" + searchValue + "%' " +
-                        "OR LastName LIKE '%" + searchValue + "%'  OR ServiceName LIKE '%" + searchValue + "%' OR rs.Name LIKE '%" + searchValue + "%' " +
+                        "OR LastName LIKE '%" + searchValue + "%'  OR srv.ServiceName LIKE '%" + searchValue + "%' OR rs.Name LIKE '%" + searchValue + "%' " +
                         "OR cus.Mobile LIKE '%" + searchValue + "%' OR cus.Phone LIKE '%" + searchValue + "%' OR Address1 LIKE '%" + searchValue + "%') ";
                 }
                 if (!string.IsNullOrEmpty(today))
@@ -89,20 +88,34 @@ namespace FSM
                 }
                 db.Open();
                 DataTable dt = new DataTable();
-
-                string sql = $@"SELECT  cus.FirstName, cus.LastName,cus.CustomerGuid, cus.BusinessID, cus.BusinessName, cus.IsBusinessContact, 
-                               cus.CustomerID, cus.Email, cus.Phone, cus.Mobile, cus.ZipCode, cus.State, cus.City, cus.Address1,
-                               apt.CompanyID, apt.ApptID, apt.ResourceID, apt.ServiceType, apt.CreatedDateTime, CONVERT(VARCHAR(10), 
-                               apt.ApptDateTime, 120) as RequestDate, apt.Note, apt.TimeSlot,apt.StartDateTime, apt.EndDateTime,
-                               rs.Name as ResourceName, srv.ServiceName, CASE WHEN apt.Status = 'Deleted' THEN 'N/A' ELSE sts.StatusName END AS AppStatus, 
-                               tkt.StatusName AS AppTicketStatus FROM tbl_Appointment apt
-                               inner JOIN tbl_Customer cus ON apt.CustomerID = cus.CustomerID and apt.CompanyID = cus.CompanyID
-                               LEFT JOIN tbl_Resources as rs on apt.ResourceID = rs.Id and apt.CompanyID = rs.CompanyID
-                               LEFT JOIN tbl_ServiceType AS srv ON apt.ServiceType = srv.ServiceTypeID AND apt.CompanyID = srv.CompanyID
-                               LEFT JOIN tbl_Status AS sts ON TRY_CAST(apt.Status AS INT) = sts.StatusID AND apt.CompanyID = sts.CompanyID
-                               LEFT JOIN tbl_TicketStatus AS tkt ON apt.TicketStatus = tkt.StatusID AND apt.CompanyID = tkt.CompanyID {whereCondition}";
-
-
+                string sql = $@"SELECT  
+    cus.FirstName, cus.LastName, cus.CustomerGuid, cus.BusinessID, cus.BusinessName, cus.IsBusinessContact, 
+    cus.CustomerID, cus.Email, cus.Phone, cus.Mobile, cus.ZipCode, cus.State, cus.City, cus.Address1,
+    apt.CompanyID, apt.ApptID, apt.ResourceID, apt.ServiceType, apt.CreatedDateTime, 
+    CONVERT(VARCHAR(10), apt.ApptDateTime, 120) as RequestDate, apt.Note, apt.TimeSlot,
+    apt.StartDateTime, apt.EndDateTime, rs.Name as ResourceName, 
+    COALESCE(srv.ServiceName, apt.ServiceType) AS ServiceName,
+    COALESCE(sts.StatusName, 'Unknown') AS AppoinmentStatus,
+    COALESCE(tkt.StatusName, 'Unknown') AS TicketStatus,
+    srv.CalenderColor as ServiceColor,
+    -- Site related fields
+    cs.Id as SiteId, 
+    cs.SiteName, 
+    cs.Address as SiteAddress, 
+    cs.Contact as SiteContact, 
+    cs.Email as SiteEmail, 
+    cs.PhoneNumber as SitePhoneNumber,
+    cs.Note as SiteNote, 
+    cs.IsActive as SiteIsActive
+FROM tbl_Appointment apt
+INNER JOIN tbl_Customer cus ON apt.CustomerID = cus.CustomerID AND apt.CompanyID = cus.CompanyID
+LEFT JOIN tbl_CustomerSite cs ON apt.SiteId = cs.Id AND apt.CustomerID = cs.CustomerID
+LEFT JOIN tbl_Resources as rs ON apt.ResourceID = rs.Id AND apt.CompanyID = rs.CompanyID
+LEFT JOIN tbl_ServiceType AS srv ON apt.ServiceType = srv.ServiceTypeID AND apt.CompanyID = srv.CompanyID
+LEFT JOIN tbl_Status AS sts ON apt.Status = sts.StatusID AND apt.CompanyID = sts.CompanyID
+LEFT JOIN tbl_TicketStatus AS tkt ON apt.TicketStatus = tkt.StatusID AND apt.CompanyID = tkt.CompanyID
+{whereCondition}
+ORDER BY apt.ApptDateTime DESC";
                 db.Execute(sql, out dt);
                 db.Close();
                 if (dt.Rows.Count > 0)
@@ -129,25 +142,46 @@ namespace FSM
                         appoinment.CustomerName = row.Field<string>("FirstName") + " " + row.Field<string>("LastName");
 
                         appoinment.AppoinmentId = row["ApptID"].ToString();
-                        appoinment.AppoinmentStatus = row.Field<string>("AppStatus") ?? "";
+                        appoinment.AppoinmentStatus = row.Field<string>("AppoinmentStatus") ?? "";
                         appoinment.Note = row.Field<string>("Note") ?? "";
-                        appoinment.TicketStatus = row.Field<string>("AppTicketStatus") ?? "";
+                        appoinment.TicketStatus = row.Field<string>("TicketStatus") ?? "";
                         appoinment.ResourceName = row.Field<string>("ResourceName") ?? "";
                         appoinment.ServiceType = row.Field<string>("ServiceName") ?? "";
+                        appoinment.ServiceColor = row.Field<string>("ServiceColor") ?? "#3b82f6"; // Default blue
                         appoinment.RequestDate = row.Field<string>("RequestDate") ?? "";
                         appoinment.TimeSlot = row.Field<string>("TimeSlot") ?? "";
                         appoinment.AppoinmentDate = row.Field<string>("RequestDate") ?? "";
                         appoinment.StartDateTime = Convert.ToDateTime(row["StartDateTime"]).ToString("MM/dd/yyyy hh:mm tt");
                         appoinment.EndDateTime = Convert.ToDateTime(row["EndDateTime"]).ToString("MM/dd/yyyy hh:mm tt");
+                        // Site related mappings
+                        appoinment.SiteId = row["SiteId"].ToString();
+                        appoinment.SiteName = row.Field<string>("SiteName") ?? "";
+                        appoinment.SiteAddress = row.Field<string>("SiteAddress") ?? "";
+                        appoinment.SiteContact = row.Field<string>("SiteContact") ?? "";
+                        appoinment.SiteEmail = row.Field<string>("SiteEmail") ?? "";
+                        appoinment.SitePhoneNumber = row.Field<string>("SitePhoneNumber") ?? "";
+                        appoinment.SiteNote = row.Field<string>("SiteNote") ?? "";
+                        appoinment.SiteIsActive = row.Field<bool?>("SiteIsActive") ?? false;
 
-                        int serviceTypeID = Convert.ToInt32(row.Field<string>("ServiceType"));
-                        appoinment.Duration = CalculateDuration(serviceTypeID);
+                        string serviceTypeValue = row.Field<string>("ServiceType") ?? "";
+                        int serviceTypeID;
+
+                        if (int.TryParse(serviceTypeValue, out serviceTypeID))
+                        {
+                            appoinment.Duration = CalculateDuration(serviceTypeID);
+                        }
+                        else
+                        {
+                            appoinment.Duration = "1 Hr : 0 Min";
+                        }
+
                         appoinments.Add(appoinment);
                     }
                 }
             }
             catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine("Error in LoadAppoinments: " + ex.Message);
                 return appoinments;
             }
             finally
@@ -157,16 +191,97 @@ namespace FSM
             return appoinments;
         }
 
+        [WebMethod]
+        [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
+        public static List<ServiceType> GetServiceTypesWithColors()
+        {
+            var serviceTypes = new List<ServiceType>();
+            string companyId = HttpContext.Current.Session["CompanyID"].ToString();
+            Database db = new Database();
 
+            try
+            {
+                db.Open();
+                DataTable dt = new DataTable();
+                string sql = @"SELECT ServiceTypeID, ServiceName, CalenderColor 
+                       FROM tbl_ServiceType 
+                       WHERE CompanyID = @CompanyID 
+                       ORDER BY ServiceName";
+
+                db.AddParameter("@CompanyID", companyId, SqlDbType.NVarChar);
+                db.ExecuteParam(sql, out dt);
+
+                if (dt.Rows.Count > 0)
+                {
+                    foreach (DataRow row in dt.Rows)
+                    {
+                        var serviceType = new ServiceType();
+                        serviceType.ServiceTypeID = row.Field<int>("ServiceTypeID");
+                        serviceType.ServiceName = row.Field<string>("ServiceName") ?? "";
+                        serviceType.CalendarColor = row.Field<string>("CalenderColor") ?? "#3b82f6"; // Default blue
+                        serviceTypes.Add(serviceType);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+
+            }
+            finally
+            {
+                db.Close();
+            }
+
+            return serviceTypes;
+        }
+
+        public class ServiceType
+        {
+            public int ServiceTypeID { get; set; }
+            public string ServiceName { get; set; }
+            public string CalendarColor { get; set; }
+        }
+        [WebMethod]
+        [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
+        public static int GetServiceTypeIDByName(string serviceName, string companyId)
+        {
+            Database db = new Database();
+            try
+            {
+                db.Open();
+                DataTable dt = new DataTable();
+                string sql = "SELECT ServiceTypeID FROM tbl_ServiceType WHERE ServiceName = @ServiceName AND CompanyID = @CompanyID";
+
+                db.AddParameter("@ServiceName", serviceName, SqlDbType.NVarChar);
+                db.AddParameter("@CompanyID", companyId, SqlDbType.NVarChar);
+
+                db.ExecuteParam(sql, out dt);
+                db.Close();
+
+                if (dt.Rows.Count > 0)
+                {
+                    return Convert.ToInt32(dt.Rows[0]["ServiceTypeID"]);
+                }
+            }
+            catch (Exception ex)
+            {
+
+            }
+            finally
+            {
+                db.Close();
+            }
+            return 0;
+        }
         public void LoadData()
         {
             string companyid = HttpContext.Current.Session["CompanyID"].ToString();
             Database db = new Database();
             try
             {
-                string Sql = "SELECT ServiceTypeID,ServiceName From msSchedulerV3.dbo.tbl_ServiceType where CompanyID = '" + companyid + "' order by ServiceName asc;";
-                Sql += @"SELECT  [StatusID],[StatusName] FROM [msSchedulerV3].[dbo].[tbl_Status] where CompanyID='" + companyid + "';";
-                Sql += @"SELECT  [StatusID],[StatusName] FROM [msSchedulerV3].[dbo].[tbl_TicketStatus] where CompanyID= '" + companyid + "';";
+                string Sql = "SELECT ServiceTypeID, ServiceName, CalenderColor From msSchedulerV3.dbo.tbl_ServiceType where CompanyID = '" + companyid + "' order by ServiceName asc;";
+                Sql += @"SELECT [StatusID], [StatusName] FROM [msSchedulerV3].[dbo].[tbl_Status] where CompanyID='" + companyid + "';";
+                Sql += @"SELECT [StatusID], [StatusName] FROM [msSchedulerV3].[dbo].[tbl_TicketStatus] where CompanyID= '" + companyid + "';";
 
                 DataTable _ServiceType = new DataTable();
                 DataTable _Status = new DataTable();
@@ -179,95 +294,89 @@ namespace FSM
                 if (_ServiceType.Rows.Count > 0)
                 {
                     ServiceTypeFilter.DataSource = _ServiceType;
-                    ServiceTypeFilter.DataBind();
                     ServiceTypeFilter.DataTextField = "ServiceName";
-                    ServiceTypeFilter.DataValueField = "ServiceName";
+                    ServiceTypeFilter.DataValueField = "ServiceTypeID";
                     ServiceTypeFilter.DataBind();
-                    ListItem listItem = new ListItem();
-                    listItem.Text = "All Services";
-                    listItem.Value = "";
+                    ListItem listItem = new ListItem("All Services", "");
                     ServiceTypeFilter.Items.Insert(0, listItem);
 
-
                     ServiceTypeFilter_2.DataSource = _ServiceType;
-                    ServiceTypeFilter_2.DataBind();
                     ServiceTypeFilter_2.DataTextField = "ServiceName";
-                    ServiceTypeFilter_2.DataValueField = "ServiceName";
+                    ServiceTypeFilter_2.DataValueField = "ServiceTypeID";
                     ServiceTypeFilter_2.DataBind();
                     ServiceTypeFilter_2.Items.Insert(0, listItem);
 
                     ServiceTypeFilter_Edit.DataSource = _ServiceType;
-                    ServiceTypeFilter_Edit.DataBind();
                     ServiceTypeFilter_Edit.DataTextField = "ServiceName";
                     ServiceTypeFilter_Edit.DataValueField = "ServiceTypeID";
                     ServiceTypeFilter_Edit.DataBind();
                     ServiceTypeFilter_Edit.Items.Insert(0, listItem);
 
                     ServiceTypeFilter_List.DataSource = _ServiceType;
-                    ServiceTypeFilter_List.DataBind();
                     ServiceTypeFilter_List.DataTextField = "ServiceName";
-                    ServiceTypeFilter_List.DataValueField = "ServiceName";
+                    ServiceTypeFilter_List.DataValueField = "ServiceTypeID";
                     ServiceTypeFilter_List.DataBind();
                     ServiceTypeFilter_List.Items.Insert(0, listItem);
 
                     ServiceTypeFilter_Resource.DataSource = _ServiceType;
-                    ServiceTypeFilter_Resource.DataBind();
                     ServiceTypeFilter_Resource.DataTextField = "ServiceName";
-                    ServiceTypeFilter_Resource.DataValueField = "ServiceName";
+                    ServiceTypeFilter_Resource.DataValueField = "ServiceTypeID";
                     ServiceTypeFilter_Resource.DataBind();
                     ServiceTypeFilter_Resource.Items.Insert(0, listItem);
                 }
+
                 if (_Status.Rows.Count > 0)
                 {
                     StatusTypeFilter.DataSource = _Status;
-                    StatusTypeFilter.DataBind();
                     StatusTypeFilter.DataTextField = "StatusName";
-                    StatusTypeFilter.DataValueField = "StatusName";
+                    StatusTypeFilter.DataValueField = "StatusID";
                     StatusTypeFilter.DataBind();
-                    StatusTypeFilter.Items.Insert(0, new ListItem("All Status", ""));
+                    StatusTypeFilter.Items.Insert(0, new ListItem("All Statuses", ""));
 
                     StatusTypeFilter_List.DataSource = _Status;
-                    StatusTypeFilter_List.DataBind();
                     StatusTypeFilter_List.DataTextField = "StatusName";
-                    StatusTypeFilter_List.DataValueField = "StatusName";
+                    StatusTypeFilter_List.DataValueField = "StatusID";
                     StatusTypeFilter_List.DataBind();
-                    StatusTypeFilter_List.Items.Insert(0, new ListItem("All Status", ""));
+                    StatusTypeFilter_List.Items.Insert(0, new ListItem("All Statuses", ""));
 
                     StatusTypeFilter_Resource.DataSource = _Status;
-                    StatusTypeFilter_Resource.DataBind();
                     StatusTypeFilter_Resource.DataTextField = "StatusName";
-                    StatusTypeFilter_Resource.DataValueField = "StatusName";
+                    StatusTypeFilter_Resource.DataValueField = "StatusID";
                     StatusTypeFilter_Resource.DataBind();
-                    StatusTypeFilter_Resource.Items.Insert(0, new ListItem("All Status", ""));
+                    StatusTypeFilter_Resource.Items.Insert(0, new ListItem("All Statuses", ""));
 
                     StatusTypeFilter_Edit.DataSource = _Status;
-                    StatusTypeFilter_Edit.DataBind();
                     StatusTypeFilter_Edit.DataTextField = "StatusName";
                     StatusTypeFilter_Edit.DataValueField = "StatusID";
                     StatusTypeFilter_Edit.DataBind();
-                    StatusTypeFilter_Edit.Items.Insert(0, new ListItem("All Status", ""));
+                    StatusTypeFilter_Edit.Items.Insert(0, new ListItem("All Statuses", ""));
                 }
 
                 if (_ticketStatus.Rows.Count > 0)
                 {
                     TicketStatusFilter_List.DataSource = _ticketStatus;
-                    TicketStatusFilter_List.DataBind();
                     TicketStatusFilter_List.DataTextField = "StatusName";
-                    TicketStatusFilter_List.DataValueField = "StatusName";
+                    TicketStatusFilter_List.DataValueField = "StatusID";
                     TicketStatusFilter_List.DataBind();
-                    TicketStatusFilter_List.Items.Insert(0, new ListItem("Ticket Status", ""));
+                    TicketStatusFilter_List.Items.Insert(0, new ListItem("All Ticket Statuses", ""));
 
                     TicketStatusFilter_Edit.DataSource = _ticketStatus;
-                    TicketStatusFilter_Edit.DataBind();
                     TicketStatusFilter_Edit.DataTextField = "StatusName";
                     TicketStatusFilter_Edit.DataValueField = "StatusID";
                     TicketStatusFilter_Edit.DataBind();
-                    TicketStatusFilter_Edit.Items.Insert(0, new ListItem("Ticket Status", ""));
+                    TicketStatusFilter_Edit.Items.Insert(0, new ListItem("All Ticket Statuses", ""));
                 }
             }
+            catch (Exception ex)
+            {
 
-            catch (Exception ex) { }
+            }
+            finally
+            {
+                db.Close();
+            }
         }
+
 
 
         [WebMethod]
@@ -367,35 +476,31 @@ namespace FSM
             try
             {
                 string strSQL = @"UPDATE [msSchedulerV3].[dbo].[tbl_Appointment]
-                            SET
-                                [ServiceType] = @ServiceType,
-                                [TimeSlot] = @TimeSlot,
-                                [ApptDateTime] = @ApptDateTime,
-                                [Status] = @Status,
-                                [ResourceID] = @ResourceID, 
-                                [TicketStatus] = @TicketStatus, 
-                                [Note] = @Note,
-                                [StartDateTime] = @StartDateTime,
-                                [EndDateTime] = @EndDateTime
-
-
-                            WHERE [ApptID] = @ApptID and
-                                  [CustomerID] = @CustomerID and
-                                  [CompanyID] = @CompanyID;";
+                    SET
+                        [ServiceType] = @ServiceType,
+                        [TimeSlot] = @TimeSlot,
+                        [ApptDateTime] = @ApptDateTime,
+                        [Status] = @Status,           
+                        [ResourceID] = @ResourceID, 
+                        [TicketStatus] = @TicketStatus, 
+                        [Note] = @Note,
+                        [StartDateTime] = @StartDateTime,
+                        [EndDateTime] = @EndDateTime
+                    WHERE [ApptID] = @ApptID AND [CompanyID] = @CompanyID;";
 
                 db.Command.Parameters.Clear();
                 db.Command.Parameters.AddWithValue("@CompanyID", CompanyID);
-                db.Command.Parameters.AddWithValue("@CustomerID", appointment.CustomerID);
                 db.Command.Parameters.AddWithValue("@ApptID", appointment.AppoinmentId);
-                db.Command.Parameters.AddWithValue("@ServiceType", appointment.ServiceType);
-                db.Command.Parameters.AddWithValue("@ApptDateTime", appointment.RequestDate);
-                db.Command.Parameters.AddWithValue("@TimeSlot", appointment.TimeSlot);
-                db.Command.Parameters.AddWithValue("@Status", appointment.Status);
-                db.Command.Parameters.AddWithValue("@TicketStatus", appointment.TicketStatus);
-                db.Command.Parameters.AddWithValue("@Note", appointment.Note);
+                db.Command.Parameters.AddWithValue("@ServiceType", (object)appointment.ServiceType ?? DBNull.Value);
+                db.Command.Parameters.AddWithValue("@Status", (object)appointment.Status ?? DBNull.Value);
+                db.Command.Parameters.AddWithValue("@ApptDateTime", (object)appointment.RequestDate ?? DBNull.Value);
+                db.Command.Parameters.AddWithValue("@TimeSlot", (object)appointment.TimeSlot ?? DBNull.Value);
+                db.Command.Parameters.AddWithValue("@TicketStatus", (object)appointment.TicketStatus ?? DBNull.Value);
+                db.Command.Parameters.AddWithValue("@Note", (object)appointment.Note ?? DBNull.Value);
                 db.Command.Parameters.AddWithValue("@ResourceID", appointment.ResourceID);
-                db.Command.Parameters.AddWithValue("@StartDateTime", appointment.StartDateTime);
-                db.Command.Parameters.AddWithValue("@EndDateTime", appointment.EndDateTime);
+                db.Command.Parameters.AddWithValue("@StartDateTime", (object)appointment.StartDateTime ?? DBNull.Value);
+                db.Command.Parameters.AddWithValue("@EndDateTime", (object)appointment.EndDateTime ?? DBNull.Value);
+
                 success = db.UpdateSql(strSQL);
                 if (success == true )
                 {
@@ -404,10 +509,10 @@ namespace FSM
                 }
 
             }
-
             catch (Exception ex)
             {
-                return success;
+                System.Diagnostics.Debug.WriteLine($"UpdateAppointment Error: {ex.Message}");
+                return false;
             }
             finally
             {
@@ -415,6 +520,8 @@ namespace FSM
             }
             return success;
         }
+
+
         [WebMethod]
         [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
         public static object GetCustomerDetailsForModal(string customerId, string siteId)
@@ -423,33 +530,35 @@ namespace FSM
             {
                 var customer = GetCustomerDetails(customerId);
                 var site = GetCustomerSitebyId(customerId, Convert.ToInt32(siteId));
-
+                if (customer == null)
+                {
+                    return new { Success = false, Error = "Customer not found." };
+                }
                 return new
                 {
                     Success = true,
-                    CustomerName = $"{customer?.FirstName} {customer?.LastName}",
-                    CustomerGuid = customer?.CustomerGuid ?? "",
-                    Address = site?.Address ?? "",
-                    Contact = site?.Contact ?? "",
-                    CustomerId = customerId,
-                    SiteId = siteId,
+                    CustomerName = $"{customer.FirstName} {customer.LastName}",
+                    Address = site?.Address ?? customer.Address1 ?? "N/A", 
+                    Contact = site?.Contact ?? $"{customer.FirstName} {customer.LastName}",
                     Status = site?.IsActive == true ? "Active" : "Disabled",
-                    Note = site?.Note ?? "",
-                    CreatedOn = site?.CreatedDateTime?.ToString("yyyy-MM-dd") ?? "",
-                    SiteName = site?.SiteName ?? "",
-                    Phone = customer?.Phone ?? "",
-                    PhoneLink = $"tel:{customer?.Phone ?? ""}",
-                    Mobile = customer?.Mobile ?? "",
-                    MobileLink = $"tel:{customer?.Mobile ?? ""}",
-                    Email = customer?.Email ?? "",
-                    EmailLink = $"mailto:{customer?.Email ?? ""}"
+                    Note = site?.Note ?? "No special instructions.",
+                    CreatedOn = site?.CreatedDateTime?.ToString("yyyy-MM-dd") ?? "N/A",
+                    Phone = customer.Phone ?? "N/A",
+                    PhoneLink = $"tel:{customer.Phone}",
+                    Mobile = customer.Mobile ?? "N/A",
+                    MobileLink = $"tel:{customer.Mobile}",
+                    Email = customer.Email ?? "N/A",
+                    EmailLink = $"mailto:{customer.Email}"
                 };
             }
             catch (Exception ex)
             {
-                return new { Success = false, Error = ex.Message };
+
+                System.Diagnostics.Debug.WriteLine($"Error in GetCustomerDetailsForModal: {ex.ToString()}");
+                return new { Success = false, Error = "An error occurred while fetching customer details." };
             }
         }
+
 
         public static CustomerEntity GetCustomerDetails(string customerId)
         {
@@ -528,7 +637,7 @@ namespace FSM
             var duration = "0";
             if (serviceTypeID > 0)
             {
-                duration =  CalculateDuration(serviceTypeID);
+                duration = CalculateDuration(serviceTypeID);
             }
             return duration;
         }
@@ -575,11 +684,11 @@ namespace FSM
             {
                 string companyId = System.Web.HttpContext.Current.Session["CompanyID"]?.ToString();
                 string userId = System.Web.HttpContext.Current.Session["UserID"]?.ToString();
-          
-                
+
+
                 if (string.IsNullOrEmpty(companyId))
                     return false;
-           
+
                 // Update appointment with attached forms
                 Database db = new Database();
                 string connectionString = ConfigurationManager.AppSettings["ConnStrJobs"].ToString();
@@ -607,7 +716,7 @@ namespace FSM
         }
 
         [WebMethod]
-        public static bool SendFormsViaEmail(string appointmentId, string customerEmail) 
+        public static bool SendFormsViaEmail(string appointmentId, string customerEmail)
         {
             try
             {
@@ -679,7 +788,7 @@ namespace FSM
                 db.Init("sp_Appointments_GetDetails");
                 db.AddParameter("@AppointmentId", appointmentId, System.Data.SqlDbType.VarChar);
                 db.AddParameter("@CompanyID", companyId, System.Data.SqlDbType.VarChar);
-                
+
                 if (db.Execute() && db.Reader.Read())
                 {
                     return new
@@ -746,40 +855,40 @@ namespace FSM
                    $"Service: {appointment.ServiceType}. Please check your email or contact us for details. Ref: {appointmentId}";
         }
 
-        private static bool SendEmail(string toEmail, string subject, string body, string appointmentId) 
+        private static bool SendEmail(string toEmail, string subject, string body, string appointmentId)
         {
             try
             {
                 // Implement your email sending logic here
                 // This is a placeholder - you'll need to integrate with your email service
                 // Examples: SendGrid, SMTP, etc.
-                
+
                 System.Net.Mail.SmtpClient smtp = new System.Net.Mail.SmtpClient();
                 System.Net.Mail.MailMessage mail = new System.Net.Mail.MailMessage();
-                
+
                 // Configure SMTP settings from web.config
                 string smtpServer = System.Configuration.ConfigurationManager.AppSettings["SMTP"];
                 string smtpPort = System.Configuration.ConfigurationManager.AppSettings["Port"];
                 string smtpUser = System.Configuration.ConfigurationManager.AppSettings["SmtpUser"];
                 string smtpPass = System.Configuration.ConfigurationManager.AppSettings["SMTPPassword"];
-                
+
                 if (!string.IsNullOrEmpty(smtpServer))
                 {
                     smtp.Host = smtpServer;
                     smtp.Port = int.Parse(smtpPort ?? "587");
                     smtp.EnableSsl = true;
                     smtp.Credentials = new System.Net.NetworkCredential(smtpUser, smtpPass);
-                    
+
                     mail.From = new System.Net.Mail.MailAddress(smtpUser);
                     mail.To.Add(toEmail);
                     mail.Subject = subject;
                     mail.Body = body;
                     mail.IsBodyHtml = true;
-                    
+
                     smtp.Send(mail);
                     return true;
                 }
-                
+
                 // If no SMTP configured, log the attempt
                 System.Diagnostics.Debug.WriteLine($"Email would be sent to: {toEmail}, Subject: {subject}");
                 return true; // Return true for demo purposes
@@ -798,7 +907,7 @@ namespace FSM
                 // Implement your SMS sending logic here
                 // This is a placeholder - you'll need to integrate with your SMS service
                 // Examples: Twilio, AWS SNS, etc.
-                
+
                 // Log the SMS attempt
                 System.Diagnostics.Debug.WriteLine($"SMS would be sent to: {phoneNumber}, Message: {message}");
                 return true; // Return true for demo purposes
@@ -814,14 +923,14 @@ namespace FSM
         {
             try
             {
-                var forObj= new FormTemplate();
+                var forObj = new FormTemplate();
                 string companyId = System.Web.HttpContext.Current.Session["CompanyID"]?.ToString();
                 if (string.IsNullOrEmpty(companyId))
                     return forObj;
 
                 var processor = new FormProcessor();
                 var template = processor.GetTemplate(templateId, companyId);
-                if(template != null)
+                if (template != null)
                 {
                     forObj = template;
                 }
@@ -843,7 +952,7 @@ namespace FSM
                     return formStructure;
 
                 var processor = new FormProcessor();
-                var template = processor.GetFormStructureFromResponse(templateId, companyId, appointmentId,customerId);
+                var template = processor.GetFormStructureFromResponse(templateId, companyId, appointmentId, customerId);
                 if (template != null)
                 {
                     formStructure = template;
