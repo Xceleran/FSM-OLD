@@ -46,7 +46,7 @@ namespace FSM
                 lblSiteId.Text = siteId;
                 lblActive.Text = site?.IsActive == true ? "Active" : "Disabled";
                 lblNote.Text = site?.Note;
-                lblCreatedOn.Text = site?.CreatedDateTime?.ToString("yyyy-MM-dd");
+                lblCreatedOn.Text = site?.CreatedDateTime?.ToString("MM/dd/yyyy");
 
                 hlPhone.Text = customer?.Phone;
                 hlPhone.NavigateUrl = "tel:" + customer?.Phone;
@@ -62,67 +62,96 @@ namespace FSM
         }
         [WebMethod]
         [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
-        public static List<AppointmentModel> LoadAppoinments(string searchValue,
-       string fromDate,
-       string toDate, string today)
+        public static List<AppointmentModel> LoadAppoinments(string searchValue, string fromDate, string toDate, string today)
         {
             var appoinments = new List<AppointmentModel>();
             string companyid = HttpContext.Current.Session["CompanyID"].ToString();
             Database db = new Database();
             try
             {
-                string whereCondition = "WHERE  apt.CompanyID = '" + companyid + "' ";
+                string whereCondition = "WHERE apt.CompanyID = @CompanyID ";
                 if (!string.IsNullOrEmpty(searchValue))
                 {
-                    whereCondition += "AND (BusinessName LIKE '%" + searchValue + "%' OR FirstName LIKE '%" + searchValue + "%' " +
-                        "OR LastName LIKE '%" + searchValue + "%'  OR srv.ServiceName LIKE '%" + searchValue + "%' OR rs.Name LIKE '%" + searchValue + "%' " +
-                        "OR cus.Mobile LIKE '%" + searchValue + "%' OR cus.Phone LIKE '%" + searchValue + "%' OR Address1 LIKE '%" + searchValue + "%') ";
+                    whereCondition += @"AND (
+                cus.BusinessName LIKE @SearchValue OR 
+                cus.FirstName LIKE @SearchValue OR 
+                cus.LastName LIKE @SearchValue OR 
+                srv.ServiceName LIKE @SearchValue OR 
+                rs.Name LIKE @SearchValue OR 
+                cus.Mobile LIKE @SearchValue OR 
+                cus.Phone LIKE @SearchValue OR 
+                cs.Address LIKE @SearchValue OR 
+                cus.Address1 LIKE @SearchValue
+            ) ";
                 }
                 if (!string.IsNullOrEmpty(today))
                 {
-                    whereCondition += "AND CONVERT(VARCHAR(10), apt.ApptDateTime, 120) = '" + today + "' ";
+                    whereCondition += "AND CONVERT(DATE, apt.ApptDateTime) = @DateFilter ";
                 }
-                if (!string.IsNullOrEmpty(fromDate) && !string.IsNullOrEmpty(toDate))
+                else if (!string.IsNullOrEmpty(fromDate) && !string.IsNullOrEmpty(toDate))
                 {
-                    whereCondition += "AND CONVERT(DATE, apt.ApptDateTime) BETWEEN '" + fromDate + "' AND '" + toDate + "' ";
+                    whereCondition += "AND CONVERT(DATE, apt.ApptDateTime) BETWEEN @FromDate AND @ToDate ";
                 }
+
                 db.Open();
                 DataTable dt = new DataTable();
-                string sql = $@"SELECT  
-    cus.FirstName, cus.LastName, cus.CustomerGuid, cus.BusinessID, cus.BusinessName, cus.IsBusinessContact, 
-    cus.CustomerID, cus.Email, cus.Phone, cus.Mobile, cus.ZipCode, cus.State, cus.City, cus.Address1,
-    apt.CompanyID, apt.ApptID, apt.ResourceID, apt.ServiceType, apt.CreatedDateTime, 
-    CONVERT(VARCHAR(10), apt.ApptDateTime, 120) as RequestDate, apt.Note, apt.TimeSlot,
-    apt.StartDateTime, apt.EndDateTime, rs.Name as ResourceName, 
-    COALESCE(srv.ServiceName, apt.ServiceType) AS ServiceName,
-    COALESCE(sts.StatusName, 'Unknown') AS AppoinmentStatus,
-    COALESCE(tkt.StatusName, 'Unknown') AS TicketStatus,
-    srv.CalenderColor as ServiceColor,
-    -- Site related fields
-    cs.Id as SiteId, 
-    cs.SiteName, 
-    cs.Address as SiteAddress, 
-    cs.Contact as SiteContact, 
-    cs.Email as SiteEmail, 
-    cs.PhoneNumber as SitePhoneNumber,
-    cs.Note as SiteNote, 
-    cs.IsActive as SiteIsActive
-FROM tbl_Appointment apt
-INNER JOIN tbl_Customer cus ON apt.CustomerID = cus.CustomerID AND apt.CompanyID = cus.CompanyID
-LEFT JOIN tbl_CustomerSite cs ON apt.SiteId = cs.Id AND apt.CustomerID = cs.CustomerID
-LEFT JOIN tbl_Resources as rs ON apt.ResourceID = rs.Id AND apt.CompanyID = rs.CompanyID
-LEFT JOIN tbl_ServiceType AS srv ON apt.ServiceType = srv.ServiceTypeID AND apt.CompanyID = srv.CompanyID
-LEFT JOIN tbl_Status AS sts ON apt.Status = sts.StatusID AND apt.CompanyID = sts.CompanyID
-LEFT JOIN tbl_TicketStatus AS tkt ON apt.TicketStatus = tkt.StatusID AND apt.CompanyID = tkt.CompanyID
-{whereCondition}
-ORDER BY apt.ApptDateTime DESC";
-                db.Execute(sql, out dt);
+
+
+                string sql = $@"
+            SELECT  
+                cus.FirstName, cus.LastName, cus.CustomerGuid, cus.BusinessID, cus.BusinessName, cus.IsBusinessContact, 
+                cus.CustomerID, cus.Email, cus.Phone, cus.Mobile, cus.ZipCode, cus.State, cus.City, cus.Address1,
+                apt.CompanyID, apt.ApptID, apt.ResourceID, apt.ServiceType AS StoredServiceType, apt.CreatedDateTime, 
+                CONVERT(VARCHAR(10), apt.ApptDateTime, 120) as RequestDate, apt.Note, apt.TimeSlot,
+                apt.StartDateTime, apt.EndDateTime, rs.Name as ResourceName, 
+                srv.ServiceTypeID,
+                srv.ServiceName,
+                srv.CalenderColor as ServiceColor,
+                sts.StatusID AS AppointmentStatusID,
+                COALESCE(sts.StatusName, apt.Status, 'Unknown') AS AppoinmentStatus,
+                tkt.StatusID AS TicketStatusID,
+                COALESCE(tkt.StatusName, apt.TicketStatus, 'Unknown') AS TicketStatus,
+                cs.Id as SiteId, cs.SiteName, cs.Address as SiteAddress, cs.Contact as SiteContact, 
+                cs.Email as SiteEmail, cs.PhoneNumber as SitePhoneNumber, cs.Note as SiteNote, cs.IsActive as SiteIsActive
+            FROM 
+                tbl_Appointment apt
+            INNER JOIN 
+                tbl_Customer cus ON apt.CustomerID = cus.CustomerID AND apt.CompanyID = cus.CompanyID
+            LEFT JOIN 
+                tbl_CustomerSite cs ON apt.SiteId = cs.Id AND apt.CustomerID = cs.CustomerID
+            LEFT JOIN 
+                tbl_Resources as rs ON apt.ResourceID = rs.Id AND apt.CompanyID = rs.CompanyID
+            LEFT JOIN 
+                tbl_ServiceType AS srv ON apt.CompanyID = srv.CompanyID AND 
+                    (TRY_CAST(apt.ServiceType AS INT) = srv.ServiceTypeID OR apt.ServiceType = srv.ServiceName)
+            LEFT JOIN 
+                tbl_Status AS sts ON apt.CompanyID = sts.CompanyID AND 
+                    (TRY_CAST(apt.Status AS INT) = sts.StatusID OR apt.Status = sts.StatusName)
+            LEFT JOIN 
+                tbl_TicketStatus AS tkt ON apt.CompanyID = tkt.CompanyID AND 
+                    (TRY_CAST(apt.TicketStatus AS INT) = tkt.StatusID OR apt.TicketStatus = tkt.StatusName)
+            {whereCondition}
+            ORDER BY 
+                apt.ApptDateTime DESC";
+
+                db.Command.Parameters.AddWithValue("@CompanyID", companyid);
+                if (!string.IsNullOrEmpty(searchValue)) db.Command.Parameters.AddWithValue("@SearchValue", "%" + searchValue + "%");
+                if (!string.IsNullOrEmpty(today)) db.Command.Parameters.AddWithValue("@DateFilter", today);
+                if (!string.IsNullOrEmpty(fromDate) && !string.IsNullOrEmpty(toDate))
+                {
+                    db.Command.Parameters.AddWithValue("@FromDate", fromDate);
+                    db.Command.Parameters.AddWithValue("@ToDate", toDate);
+                }
+
+                db.ExecuteParam(sql, out dt);
                 db.Close();
+
                 if (dt.Rows.Count > 0)
                 {
                     foreach (DataRow row in dt.Rows)
                     {
                         var appoinment = new AppointmentModel();
+                        // All other properties...
                         appoinment.CompanyID = companyid;
                         appoinment.CustomerGuid = row.Field<string>("CustomerGuid") ?? "";
                         appoinment.CustomerID = row["CustomerID"].ToString();
@@ -138,23 +167,27 @@ ORDER BY apt.ApptDateTime DESC";
                         appoinment.City = row.Field<string>("City") ?? "";
                         appoinment.Address1 = row.Field<string>("Address1") ?? "";
                         appoinment.Email = row.Field<string>("Email") ?? "";
-
                         appoinment.CustomerName = row.Field<string>("FirstName") + " " + row.Field<string>("LastName");
-
                         appoinment.AppoinmentId = row["ApptID"].ToString();
-                        appoinment.AppoinmentStatus = row.Field<string>("AppoinmentStatus") ?? "";
                         appoinment.Note = row.Field<string>("Note") ?? "";
-                        appoinment.TicketStatus = row.Field<string>("TicketStatus") ?? "";
                         appoinment.ResourceName = row.Field<string>("ResourceName") ?? "";
-                        appoinment.ServiceType = row.Field<string>("ServiceName") ?? "";
-                        appoinment.ServiceColor = row.Field<string>("ServiceColor") ?? "#3b82f6"; // Default blue
                         appoinment.RequestDate = row.Field<string>("RequestDate") ?? "";
                         appoinment.TimeSlot = row.Field<string>("TimeSlot") ?? "";
                         appoinment.AppoinmentDate = row.Field<string>("RequestDate") ?? "";
-                        appoinment.StartDateTime = Convert.ToDateTime(row["StartDateTime"]).ToString("MM/dd/yyyy hh:mm tt");
-                        appoinment.EndDateTime = Convert.ToDateTime(row["EndDateTime"]).ToString("MM/dd/yyyy hh:mm tt");
-                        // Site related mappings
-                        appoinment.SiteId = row["SiteId"].ToString();
+
+                        // Reliably populate all IDs and Names
+                        appoinment.ServiceType = row.Field<string>("ServiceName") ?? row.Field<string>("StoredServiceType") ?? "N/A";
+                        appoinment.ServiceTypeID = row.Field<int?>("ServiceTypeID") ?? 0;
+                        appoinment.AppoinmentStatus = row.Field<string>("AppoinmentStatus") ?? "N/A";
+                        appoinment.AppoinmentStatusID = row.Field<int?>("AppointmentStatusID") ?? 0;
+                        appoinment.TicketStatus = row.Field<string>("TicketStatus") ?? "N/A";
+                        appoinment.TicketStatusID = row.Field<int?>("TicketStatusID") ?? 0;
+
+                        appoinment.ServiceColor = row.Field<string>("ServiceColor") ?? "#3b82f6";
+                        if (row["StartDateTime"] != DBNull.Value) appoinment.StartDateTime = Convert.ToDateTime(row["StartDateTime"]).ToString("MM/dd/yyyy hh:mm tt");
+                        if (row["EndDateTime"] != DBNull.Value) appoinment.EndDateTime = Convert.ToDateTime(row["EndDateTime"]).ToString("MM/dd/yyyy hh:mm tt");
+
+                        appoinment.SiteId = row["SiteId"] != DBNull.Value ? row["SiteId"].ToString() : "0";
                         appoinment.SiteName = row.Field<string>("SiteName") ?? "";
                         appoinment.SiteAddress = row.Field<string>("SiteAddress") ?? "";
                         appoinment.SiteContact = row.Field<string>("SiteContact") ?? "";
@@ -163,12 +196,9 @@ ORDER BY apt.ApptDateTime DESC";
                         appoinment.SiteNote = row.Field<string>("SiteNote") ?? "";
                         appoinment.SiteIsActive = row.Field<bool?>("SiteIsActive") ?? false;
 
-                        string serviceTypeValue = row.Field<string>("ServiceType") ?? "";
-                        int serviceTypeID;
-
-                        if (int.TryParse(serviceTypeValue, out serviceTypeID))
+                        if (appoinment.ServiceTypeID > 0)
                         {
-                            appoinment.Duration = CalculateDuration(serviceTypeID);
+                            appoinment.Duration = CalculateDuration(appoinment.ServiceTypeID);
                         }
                         else
                         {
@@ -182,7 +212,6 @@ ORDER BY apt.ApptDateTime DESC";
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine("Error in LoadAppoinments: " + ex.Message);
-                return appoinments;
             }
             finally
             {
@@ -190,6 +219,7 @@ ORDER BY apt.ApptDateTime DESC";
             }
             return appoinments;
         }
+
 
         [WebMethod]
         [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
@@ -383,7 +413,7 @@ ORDER BY apt.ApptDateTime DESC";
         [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
         public static List<TimeSlot> GetTimeSlots()
         {
-            string CompanyID = HttpContext.Current.Session["CompanyID"].ToString();           
+            string CompanyID = HttpContext.Current.Session["CompanyID"].ToString();
             var timeSlots = new List<TimeSlot>();
             Database db = new Database();
             try
@@ -502,12 +532,11 @@ ORDER BY apt.ApptDateTime DESC";
                 db.Command.Parameters.AddWithValue("@EndDateTime", (object)appointment.EndDateTime ?? DBNull.Value);
 
                 success = db.UpdateSql(strSQL);
-                if (success == true )
+                if (success == true)
                 {
                     TwilioSMSService twilioSMS = new TwilioSMSService();
-                     twilioSMS.SendAppointmentSMS(appointment.AppoinmentId, appointment.CustomerID, appointment.Status, CompanyID,companyName, appointment.RequestDate, appointment.TimeSlot, appointment.ResourceID);
+                    twilioSMS.SendAppointmentSMS(appointment.AppoinmentId, appointment.CustomerID, appointment.Status, CompanyID, companyName, appointment.RequestDate, appointment.TimeSlot, appointment.ResourceID);
                 }
-
             }
             catch (Exception ex)
             {
@@ -538,7 +567,7 @@ ORDER BY apt.ApptDateTime DESC";
                 {
                     Success = true,
                     CustomerName = $"{customer.FirstName} {customer.LastName}",
-                    Address = site?.Address ?? customer.Address1 ?? "N/A", 
+                    Address = site?.Address ?? customer.Address1 ?? "N/A",
                     Contact = site?.Contact ?? $"{customer.FirstName} {customer.LastName}",
                     Status = site?.IsActive == true ? "Active" : "Disabled",
                     Note = site?.Note ?? "No special instructions.",

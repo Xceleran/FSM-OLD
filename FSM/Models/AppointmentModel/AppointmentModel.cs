@@ -18,9 +18,13 @@ namespace FSM.Models.AppoinmentModel
         public string ResourceName { get; set; }
         public string TimeSlot { get; set; }
         public string TicketStatus { get; set; }
+        public int TicketStatusID { get; set; }
+        public int ResourceID { get; set; }
+        public string CustomFieldsJson { get; set; }
         public string Note { get; set; }
         public string SiteId { get; set; }
         public string SiteName { get; set; }
+        public int ServiceTypeID { get; set; }
         public string SiteAddress { get; set; }
         public string SiteContact { get; set; }
         public string SiteEmail { get; set; }
@@ -29,12 +33,12 @@ namespace FSM.Models.AppoinmentModel
         public bool SiteIsActive { get; set; }
         public string Duration { get; set; } = "0";
         public string AppoinmentStatus { get; set; }
-
+        public int AppoinmentStatusID { get; set; }
         public string CompanyID { get; set; }
         public string CustomerID { get; set; }
         public string CustomerGuid { get; set; }
         public string ServiceColor { get; set; }
- 
+
         public string Contact { get; set; }
         public Int32 BusinessID { get; set; } = 0;
         public string Address1 { get; set; }

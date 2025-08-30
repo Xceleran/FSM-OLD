@@ -19,10 +19,11 @@ namespace FSM.Entity.Appoinments
         public string ResourceName { get; set; }
         public int ResourceID { get; set; }
         public string TimeSlot { get; set; }
-
+        public int ServiceTypeID { get; set; }
         public string TicketStatus { get; set; }
         public string CustomTags { get; set; }
         public string Status { get; set; }
         public string Note { get; set; }
+        public string CustomFieldsJson { get; set; }
     }
 }
