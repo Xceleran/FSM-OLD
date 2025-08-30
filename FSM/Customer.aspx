@@ -44,6 +44,7 @@
     }
 </style>
 
+
     <div class="cust-page-container">
         <!-- Page Header -->
         <header class="cust-header mt-0 mb-0">
@@ -97,6 +98,7 @@
                 </table>
             </div>
 
+
             <!-- Customer Details -->
             <div class="cust-details-container">
                 <div class="cust-details-header">
@@ -115,12 +117,29 @@
                     <div class="cust-section-block">
                         <button class="cust-section-toggle" data-section="contact" id="contactBtn">Contact Info</button>
                         <div class="cust-section-content" id="contact">
-                            <p class="cust-info-text"><span class="cust-info-label">Email:</span> <span class="cust-info-value" id="customerEmail">-</span></p>
-                            <p class="cust-info-text"><span class="cust-info-label">Phone:</span> <span class="cust-info-value" id="customerPhone">-</span></p>
-                            <p class="cust-info-text"><span class="cust-info-label">Address:</span> <span class="cust-info-value" id="customerAddress">-</span></p>
-                            <p class="cust-info-text"><span class="cust-info-label">Job Title:</span> <span class="cust-info-value" id="customerJobTitle">-</span></p>
+                            <p class="cust-info-text">
+                                <span class="cust-info-label">Phone:</span>
+                                <span class="cust-info-value" id="customerPhone">-</span>
+                            </p>
+                            <p class="cust-info-text">
+                                <span class="cust-info-label">Mobile:</span>
+                                <span class="cust-info-value" id="customerMobile">-</span>
+                            </p>
+                            <p class="cust-info-text">
+                                <span class="cust-info-label">Email:</span>
+                                <span class="cust-info-value" id="customerEmail">-</span>
+                            </p>
+                            <p class="cust-info-text">
+                                <span class="cust-info-label">Address:</span>
+                                <span class="cust-info-value" id="customerAddress">-</span>
+                            </p>
+                            <p class="cust-info-text">
+                                <span class="cust-info-label">Job Title:</span>
+                                <span class="cust-info-value" id="customerJobTitle">-</span>
+                            </p>
                         </div>
                     </div>
+
 
                     <!-- Sites & Locations -->
                     <div class="cust-section-block">

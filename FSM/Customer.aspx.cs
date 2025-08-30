@@ -14,6 +14,7 @@ using System.Web.UI;
 using System.Web.UI.WebControls;
 using System.Xml.Linq;
 
+
 namespace FSM
 {
     public partial class Customer : System.Web.UI.Page
@@ -86,13 +87,13 @@ namespace FSM
                             //LastName2 = dr["LastName2"].ToString(),
                             //Title = dr["Title"].ToString(),
                             //Title2 = dr["Title2"].ToString(),
-                            //JobTitle = dr["JobTitle"].ToString(),
-                            //JobTitle2 = dr["JobTitle2"].ToString(),
-                            // City = dr["City"].ToString(),
-                            //State = dr["State"].ToString(),
-                            //ZipCode = dr["ZipCode"].ToString(),
+                            JobTitle = dr["JobTitle"].ToString(),
+                            JobTitle2 = dr["JobTitle2"].ToString(),
+                            City = dr["City"].ToString(),
+                            State = dr["State"].ToString(),
+                            ZipCode = dr["ZipCode"].ToString(),
                             Phone = dr["Phone"].ToString(),
-                            //Mobile = dr["Mobile"].ToString(),
+                            Mobile = dr["Mobile"].ToString(),
                             Email = dr["Email"].ToString(),
                             // Notes = dr["Notes"].ToString(),
                             CompanyName = dr["CompanyName"].ToString(),

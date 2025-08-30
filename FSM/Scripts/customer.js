@@ -418,24 +418,61 @@ $('#hideNA').on('change', function () {
 
 function generateCustomerDetails(data) {
     console.log(data);
-    if (data) {
-        document.getElementById('customerName').textContent = data.FirstName + " " + data.LastName;
-        document.getElementById('customerEmail').textContent = data.Email || '-';
-        document.getElementById('customerPhone').textContent = data.Phone || '-';
-        // Construct and display Address
-        var address = [
-            data.Address1,
-            data.City,
-            data.State,
-            data.ZipCode
-        ].filter(Boolean).join(', '); // Join non-empty fields with commas
-        document.getElementById('customerAddress').textContent = address || '-';
-        document.getElementById('customerJobTitle').textContent = data.JobTitle || '-';
-        document.getElementById('CustomerID').value = data.CustomerID;
-        document.getElementById('CustomerGuid').value = data.CustomerGuid;
-        loadCustomerSiteData(data.CustomerID);
+    if (!data) return;
+
+    const safe = (v) => (v == null || v === '') ? '' : String(v);
+    const normPhone = (v) => safe(v).replace(/[^\d+]/g, ''); 
+
+    const phone = safe(data.Phone);
+    const mobile = safe(data.Mobile);
+    const email = safe(data.Email);
+
+    document.getElementById('customerName').textContent =
+        [safe(data.FirstName), safe(data.LastName)].filter(Boolean).join(' ');
+
+    // CLICKABLE fields
+    const phoneEl = document.getElementById('customerPhone');
+    const mobileEl = document.getElementById('customerMobile');
+    const emailEl = document.getElementById('customerEmail');
+
+    if (phone) {
+        const href = `tel:${normPhone(phone)}`;
+        phoneEl.innerHTML = `<a href="${href}">${escapeHTML(phone)}</a>`;
+    } else {
+        phoneEl.textContent = '-';
     }
+
+    // on click options
+    if (mobile) {
+        const href = `sms:${normPhone(mobile)}`;
+        mobileEl.innerHTML = `<a href="${href}">${escapeHTML(mobile)}</a>`;
+    } else {
+        mobileEl.textContent = '-';
+    }
+
+    if (email) {
+        const href = `mailto:${email}`;
+        emailEl.innerHTML = `<a href="${href}">${escapeHTML(email)}</a>`;
+    } else {
+        emailEl.textContent = '-';
+    }
+
+    // Address
+    const address = [safe(data.Address1), safe(data.City), safe(data.State), safe(data.ZipCode)]
+        .filter(Boolean).join(', ');
+    document.getElementById('customerAddress').textContent = address || '-';
+
+    // Job Title
+    document.getElementById('customerJobTitle').textContent = safe(data.JobTitle) || '-';
+
+    // Hidden IDs for site 
+    document.getElementById('CustomerID').value = safe(data.CustomerID);
+    document.getElementById('CustomerGuid').value = safe(data.CustomerGuid);
+
+    
+    loadCustomerSiteData(data.CustomerID);
 }
+
 
 function loadCustomerSiteData(customerId) {
     if (!customerId) return;
@@ -619,7 +656,6 @@ function renderSiteAppointments(siteId, list, containerEl) {
         return;
     }
 
- 
     const getDateStr = (item) => item.AppoinmentDate || item.RequestDate || '';
 
     const toTs = (s) => {
@@ -633,28 +669,43 @@ function renderSiteAppointments(siteId, list, containerEl) {
         return isNaN(t) ? NaN : t;
     };
 
-    const tsList = list.map(i => toTs(getDateStr(i)));
-    const validTs = tsList.filter(t => !isNaN(t));
+    const normStatus = (s) => (s || '').toLowerCase().trim();
 
-    let mostIdx = 0;               // default first
-    let lastIdx = list.length > 1 ? list.length - 1 : -1;
+    const meta = list.map((item, origIdx) => ({
+        item,
+        origIdx,
+        ts: toTs(getDateStr(item)),
+        statusNorm: normStatus(item.AppoinmentStatus || 'N/A')
+    }));
 
-    if (validTs.length > 0) {
-        const maxTs = Math.max(...validTs);
-        const minTs = Math.min(...validTs);
-        mostIdx = tsList.findIndex(t => t === maxTs);
-        lastIdx = tsList.findIndex(t => t === minTs);
-        if (mostIdx === lastIdx) lastIdx = -1; // only show "Most recent" when same
+    // ---- Determining badges based on NEWEST and PREVIOUS-NEWEST overall ----
+    const validByDate = meta.filter(m => !isNaN(m.ts))
+        .sort((a, b) => (b.ts - a.ts) || (a.origIdx - b.origIdx));
+    let mostOrigIdx = 0;
+    let prevOrigIdx = -1;
+    if (validByDate.length > 0) {
+        mostOrigIdx = validByDate[0].origIdx;
+        prevOrigIdx = validByDate.length >= 2 ? validByDate[1].origIdx : -1;
     } else {
-        if (list.length === 1) lastIdx = -1; // single item → only "Most recent"
+        mostOrigIdx = 0;
+        prevOrigIdx = list.length > 1 ? 1 : -1;
     }
 
-    const rows = list.map((item, idx) => {
+    
+    const rank = (s) => (s === 'scheduled' ? 0 : 1);
+    meta.sort((a, b) => {
+        const r = rank(a.statusNorm) - rank(b.statusNorm);
+        if (r !== 0) return r;
+        const t = (isNaN(b.ts) - isNaN(a.ts)) || (b.ts - a.ts); 
+        if (t !== 0) return t;
+        return a.origIdx - b.origIdx; 
+    });
+
+    const rows = meta.map(({ item, origIdx }) => {
         const date = escapeHTML(getDateStr(item) || '—');
         const type = escapeHTML(item.ServiceType || '—');
         const status = escapeHTML(item.AppoinmentStatus || 'N/A');
 
-        // Map status to existing badge classes
         const statusClass = (function (s) {
             switch ((s || '').toLowerCase()) {
                 case 'scheduled': return 'status-scheduled';
@@ -667,11 +718,10 @@ function renderSiteAppointments(siteId, list, containerEl) {
             }
         })(status);
 
-        // Indicator first, styled like a badge
         let indicatorHtml = '&nbsp;';
-        if (idx === mostIdx) {
+        if (origIdx === mostOrigIdx) {
             indicatorHtml = '<span class="badge status-na">Most recent</span>';
-        } else if (idx === lastIdx) {
+        } else if (origIdx === prevOrigIdx) {
             indicatorHtml = '<span class="badge status-na">Last appointment</span>';
         }
 
@@ -680,12 +730,13 @@ function renderSiteAppointments(siteId, list, containerEl) {
         <div class="small" style="min-width:140px">${indicatorHtml}</div>
         <div class="small" style="min-width:140px"><strong>Date:</strong> ${date}</div>
         <div class="small" style="min-width:180px"><strong>Type:</strong> ${type}</div>
-        <div class="small"><strong></strong> <span class="badge ${statusClass}">${status}</span></div>
+        <div class="small"><span class="badge ${statusClass}">${status}</span></div>
       </div>`;
     }).join('');
 
     containerEl.innerHTML = `<div class="cust-appt-list">${rows}</div>`;
 }
+
 
 
 
