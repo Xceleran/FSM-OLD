@@ -13,6 +13,7 @@ using FSM.Helper;
 
 namespace FSM
 {
+    [ScriptService]
     public partial class Forms : Page
     {
         protected void Page_Load(object sender, EventArgs e)
@@ -213,16 +214,37 @@ namespace FSM
         {
             try
             {
+                
+                if (templateId <= 0)
+                {
+
+                    return "{}";
+                }
+                
                 string companyId = System.Web.HttpContext.Current.Session["CompanyID"]?.ToString();
                 if (string.IsNullOrEmpty(companyId))
+                {
+                    System.Diagnostics.Debug.WriteLine("CompanyID is null or empty");
                     return "{}";
+                }
+
+                System.Diagnostics.Debug.WriteLine($"CompanyID: {companyId}");
 
                 var processor = new FormProcessor();
                 var template = processor.GetTemplate(templateId, companyId);
+                
+                if (template == null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Template not found for ID: {templateId}");
+                    return "{}";
+                }
+                
+                System.Diagnostics.Debug.WriteLine($"Template found: {template.TemplateName}");
                 return template?.FormStructure ?? "{}";
             }
             catch (Exception ex)
             {
+                
                 throw new Exception("Error retrieving form structure: " + ex.Message);
             }
         }

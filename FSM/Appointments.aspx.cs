@@ -17,6 +17,7 @@ using System.Configuration;
 using FSM.Processors;
 using FSM.Entity.Forms;
 using FSM.SMSService;
+using System.Data.SqlClient;
 
 namespace FSM
 {
@@ -714,28 +715,115 @@ namespace FSM
                 string companyId = System.Web.HttpContext.Current.Session["CompanyID"]?.ToString();
                 string userId = System.Web.HttpContext.Current.Session["UserID"]?.ToString();
 
-
                 if (string.IsNullOrEmpty(companyId))
                     return false;
 
-                // Update appointment with attached forms
-                Database db = new Database();
                 string connectionString = ConfigurationManager.AppSettings["ConnStrJobs"].ToString();
-                db = new Database(connectionString);
-                try
+                
+                using (SqlConnection connection = new SqlConnection(connectionString))
                 {
-                    db.Init("sp_Appointments_UpdateAttachedForms");
-                    db.AddParameter("@AppointmentId", appointmentId, System.Data.SqlDbType.VarChar);
-                    db.AddParameter("@CustomerId", customerId, System.Data.SqlDbType.Int);
-                    db.AddParameter("@CompanyID", companyId, System.Data.SqlDbType.VarChar);
-                    db.AddParameter("@FormIds", string.Join(",", formIds), System.Data.SqlDbType.VarChar);
-                    db.AddParameter("@UpdatedBy", userId, System.Data.SqlDbType.VarChar);
-
-                    return db.ExecuteCommand();
-                }
-                finally
-                {
-                    db.Close();
+                    connection.Open();
+                    
+                    using (SqlTransaction transaction = connection.BeginTransaction())
+                    {
+                        try
+                        {
+                           
+                            string deleteQuery = @"
+                                DELETE FROM myServiceJobs.dbo.FormInstances 
+                                WHERE AppointmentId = @AppointmentId 
+                                  AND CustomerID = @CustomerId 
+                                  AND CompanyID = @CompanyID";
+                            
+                            using (SqlCommand deleteCommand = new SqlCommand(deleteQuery, connection, transaction))
+                            {
+                                deleteCommand.Parameters.AddWithValue("@AppointmentId", appointmentId);
+                                deleteCommand.Parameters.AddWithValue("@CustomerId", customerId);
+                                deleteCommand.Parameters.AddWithValue("@CompanyID", companyId);
+                                deleteCommand.ExecuteNonQuery();
+                            }
+                            
+                            
+                            // Handle form attachment - can be empty list (remove all forms) or list with form IDs
+                            if (formIds != null)
+                            {
+                                // Only validate and insert if there are form IDs to process
+                                if (formIds.Count > 0)
+                                {
+                                    // First, validate that all form templates exist
+                                    string validateQuery = @"
+                                        SELECT Id FROM myServiceJobs.dbo.FormTemplates 
+                                        WHERE Id = @TemplateId AND CompanyID = @CompanyID AND IsActive = 1";
+                                    
+                                    List<int> validFormIds = new List<int>();
+                                    List<int> invalidFormIds = new List<int>();
+                                    
+                                    foreach (int formId in formIds)
+                                    {
+                                        using (SqlCommand validateCommand = new SqlCommand(validateQuery, connection, transaction))
+                                        {
+                                            validateCommand.Parameters.AddWithValue("@TemplateId", formId);
+                                            validateCommand.Parameters.AddWithValue("@CompanyID", companyId);
+                                            
+                                            object result = validateCommand.ExecuteScalar();
+                                            if (result != null && result != DBNull.Value)
+                                            {
+                                                validFormIds.Add(formId);
+                                            }
+                                            else
+                                            {
+                                                invalidFormIds.Add(formId);
+                                                // Log invalid form ID for debugging
+                                                System.Diagnostics.Debug.WriteLine($"Invalid form template ID: {formId}");
+                                            }
+                                        }
+                                    }
+                                    
+                                    // If there are invalid form IDs, log them but continue with valid ones
+                                    if (invalidFormIds.Count > 0)
+                                    {
+                                        System.Diagnostics.Debug.WriteLine($"Invalid form template IDs: {string.Join(", ", invalidFormIds)}");
+                                    }
+                                    
+                                    // Insert only valid form instances
+                                    foreach (int formId in validFormIds)
+                                    {
+                                        string insertQuery = @"
+                                            INSERT INTO myServiceJobs.dbo.FormInstances (
+                                                CompanyID, TemplateId, AppointmentId, CustomerId,
+                                                Status, StartedDateTime
+                                            ) VALUES (
+                                                @CompanyID, @TemplateId, @AppointmentId, @CustomerId,
+                                                'Pending', GETDATE()
+                                            )";
+                                        
+                                        using (SqlCommand insertCommand = new SqlCommand(insertQuery, connection, transaction))
+                                        {
+                                            insertCommand.Parameters.AddWithValue("@CompanyID", companyId);
+                                            insertCommand.Parameters.AddWithValue("@TemplateId", formId);
+                                            insertCommand.Parameters.AddWithValue("@AppointmentId", appointmentId);
+                                            insertCommand.Parameters.AddWithValue("@CustomerId", customerId);
+                                            
+                                            insertCommand.ExecuteNonQuery();
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    // No form IDs provided - this means remove all forms (DELETE already handled above)
+                                    System.Diagnostics.Debug.WriteLine("No form IDs provided - removing all attached forms");
+                                }
+                            }
+                            
+                            transaction.Commit();
+                            return true;
+                        }
+                        catch (Exception ex)
+                        {
+                            transaction.Rollback();
+                            throw new Exception("Error updating attached forms: " + ex.Message);
+                        }
+                    }
                 }
             }
             catch (Exception ex)

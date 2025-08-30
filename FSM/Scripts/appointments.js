@@ -3233,14 +3233,21 @@ function initializeFormsIntegration() {
 // Open forms selection modal
 function openFormsSelectionModal(mode) {
     currentFormsModal = mode;
-    selectedForms = [];
+    
+    // Only reset selectedForms for new appointments, not for editing
+    if (mode === 'new') {
+        selectedForms = [];
+    }
 
     $('#formsSelectionModal').modal('show');
     loadAvailableForms();
 
     // Load currently selected forms if editing
     if (mode === 'edit') {
-        loadCurrentlySelectedForms();
+        // Add a small delay to ensure the modal is fully shown and forms are loaded
+        setTimeout(() => {
+            loadCurrentlySelectedForms();
+        }, 200);
     }
 }
 
@@ -3325,6 +3332,59 @@ function removeSelectedForm(formId) {
     selectedForms = selectedForms.filter(form => form.id !== formId);
     $(`#form_${formId}`).prop('checked', false);
     updateSelectedFormsList();
+}
+
+// Update selected forms from form IDs array
+function updateSelectedFormsFromIds(formIds) {
+    console.log('updateSelectedFormsFromIds called with:', formIds);
+    
+    if (!formIds || !Array.isArray(formIds) || formIds.length === 0) {
+        console.log('No form IDs provided, clearing selection');
+        selectedForms = [];
+        updateSelectedFormsList();
+        return;
+    }
+
+    // Clear current selection
+    selectedForms = [];
+    
+    // Uncheck all checkboxes first
+    $('.form-check-input[type="checkbox"]').prop('checked', false);
+    
+    // Load available forms to get form names
+    $.ajax({
+        type: "POST",
+        url: "Forms.aspx/GetAllTemplates",
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        success: function (response) {
+            if (response.d) {
+                const availableForms = response.d;
+                
+                // Match form IDs with available forms and update selectedForms array
+                formIds.forEach(formId => {
+                    const form = availableForms.find(f => f.Id === formId);
+                    if (form) {
+                        selectedForms.push({ id: form.Id, name: form.TemplateName });
+                        // Check the corresponding checkbox - use setTimeout to ensure DOM is ready
+                        setTimeout(() => {
+                            $(`#form_${form.Id}`).prop('checked', true);
+                        }, 100);
+                    }
+                });
+                
+                updateSelectedFormsList();
+            }
+        },
+        error: function (xhr, status, error) {
+            console.error('Error loading available forms for updateSelectedFormsFromIds:', error);
+            // Fallback: just update the selectedForms array with IDs
+            formIds.forEach(formId => {
+                selectedForms.push({ id: formId, name: `Form ${formId}` });
+            });
+            updateSelectedFormsList();
+        }
+    });
 }
 
 // Load auto-assigned forms
@@ -3659,10 +3719,17 @@ function loadCurrentlySelectedForms(appointmentId) {
         appointmentId = $('#AppoinmentId').val();
     }
 
-    if (!appointmentId) return;
+    if (!appointmentId) {
+        console.log('No appointment ID found for loadCurrentlySelectedForms');
+        return;
+    }
+    
+    console.log('Loading currently selected forms for appointment:', appointmentId);
+    
     // First check if we have the appointment data locally
     const appointment = appointments.find(a => a.AppoinmentId == appointmentId);
     if (appointment && appointment.AttachedForms) {
+        console.log('Found attached forms in local data:', appointment.AttachedForms);
         // If we have form IDs in the appointment data, use those
         updateSelectedFormsFromIds(appointment.AttachedForms);
         return;
@@ -3686,6 +3753,12 @@ function loadCurrentlySelectedForms(appointmentId) {
                         id: form.Id,
                         name: form.TemplateName
                     }));
+                    
+                    // Check the corresponding checkboxes in the forms selection modal
+                    response.d.forEach(form => {
+                        $(`#form_${form.Id}`).prop('checked', true);
+                    });
+                    
                     response.d.forEach(form => {
                         const statusClass = getFormStatusClass(form.Status);
                         const formBadge = $(`
@@ -3738,15 +3811,15 @@ function updateAttachedForms() {
         });
         return;
     }
-    if (selectedForms.length === 0) {
-        showAlert({
-            icon: 'warning',
-            title: 'Warning',
-            text: 'No forms selected to attach',
-            confirmButtonText: 'OK'
-        });
-        return;
-    }
+    //if (selectedForms.length === 0) {
+    //    showAlert({
+    //        icon: 'warning',
+    //        title: 'Warning',
+    //        text: 'No forms selected to attach',
+    //        confirmButtonText: 'OK'
+    //    });
+    //    return;
+    //}
     const formIds = selectedForms.map(form => form.id);
     $.ajax({
         type: "POST",
@@ -4474,5 +4547,13 @@ function showAppointmentModalFromResponseClose() {
 }
 function openAppointmentModal() {
     $('#editModal').modal('show');
+}
+function getFormStatusClass(status) {
+    switch (status?.toLowerCase()) {
+        case 'completed': return 'text-success';
+        case 'inprogress': return 'text-info';
+        case 'submitted': return 'text-primary';
+        default: return 'text-warning';
+    }
 }
 
