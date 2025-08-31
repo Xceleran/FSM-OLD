@@ -38,7 +38,6 @@ namespace FSM.Models.AppoinmentModel
         public string CustomerID { get; set; }
         public string CustomerGuid { get; set; }
         public string ServiceColor { get; set; }
-
         public string Contact { get; set; }
         public Int32 BusinessID { get; set; } = 0;
         public string Address1 { get; set; }

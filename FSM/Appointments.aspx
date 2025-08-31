@@ -123,7 +123,7 @@
                         <div class="card-header">
                             <div class="d-flex justify-content-between align-items-center">
                                 <h3 class="card-title mb-0">Appointment List</h3>
-                               <%-- <button type="button" id="sortUnscheduledBtn" class="btn btn-sm btn-outline-secondary" onclick="performSort('date')" title="Sort by date">
+                                <%-- <button type="button" id="sortUnscheduledBtn" class="btn btn-sm btn-outline-secondary" onclick="performSort('date')" title="Sort by date">
                                     <i class="fas fa-sort-amount-up"></i>
                                 </button>--%>
                             </div>
@@ -276,7 +276,7 @@
                         <div class="card-header">
                             <div class="d-flex justify-content-between align-items-center">
                                 <h3 class="card-title mb-0">Appointment List</h3>
-                               <%-- <button type="button" id="sortUnscheduledBtnResource" class="btn btn-sm btn-outline-secondary" onclick="performSort('resource')" title="Sort by date">
+                                <%-- <button type="button" id="sortUnscheduledBtnResource" class="btn btn-sm btn-outline-secondary" onclick="performSort('resource')" title="Sort by date">
                                     <i class="fas fa-sort-amount-up"></i>
                                 </button>--%>
                             </div>
@@ -713,9 +713,16 @@
                                         <small id="customer_EndDate" style="display: none;" class="mb-3 text-warning">End date time cant be smaller than start date time.</small>
                                     </div>
                                     <div class="col-12">
-                                        <label class="form-label">Address</label>
-                                        <input type="text" name="address" class="form-control" readonly="readonly">
+                                        <label class="form-label">Service Location (Site)</label>
+                                        <div id="siteSelectionContainer">
+                                        </div>
                                     </div>
+
+                                    <div class="col-12">
+                                        <label class="form-label">Site Address</label>
+                                        <input type="text" id="selectedSiteAddress" name="selectedSiteAddress" class="form-control" readonly="readonly" placeholder="Address will appear here...">
+                                    </div>
+
                                     <div class="col-md-6">
                                         <label class="form-label">Appointment Status</label>
                                         <select runat="server" id="StatusTypeFilter_Edit" name="status" class="form-select" required>
@@ -732,8 +739,11 @@
                                         <label class="form-label">Any details</label>
                                         <textarea type="text" name="note" class="form-control"></textarea>
                                     </div>
-
-
+                                    <div class="row">
+                                        <div id="customFieldsContainer">
+                                            <!-- Custom fields will be loaded here -->
+                                        </div>
+                                    </div>
 
                                 </div>
                             </div>
@@ -830,7 +840,7 @@
                         <button type="button" class="btn btn-danger d-none" onclick="deleteAppointment()">Delete</button>
                         <button type="button" class="btn btn-secondary d-none" onclick="unscheduleAppointment()">openEditModalUnschedule</button>
                         <button type="button" class="btn btn-secondary edit_close" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary" onclick="updateAttachedForms()">Update</button>
+                        <button type="submit" class="btn btn-primary" onclick="saveAllDataFromModal()">Update</button>
                     </div>
                 </form>
             </div>

@@ -76,7 +76,7 @@ function parseTimeToMinutes(timeStr) {
     if (timeSlots[lowerTimeStr]) {
         timeStr = timeSlots[lowerTimeStr].start;
     } else {
-        // Handle full schedule strings like "09:00 AM - 10:00 AM"
+
         const matchingSlot = allTimeSlots.find(slot =>
             slot.TimeBlock.toLowerCase() === lowerTimeStr ||
             slot.TimeBlockSchedule.toLowerCase() === lowerTimeStr
@@ -86,18 +86,18 @@ function parseTimeToMinutes(timeStr) {
         }
     }
 
-    // Standardize the time string for parsing
+
     let time = timeStr.toUpperCase();
     let hours = 0;
     let minutes = 0;
 
-    // Use a regular expression to extract hours and minutes
+
     const match = time.match(/(\d{1,2}):(\d{2})/);
     if (match) {
         hours = parseInt(match[1], 10);
         minutes = parseInt(match[2], 10);
     } else {
-        // Fallback for times without minutes like "9 AM"
+
         const singleHourMatch = time.match(/(\d{1,2})/);
         if (singleHourMatch) {
             hours = parseInt(singleHourMatch[1], 10);
@@ -108,7 +108,7 @@ function parseTimeToMinutes(timeStr) {
     if (time.includes('PM') && hours < 12) {
         hours += 12;
     }
-    // Adjust for 12 AM (midnight)
+
     if (time.includes('AM') && hours === 12) {
         hours = 0;
     }
@@ -992,17 +992,17 @@ function renderDateView(date) {
                         })
                         .filter(a => a);
 
-                    // Sort appointments by start time
+
                     cellAppointments.sort((a, b) => {
                         const aStart = parseTimeToMinutes(a.appointment.TimeSlot.split('-')[0]);
                         const bStart = parseTimeToMinutes(b.appointment.TimeSlot.split('-')[0]);
                         return aStart - bStart;
                     });
 
-                    // Calculate the width of each appointment and ensure no overlap
-                    const appointmentWidth = 150; // Fixed width for each appointment
+
+                    const appointmentWidth = 150;
                     const maxAppointments = cellAppointments.length;
-                    const totalWidth = maxAppointments * appointmentWidth; // Total width needed for all appointments
+                    const totalWidth = maxAppointments * appointmentWidth;
 
 
                     html += `
@@ -1127,25 +1127,25 @@ $(document).off('click', 'th.sortable').on('click', 'th.sortable', function () {
     $(this).addClass(currentSort.direction === 'asc' ? 'sort-asc' : 'sort-desc');
 
     listViewFilteredAppointments.sort((a, b) => {
-        // Primary sort: by date
+
         const dateA = new Date(a.RequestDate);
         const dateB = new Date(b.RequestDate);
         if (dateA < dateB) return -1;
         if (dateA > dateB) return 1;
 
-        // Secondary sort: by time slot
+
         const timeA = parseTimeToMinutes(a.TimeSlot);
         const timeB = parseTimeToMinutes(b.TimeSlot);
         return timeA - timeB;
     });
 
-    // If a user has clicked a header, apply that sort on top of the default
+
     if (currentSort.key) {
         listViewFilteredAppointments.sort((a, b) => {
             const valA = a[currentSort.key] ? a[currentSort.key].toString().toLowerCase() : '';
             const valB = b[currentSort.key] ? b[currentSort.key].toString().toLowerCase() : '';
 
-            // Ensure consistent sorting direction
+
             if (valA < valB) return currentSort.direction === 'asc' ? -1 : 1;
             if (valA > valB) return currentSort.direction === 'asc' ? 1 : -1;
             return 0;
@@ -1422,7 +1422,6 @@ function formatToUSDate(dateString) {
         return dateString;
     }
 
-    // Get month, day, and year
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
     const day = date.getDate().toString().padStart(2, '0');
     const year = date.getFullYear();
@@ -1431,16 +1430,16 @@ function formatToUSDate(dateString) {
 }
 
 
-//Custom Sorting for Appointment List
+
 function performSort(view) {
-    // This function ONLY toggles the sort direction and re-renders.
+
     unscheduledSortOrder = unscheduledSortOrder === 'asc' ? 'desc' : 'asc';
     renderUnscheduledList(view);
 }
 
-// Setup drag-and-drop functionality
+
 function setupDragAndDrop() {
-    // Initialize draggable elements
+
     $(".calendar-event, .calendar-event-resource, .appointment-card").draggable({
         revert: "invalid",
         revertDuration: 200,
@@ -1456,7 +1455,6 @@ function setupDragAndDrop() {
                 transition: "none",
                 transform: "translateZ(0)"
             });
-            // Hide details popup during drag
             hideDetailsPopup(calendarDetailsPopup);
             hideDetailsPopup(cardDetailsPopup);
         },
@@ -1465,6 +1463,106 @@ function setupDragAndDrop() {
         }
     });
 
+
+    $(".calendar-event-resource").resizable({
+        handles: "e",
+        stop: function (event, ui) {
+            const appointmentId = $(this).data("id").toString();
+            const appointment = appointments.find(a => a.AppoinmentId === appointmentId);
+            if (!appointment) { return; }
+
+            let startDateTime;
+
+
+            if (appointment.StartDateTime && !isNaN(new Date(appointment.StartDateTime))) {
+                startDateTime = new Date(appointment.StartDateTime);
+            }
+
+            else {
+                const dateStr = appointment.RequestDate;
+                const timeSlotStr = appointment.TimeSlot;
+
+                if (dateStr && timeSlotStr) {
+
+                    const timeMatch = timeSlotStr.match(/(\d{1,2}:\d{2}(\s*[AP]M)?)/);
+
+
+                    if (timeMatch) {
+                        startDateTime = new Date(`${dateStr} ${timeMatch[0]}`);
+                    }
+                }
+            }
+
+
+            if (!startDateTime || isNaN(startDateTime.getTime())) {
+                showAlert({
+                    icon: 'error',
+                    title: 'Cannot Resize Appointment',
+                    text: `This appointment (ID: ${appointmentId}) has an invalid date or time slot format that could not be parsed.`
+                });
+                updateAllViews();
+                return;
+            }
+
+
+            const newWidth = ui.size.width;
+            const pixelsPerHour = 200;
+            const newDurationInMinutes = Math.round((newWidth / pixelsPerHour) * 60);
+            const newEndDateTime = new Date(startDateTime.getTime() + newDurationInMinutes * 60000);
+            const newHours = Math.floor(newDurationInMinutes / 60);
+            const newMinutes = newDurationInMinutes % 60;
+
+            const formatForServer = (dt) => {
+                if (isNaN(dt.getTime())) return '';
+                const mo = (dt.getMonth() + 1).toString().padStart(2, '0');
+                const d = dt.getDate().toString().padStart(2, '0');
+                const y = dt.getFullYear();
+                let h = dt.getHours();
+                const m = dt.getMinutes().toString().padStart(2, '0');
+                const ampm = h >= 12 ? 'PM' : 'AM';
+                h = h % 12; h = h ? h : 12;
+                return `${mo}/${d}/${y} ${h}:${m} ${ampm}`;
+            };
+
+            $.ajax({
+                type: "POST",
+                url: "Appointments.aspx/UpdateAppointmentDuration",
+                data: JSON.stringify({
+                    AppoinmentId: parseInt(appointment.AppoinmentId),
+                    StartDateTime: formatForServer(startDateTime),
+                    EndDateTime: formatForServer(newEndDateTime),
+                    Hour: newHours,
+                    Minute: newMinutes
+                }),
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (response) {
+                    if (response.d) {
+                        showAlert({ icon: 'success', title: 'Duration Updated!', timer: 1500, showConfirmButton: false });
+
+                        appointment.StartDateTime = formatForServer(startDateTime);
+                        appointment.EndDateTime = formatForServer(newEndDateTime);
+                        appointment.Duration = `${newHours} Hr : ${newMinutes} Min`;
+
+                        saveAppointments();
+                        updateAllViews();
+                    } else {
+                        showAlert({ icon: 'error', title: 'Update Failed' });
+                        updateAllViews();
+                    }
+                },
+                error: function () {
+                    showAlert({ icon: 'error', title: 'Server Error' });
+                    updateAllViews();
+                }
+            });
+        }
+    });
+
+
+
+
+    // Inside setupDragAndDrop()
     $(".drop-target").droppable({
         accept: ".appointment-card, .calendar-event, .calendar-event-resource",
         hoverClass: "drag-over",
@@ -1476,33 +1574,39 @@ function setupDragAndDrop() {
             const newResourceName = $(this).data("resource") || "Unassigned";
 
             const appointment = appointments.find(a => a.AppoinmentId === appointmentId);
-            if (!appointment) {
-                console.warn(`Appointment not found for ID: ${appointmentId}`);
-                return;
-            }
-
-            if (appointment.AppoinmentStatus.toLowerCase() === "closed") {
-                showAlert({
-                    icon: 'info',
-                    title: 'Cannot Reschedule',
-                    text: 'This appointment is closed and cannot be rescheduled.',
-                    confirmButtonText: 'OK'
-                });
-                return;
-            }
-
-            if (hasConflict(appointment, newTime || appointment.TimeSlot, newResourceName, newDate, appointmentId)) {
-                showAlert({
-                    icon: 'error',
-                    title: 'Scheduling Conflict',
-                    text: 'This time slot is already taken for the selected resource and date.',
-                    confirmButtonText: 'OK'
-                });
-                return;
-            }
+            if (!appointment) { return; }
+            if (appointment.AppoinmentStatus.toLowerCase() === "closed") { return; }
+            if (hasConflict(appointment, newTime || appointment.TimeSlot, newResourceName, newDate, appointmentId)) { return; }
 
             const resourceObj = resources.find(r => r.ResourceName === newResourceName);
             const newResourceId = resourceObj ? resourceObj.Id : 0;
+
+
+            const formatForServer = (dt) => {
+                if (!dt || isNaN(dt.getTime())) return null;
+                const mo = (dt.getMonth() + 1).toString().padStart(2, '0');
+                const d = dt.getDate().toString().padStart(2, '0');
+                const y = dt.getFullYear();
+                let h = dt.getHours();
+                const m = dt.getMinutes().toString().padStart(2, '0');
+                const ampm = h >= 12 ? 'PM' : 'AM';
+                h = h % 12;
+                h = h ? h : 12;
+                return `${mo}/${d}/${y} ${h}:${m} ${ampm}`;
+            };
+
+
+            const timeMatch = (newTime || appointment.TimeSlot).match(/(\d{1,2}:\d{2}\s*[AP]M)/);
+            let newStartDateTime = null;
+            let newEndDateTime = null;
+            if (timeMatch) {
+                newStartDateTime = new Date(`${newDate} ${timeMatch[0]}`);
+                const durationMinutes = parseDuration(appointment.Duration);
+                if (!isNaN(newStartDateTime.getTime()) && durationMinutes > 0) {
+                    newEndDateTime = new Date(newStartDateTime.getTime() + durationMinutes * 60000);
+                }
+            }
+
 
             const serverAppointment = {
                 AppoinmentId: parseInt(appointment.AppoinmentId),
@@ -1512,10 +1616,11 @@ function setupDragAndDrop() {
                 TimeSlot: newTime || appointment.TimeSlot,
                 ResourceID: newResourceId,
                 Status: appointment.AppoinmentStatus,
-                TicketStatus: appointment.TicketStatus || null,
+                TicketStatus: appointment.TicketStatusID || null,
                 Note: appointment.Note || '',
-                StartDateTime: null,
-                EndDateTime: null
+
+                StartDateTime: formatForServer(newStartDateTime),
+                EndDateTime: formatForServer(newEndDateTime)
             };
 
             $.ajax({
@@ -1526,14 +1631,7 @@ function setupDragAndDrop() {
                 dataType: "json",
                 success: function (response) {
                     if (response.d) {
-                        showAlert({
-                            icon: 'success',
-                            title: 'Rescheduled!',
-                            text: 'The appointment has been moved.',
-                            timer: 1500,
-                            showConfirmButton: false,
-                            customClass: { popup: 'swal-custom-popup' }
-                        });
+                        showAlert({ icon: 'success', title: 'Rescheduled!', timer: 1500, showConfirmButton: false });
 
 
                         appointment.RequestDate = newDate;
@@ -1541,27 +1639,22 @@ function setupDragAndDrop() {
                         appointment.ResourceName = newResourceName;
                         appointment.ResourceID = newResourceId;
 
+                        appointment.StartDateTime = formatForServer(newStartDateTime);
+                        appointment.EndDateTime = formatForServer(newEndDateTime);
+
                         saveAppointments();
                         updateAllViews();
                     } else {
-                        showAlert({
-                            icon: 'error',
-                            title: 'Update Failed',
-                            text: 'The server failed to update the appointment. The change has been reverted.'
-                        });
+                        showAlert({ icon: 'error', title: 'Update Failed' });
                     }
                 },
-                error: function (xhr, status, error) {
-                    console.error("Error updating appointment on drop:", error);
-                    showAlert({
-                        icon: 'error',
-                        title: 'Server Error',
-                        text: 'A server error occurred while rescheduling. The change has been reverted.'
-                    });
+                error: function () {
+                    showAlert({ icon: 'error', title: 'Server Error' });
                 }
             });
         }
     });
+
 
 
 
@@ -1764,14 +1857,15 @@ function openEditModal(id, date, time, resource, confirm) {
     }
 
 
-    loadCustomFields(form, a); // Load and render the custom fields
+    loadCustomFields(form, a.AppoinmentId);
 
     form.querySelector("[id='AppoinmentId']").value = parseInt(a.AppoinmentId);
     form.querySelector("[id='CustomerID']").value = parseInt(a.CustomerID) || '';
     form.querySelector("[name='customerName']").value = a.CustomerName || '';
     form.querySelector("[name='phone']").value = a.Phone || '';
     form.querySelector("[name='mobile']").value = a.Mobile || '';
-    form.querySelector("[name='address']").value = a.SiteAddress || a.Address1 || '';
+
+    populateSiteSelector(a);
     form.querySelector("[name='note']").value = a.Note || '';
     form.querySelector("[name='duration']").value = a.Duration || "1 Hr";
 
@@ -1816,26 +1910,24 @@ function openEditModal(id, date, time, resource, confirm) {
     }
 }
 
-// ADD ALL OF THESE NEW FUNCTIONS
-
-function loadCustomFields(form, appointment) {
+function loadCustomFields(form, appointmentId) {
     const container = document.getElementById("customFieldsContainer");
     if (!container) {
         console.error("Custom fields container not found");
         return;
     }
-    container.innerHTML = '<div class="loading-spinner">Loading custom fields...</div>';
+    container.innerHTML = '<div class="text-center p-4">Loading custom fields...</div>';
 
     $.ajax({
         type: "POST",
         url: "Appointments.aspx/GetActiveCustomFields",
         contentType: "application/json; charset=utf-8",
-        data: JSON.stringify({ apptId: currentEditId }),
+        data: JSON.stringify({ apptId: appointmentId }),
         dataType: "json",
         success: function (response) {
             container.innerHTML = ''; // Clear loading spinner
             if (response.d && response.d.length > 0) {
-                renderCustomFields(response.d, container, appointment);
+                renderCustomFields(response.d, container);
             } else {
                 container.innerHTML = '<div class="alert alert-info">No active custom fields found.</div>';
             }
@@ -1847,29 +1939,20 @@ function loadCustomFields(form, appointment) {
     });
 }
 
-function renderCustomFields(fields, container, appointment) {
-    const existingValues = appointment.CustomFieldsJson ? JSON.parse(appointment.CustomFieldsJson) : {};
 
+function renderCustomFields(fields, container) {
     fields.forEach(field => {
         const fieldGroup = document.createElement('div');
-        fieldGroup.className = 'form-group mb-3 col-md-6';
+        fieldGroup.className = 'form-group mt-2 col-md-6'; // Use grid columns
 
         const label = document.createElement('label');
         label.className = 'form-label';
         label.htmlFor = `custom_${field.FieldId}`;
         label.textContent = field.FieldName;
-
-        if (field.FieldType !== 'checklist') {
-            const reqSpan = document.createElement('span');
-            reqSpan.className = 'text-danger ms-1';
-            reqSpan.title = 'Required field';
-            reqSpan.textContent = '*';
-            label.appendChild(reqSpan);
-        }
         fieldGroup.appendChild(label);
 
         let input;
-        const value = existingValues[field.FieldId] || '';
+        const value = field.Value; // Use the value from the server
         const options = field.Options ? JSON.parse(field.Options) : [];
 
         switch (field.FieldType) {
@@ -1881,15 +1964,13 @@ function renderCustomFields(fields, container, appointment) {
                 input.id = `custom_${field.FieldId}`;
                 input.name = `custom_${field.FieldId}`;
                 input.className = 'form-control';
-                input.value = value;
-                if (field.FieldType !== 'checklist') input.required = true;
+                if (value) input.value = value;
                 break;
             case 'dropdown':
                 input = document.createElement('select');
                 input.id = `custom_${field.FieldId}`;
                 input.name = `custom_${field.FieldId}`;
                 input.className = 'form-select';
-                input.required = true;
                 const defaultOpt = document.createElement('option');
                 defaultOpt.value = '';
                 defaultOpt.textContent = 'Select an option';
@@ -1898,13 +1979,13 @@ function renderCustomFields(fields, container, appointment) {
                     const option = document.createElement('option');
                     option.value = opt;
                     option.textContent = opt;
-                    option.selected = opt === value;
+                    if (opt === value) option.selected = true;
                     input.appendChild(option);
                 });
                 break;
             case 'checklist':
                 input = document.createElement('div');
-                const values = Array.isArray(value) ? value : [];
+                const savedValues = value ? JSON.parse(value) : [];
                 options.forEach(opt => {
                     const checkDiv = document.createElement('div');
                     checkDiv.className = 'form-check';
@@ -1913,7 +1994,7 @@ function renderCustomFields(fields, container, appointment) {
                     chkInput.className = 'form-check-input';
                     chkInput.name = `custom_${field.FieldId}`;
                     chkInput.value = opt;
-                    chkInput.checked = values.includes(opt);
+                    if (savedValues.includes(opt)) chkInput.checked = true;
                     chkInput.id = `custom_${field.FieldId}_${opt.replace(/\s+/g, '_')}`;
                     const chkLabel = document.createElement('label');
                     chkLabel.className = 'form-check-label';
@@ -1925,16 +2006,17 @@ function renderCustomFields(fields, container, appointment) {
                 });
                 break;
             default:
-                return;
+                return; // Skip unknown field types
         }
 
-        fieldGroup.appendChild(input);
+        if (input) fieldGroup.appendChild(input);
         container.appendChild(fieldGroup);
     });
 }
 
 
-// Update an existing appointment
+
+// In Appointments.js
 function updateAppointment(e) {
     e.preventDefault();
     const form = new FormData(e.target);
@@ -1942,12 +2024,17 @@ function updateAppointment(e) {
     const appointment = appointments.find(a => a.AppoinmentId === id);
     if (!appointment) return;
 
-    const newDate = form.get("date");
-    const newTimeSlot = form.get("timeSlot");
-    const formData = document.getElementById("editForm");
-    const select_rs = formData.querySelector("[name='resource']");
-    const newResource = select_rs.options[select_rs.selectedIndex].text;
+    if (selectedForms.length > 0) {
+        updateAttachedForms();
 
+        const newDate = form.get("date");
+        const newTimeSlot = form.get("timeSlot");
+        const formData = document.getElementById("editForm");
+        const select_rs = formData.querySelector("[name='resource']");
+        const newResource = select_rs.options[select_rs.selectedIndex].text;
+
+        saveAppoinmentData(e);
+    }
     saveAppoinmentData(e);
 }
 
@@ -2029,6 +2116,82 @@ function deleteAppointment() {
     });
 }
 
+function populateSiteSelector(appointment) {
+    const container = $('#siteSelectionContainer');
+    const addressInput = $('#selectedSiteAddress');
+
+
+    container.html('<p class="form-control-plaintext text-muted">Loading sites...</p>');
+    addressInput.val('');
+
+
+    if (!appointment.CustomerID) {
+        container.html('<p class="form-control-plaintext text-danger">No customer assigned.</p>');
+        addressInput.val(appointment.Address1 || 'No primary address available.');
+        return;
+    }
+
+    $.ajax({
+        type: "POST",
+        url: "Appointments.aspx/GetSitesForCustomer",
+        data: JSON.stringify({ customerId: appointment.CustomerID }),
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        success: function (response) {
+            const sites = response.d;
+
+            if (sites && sites.length > 0) {
+
+                let dropdownHtml = '<select id="siteSelector" class="form-select" onchange="handleSiteChange(this)">';
+
+                sites.forEach(site => {
+                    const isSelected = appointment.SiteId && parseInt(appointment.SiteId) === site.Id;
+                    dropdownHtml += `<option 
+                                        value="${site.Id}" 
+                                        data-address="${escapeHTML(site.Address)}" 
+                                        ${isSelected ? 'selected' : ''}>
+                                        ${escapeHTML(site.SiteName)}
+                                    </option>`;
+                });
+                dropdownHtml += '</select>';
+                container.html(dropdownHtml);
+
+
+                handleSiteChange(document.getElementById('siteSelector'));
+
+            } else {
+
+                container.html('<p class="form-control-plaintext">Default Customer Address (No Sites)</p>');
+                addressInput.val(appointment.Address1 || 'N/A');
+            }
+        },
+        error: function () {
+            container.html('<p class="form-control-plaintext text-danger">Failed to load sites.</p>');
+            addressInput.val(appointment.Address1 || 'Error loading address');
+        }
+    });
+}
+
+
+
+ 
+function handleSiteChange(selectElement) {
+    const addressInput = $('#selectedSiteAddress');
+    const selectedOption = selectElement.options[selectElement.selectedIndex];
+
+    if (selectedOption) {
+        const address = selectedOption.getAttribute('data-address');
+        addressInput.val(address || 'No address specified for this site.');
+    } else {
+        addressInput.val('');
+    }
+}
+function escapeHTML(str) {
+    return String(str ?? '').replace(/[&<>"']/g, s => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[s]));
+}
+
 // Unschedule an appointment
 function unscheduleAppointment() {
     const appointment = appointments.find(a => a.AppoinmentId === currentEditId.toString());
@@ -2100,7 +2263,7 @@ const getTicketStatusIcon = (ticketStatus) => {
     }
 };
 
-// Render Resource View with duration-based independent positioning
+
 function renderResourceView(date) {
     $('#resourceLoading').show();
     $("#resourceViewContainer").css('display', 'block');
@@ -2119,13 +2282,13 @@ function renderResourceView(date) {
     const pixelsPerSlot = 100;
     const eventHeight = 35;
 
-    // Always show pagination controls
+
     const paginationControls = document.querySelector('#resourceView .pagination-controls');
     if (paginationControls) {
         paginationControls.style.display = 'flex';
     }
 
-    // Determine date range based on view
+
     let dates = [dateStr];
     let fromDate, toDate;
     if (view === 'week') {
@@ -2170,18 +2333,18 @@ function renderResourceView(date) {
         slot && slot.TimeBlockSchedule && !allTimeSlots.some(other => other !== slot && other.TimeBlockSchedule === slot.TimeBlockSchedule)
     );
 
-    // Fetch appointments for the entire date range
+
     getAppoinments("", fromDate, toDate, view === 'day' ? dateStr : "", function (appointments) {
         $('#resourceLoading').hide();
 
-        // Re-render date navigation after data load to ensure consistency
+
         renderDateNav("resourceNav", dateStr);
 
         let html = `
             <div class="border rounded overflow-hidden resizable-container" style="margin: 0; padding: 0; max-width: 100%;">
         `;
 
-        // Render header based on view
+
         if (view === 'day') {
             html += `
                 <div class="calendar-grid calendar-header" id="resource-header" style="grid-template-columns: 120px repeat(${validTimeSlots.length}, ${pixelsPerSlot}px);">
@@ -2247,7 +2410,22 @@ function renderResourceView(date) {
                                 }
                                 const startIndex = validTimeSlots.findIndex(slot => slot.TimeBlockSchedule === timeSlot.TimeBlockSchedule);
                                 if (startIndex === timeIndex) {
-                                    const durationMinutes = parseDuration(a.Duration);
+                                    let durationMinutes;
+
+                                    if (a.StartDateTime && a.EndDateTime) {
+                                        const start = new Date(a.StartDateTime);
+                                        const end = new Date(a.EndDateTime);
+
+                                        if (!isNaN(start) && !isNaN(end)) {
+                                            durationMinutes = (end - start) / (1000 * 60);
+                                        } else {
+                                            durationMinutes = parseDuration(a.Duration);
+                                        }
+                                    } else {
+
+                                        durationMinutes = parseDuration(a.Duration);
+                                    }
+
                                     const totalHours = durationMinutes / 60;
                                     const startTimeMinutes = parseTimeToMinutes(timeSlot.TimeBlockSchedule.split('-')[0]);
                                     const slotStartTimeMinutes = parseTimeToMinutes(time.TimeBlockSchedule.split('-')[0]);
@@ -2676,7 +2854,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Tab switching logic
             document.querySelectorAll('#viewTabs button[data-bs-toggle="tab"]').forEach(tab => {
                 tab.addEventListener('shown.bs.tab', function (event) {
-                    // Get the current date from the appropriate picker based on which tab is active
+
                     const currentDate = event.target.id === 'resource-tab'
                         ? $('#resourceDatePicker').val()
                         : $('#dayDatePicker').val();
@@ -2728,7 +2906,30 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('viewSelect').addEventListener('change', (e) => {
                 renderDateView($('#dayDatePicker').val());
             });
+            $(document).on('change', '#MainContent_ServiceTypeFilter_Edit', function () {
+                const serviceTypeId = $(this).val();
+                if (!serviceTypeId) return;
 
+                $.ajax({
+                    type: "POST",
+                    url: "Appointments.aspx/GetDuration",
+                    data: JSON.stringify({ serviceTypeID: parseInt(serviceTypeId) }),
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    success: function (response) {
+                        if (response.d) {
+                            const form = document.getElementById("editForm");
+                            form.querySelector("[name='duration']").value = response.d;
+
+                            extractHoursAndMinutes(response.d);
+                            calculateStartEndTime();
+                        }
+                    },
+                    error: function () {
+                        console.error("Failed to fetch new duration.");
+                    }
+                });
+            });
             document.getElementById('resourceViewSelect').addEventListener('change', (e) => {
                 const currentDate = $('#resourceDatePicker').val();
                 if (e.target.value === 'custom') {
@@ -2934,7 +3135,7 @@ function formatTimeRange(str) {
     return str.replace(/[()]/g, '')
         .trim()
         .replace(/\s{2,}/g, ' ')
-        .replace(/\s*(AM|PM)\s*/gi, '') // Remove AM/PM
+        .replace(/\s*(AM|PM)\s*/gi, '')
         .trim();
 }
 
@@ -3060,7 +3261,7 @@ function saveAppoinmentData(e) {
     appointment.RequestDate = form.get("date");
     appointment.TimeSlot = form.get("timeSlot");
     appointment.ResourceID = parseInt(form.get("resource"));
-    appointment.Status = form.get("ctl00$MainContent$StatusTypeFilter_Edit");
+    appointment.Status = $("#MainContent_StatusTypeFilter_Edit").val();
     appointment.TicketStatus = form.get("ctl00$MainContent$TicketStatusFilter_Edit");
     appointment.Note = form.get("note");
     appointment.StartDateTime = form.get("txt_StartDate");
@@ -3111,6 +3312,78 @@ function saveAppoinmentData(e) {
         }
     });
 }
+function saveAllDataFromModal(e) {
+    e.preventDefault(); 
+
+    const form = document.getElementById("editForm");
+    const appointmentId = parseInt(form.querySelector("#AppoinmentId").value);
+
+    const siteSelector = document.getElementById('siteSelector');
+
+    const selectedSiteId = siteSelector ? parseInt(siteSelector.value, 10) : 0;
+    const customFieldValues = [];
+    const customFieldsContainer = document.getElementById('customFieldsContainer');
+    const seenChecklists = new Set();
+
+    customFieldsContainer.querySelectorAll('input[name^="custom_"], select[name^="custom_"], textarea[name^="custom_"]').forEach(input => {
+        const fieldId = parseInt(input.name.replace('custom_', ''));
+        if (isNaN(fieldId)) return;
+
+        if (input.type === 'checkbox') {
+            if (seenChecklists.has(fieldId)) return;
+            const checkedItems = [];
+            customFieldsContainer.querySelectorAll(`input[name="custom_${fieldId}"]:checked`).forEach(chk => {
+                checkedItems.push(chk.value);
+            });
+            if (checkedItems.length > 0) {
+                customFieldValues.push({ FieldId: fieldId, Value: JSON.stringify(checkedItems) });
+            }
+            seenChecklists.add(fieldId);
+        } else {
+            if (input.value) {
+                customFieldValues.push({ FieldId: fieldId, Value: input.value });
+            }
+        }
+    });
+
+
+    $.ajax({
+        type: "POST",
+        url: "Appointments.aspx/SaveCustomFieldData",
+        data: JSON.stringify({
+            appointmentId: appointmentId,
+            customFieldValues: customFieldValues
+        }),
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        success: function (response) {
+            if (response.d) {
+                console.log("Custom fields saved successfully.");
+           
+            } else {
+                showAlert({ icon: 'error', title: 'Custom Fields Failed', text: 'Could not save custom field data.' });
+            }
+        },
+        error: function (xhr) {
+            console.error("Error saving custom fields: ", xhr.responseText);
+            showAlert({ icon: 'error', title: 'Server Error', text: 'A critical error occurred while saving custom fields.' });
+        }
+    });
+
+
+    updateAppointment(e); 
+
+    showAlert({ icon: 'success', title: 'Success!', text: 'Appointment update request sent.' });
+    window.editModalInstance.hide();
+
+    setTimeout(() => {
+        getAppoinments($("#search_term").val() || "", $("#listDatePickerFrom").val() || "", $("#listDatePickerTo").val() || "", "", function () {
+            updateAllViews();
+        });
+    }, 500);
+}
+
+
 
 function extractHoursAndMinutes(duration) {
     if (!duration) {
@@ -3136,13 +3409,13 @@ function calculateStartEndTime() {
         return;
     }
 
-    // The date is YYYY-MM-DD, which is safe to parse
+
     const dateParts = dateValue.split('-');
     const year = parseInt(dateParts[0], 10);
-    const month = parseInt(dateParts[1], 10) - 1; // JS months are 0-indexed
+    const month = parseInt(dateParts[1], 10) - 1;
     const day = parseInt(dateParts[2], 10);
 
-    // Extract start time from the time slot, e.g., "08:00 AM" from "Morning (08:00 AM - 12:00 PM)"
+
     const timeMatch = timeSlot.match(/(\d{1,2}:\d{2}\s*[AP]M)/);
     if (!timeMatch) {
         console.warn(`Could not extract start time from timeSlot: ${timeSlot}`);
@@ -3150,7 +3423,7 @@ function calculateStartEndTime() {
     }
     const startTimeStr = timeMatch[0];
 
-    // Parse the start time
+
     const timeParts = startTimeStr.match(/(\d+):(\d+)\s*([AP]M)/);
     let hours = parseInt(timeParts[1], 10);
     const minutes = parseInt(timeParts[2], 10);
@@ -3160,10 +3433,9 @@ function calculateStartEndTime() {
         hours += 12;
     }
     if (modifier === 'AM' && hours === 12) {
-        hours = 0; // Midnight case
+        hours = 0;
     }
 
-    // Create the start date object
     const startDateTime = new Date(year, month, day, hours, minutes);
 
     if (isNaN(startDateTime.getTime())) {
@@ -3171,11 +3443,11 @@ function calculateStartEndTime() {
         return;
     }
 
-    // Calculate end date
+
     const durationMinutes = (timerequired_Hour * 60) + timerequired_Minute;
     const endDateTime = new Date(startDateTime.getTime() + durationMinutes * 60000);
 
-    // Reusable US date/time formatting function
+
     const formatToUSDateTime = (dt) => {
         if (isNaN(dt.getTime())) return '';
         const mo = (dt.getMonth() + 1).toString().padStart(2, '0');
@@ -3186,12 +3458,12 @@ function calculateStartEndTime() {
         const m = dt.getMinutes().toString().padStart(2, '0');
         const ampm = h >= 12 ? 'PM' : 'AM';
         h = h % 12;
-        h = h ? h : 12; // the hour '0' should be '12'
+        h = h ? h : 12;
 
         return `${mo}/${d}/${y} ${h}:${m} ${ampm}`;
     };
 
-    // Set the formatted values
+
     form.querySelector("[id='txt_StartDate']").value = formatToUSDateTime(startDateTime);
     form.querySelector("[id='txt_EndDate']").value = formatToUSDateTime(endDateTime);
 }
@@ -3233,7 +3505,6 @@ function initializeFormsIntegration() {
 // Open forms selection modal
 function openFormsSelectionModal(mode) {
     currentFormsModal = mode;
-    
     // Only reset selectedForms for new appointments, not for editing
     if (mode === 'new') {
         selectedForms = [];
@@ -3300,7 +3571,55 @@ function toggleFormSelection(formId, formName, isSelected) {
 
     updateSelectedFormsList();
 }
+// Update selected forms from form IDs array
 
+
+
+function updateSelectedFormsFromIds(formIds) {
+    console.log('updateSelectedFormsFromIds called with:', formIds);
+    if (!formIds || !Array.isArray(formIds) || formIds.length === 0) {
+        console.log('No form IDs provided, clearing selection');
+        selectedForms = [];
+        updateSelectedFormsList();
+        return;
+    }
+    // Clear current selection
+    selectedForms = [];
+    // Uncheck all checkboxes first
+    $('.form-check-input[type="checkbox"]').prop('checked', false);
+    // Load available forms to get form names
+    $.ajax({
+        type: "POST",
+        url: "Forms.aspx/GetAllTemplates",
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        success: function (response) {
+            if (response.d) {
+                const availableForms = response.d;
+                // Match form IDs with available forms and update selectedForms array
+                formIds.forEach(formId => {
+                    const form = availableForms.find(f => f.Id === formId);
+                    if (form) {
+                        selectedForms.push({ id: form.Id, name: form.TemplateName });
+                        // Check the corresponding checkbox - use setTimeout to ensure DOM is ready
+                        setTimeout(() => {
+                            $(`#form_${form.Id}`).prop('checked', true);
+                        }, 100);
+                    }
+                });
+                updateSelectedFormsList();
+            }
+        },
+        error: function (xhr, status, error) {
+            console.error('Error loading available forms for updateSelectedFormsFromIds:', error);
+            // Fallback: just update the selectedForms array with IDs
+            formIds.forEach(formId => {
+                selectedForms.push({ id: formId, name: `Form ${formId}` });
+            });
+            updateSelectedFormsList();
+        }
+    });
+}
 // Update selected forms list
 function updateSelectedFormsList() {
     const container = $('#selectedFormsList');
@@ -3332,59 +3651,6 @@ function removeSelectedForm(formId) {
     selectedForms = selectedForms.filter(form => form.id !== formId);
     $(`#form_${formId}`).prop('checked', false);
     updateSelectedFormsList();
-}
-
-// Update selected forms from form IDs array
-function updateSelectedFormsFromIds(formIds) {
-    console.log('updateSelectedFormsFromIds called with:', formIds);
-    
-    if (!formIds || !Array.isArray(formIds) || formIds.length === 0) {
-        console.log('No form IDs provided, clearing selection');
-        selectedForms = [];
-        updateSelectedFormsList();
-        return;
-    }
-
-    // Clear current selection
-    selectedForms = [];
-    
-    // Uncheck all checkboxes first
-    $('.form-check-input[type="checkbox"]').prop('checked', false);
-    
-    // Load available forms to get form names
-    $.ajax({
-        type: "POST",
-        url: "Forms.aspx/GetAllTemplates",
-        contentType: "application/json; charset=utf-8",
-        dataType: "json",
-        success: function (response) {
-            if (response.d) {
-                const availableForms = response.d;
-                
-                // Match form IDs with available forms and update selectedForms array
-                formIds.forEach(formId => {
-                    const form = availableForms.find(f => f.Id === formId);
-                    if (form) {
-                        selectedForms.push({ id: form.Id, name: form.TemplateName });
-                        // Check the corresponding checkbox - use setTimeout to ensure DOM is ready
-                        setTimeout(() => {
-                            $(`#form_${form.Id}`).prop('checked', true);
-                        }, 100);
-                    }
-                });
-                
-                updateSelectedFormsList();
-            }
-        },
-        error: function (xhr, status, error) {
-            console.error('Error loading available forms for updateSelectedFormsFromIds:', error);
-            // Fallback: just update the selectedForms array with IDs
-            formIds.forEach(formId => {
-                selectedForms.push({ id: formId, name: `Form ${formId}` });
-            });
-            updateSelectedFormsList();
-        }
-    });
 }
 
 // Load auto-assigned forms
@@ -3718,14 +3984,11 @@ function loadCurrentlySelectedForms(appointmentId) {
     if (!appointmentId) {
         appointmentId = $('#AppoinmentId').val();
     }
-
     if (!appointmentId) {
         console.log('No appointment ID found for loadCurrentlySelectedForms');
         return;
     }
-    
     console.log('Loading currently selected forms for appointment:', appointmentId);
-    
     // First check if we have the appointment data locally
     const appointment = appointments.find(a => a.AppoinmentId == appointmentId);
     if (appointment && appointment.AttachedForms) {
@@ -3753,12 +4016,10 @@ function loadCurrentlySelectedForms(appointmentId) {
                         id: form.Id,
                         name: form.TemplateName
                     }));
-                    
                     // Check the corresponding checkboxes in the forms selection modal
                     response.d.forEach(form => {
                         $(`#form_${form.Id}`).prop('checked', true);
                     });
-                    
                     response.d.forEach(form => {
                         const statusClass = getFormStatusClass(form.Status);
                         const formBadge = $(`
@@ -4548,6 +4809,7 @@ function showAppointmentModalFromResponseClose() {
 function openAppointmentModal() {
     $('#editModal').modal('show');
 }
+
 function getFormStatusClass(status) {
     switch (status?.toLowerCase()) {
         case 'completed': return 'text-success';
@@ -4556,4 +4818,3 @@ function getFormStatusClass(status) {
         default: return 'text-warning';
     }
 }
-

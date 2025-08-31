@@ -23,7 +23,9 @@ namespace FSM.Entity.Appoinments
         public string TicketStatus { get; set; }
         public string CustomTags { get; set; }
         public string Status { get; set; }
+        public int SiteId { get; set; }
         public string Note { get; set; }
         public string CustomFieldsJson { get; set; }
+        public string Duration { get; set; } = "0";
     }
 }

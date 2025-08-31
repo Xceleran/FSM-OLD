@@ -1,345 +1,539 @@
 ﻿<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="Settings.aspx.cs" Inherits="FSM.Settings" MasterPageFile="~/FSM.master" %>
 
-<asp:Content ID="Content1" ContentPlaceHolderID="MainContent" runat="server">
+<asp:Content ID="BodyContent" ContentPlaceHolderID="MainContent" runat="server">
+    
     <style>
-        .page-title {
-            font-size: 32px;
-            font-weight: 700;
-            color:var(--text-orange-700);
-            margin-bottom: 20px;
-        }
-        [data-theme="dark"] .page-title
-        {
-            color: white;
-        }
-        .tab-container {
-            background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
-
-        .tab-nav {
-            display: flex;
-            border-bottom: 1px solid #e5e7eb;
-            background: #f9fafb;
-        }
-
-        .tab-button {
-            flex: 1;
-            padding: 15px 20px;
-            text-align: center;
-            font-weight: 600;
-            color: #6b7280;
-            cursor: pointer;
-            border: none;
-            background: none;
-            transition: all 0.3s ease;
-        }
-
-            .tab-button.active {
-                color: #f84700;
-                border-bottom: 2px solid #f84700;
-                background: #fff;
-            }
-
-            .tab-button:hover:not(.active) {
-                color: #4b5563;
-                background: #f1f3f5;
-            }
-
-        .tab-content {
-            padding: 20px;
-            display: none;
-        }
-
-            .tab-content.active {
-                display: block;
-            }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-            .form-group label {
-                display: block;
-                font-weight: 500;
-                color: #374151;
-                margin-bottom: 5px;
-            }
-
-        .form-control {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-            font-size: 14px;
-        }
-
-        .form-check {
-            margin: 10px 0;
-        }
-
-        .form-check-input {
-            margin-right: 10px;
-        }
-
-        .form-check-label {
-            color: #4b5563;
-        }
-
-        .settings-actions {
-            margin-top: 30px;
-            text-align: right;
-            padding: 25px;
-        }
-
-        .btn {
-            padding: 10px 20px;
-            margin-left: 10px;
-            border-radius: 6px;
-            border: none;
-            cursor: pointer;
-            font-weight: 500;
-        }
-
-        .btn-success {
-            background-color: #28a745;
-            color: white;
-        }
-
-            .btn-success:hover {
-                background-color: #218838;
-            }
-
-        .btn-secondary {
-            background-color: #6c757d;
-            color: white;
-        }
-
-            .btn-secondary:hover {
-                background-color: #5a6268;
-            }
-
-        @media (max-width: 768px) {
-            .settings-container {
-                padding: 10px;
-            }
-
-            .tab-nav {
-                flex-direction: column;
-            }
-
-            .tab-button {
-                padding: 12px;
-                text-align: left;
-            }
-        }
-  
+        /* Custom Fields Styles */
+        .card { box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15); margin-bottom: 1.5rem; }
+        .list-group-item { transition: all 0.3s ease; }
+        .list-group-item:hover { background-color: #f8f9fa; }
+        .form-check-input:checked { background-color: #0d6efd; border-color: #0d6efd; }
+        .preview-container { background-color: #f8f9fa; border-radius: 0.375rem; min-height: 150px; padding: 1rem; }
+        .badge { font-size: 0.75em; }
+        .option-input-group { margin-bottom: 0.5rem; }
+        .modal-content { border: none; border-radius: 0.5rem; }
+        .modal-header { background-color: #f8f9fa; border-bottom: 1px solid #dee2e6; border-top-left-radius: 0.5rem; border-top-right-radius: 0.5rem; }
+        .list-group-placeholder { border: 2px dashed #ccc; padding: 2rem; text-align: center; color: #6c757d; }
+        
+        /* Tab Styles */
+        .nav-tabs { border-bottom: 2px solid #dee2e6; margin-bottom: 2rem; }
+        .nav-tabs .nav-link { border: none; border-radius: 0; padding: 1rem 1.5rem; font-weight: 500; color: #6c757d; transition: all 0.3s ease; }
+        .nav-tabs .nav-link:hover { border-color: transparent; color: #0d6efd; background-color: #f8f9fa; }
+        .nav-tabs .nav-link.active { color: #0d6efd; background-color: transparent; border-bottom: 2px solid #0d6efd; }
+        
+        /* SMS Settings Styles */
+        .sms-section { margin-bottom: 2rem; }
+        .sms-legend { font-size: 1.1rem; font-weight: 600; color: #495057; margin-bottom: 1rem; border-bottom: 1px solid #dee2e6; padding-bottom: 0.5rem; }
+        .sms-checkbox-container { margin-bottom: 1rem; }
+        .sms-textarea { resize: vertical; min-height: 120px; }
+        .placeholder-info { background-color: #f8f9fa; border-radius: 0.375rem; padding: 1.5rem; margin-top: 2rem; }
+        .placeholder-info small { display: block; margin-bottom: 0.25rem; color: #6c757d; }
     </style>
 
-    <div class="row mx-0 my-3 g-3 px-3 py-5">
-        <h1 class="page-title">Settings (Under Development)</h1>
+    <div class="container-fluid py-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+        
+        </div>
+        
+        <!-- Tab Navigation -->
+        <ul class="nav nav-tabs" id="settingsTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="custom-fields-tab" data-bs-toggle="tab" data-bs-target="#custom-fields" type="button" role="tab" aria-controls="custom-fields" aria-selected="true">
+                    <i class="bi bi-ui-checks me-2"></i>Custom Fields
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="sms-settings-tab" data-bs-toggle="tab" data-bs-target="#sms-settings" type="button" role="tab" aria-controls="sms-settings" aria-selected="false">
+                    <i class="bi bi-chat-text me-2"></i>Two Way Texting
+                </button>
+            </li>
+        </ul>
 
-        <div class="tab-container">
-            <div class="tab-nav">
-                <button class="tab-button active" data-tab="profile">Profile</button>
-                <button class="tab-button" data-tab="notifications">Notifications</button>
-                <button class="tab-button" data-tab="login-security">Login & Security</button>
-            </div>
-
-            <div class="tab-content active" id="profile">
-                <h2>Profile Settings</h2>
-                <div class="form-group">
-                    <label for="companyName">Company Name</label>
-                    <input type="text" id="companyName" class="form-control" placeholder="Your Company Name">
+        <!-- Tab Content -->
+        <div class="tab-content" id="settingsTabContent">
+            
+            <!-- Custom Fields Tab -->
+            <div class="tab-pane fade show active" id="custom-fields" role="tabpanel" aria-labelledby="custom-fields-tab">
+                <div class="d-flex justify-content-between align-items-center mb-4">             
+                    <div>
+                        <button type="button" id="btnCreateNew" class="btn btn-success">
+                            <i class="bi bi-plus-circle me-1"></i> Create New Field
+                        </button>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="invoicePrefix">Invoice Number Prefix</label>
-                    <input type="text" id="invoicePrefix" class="form-control" maxlength="5" placeholder="INV-">
-                </div>
-                <div class="form-group">
-                    <label for="defaultLaborRate">Default Labor Rate ($/hr)</label>
-                    <input type="number" id="defaultLaborRate" class="form-control" min="0" step="0.01">
-                </div>
-                <div class="form-check">
-                    <input type="checkbox" id="autoInvoiceNumber" class="form-check-input">
-                    <label class="form-check-label" for="autoInvoiceNumber">Auto-generate Invoice Numbers</label>
-                </div>
-            </div>
-
-            <div class="tab-content" id="notifications">
-                <h2>Notification Settings</h2>
-                <div class="form-group">
-                    <label for="emailNotifications">Notification Email</label>
-                    <input type="email" id="emailNotifications" class="form-control" placeholder="notifications@yourcompany.com">
-                </div>
-                <div class="form-check">
-                    <input type="checkbox" id="notifyInvoiceDue" class="form-check-input">
-                    <label class="form-check-label" for="notifyInvoiceDue">Notify on Invoice Due</label>
-                </div>
-                <div class="form-check">
-                    <input type="checkbox" id="notifyAppointment" class="form-check-input">
-                    <label class="form-check-label" for="notifyAppointment">Notify on New Appointments</label>
-                </div>
-                <div class="form-group">
-                    <label for="notificationInterval">Notification Interval</label>
-                    <select id="notificationInterval" class="form-control">
-                        <option value="daily">Daily</option>
-                        <option value="weekly">Weekly</option>
-                        <option value="monthly">Monthly</option>
-                    </select>
+                
+                <div class="card">
+                    <div class="card-body">
+                        <ul id="customFieldsList" class="list-group">
+                            <!-- Fields will be rendered here by JavaScript -->
+                        </ul>
+                    </div>
                 </div>
             </div>
 
-            <div class="tab-content" id="login-security">
-                <h2>Login & Security Settings</h2>
-                <div class="form-group">
-                    <label for="currentPassword">Current Password</label>
-                    <input type="password" id="currentPassword" class="form-control" placeholder="Enter current password">
-                </div>
-                <div class="form-group">
-                    <label for="newPassword">New Password</label>
-                    <input type="password" id="newPassword" class="form-control" placeholder="Enter new password">
-                </div>
-                <div class="form-group">
-                    <label for="confirmPassword">Confirm New Password</label>
-                    <input type="password" id="confirmPassword" class="form-control" placeholder="Confirm new password">
-                </div>
-                <div class="form-check">
-                    <input type="checkbox" id="enable2FA" class="form-check-input">
-                    <label class="form-check-label" for="enable2FA">Enable Two-Factor Authentication</label>
+            <!-- SMS Settings Tab -->
+            <div class="tab-pane fade" id="sms-settings" role="tabpanel" aria-labelledby="sms-settings-tab">
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <div class="card-title">
+                            <h4 class="mb-0">Check the types of communications you want to send to your customers</h4>
+                        </div>
+                    </div>
+                    
+                    <input type="hidden" id="hdCompanyID" name="hdCompanyID" runat="server" />
+                    
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-12 col-md-6">
+                                
+                                <!-- Pending Status -->
+                                <div class="sms-section">
+                                    <div class="sms-legend">Appointment Status: <strong>Pending</strong></div>
+                                    <div class="sms-checkbox-container">
+                                        <div class="form-check">
+                                            <asp:CheckBox ID="PendingYN" runat="server" CssClass="form-check-input" />
+                                            <label class="form-check-label" for="PendingYN">Add Yes/No Option</label>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Message Body</label>
+                                        <textarea id="txtPending" rows="5" runat="server" class="form-control sms-textarea"></textarea>
+                                    </div>
+                                </div>
+
+                                <!-- Cancelled Status -->
+                                <div class="sms-section">
+                                    <div class="sms-legend">Appointment Status: <strong>Cancelled</strong></div>
+                                    <div class="sms-checkbox-container">
+                                        <div class="form-check">
+                                            <asp:CheckBox ID="CancelledYN" runat="server" CssClass="form-check-input" />
+                                            <label class="form-check-label" for="CancelledYN">Add Yes/No Option</label>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Message Body</label>
+                                        <textarea id="txtCancelled" rows="5" runat="server" class="form-control sms-textarea"></textarea>
+                                    </div>
+                                </div>
+
+                                <!-- Installation In Progress Status -->
+                                <div class="sms-section">
+                                    <div class="sms-legend">Appointment Status: <strong>Installation In Progress</strong></div>
+                                    <div class="sms-checkbox-container">
+                                        <div class="form-check">
+                                            <asp:CheckBox ID="ProgressYN" runat="server" CssClass="form-check-input" />
+                                            <label class="form-check-label" for="ProgressYN">Add Yes/No Option</label>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Message Body</label>
+                                        <textarea id="txtProgress" rows="5" runat="server" class="form-control sms-textarea"></textarea>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <div class="col-12 col-md-6">
+                                
+                                <!-- Scheduled Status -->
+                                <div class="sms-section">
+                                    <div class="sms-legend">Appointment Status: <strong>Scheduled</strong></div>
+                                    <div class="sms-checkbox-container">
+                                        <div class="form-check">
+                                            <asp:CheckBox ID="ScheduledYN" runat="server" CssClass="form-check-input" />
+                                            <label class="form-check-label" for="ScheduledYN">Add Yes/No Option</label>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Message Body</label>
+                                        <textarea id="txtScheduled" rows="5" runat="server" class="form-control sms-textarea"></textarea>
+                                    </div>
+                                </div>
+
+                                <!-- Closed Status -->
+                                <div class="sms-section">
+                                    <div class="sms-legend">Appointment Status: <strong>Closed</strong></div>
+                                    <div class="sms-checkbox-container">
+                                        <div class="form-check">
+                                            <asp:CheckBox ID="ClosedYN" runat="server" CssClass="form-check-input" />
+                                            <label class="form-check-label" for="ClosedYN">Add Yes/No Option</label>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Message Body</label>
+                                        <textarea id="txtClosed" rows="5" runat="server" class="form-control sms-textarea"></textarea>
+                                    </div>
+                                </div>
+
+                                <!-- Completed Status -->
+                                <div class="sms-section">
+                                    <div class="sms-legend">Appointment Status: <strong>Completed</strong></div>
+                                    <div class="sms-checkbox-container">
+                                        <div class="form-check">
+                                            <asp:CheckBox ID="CompletedYN" runat="server" CssClass="form-check-input" />
+                                            <label class="form-check-label" for="CompletedYN">Add Yes/No Option</label>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Message Body</label>
+                                        <textarea id="txtCompleted" rows="5" runat="server" class="form-control sms-textarea"></textarea>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12 col-md-3">
+                                <asp:Button ID="SubmitData" runat="server" Text="Save SMS Settings" CssClass="btn btn-success w-100" OnClick="SubmitData_Click"/>
+                            </div>
+                        </div>
+
+                        <!-- Placeholder Information -->
+                        <div class="placeholder-info">
+                            <h6 class="mb-3">Available Placeholders:</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <small>[First Name] = Customer First Name</small>
+                                    <small>[Last Name] = Customer Last Name</small>
+                                    <small>[Full Name] = Customer Full Name</small>
+                                    <small>[Title] = Customer Title</small>
+                                </div>
+                                <div class="col-md-6">
+                                    <small>[Job Title] = Customer Job Title</small>
+                                    <small>[Company Name] = Company Full Name</small>
+                                    <small>[Time] = Appointment Time</small>
+                                    <small>[Date] = Appointment Date</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
+        </div>
+    </div>
 
-            <div class="settings-actions">
-                <button id="saveSettings" class="btn btn-success">Save Settings</button>
-                <button id="resetSettings" class="btn btn-secondary">Reset to Defaults</button>
+    <!-- Custom Fields Modal -->
+    <div class="modal fade" id="addCustomFieldModal" tabindex="-1" aria-labelledby="addCustomFieldModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addCustomFieldModalLabel">Create Custom Field</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="hfFieldId" value="">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="fieldName" class="form-label">Field Name *</label>
+                                <input type="text" id="fieldName" class="form-control" placeholder="e.g., Gate Code">
+                            </div>
+                            <div class="mb-3">
+                                <label for="fieldType" class="form-label">Field Type</label>
+                                <select id="fieldType" class="form-select">
+                                    <option value="text">Text</option>
+                                    <option value="number">Number</option>
+                                    <option value="date">Date</option>
+                                    <option value="dropdown">Drop-down List</option>
+                                    <option value="checklist">Checklist</option>
+                                </select>
+                            </div>
+                            <div class="mb-3" id="divOptions" style="display: none;">
+                                <label class="form-label">Field Options *</label>
+                                <div id="optionsContainer" class="p-3 border rounded bg-light"></div>
+                                <button type="button" id="btnAddOption" class="btn btn-link text-success p-0 mt-2">
+                                    <i class="bi bi-plus-circle"></i> Add New Option
+                                </button>
+                            </div>
+                            <div class="form-check form-switch mt-3">
+                                <input class="form-check-input" type="checkbox" id="isActive" checked>
+                                <label class="form-check-label" for="isActive">Field is Active</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mt-4" id="previewSection">
+                                <label class="form-label">Preview:</label>
+                                <div id="fieldPreview" class="preview-container"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" id="btnSave" class="btn btn-primary">Save Field</button>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const tabs = document.querySelectorAll('.tab-button');
-            const contents = document.querySelectorAll('.tab-content');
-
-            tabs.forEach(tab => {
-                tab.addEventListener('click', () => {
-                    tabs.forEach(t => t.classList.remove('active'));
-                    contents.forEach(c => c.classList.remove('active'));
-
-                    tab.classList.add('active');
-                    document.getElementById(tab.dataset.tab).classList.add('active');
+        document.addEventListener('DOMContentLoaded', function () {
+            // Initialize tabs
+            const triggerTabList = document.querySelectorAll('#settingsTabs button');
+            triggerTabList.forEach(triggerEl => {
+                const tabTrigger = new bootstrap.Tab(triggerEl);
+                triggerEl.addEventListener('click', event => {
+                    event.preventDefault();
+                    tabTrigger.show();
                 });
             });
 
-            loadSettings();
-
-            document.getElementById('saveSettings').addEventListener('click', () => {
-                if (validateSettings()) {
-                    saveSettings();
-                    alert('Settings saved successfully!');
-                }
-            });
-
-            document.getElementById('resetSettings').addEventListener('click', () => {
-                if (confirm('Are you sure you want to reset all settings to default?')) {
-                    resetSettings();
-                }
-            });
+            // Custom Fields JavaScript
+            initializeCustomFields();
         });
 
-        function loadSettings() {
-            const defaultSettings = {
-                companyName: 'Your Company',
-                invoicePrefix: 'INV-',
-                defaultLaborRate: 75.00,
-                autoInvoiceNumber: true,
-                emailNotifications: 'notifications@yourcompany.com',
-                notifyInvoiceDue: true,
-                notifyAppointment: false,
-                notificationInterval: 'daily',
-                currentPassword: '',
-                newPassword: '',
-                confirmPassword: '',
-                enable2FA: false
-            };
+        function initializeCustomFields() {
+            // --- Global Elements ---
+            const modalEl = document.getElementById('addCustomFieldModal');
+            const modalInstance = new bootstrap.Modal(modalEl);
+            const customFieldsList = document.getElementById('customFieldsList');
 
-            const settings = {
-                companyName: localStorage.getItem('companyName') || defaultSettings.companyName,
-                invoicePrefix: localStorage.getItem('invoicePrefix') || defaultSettings.invoicePrefix,
-                defaultLaborRate: localStorage.getItem('defaultLaborRate') || defaultSettings.defaultLaborRate,
-                autoInvoiceNumber: localStorage.getItem('autoInvoiceNumber') !== 'false',
-                emailNotifications: localStorage.getItem('emailNotifications') || defaultSettings.emailNotifications,
-                notifyInvoiceDue: localStorage.getItem('notifyInvoiceDue') !== 'false',
-                notifyAppointment: localStorage.getItem('notifyAppointment') === 'true',
-                notificationInterval: localStorage.getItem('notificationInterval') || defaultSettings.notificationInterval,
-                currentPassword: localStorage.getItem('currentPassword') || defaultSettings.currentPassword,
-                newPassword: localStorage.getItem('newPassword') || defaultSettings.newPassword,
-                confirmPassword: localStorage.getItem('confirmPassword') || defaultSettings.confirmPassword,
-                enable2FA: localStorage.getItem('enable2FA') === 'true'
-            };
+            // --- Modal Form Elements ---
+            const modalTitle = document.getElementById('addCustomFieldModalLabel');
+            const hfFieldId = document.getElementById('hfFieldId');
+            const fieldName = document.getElementById('fieldName');
+            const fieldType = document.getElementById('fieldType');
+            const isActive = document.getElementById('isActive');
+            const divOptions = document.getElementById('divOptions');
+            const optionsContainer = document.getElementById('optionsContainer');
+            const btnAddOption = document.getElementById('btnAddOption');
+            const fieldPreview = document.getElementById('fieldPreview');
 
-            document.getElementById('companyName').value = settings.companyName;
-            document.getElementById('invoicePrefix').value = settings.invoicePrefix;
-            document.getElementById('defaultLaborRate').value = settings.defaultLaborRate;
-            document.getElementById('autoInvoiceNumber').checked = settings.autoInvoiceNumber;
-            document.getElementById('emailNotifications').value = settings.emailNotifications;
-            document.getElementById('notifyInvoiceDue').checked = settings.notifyInvoiceDue;
-            document.getElementById('notifyAppointment').checked = settings.notifyAppointment;
-            document.getElementById('notificationInterval').value = settings.notificationInterval;
-            document.getElementById('currentPassword').value = settings.currentPassword;
-            document.getElementById('newPassword').value = settings.newPassword;
-            document.getElementById('confirmPassword').value = settings.confirmPassword;
-            document.getElementById('enable2FA').checked = settings.enable2FA;
-        }
-
-        function validateSettings() {
-            const laborRate = document.getElementById('defaultLaborRate').value;
-            const newPassword = document.getElementById('newPassword').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-            const email = document.getElementById('emailNotifications').value;
-
-            if (laborRate < 0) {
-                alert('Labor rate cannot be negative');
-                return false;
+            // --- Main Function to Fetch and Render Fields ---
+            function refreshFieldsList() {
+                customFieldsList.innerHTML = '<div class="list-group-placeholder">Loading fields...</div>';
+                PageMethods.GetFields(onGetFieldsSuccess, onApiError);
             }
-            if (newPassword && newPassword !== confirmPassword) {
-                alert('New password and confirmation do not match');
-                return false;
-            }
-            if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                alert('Please enter a valid email address for notifications');
-                return false;
-            }
-            return true;
-        }
 
-        function saveSettings() {
-            const settings = {
-                companyName: document.getElementById('companyName').value,
-                invoicePrefix: document.getElementById('invoicePrefix').value,
-                defaultLaborRate: document.getElementById('defaultLaborRate').value,
-                autoInvoiceNumber: document.getElementById('autoInvoiceNumber').checked,
-                emailNotifications: document.getElementById('emailNotifications').value,
-                notifyInvoiceDue: document.getElementById('notifyInvoiceDue').checked,
-                notifyAppointment: document.getElementById('notifyAppointment').checked,
-                notificationInterval: document.getElementById('notificationInterval').value,
-                currentPassword: document.getElementById('currentPassword').value,
-                newPassword: document.getElementById('newPassword').value,
-                confirmPassword: document.getElementById('confirmPassword').value,
-                enable2FA: document.getElementById('enable2FA').checked
-            };
+            function onGetFieldsSuccess(response) {
+                if (response.success) {
+                    renderFields(response.data);
+                } else {
+                    showError(response.message);
+                    customFieldsList.innerHTML = '<div class="list-group-placeholder">Could not load fields.</div>';
+                }
+            }
 
-            Object.entries(settings).forEach(([key, value]) => {
-                localStorage.setItem(key, value);
+            function renderFields(fields) {
+                customFieldsList.innerHTML = '';
+                if (fields.length === 0) {
+                    customFieldsList.innerHTML = '<div class="list-group-placeholder">No custom fields found. Click "Create New Field" to get started.</div>';
+                    return;
+                }
+                fields.forEach(field => {
+                    const activeStatus = field.IsActive ? '' : "<span class='badge bg-light text-dark ms-2'>Inactive</span>";
+                    const toggleButton = field.IsActive
+                        ? `<button type="button" class="btn btn-sm btn-outline-warning me-2 toggle-btn" data-fieldid="${field.FieldId}"><i class="bi bi-eye-slash-fill me-1"></i> Deactivate</button>`
+                        : `<button type="button" class="btn btn-sm btn-outline-info me-2 toggle-btn" data-fieldid="${field.FieldId}"><i class="bi bi-eye-fill me-1"></i> Activate</button>`;
+
+                    const li = document.createElement('li');
+                    li.className = 'list-group-item d-flex justify-content-between align-items-center';
+                    li.innerHTML = `
+                        <div>
+                            <i class="bi bi-grip-vertical text-muted me-2"></i>
+                            <strong>${escapeHtml(field.FieldName)}</strong>
+                            <span class="badge bg-secondary ms-2">${escapeHtml(field.FieldType)}</span>
+                            ${activeStatus}
+                        </div>
+                        <div>
+                            <button type="button" class="btn btn-sm btn-outline-primary me-2 edit-btn" data-fieldid="${field.FieldId}">
+                                <i class="bi bi-pencil-fill me-1"></i> Edit
+                            </button>
+                            ${toggleButton}
+                            <button type="button" class="btn btn-sm btn-outline-danger delete-btn" data-fieldid="${field.FieldId}">
+                                <i class="bi bi-trash-fill me-1"></i> Delete
+                            </button>
+                        </div>`;
+                    customFieldsList.appendChild(li);
+                });
+            }
+
+            // --- Event Listeners ---
+            document.getElementById('btnCreateNew').addEventListener('click', () => {
+                clearModalForm();
+                modalTitle.textContent = 'Create Custom Field';
+                modalInstance.show();
             });
-        }
 
-        function resetSettings() {
-            localStorage.clear();
-            loadSettings();
+            document.getElementById('btnSave').addEventListener('click', () => {
+                if (validateForm()) {
+                    const fieldId = parseInt(hfFieldId.value) || 0;
+                    const name = fieldName.value;
+                    const type = fieldType.value;
+                    const options = collectOptions();
+                    const active = isActive.checked;
+
+                    PageMethods.SaveField(fieldId, name, type, options, active, onSaveSuccess, onApiError);
+                }
+            });
+
+            function onSaveSuccess(response) {
+                if (response.success) {
+                    modalInstance.hide();
+                    refreshFieldsList();
+                } else {
+                    showError(response.message);
+                }
+            }
+
+            customFieldsList.addEventListener('click', (e) => {
+                const target = e.target.closest('button');
+                if (!target) return;
+
+                const fieldId = parseInt(target.dataset.fieldid);
+
+                if (target.classList.contains('edit-btn')) {
+                    PageMethods.GetFields(function (response) {
+                        if (response.success) {
+                            const field = response.data.find(f => f.FieldId === fieldId);
+                            if (field) loadFieldDataForEdit(field);
+                        }
+                    }, onApiError);
+                }
+                if (target.classList.contains('delete-btn')) {
+                    if (confirm('Are you sure you want to delete this field? This will also remove all data entered for this field from existing appointments.')) {
+                        PageMethods.DeleteField(fieldId, onModifySuccess, onApiError);
+                    }
+                }
+                if (target.classList.contains('toggle-btn')) {
+                    PageMethods.ToggleFieldActive(fieldId, onModifySuccess, onApiError);
+                }
+            });
+
+            function onModifySuccess(response) {
+                if (response.success) {
+                    refreshFieldsList();
+                } else {
+                    showError(response.message);
+                }
+            }
+
+            // --- Modal-specific Listeners and Functions ---
+            fieldType.addEventListener('change', () => { updateVisibility(); buildPreview(); });
+            fieldName.addEventListener('input', buildPreview);
+            btnAddOption.addEventListener('click', () => {
+                addOptionInput('');
+                const lastInput = optionsContainer.querySelector('.option-input:last-of-type');
+                if (lastInput) lastInput.focus();
+            });
+
+            function updateVisibility() {
+                divOptions.style.display = (fieldType.value === 'dropdown' || fieldType.value === 'checklist') ? 'block' : 'none';
+            }
+
+            function addOptionInput(value) {
+                const div = document.createElement('div');
+                div.className = 'input-group option-input-group';
+                div.innerHTML = `
+                    <span class="input-group-text"><i class="bi bi-grip-vertical text-muted"></i></span>
+                    <input type="text" class="form-control option-input" value="${escapeHtml(value)}" placeholder="Option value">
+                    <button type="button" class="btn btn-outline-danger remove-option"><i class="bi bi-x-lg"></i></button>`;
+                optionsContainer.appendChild(div);
+                div.querySelector('.remove-option').addEventListener('click', () => {
+                    div.remove();
+                    buildPreview();
+                });
+                div.querySelector('.option-input').addEventListener('input', buildPreview);
+            }
+
+            function collectOptions() {
+                if (fieldType.value !== 'dropdown' && fieldType.value !== 'checklist') return '';
+                const inputs = optionsContainer.querySelectorAll('.option-input');
+                const options = Array.from(inputs).map(i => i.value.trim()).filter(v => v);
+                return JSON.stringify(options);
+            }
+
+            function validateForm() {
+                if (!fieldName.value.trim()) {
+                    showError('Field name is required.');
+                    fieldName.focus();
+                    return false;
+                }
+                if ((fieldType.value === 'dropdown' || fieldType.value === 'checklist') && collectOptions() === '[]') {
+                    showError('At least one option is required for this field type.');
+                    return false;
+                }
+                return true;
+            }
+
+            function buildPreview() {
+                const name = fieldName.value.trim() || 'Field Name';
+                const type = fieldType.value;
+                const options = JSON.parse(collectOptions() || '[]');
+                let html = `<label class="form-label mb-2"><strong>${escapeHtml(name)}</strong></label>`;
+                switch (type) {
+                    case 'text': html += `<input type="text" class="form-control" disabled>`; break;
+                    case 'number': html += `<input type="number" class="form-control" disabled>`; break;
+                    case 'date': html += `<input type="date" class="form-control" disabled>`; break;
+                    case 'dropdown':
+                        html += `<select class="form-select" disabled><option>-- Select --</option>`;
+                        options.forEach(o => html += `<option>${escapeHtml(o)}</option>`);
+                        html += `</select>`;
+                        break;
+                    case 'checklist':
+                        if (options.length === 0) {
+                            html += '<p class="text-muted small">Add options to see preview.</p>';
+                        } else {
+                            options.forEach(o => html += `<div class="form-check"><input type="checkbox" disabled><label class="form-check-label ms-2">${escapeHtml(o)}</label></div>`);
+                        }
+                        break;
+                }
+                fieldPreview.innerHTML = html;
+            }
+
+            function clearModalForm() {
+                hfFieldId.value = '0';
+                fieldName.value = '';
+                fieldType.selectedIndex = 0;
+                isActive.checked = true;
+                optionsContainer.innerHTML = '';
+                updateVisibility();
+                buildPreview();
+            }
+
+            function loadFieldDataForEdit(field) {
+                clearModalForm();
+                modalTitle.textContent = 'Edit Custom Field';
+                hfFieldId.value = field.FieldId;
+                fieldName.value = field.FieldName;
+                fieldType.value = field.FieldType;
+                isActive.checked = field.IsActive;
+
+                if (field.FieldType === 'dropdown' || field.FieldType === 'checklist') {
+                    const options = JSON.parse(field.Options || '[]');
+                    options.forEach(option => addOptionInput(option));
+                }
+
+                updateVisibility();
+                buildPreview();
+                modalInstance.show();
+            }
+
+            function showError(message) {
+                alert('Error: ' + message);
+            }
+
+            function onApiError(error) {
+                console.error('API Error:', error);
+                showError('An unexpected error occurred. Please try again.');
+            }
+
+            function escapeHtml(text) {
+                const map = {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#039;'
+                };
+                return text.replace(/[&<>"']/g, function (m) { return map[m]; });
+            }
+
+            // Initialize on page load
+            refreshFieldsList();
         }
     </script>
+
 </asp:Content>
+

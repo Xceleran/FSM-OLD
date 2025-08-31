@@ -61,6 +61,68 @@ namespace FSM
                 LoadData();
             }
         }
+
+        [WebMethod]
+        [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
+        public static object GetActiveCustomFields(int apptId)
+        {
+
+            string connStrJobs = ConfigurationManager.AppSettings["ConnStrJobs"];
+            var fields = new List<object>();
+
+            string sql = @"
+        SELECT 
+            cf.FieldID, 
+            cf.FieldName, 
+            cf.FieldType, 
+            cf.FieldOptions,
+            acf.FieldValue
+        FROM 
+            [msSchedulerV3].[dbo].[CustomFields] cf
+        LEFT JOIN 
+            [msSchedulerV3].[dbo].[AppointmentCustomFields] acf 
+            ON cf.FieldID = acf.FieldID AND acf.AppointmentID = @AppointmentID
+        WHERE 
+            cf.IsActive = 1
+        ORDER BY 
+            cf.FieldName";
+
+            try
+            {
+                using (var con = new System.Data.SqlClient.SqlConnection(connStrJobs))
+                using (var cmd = new System.Data.SqlClient.SqlCommand(sql, con))
+                {
+                    cmd.Parameters.AddWithValue("@AppointmentID", apptId);
+                    con.Open();
+                    using (var dr = cmd.ExecuteReader())
+                    {
+                        while (dr.Read())
+                        {
+                            fields.Add(new
+                            {
+                                FieldId = dr["FieldID"],
+                                FieldName = dr["FieldName"].ToString(),
+                                FieldType = dr["FieldType"].ToString(),
+                                Options = dr["FieldOptions"] == DBNull.Value ? "[]" : dr["FieldOptions"].ToString(),
+                                Value = dr["FieldValue"] == DBNull.Value ? null : dr["FieldValue"].ToString()
+                            });
+                        }
+                    }
+                }
+
+                return fields;
+            }
+            catch (Exception ex)
+            {
+
+                System.Diagnostics.Debug.WriteLine("FATAL ERROR in GetActiveCustomFields: " + ex.ToString());
+
+
+
+                throw new Exception("Server-side error in GetActiveCustomFields. Check debug output for details.");
+            }
+        }
+
         [WebMethod]
         [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
         public static List<AppointmentModel> LoadAppoinments(string searchValue, string fromDate, string toDate, string today)
@@ -104,7 +166,7 @@ namespace FSM
                 cus.CustomerID, cus.Email, cus.Phone, cus.Mobile, cus.ZipCode, cus.State, cus.City, cus.Address1,
                 apt.CompanyID, apt.ApptID, apt.ResourceID, apt.ServiceType AS StoredServiceType, apt.CreatedDateTime, 
                 CONVERT(VARCHAR(10), apt.ApptDateTime, 120) as RequestDate, apt.Note, apt.TimeSlot,
-                apt.StartDateTime, apt.EndDateTime, rs.Name as ResourceName, 
+                apt.StartDateTime, apt.EndDateTime, apt.Hour, apt.Minute, rs.Name as ResourceName, 
                 srv.ServiceTypeID,
                 srv.ServiceName,
                 srv.CalenderColor as ServiceColor,
@@ -152,7 +214,7 @@ namespace FSM
                     foreach (DataRow row in dt.Rows)
                     {
                         var appoinment = new AppointmentModel();
-                        // All other properties...
+
                         appoinment.CompanyID = companyid;
                         appoinment.CustomerGuid = row.Field<string>("CustomerGuid") ?? "";
                         appoinment.CustomerID = row["CustomerID"].ToString();
@@ -176,7 +238,6 @@ namespace FSM
                         appoinment.TimeSlot = row.Field<string>("TimeSlot") ?? "";
                         appoinment.AppoinmentDate = row.Field<string>("RequestDate") ?? "";
 
-                        // Reliably populate all IDs and Names
                         appoinment.ServiceType = row.Field<string>("ServiceName") ?? row.Field<string>("StoredServiceType") ?? "N/A";
                         appoinment.ServiceTypeID = row.Field<int?>("ServiceTypeID") ?? 0;
                         appoinment.AppoinmentStatus = row.Field<string>("AppoinmentStatus") ?? "N/A";
@@ -197,14 +258,25 @@ namespace FSM
                         appoinment.SiteNote = row.Field<string>("SiteNote") ?? "";
                         appoinment.SiteIsActive = row.Field<bool?>("SiteIsActive") ?? false;
 
-                        if (appoinment.ServiceTypeID > 0)
+
+                        if (row["Hour"] != DBNull.Value && row["Hour"] != null)
+                        {
+                            int hr = row.Field<int?>("Hour") ?? 0;
+                            int min = row.Field<int?>("Minute") ?? 0;
+                            appoinment.Duration = $"{hr} Hr : {min} Min";
+                        }
+
+                        else if (appoinment.ServiceTypeID > 0)
                         {
                             appoinment.Duration = CalculateDuration(appoinment.ServiceTypeID);
                         }
+
                         else
                         {
                             appoinment.Duration = "1 Hr : 0 Min";
                         }
+
+
 
                         appoinments.Add(appoinment);
                     }
@@ -219,6 +291,42 @@ namespace FSM
                 db.Close();
             }
             return appoinments;
+        }
+
+        [WebMethod]
+        [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
+        public static bool UpdateAppointmentDuration(int AppoinmentId, string StartDateTime, string EndDateTime, int Hour, int Minute)
+        {
+            string companyId = HttpContext.Current.Session["CompanyID"].ToString();
+            Database db = new Database();
+            try
+            {
+                string sql = @"UPDATE [msSchedulerV3].[dbo].[tbl_Appointment] SET
+                            [StartDateTime] = @StartDateTime,
+                            [EndDateTime] = @EndDateTime,
+                            [Hour] = @Hour,
+                            [Minute] = @Minute
+                       WHERE [ApptID] = @ApptID AND [CompanyID] = @CompanyID;";
+
+                db.Command.Parameters.Clear();
+                db.AddParameter("@StartDateTime", Convert.ToDateTime(StartDateTime), SqlDbType.DateTime);
+                db.AddParameter("@EndDateTime", Convert.ToDateTime(EndDateTime), SqlDbType.DateTime);
+                db.AddParameter("@Hour", Hour, SqlDbType.Int);
+                db.AddParameter("@Minute", Minute, SqlDbType.Int);
+                db.AddParameter("@ApptID", AppoinmentId, SqlDbType.Int);
+                db.AddParameter("@CompanyID", companyId, SqlDbType.VarChar);
+
+                return db.UpdateSql(sql);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"UpdateAppointmentDuration Error: {ex.Message}");
+                return false;
+            }
+            finally
+            {
+                db.Close();
+            }
         }
 
 
@@ -494,7 +602,6 @@ namespace FSM
             }
             return resources;
         }
-
         [WebMethod]
         [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
         public static Boolean UpdateAppointment(Appointment appointment)
@@ -506,33 +613,79 @@ namespace FSM
 
             try
             {
-                string strSQL = @"UPDATE [msSchedulerV3].[dbo].[tbl_Appointment]
-                    SET
-                        [ServiceType] = @ServiceType,
-                        [TimeSlot] = @TimeSlot,
-                        [ApptDateTime] = @ApptDateTime,
-                        [Status] = @Status,           
-                        [ResourceID] = @ResourceID, 
-                        [TicketStatus] = @TicketStatus, 
-                        [Note] = @Note,
-                        [StartDateTime] = @StartDateTime,
-                        [EndDateTime] = @EndDateTime
-                    WHERE [ApptID] = @ApptID AND [CompanyID] = @CompanyID;";
+                var setClauses = new List<string>();
 
                 db.Command.Parameters.Clear();
                 db.Command.Parameters.AddWithValue("@CompanyID", CompanyID);
                 db.Command.Parameters.AddWithValue("@ApptID", appointment.AppoinmentId);
-                db.Command.Parameters.AddWithValue("@ServiceType", (object)appointment.ServiceType ?? DBNull.Value);
-                db.Command.Parameters.AddWithValue("@Status", (object)appointment.Status ?? DBNull.Value);
-                db.Command.Parameters.AddWithValue("@ApptDateTime", (object)appointment.RequestDate ?? DBNull.Value);
-                db.Command.Parameters.AddWithValue("@TimeSlot", (object)appointment.TimeSlot ?? DBNull.Value);
-                db.Command.Parameters.AddWithValue("@TicketStatus", (object)appointment.TicketStatus ?? DBNull.Value);
-                db.Command.Parameters.AddWithValue("@Note", (object)appointment.Note ?? DBNull.Value);
-                db.Command.Parameters.AddWithValue("@ResourceID", appointment.ResourceID);
-                db.Command.Parameters.AddWithValue("@StartDateTime", (object)appointment.StartDateTime ?? DBNull.Value);
-                db.Command.Parameters.AddWithValue("@EndDateTime", (object)appointment.EndDateTime ?? DBNull.Value);
+
+                if (!string.IsNullOrEmpty(appointment.ServiceType))
+                {
+                    setClauses.Add("[ServiceType] = @ServiceType");
+                    db.Command.Parameters.AddWithValue("@ServiceType", appointment.ServiceType);
+                }
+                if (!string.IsNullOrEmpty(appointment.TimeSlot))
+                {
+                    setClauses.Add("[TimeSlot] = @TimeSlot");
+                    db.Command.Parameters.AddWithValue("@TimeSlot", appointment.TimeSlot);
+                }
+                if (!string.IsNullOrEmpty(appointment.RequestDate))
+                {
+                    setClauses.Add("[ApptDateTime] = @ApptDateTime");
+                    db.Command.Parameters.AddWithValue("@ApptDateTime", Convert.ToDateTime(appointment.RequestDate));
+                }
+                if (!string.IsNullOrEmpty(appointment.Status))
+                {
+                    setClauses.Add("[Status] = @Status");
+                    db.Command.Parameters.AddWithValue("@Status", appointment.Status);
+                }
+                if (appointment.ResourceID > 0)
+                {
+                    setClauses.Add("[ResourceID] = @ResourceID");
+                    db.Command.Parameters.AddWithValue("@ResourceID", appointment.ResourceID);
+                }
+                if (!string.IsNullOrEmpty(appointment.TicketStatus))
+                {
+                    setClauses.Add("[TicketStatus] = @TicketStatus");
+                    db.Command.Parameters.AddWithValue("@TicketStatus", appointment.TicketStatus);
+                }
+                if (appointment.Note != null)
+                {
+                    setClauses.Add("[Note] = @Note");
+                    db.Command.Parameters.AddWithValue("@Note", appointment.Note);
+                }
+                if (appointment.SiteId > 0)
+                {
+                    setClauses.Add("[SiteId] = @SiteId");
+                    db.Command.Parameters.AddWithValue("@SiteId", appointment.SiteId);
+                }
+                else
+                {
+  
+                    setClauses.Add("[SiteId] = NULL");
+                }
+                if (!string.IsNullOrEmpty(appointment.StartDateTime))
+                {
+                    setClauses.Add("[StartDateTime] = @StartDateTime");
+                    db.Command.Parameters.AddWithValue("@StartDateTime", Convert.ToDateTime(appointment.StartDateTime));
+                }
+                if (!string.IsNullOrEmpty(appointment.EndDateTime))
+                {
+                    setClauses.Add("[EndDateTime] = @EndDateTime");
+                    db.Command.Parameters.AddWithValue("@EndDateTime", Convert.ToDateTime(appointment.EndDateTime));
+                }
+
+                if (setClauses.Count == 0)
+                {
+                    return true;
+                }
+
+                string strSQL = $@"UPDATE [msSchedulerV3].[dbo].[tbl_Appointment]
+                           SET {string.Join(", ", setClauses)}
+                           WHERE [ApptID] = @ApptID AND [CompanyID] = @CompanyID;";
 
                 success = db.UpdateSql(strSQL);
+
                 if (success == true)
                 {
                     TwilioSMSService twilioSMS = new TwilioSMSService();
@@ -550,6 +703,8 @@ namespace FSM
             }
             return success;
         }
+
+
 
 
         [WebMethod]
@@ -715,26 +870,24 @@ namespace FSM
                 string companyId = System.Web.HttpContext.Current.Session["CompanyID"]?.ToString();
                 string userId = System.Web.HttpContext.Current.Session["UserID"]?.ToString();
 
+
                 if (string.IsNullOrEmpty(companyId))
                     return false;
 
+
                 string connectionString = ConfigurationManager.AppSettings["ConnStrJobs"].ToString();
-                
                 using (SqlConnection connection = new SqlConnection(connectionString))
                 {
                     connection.Open();
-                    
                     using (SqlTransaction transaction = connection.BeginTransaction())
                     {
                         try
                         {
-                           
                             string deleteQuery = @"
                                 DELETE FROM myServiceJobs.dbo.FormInstances 
                                 WHERE AppointmentId = @AppointmentId 
                                   AND CustomerID = @CustomerId 
                                   AND CompanyID = @CompanyID";
-                            
                             using (SqlCommand deleteCommand = new SqlCommand(deleteQuery, connection, transaction))
                             {
                                 deleteCommand.Parameters.AddWithValue("@AppointmentId", appointmentId);
@@ -742,8 +895,6 @@ namespace FSM
                                 deleteCommand.Parameters.AddWithValue("@CompanyID", companyId);
                                 deleteCommand.ExecuteNonQuery();
                             }
-                            
-                            
                             // Handle form attachment - can be empty list (remove all forms) or list with form IDs
                             if (formIds != null)
                             {
@@ -754,17 +905,14 @@ namespace FSM
                                     string validateQuery = @"
                                         SELECT Id FROM myServiceJobs.dbo.FormTemplates 
                                         WHERE Id = @TemplateId AND CompanyID = @CompanyID AND IsActive = 1";
-                                    
                                     List<int> validFormIds = new List<int>();
                                     List<int> invalidFormIds = new List<int>();
-                                    
                                     foreach (int formId in formIds)
                                     {
                                         using (SqlCommand validateCommand = new SqlCommand(validateQuery, connection, transaction))
                                         {
                                             validateCommand.Parameters.AddWithValue("@TemplateId", formId);
                                             validateCommand.Parameters.AddWithValue("@CompanyID", companyId);
-                                            
                                             object result = validateCommand.ExecuteScalar();
                                             if (result != null && result != DBNull.Value)
                                             {
@@ -778,13 +926,11 @@ namespace FSM
                                             }
                                         }
                                     }
-                                    
                                     // If there are invalid form IDs, log them but continue with valid ones
                                     if (invalidFormIds.Count > 0)
                                     {
                                         System.Diagnostics.Debug.WriteLine($"Invalid form template IDs: {string.Join(", ", invalidFormIds)}");
                                     }
-                                    
                                     // Insert only valid form instances
                                     foreach (int formId in validFormIds)
                                     {
@@ -796,14 +942,12 @@ namespace FSM
                                                 @CompanyID, @TemplateId, @AppointmentId, @CustomerId,
                                                 'Pending', GETDATE()
                                             )";
-                                        
                                         using (SqlCommand insertCommand = new SqlCommand(insertQuery, connection, transaction))
                                         {
                                             insertCommand.Parameters.AddWithValue("@CompanyID", companyId);
                                             insertCommand.Parameters.AddWithValue("@TemplateId", formId);
                                             insertCommand.Parameters.AddWithValue("@AppointmentId", appointmentId);
                                             insertCommand.Parameters.AddWithValue("@CustomerId", customerId);
-                                            
                                             insertCommand.ExecuteNonQuery();
                                         }
                                     }
@@ -814,7 +958,6 @@ namespace FSM
                                     System.Diagnostics.Debug.WriteLine("No form IDs provided - removing all attached forms");
                                 }
                             }
-                            
                             transaction.Commit();
                             return true;
                         }
@@ -1058,6 +1201,131 @@ namespace FSM
                 throw new Exception("Error retrieving form structure: " + ex.Message);
             }
         }
+
+        [WebMethod]
+        [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
+        public static bool UpdateAppointmentWithCustomFields(Appointment appointment, List<CustomFieldData> customFieldValues)
+        {
+           
+            if (customFieldValues != null)
+            {          
+                SaveCustomFieldData(Convert.ToInt32(appointment.AppoinmentId), customFieldValues);
+            }
+
+            return UpdateAppointment(appointment);
+        }
+
+
+        [WebMethod]
+        [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
+        public static bool SaveCustomFieldData(int appointmentId, List<CustomFieldData> customFieldValues)
+        {
+            string connStrJobs = ConfigurationManager.AppSettings["ConnStrJobs"];
+            using (var con = new SqlConnection(connStrJobs))
+            {
+                con.Open();
+            
+                SqlTransaction transaction = con.BeginTransaction();
+                try
+                {
+                
+                    string deleteSql = "DELETE FROM [msSchedulerV3].[dbo].[AppointmentCustomFields] WHERE AppointmentID = @AppointmentID";
+                    using (var deleteCmd = new SqlCommand(deleteSql, con, transaction))
+                    {
+                        deleteCmd.Parameters.AddWithValue("@AppointmentID", appointmentId);
+                        deleteCmd.ExecuteNonQuery();
+                    }
+
+             
+                    if (customFieldValues != null)
+                    {
+                        foreach (var fieldData in customFieldValues)
+                        {
+                            if (string.IsNullOrEmpty(fieldData.Value) || fieldData.Value == "[]") continue;
+
+                            string insertSql = @"
+                        INSERT INTO [msSchedulerV3].[dbo].[AppointmentCustomFields] (AppointmentID, FieldID, FieldValue, LastUpdated)
+                        VALUES (@AppointmentID, @FieldID, @FieldValue, GETDATE())";
+
+                            using (var cmd = new SqlCommand(insertSql, con, transaction))
+                            {
+                                cmd.Parameters.AddWithValue("@AppointmentID", appointmentId);
+                                cmd.Parameters.AddWithValue("@FieldID", fieldData.FieldId);
+                                cmd.Parameters.AddWithValue("@FieldValue", fieldData.Value);
+                                cmd.ExecuteNonQuery();
+                            }
+                        }
+                    }
+
+                    transaction.Commit(); 
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback(); 
+                    System.Diagnostics.Debug.WriteLine("Error in SaveCustomFieldData: " + ex.Message);
+                    return false;
+                }
+            }
+        }
+
+        [WebMethod]
+        [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
+        public static List<CustomerSite> GetSitesForCustomer(string customerId)
+        {
+            var sites = new List<CustomerSite>();
+            // Ensure we have a valid customerId to query
+            if (string.IsNullOrEmpty(customerId))
+            {
+                return sites;
+            }
+
+            string companyid = HttpContext.Current.Session["CompanyID"].ToString();
+            Database db = new Database();
+            DataTable dt = new DataTable();
+            try
+            {
+                db.Open();
+                string strSQL = @"SELECT Id, SiteName, Address 
+                          FROM [msSchedulerV3].dbo.tbl_CustomerSite 
+                          WHERE CompanyID = @CompanyID AND CustomerID = @CustomerID 
+                          ORDER BY SiteName";
+
+                // Using the existing pattern in your project for parameterized queries
+                db.Command.Parameters.Clear();
+                db.AddParameter("@CompanyID", companyid, SqlDbType.NVarChar);
+                db.AddParameter("@CustomerID", customerId, SqlDbType.NVarChar);
+                db.ExecuteParam(strSQL, out dt);
+                db.Close();
+
+                if (dt.Rows.Count > 0)
+                {
+                    foreach (DataRow dr in dt.Rows)
+                    {
+                        sites.Add(new CustomerSite
+                        {
+                            Id = Convert.ToInt32(dr["Id"]),
+                            SiteName = dr["SiteName"].ToString() ?? "",
+                            Address = dr["Address"].ToString() ?? ""
+                        });
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // It's good practice to log the exception
+                System.Diagnostics.Debug.WriteLine("Error in GetSitesForCustomer: " + ex.Message);
+                if (db != null) db.Close();
+            }
+            return sites;
+        }
+
+        public class CustomFieldData
+        {
+            public int FieldId { get; set; }
+            public string Value { get; set; }
+        }
+
         [WebMethod]
         public static string GetCustomerResponseOnForms(int templateId, int appointmentId, int customerId)
         {
