@@ -284,6 +284,12 @@ function loadCustomers() {
     });
 }
 
+$('#customerTable')
+    .off('draw.dt.statusFilter')
+    .on('draw.dt.statusFilter', function () {
+        applyRowFiltersOnCurrentPage();
+        selectFirstVisibleRow();
+    });
 
 
 function loadCustomers_Backup() {
@@ -376,8 +382,9 @@ function loadCustomers_Backup() {
 }
 
 $(document).on('change', '#statusFilter', function () {
-    if (table) table.ajax.reload(null, true);
+    if (table) table.draw(false); 
 });
+
 
 $(document).on('change', '#hideNA', function () {
     applyRowFiltersOnCurrentPage();
