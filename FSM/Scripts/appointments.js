@@ -193,13 +193,13 @@ function hasConflict(appointment, newTimeSlot, newResource, newDate, excludeId =
     );
 }
 
-
+// Function to get CSS class for time slot based on service type
 function getEventTimeSlotClass(appointment) {
-    return 'service-type-custom'; /
+    return 'service-type-custom'; // Generic class for all service types
 }
-
+// Utility: decide text color based on background brightness
 function getContrastColor(hex) {
-    if (!hex) return "#000"; 
+    if (!hex) return "#000"; // default black if no color
 
     hex = hex.replace("#", "");
 
@@ -543,12 +543,12 @@ function gotoToday(containerId) {
 }
 
 
-
+// Create appointment details popup for calendar events
 const calendarDetailsPopup = document.createElement('div');
 calendarDetailsPopup.className = 'appointment-details-popup';
 document.body.appendChild(calendarDetailsPopup);
 
-
+// Create appointment details popup for appointment cards
 const cardDetailsPopup = document.createElement('div');
 cardDetailsPopup.className = 'appointment-card-details-popup';
 document.body.appendChild(cardDetailsPopup);
@@ -628,33 +628,33 @@ function showDetailsPopup(appointment, element, event, popup) {
 
 function hideDetailsPopup(popup) {
     popup.classList.remove('show');
-
+    // Only remove 'expanded' from calendar-event and appointment-card
     document.querySelectorAll('.calendar-event.expanded, .appointment-card.expanded').forEach(el => {
         el.classList.remove('expanded');
     });
 }
-
+// Function to hide the details popup and remove expanded state
 function hideDetailsPopup(popup) {
     popup.classList.remove('show');
-
+    // Remove expanded class from all appointment elements
     document.querySelectorAll('.calendar-event.expanded, .appointment-card.expanded').forEach(el => {
         el.classList.remove('expanded');
     });
 }
 
-
+// Add hover functionality to appointment elements
 function setupHoverEvents() {
     document.querySelectorAll('.calendar-event, .calendar-event-resource').forEach(element => {
-
+        // Remove existing event listeners to prevent duplicates
         element.removeEventListener('mouseenter', handleMouseEnter);
         element.removeEventListener('mouseleave', handleMouseLeave);
 
-
+        // Define mouseenter handler
         function handleMouseEnter(e) {
             const appointmentId = this.dataset.id;
             const appointment = appointments.find(a => a.AppoinmentId === appointmentId.toString());
             if (appointment) {
-
+                // Choose the appropriate popup based on element class
                 const isCalendarEvent = this.classList.contains('calendar-event') || this.classList.contains('calendar-event-resource');
                 const popup = isCalendarEvent ? calendarDetailsPopup : cardDetailsPopup;
                 showDetailsPopup(appointment, this, e, popup);
@@ -1386,7 +1386,7 @@ function renderUnscheduledList(view = 'date') {
     }
 
     sortedAppointments.forEach(app => {
-
+        // THIS IS THE KEY CHANGE: Use StartDateTime for the display date
         const displayDate = app.StartDateTime ? app.StartDateTime.split(' ')[0] : app.RequestDate;
 
         const card = `
@@ -1594,7 +1594,7 @@ function setupDragAndDrop() {
     });
 
 
-
+ 
 
     $(".drop-target").droppable({
         accept: ".appointment-card, .calendar-event, .calendar-event-resource",
@@ -1614,29 +1614,30 @@ function setupDragAndDrop() {
             const resourceObj = resources.find(r => r.ResourceName === newResourceName);
             const newResourceId = resourceObj ? resourceObj.Id : 0;
 
-
+       
             const formatForServer = (dt) => {
                 if (!dt || !moment(dt).isValid()) return null;
                 return moment(dt).format('MM/DD/YYYY hh:mm A');
             };
 
-
+      
             let newStartDateTime = null;
             let newEndDateTime = null;
 
-
+     
             const timeMatch = (newTime || appointment.TimeSlot).match(/(\d{1,2}:\d{2}\s*[AP]M)/);
             if (timeMatch) {
-
+            
                 newStartDateTime = moment(`${newDate} ${timeMatch[0]}`, 'YYYY-MM-DD hh:mm A');
 
-
+         
                 const durationMinutes = parseDuration(appointment.Duration);
                 if (newStartDateTime.isValid() && durationMinutes > 0) {
                     newEndDateTime = newStartDateTime.clone().add(durationMinutes, 'minutes');
                 }
             }
 
+        
             const serverAppointment = {
                 AppoinmentId: parseInt(appointment.AppoinmentId),
                 CustomerID: parseInt(appointment.CustomerID) || null,
@@ -1647,6 +1648,7 @@ function setupDragAndDrop() {
                 Status: appointment.AppoinmentStatus,
                 TicketStatus: appointment.TicketStatusID || null,
                 Note: appointment.Note || '',
+            
                 StartDateTime: formatForServer(newStartDateTime),
                 EndDateTime: formatForServer(newEndDateTime)
             };
@@ -1662,7 +1664,7 @@ function setupDragAndDrop() {
                     if (response.d) {
                         showAlert({ icon: 'success', title: 'Rescheduled!', timer: 1500, showConfirmButton: false });
 
-         
+                      
                         appointment.RequestDate = newDate;
                         appointment.TimeSlot = newTime || appointment.TimeSlot;
                         appointment.ResourceName = newResourceName;
@@ -1850,6 +1852,7 @@ function openEditModal(id, date, time, resource, confirm) {
         return;
     }
 
+
     const viewDetailsBtn = document.getElementById('viewCustomerDetailsBtn');
     if (viewDetailsBtn) {
         if (a.CustomerID && a.SiteId) {
@@ -1877,7 +1880,7 @@ function openEditModal(id, date, time, resource, confirm) {
 
     loadCustomFields(form, a.AppoinmentId);
 
-
+    // Populate basic fields
     form.querySelector("[id='AppoinmentId']").value = parseInt(a.AppoinmentId);
     form.querySelector("[id='CustomerID']").value = parseInt(a.CustomerID) || '';
     form.querySelector("[name='customerName']").value = a.CustomerName || '';
@@ -1886,13 +1889,13 @@ function openEditModal(id, date, time, resource, confirm) {
     populateSiteSelector(a);
     form.querySelector("[name='note']").value = a.Note || '';
 
-
+    // Populate dropdowns
     getSelectedId(form.querySelector("[id='MainContent_ServiceTypeFilter_Edit']"), a.ServiceType || "");
     getSelectedId(form.querySelector("[id='MainContent_StatusTypeFilter_Edit']"), a.AppoinmentStatus || "");
     getSelectedId(form.querySelector("[id='MainContent_TicketStatusFilter_Edit']"), a.TicketStatus || "");
     getSelectedId(form.querySelector("[name='resource']"), resource || a.ResourceName || "");
 
-
+    // Correctly set Date, Time Slot, and Duration
     const startDateInput = form.querySelector("[id='txt_StartDate']");
     const endDateInput = form.querySelector("[id='txt_EndDate']");
     const durationInput = form.querySelector("[name='duration']");
@@ -1911,14 +1914,14 @@ function openEditModal(id, date, time, resource, confirm) {
 
     durationInput.value = a.Duration || "1 Hr : 0 Min";
 
-
+    // Attach event listeners
     $(datePicker).off('change').on('change', syncModalTimes);
     $(timeSlotSelect).off('change').on('change', syncModalTimes);
     $(durationInput).off('change').on('change', updateEndDateFromDuration);
     $(startDateInput).off('change').on('change', calculateTimeRequired);
     $(endDateInput).off('change').on('change', calculateTimeRequired);
 
-
+    // Run initial sync
     syncModalTimes();
 
 
@@ -2072,7 +2075,7 @@ function updateAppointment(e) {
     saveAppoinmentData(e);
 }
 
-
+// Open modal to confirm scheduling
 function openConfirmModal(id, date, timeSlot, resource) {
     const a = appointments.find(x => x.AppoinmentId === id.toString());
     if (!a) return;
@@ -2208,7 +2211,7 @@ function populateSiteSelector(appointment) {
 
 
 
- 
+
 function handleSiteChange(selectElement) {
     const addressInput = $('#selectedSiteAddress');
     const selectedOption = selectElement.options[selectElement.selectedIndex];
@@ -3410,7 +3413,7 @@ function saveAppoinmentData(e) {
     });
 }
 function saveAllDataFromModal(e) {
-    e.preventDefault(); 
+    e.preventDefault();
 
     const form = document.getElementById("editForm");
     const appointmentId = parseInt(form.querySelector("#AppoinmentId").value);
@@ -3456,7 +3459,7 @@ function saveAllDataFromModal(e) {
         success: function (response) {
             if (response.d) {
                 console.log("Custom fields saved successfully.");
-           
+
             } else {
                 showAlert({ icon: 'error', title: 'Custom Fields Failed', text: 'Could not save custom field data.' });
             }
@@ -3468,7 +3471,7 @@ function saveAllDataFromModal(e) {
     });
 
 
-    updateAppointment(e); 
+    updateAppointment(e);
 
     showAlert({ icon: 'success', title: 'Success!', text: 'Appointment update request sent.' });
     window.editModalInstance.hide();
