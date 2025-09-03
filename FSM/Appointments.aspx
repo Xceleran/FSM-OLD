@@ -75,6 +75,11 @@
             <div class="tab-pane fade show active" id="dateView" role="tabpanel">
                 <div class="date-view-container">
                     <div class="card calendar-container date-view">
+                        <div class="loading-overlay" style="display: none;">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                            </div>
                         <div class="card-header">
                             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                                 <div class="d-flex flex-wrap gap-2 align-items-center">
@@ -699,19 +704,20 @@
                                             <option value="emergency">Emergency</option>
                                         </select>
                                     </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">Time Required</label>
-                                        <input type="text" id="duration" name="duration" class="form-control" readonly="readonly" />
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">Appointment Start Date</label>
-                                        <input type="text" name="txt_StartDate" class="form-control" id="txt_StartDate" readonly="readonly">
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">Appointment End Date</label>
-                                        <input type="text" name="txt_EndDate" class="form-control" id="txt_EndDate" readonly="readonly">
-                                        <small id="customer_EndDate" style="display: none;" class="mb-3 text-warning">End date time cant be smaller than start date time.</small>
-                                    </div>
+                                <div class="col-md-6">
+    <label class="form-label">Time Required</label>
+    <input type="text" id="duration" name="duration" class="form-control" placeholder="e.g., 1 Hr : 30 Min" />
+</div>
+<div class="col-md-6">
+    <label class="form-label">Appointment Start Date</label>
+    <input type="text" name="txt_StartDate" class="form-control" id="txt_StartDate" placeholder="MM/DD/YYYY hh:mm AM/PM">
+</div>
+<div class="col-md-6">
+    <label class="form-label">Appointment End Date</label>
+    <input type="text" name="txt_EndDate" class="form-control" id="txt_EndDate" placeholder="MM/DD/YYYY hh:mm AM/PM">
+    <small id="customer_EndDate" style="display: none;" class="mb-3 text-warning">End date time cant be smaller than start date time.</small>
+</div>
+
                                     <div class="col-12">
                                         <label class="form-label">Service Location (Site)</label>
                                         <div id="siteSelectionContainer">
@@ -731,7 +737,7 @@
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label">Ticket Status</label>
-                                        <select runat="server" id="TicketStatusFilter_Edit" name="status" class="form-select" required>
+                                        <select runat="server" id="TicketStatusFilter_Edit" name="status" class="form-select">
                                             <option value="all">Select</option>
                                         </select>
                                     </div>

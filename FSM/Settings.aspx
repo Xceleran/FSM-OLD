@@ -44,7 +44,7 @@
             </li>
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="sms-settings-tab" data-bs-toggle="tab" data-bs-target="#sms-settings" type="button" role="tab" aria-controls="sms-settings" aria-selected="false">
-                    <i class="bi bi-chat-text me-2"></i>Two Way Texting
+                    <i class="bi bi-chat-text me-2"></i>SMS Settings
                 </button>
             </li>
         </ul>

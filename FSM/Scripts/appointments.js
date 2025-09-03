@@ -676,6 +676,7 @@ function setupHoverEvents() {
 }
 
 function renderDateView(date) {
+    $('#dateView .loading-overlay').show();
     currentDate = new Date(date);
     const container = $("#dayCalendar").addClass('date-view').removeClass('resource-view');
     const view = $("#viewSelect").val();
@@ -1041,6 +1042,9 @@ function renderDateView(date) {
         updateCalendarEventColors();
 
         renderUnscheduledList('date', { from: fromStr, to: toStr });
+        setTimeout(() => {
+            $('#dateView .loading-overlay').hide();
+        }, 100);
     });
 }
 
@@ -1382,6 +1386,9 @@ function renderUnscheduledList(view = 'date') {
     }
 
     sortedAppointments.forEach(app => {
+        // THIS IS THE KEY CHANGE: Use StartDateTime for the display date
+        const displayDate = app.StartDateTime ? app.StartDateTime.split(' ')[0] : app.RequestDate;
+
         const card = `
           <div class="appointment-card card mb-3 shadow-sm unscheduled-item" data-id="${app.AppoinmentId}" draggable="true">
             <div class="card-body p-3">
@@ -1391,7 +1398,7 @@ function renderUnscheduledList(view = 'date') {
               </div>
                <div class="fs-7 text-muted mt-1 line-clamp-2">${app.SiteAddress || app.Address1 || 'No address'}</div>
               <div class="fs-7 text-muted mt-1">
-              <i class="fa fa-calendar me-1"></i>${formatToUSDate(app.RequestDate)}
+              <i class="fa fa-calendar me-1"></i>${formatToUSDate(displayDate)}
                 &nbsp;&nbsp; 
                 <i class="fa fa-clock me-1"></i>${formatTimeRange(app.TimeSlot)}
               </div>
@@ -1407,6 +1414,7 @@ function renderUnscheduledList(view = 'date') {
 
     setupDragAndDrop();
 }
+
 function formatToUSDate(dateString) {
 
     if (!dateString) {
@@ -1435,6 +1443,32 @@ function performSort(view) {
 
     unscheduledSortOrder = unscheduledSortOrder === 'asc' ? 'desc' : 'asc';
     renderUnscheduledList(view);
+}
+function syncModalTimes() {
+    const modal = document.getElementById('editModal');
+    const datePicker = modal.querySelector("[name='date']");
+    const timeSlotSelect = modal.querySelector("[name='timeSlot']");
+    const startDateInput = modal.querySelector('#txt_StartDate');
+    const durationInput = modal.querySelector('#duration');
+
+    const dateValue = datePicker.value;
+    const timeSlotValue = timeSlotSelect.value;
+
+    if (!dateValue || !timeSlotValue) return;
+
+    const selectedSlot = allTimeSlots.find(slot => slot.TimeBlock === timeSlotValue);
+    if (!selectedSlot) return;
+
+    const timeMatch = selectedSlot.TimeBlockSchedule.match(/(\d{1,2}:\d{2}\s*[AP]M)/);
+    if (!timeMatch) return;
+
+    const startTimeStr = timeMatch[0];
+    const newStartDateTime = moment(`${dateValue} ${startTimeStr}`, 'YYYY-MM-DD hh:mm A');
+
+    if (newStartDateTime.isValid()) {
+        startDateInput.value = newStartDateTime.format('MM/DD/YYYY hh:mm A');
+        updateEndDateFromDuration();
+    }
 }
 
 
@@ -1560,9 +1594,8 @@ function setupDragAndDrop() {
     });
 
 
+    // This is inside the setupDragAndDrop function
 
-
-    // Inside setupDragAndDrop()
     $(".drop-target").droppable({
         accept: ".appointment-card, .calendar-event, .calendar-event-resource",
         hoverClass: "drag-over",
@@ -1581,33 +1614,31 @@ function setupDragAndDrop() {
             const resourceObj = resources.find(r => r.ResourceName === newResourceName);
             const newResourceId = resourceObj ? resourceObj.Id : 0;
 
-
+            // --- START OF THE FIX ---
+            // Helper function to format date/time for the server and for moment.js
             const formatForServer = (dt) => {
-                if (!dt || isNaN(dt.getTime())) return null;
-                const mo = (dt.getMonth() + 1).toString().padStart(2, '0');
-                const d = dt.getDate().toString().padStart(2, '0');
-                const y = dt.getFullYear();
-                let h = dt.getHours();
-                const m = dt.getMinutes().toString().padStart(2, '0');
-                const ampm = h >= 12 ? 'PM' : 'AM';
-                h = h % 12;
-                h = h ? h : 12;
-                return `${mo}/${d}/${y} ${h}:${m} ${ampm}`;
+                if (!dt || !moment(dt).isValid()) return null;
+                return moment(dt).format('MM/DD/YYYY hh:mm A');
             };
 
-
-            const timeMatch = (newTime || appointment.TimeSlot).match(/(\d{1,2}:\d{2}\s*[AP]M)/);
+            // Calculate the new Start and End DateTimes based on the drop
             let newStartDateTime = null;
             let newEndDateTime = null;
+
+            // Extract the start time from the new time slot (e.g., "9:30 AM" from "( 9:30AM - 10:00AM )")
+            const timeMatch = (newTime || appointment.TimeSlot).match(/(\d{1,2}:\d{2}\s*[AP]M)/);
             if (timeMatch) {
-                newStartDateTime = new Date(`${newDate} ${timeMatch[0]}`);
+                // Combine the new date and new time to create a moment object
+                newStartDateTime = moment(`${newDate} ${timeMatch[0]}`, 'YYYY-MM-DD hh:mm A');
+
+                // Recalculate the end time using the appointment's duration
                 const durationMinutes = parseDuration(appointment.Duration);
-                if (!isNaN(newStartDateTime.getTime()) && durationMinutes > 0) {
-                    newEndDateTime = new Date(newStartDateTime.getTime() + durationMinutes * 60000);
+                if (newStartDateTime.isValid() && durationMinutes > 0) {
+                    newEndDateTime = newStartDateTime.clone().add(durationMinutes, 'minutes');
                 }
             }
 
-
+            // Prepare the data packet for the server
             const serverAppointment = {
                 AppoinmentId: parseInt(appointment.AppoinmentId),
                 CustomerID: parseInt(appointment.CustomerID) || null,
@@ -1618,10 +1649,11 @@ function setupDragAndDrop() {
                 Status: appointment.AppoinmentStatus,
                 TicketStatus: appointment.TicketStatusID || null,
                 Note: appointment.Note || '',
-
+                // Use the newly calculated and formatted date-times
                 StartDateTime: formatForServer(newStartDateTime),
                 EndDateTime: formatForServer(newEndDateTime)
             };
+            // --- END OF THE FIX ---
 
             $.ajax({
                 type: "POST",
@@ -1633,14 +1665,13 @@ function setupDragAndDrop() {
                     if (response.d) {
                         showAlert({ icon: 'success', title: 'Rescheduled!', timer: 1500, showConfirmButton: false });
 
-
+                        // Update the local appointment object with the new, correct data
                         appointment.RequestDate = newDate;
                         appointment.TimeSlot = newTime || appointment.TimeSlot;
                         appointment.ResourceName = newResourceName;
                         appointment.ResourceID = newResourceId;
-
-                        appointment.StartDateTime = formatForServer(newStartDateTime);
-                        appointment.EndDateTime = formatForServer(newEndDateTime);
+                        appointment.StartDateTime = serverAppointment.StartDateTime;
+                        appointment.EndDateTime = serverAppointment.EndDateTime;
 
                         saveAppointments();
                         updateAllViews();
@@ -1654,8 +1685,6 @@ function setupDragAndDrop() {
             });
         }
     });
-
-
 
 
     $("#unscheduledList, #unscheduledListResource").droppable({
@@ -1817,7 +1846,6 @@ function createAppointment(e) {
     // Clear selected forms
     selectedForms = [];
 }
-
 function openEditModal(id, date, time, resource, confirm) {
     const a = appointments.find(x => x.AppoinmentId === id.toString());
     if (!a) {
@@ -1825,6 +1853,7 @@ function openEditModal(id, date, time, resource, confirm) {
         return;
     }
 
+    // ... (keep the customer details and forms logic here) ...
     const viewDetailsBtn = document.getElementById('viewCustomerDetailsBtn');
     if (viewDetailsBtn) {
         if (a.CustomerID && a.SiteId) {
@@ -1834,18 +1863,12 @@ function openEditModal(id, date, time, resource, confirm) {
             viewDetailsBtn.style.display = 'none';
         }
     }
-
     if (!confirm) {
         loadCurrentlySelectedForms(id);
         loadCustomerDataForModal(id);
     }
-
     if (a.AppoinmentStatus.toLowerCase() === "closed") {
-        showAlert({
-            icon: 'info',
-            title: 'Cannot Edit',
-            text: 'This appointment is closed and cannot be edited.'
-        });
+        showAlert({ icon: 'info', title: 'Cannot Edit', text: 'This appointment is closed and cannot be edited.' });
         return;
     }
 
@@ -1856,40 +1879,53 @@ function openEditModal(id, date, time, resource, confirm) {
         return;
     }
 
-
     loadCustomFields(form, a.AppoinmentId);
 
+    // Populate basic fields
     form.querySelector("[id='AppoinmentId']").value = parseInt(a.AppoinmentId);
     form.querySelector("[id='CustomerID']").value = parseInt(a.CustomerID) || '';
     form.querySelector("[name='customerName']").value = a.CustomerName || '';
     form.querySelector("[name='phone']").value = a.Phone || '';
     form.querySelector("[name='mobile']").value = a.Mobile || '';
-
     populateSiteSelector(a);
     form.querySelector("[name='note']").value = a.Note || '';
-    form.querySelector("[name='duration']").value = a.Duration || "1 Hr";
 
-    const service_select = form.querySelector("[id='MainContent_ServiceTypeFilter_Edit']");
-    getSelectedId(service_select, a.ServiceType || "");
+    // Populate dropdowns
+    getSelectedId(form.querySelector("[id='MainContent_ServiceTypeFilter_Edit']"), a.ServiceType || "");
+    getSelectedId(form.querySelector("[id='MainContent_StatusTypeFilter_Edit']"), a.AppoinmentStatus || "");
+    getSelectedId(form.querySelector("[id='MainContent_TicketStatusFilter_Edit']"), a.TicketStatus || "");
+    getSelectedId(form.querySelector("[name='resource']"), resource || a.ResourceName || "");
 
-    const status_select = form.querySelector("[id='MainContent_StatusTypeFilter_Edit']");
-    getSelectedId(status_select, a.AppoinmentStatus || "");
+    // Correctly set Date, Time Slot, and Duration
+    const startDateInput = form.querySelector("[id='txt_StartDate']");
+    const endDateInput = form.querySelector("[id='txt_EndDate']");
+    const durationInput = form.querySelector("[name='duration']");
+    const datePicker = form.querySelector("[name='date']");
+    const timeSlotSelect = form.querySelector("[name='timeSlot']");
 
-    const ticket_status = form.querySelector("[id='MainContent_TicketStatusFilter_Edit']");
-    getSelectedId(ticket_status, a.TicketStatus || "");
-
-    const resource_select = form.querySelector("[name='resource']");
-    getSelectedId(resource_select, resource || a.ResourceName || "");
-
-    form.querySelector("[name='date']").value = date || a.RequestDate || '';
+    if (a.StartDateTime && moment(a.StartDateTime, 'MM/DD/YYYY hh:mm A').isValid()) {
+        datePicker.value = moment(a.StartDateTime, 'MM/DD/YYYY hh:mm A').format('YYYY-MM-DD');
+    } else {
+        datePicker.value = a.RequestDate || '';
+    }
 
     const timeSlotValue = time || a.TimeSlot || '';
     const matchingSlot = allTimeSlots.find(slot => slot.TimeBlockSchedule === timeSlotValue || slot.TimeBlock === timeSlotValue);
-    form.querySelector("[name='timeSlot']").value = matchingSlot ? matchingSlot.TimeBlock : a.TimeSlot || '';
+    timeSlotSelect.value = matchingSlot ? matchingSlot.TimeBlock : timeSlotValue;
 
-    extractHoursAndMinutes(a.Duration);
-    calculateStartEndTime();
+    durationInput.value = a.Duration || "1 Hr : 0 Min";
 
+    // Attach event listeners
+    $(datePicker).off('change').on('change', syncModalTimes);
+    $(timeSlotSelect).off('change').on('change', syncModalTimes);
+    $(durationInput).off('change').on('change', updateEndDateFromDuration);
+    $(startDateInput).off('change').on('change', calculateTimeRequired);
+    $(endDateInput).off('change').on('change', calculateTimeRequired);
+
+    // Run initial sync
+    syncModalTimes();
+
+    // ... (keep the rest of the function for confirm title, disabling fields, and showing the modal) ...
     if (confirm) {
         $('.confirm-title').removeClass('d-none');
         $('.edit-title').addClass('d-none');
@@ -1899,9 +1935,9 @@ function openEditModal(id, date, time, resource, confirm) {
     }
 
     const isClosed = a.AppoinmentStatus.toLowerCase() === "closed";
-    service_select.disabled = isClosed;
-    status_select.disabled = isClosed;
-    ticket_status.disabled = isClosed;
+    form.querySelector("[id='MainContent_ServiceTypeFilter_Edit']").disabled = isClosed;
+    form.querySelector("[id='MainContent_StatusTypeFilter_Edit']").disabled = isClosed;
+    form.querySelector("[id='MainContent_TicketStatusFilter_Edit']").disabled = isClosed;
 
     try {
         window.editModalInstance.show();
@@ -1909,6 +1945,8 @@ function openEditModal(id, date, time, resource, confirm) {
         console.error('Error opening editModal:', error);
     }
 }
+
+
 
 function loadCustomFields(form, appointmentId) {
     const container = document.getElementById("customFieldsContainer");
@@ -3170,6 +3208,69 @@ function populateTimeSlotDropdown(slots) {
         $dropdown.append(`<option value="${slot.TimeBlock}">${slot.TimeBlockSchedule}</option>`);
     });
 }
+
+/**
+ * Recalculates the "Time Required" field based on the start and end dates.
+ */
+function calculateTimeRequired() {
+    const modal = document.getElementById('editModal');
+    const startDateInput = modal.querySelector('#txt_StartDate');
+    const endDateInput = modal.querySelector('#txt_EndDate');
+    const durationInput = modal.querySelector('#duration');
+    const errorMsg = modal.querySelector('#customer_EndDate');
+
+    const start = moment(startDateInput.value, 'MM/DD/YYYY hh:mm A');
+    const end = moment(endDateInput.value, 'MM/DD/YYYY hh:mm A');
+
+    if (!start.isValid() || !end.isValid()) {
+        durationInput.value = '';
+        return;
+    }
+
+    if (end.isBefore(start)) {
+        errorMsg.style.display = 'block';
+        endDateInput.style.borderColor = 'red';
+        durationInput.value = 'Invalid';
+        return;
+    }
+
+    errorMsg.style.display = 'none';
+    endDateInput.style.borderColor = '';
+
+    const diff = moment.duration(end.diff(start));
+    const hours = Math.floor(diff.asHours());
+    const minutes = diff.minutes();
+
+    durationInput.value = `${hours} Hr : ${minutes} Min`;
+}
+
+/**
+ * Recalculates the "End Date" based on the "Start Date" and the "Time Required" duration.
+ */
+function updateEndDateFromDuration() {
+    const modal = document.getElementById('editModal');
+    const startDateInput = modal.querySelector('#txt_StartDate');
+    const endDateInput = modal.querySelector('#txt_EndDate');
+    const durationInput = modal.querySelector('#duration');
+
+    const start = moment(startDateInput.value, 'MM/DD/YYYY hh:mm A');
+    if (!start.isValid()) return;
+
+    const durationStr = durationInput.value;
+    const hourMatch = durationStr.match(/(\d+)\s*Hr/i);
+    const minuteMatch = durationStr.match(/(\d+)\s*Min/i);
+
+    const hours = hourMatch ? parseInt(hourMatch[1], 10) : 0;
+    const minutes = minuteMatch ? parseInt(minuteMatch[1], 10) : 0;
+
+    if (isNaN(hours) && isNaN(minutes)) return;
+
+    const newEnd = start.clone().add(hours, 'hours').add(minutes, 'minutes');
+    endDateInput.value = newEnd.format('MM/DD/YYYY hh:mm A');
+
+    calculateTimeRequired(); // Re-validate after updating
+}
+
 function populateStatusDropdown() {
     const statusOptions = [
         { value: 'Pending', text: 'Pending' },

@@ -94,5 +94,7 @@ namespace FSM.Entity.Customer
         public string CustomerName { get; set; }
         public string ID { get; set; }
         public string AppointmentId { get; set; }
+        public string CustomerGuid { get; set; }
+        public string ExternalLink { get; set; }
     }
 }

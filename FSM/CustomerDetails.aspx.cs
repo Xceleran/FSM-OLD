@@ -311,36 +311,58 @@ namespace FSM
             var invoices = new List<CustomerInvoice>();
             string companyid = HttpContext.Current.Session["CompanyID"].ToString();
             Database db = new Database();
-            //customerId = "302"; // for testing purpose
             try
             {
                 db.Open();
                 DataTable dt = new DataTable();
-                string sql = @"select ID, Number,Subtotal,isnull([AmountCollect],0.00) as AmountCollect,
-                            isnull([DepositAmount],0.00) as DepositAmount, Discount, Tax, (Total- (isnull(AmountCollect,0.00))) as Due, 
-                            Type, CONVERT(VARCHAR(10), InvoiceDate, 101) as InvoiceDate, Total, AppointmentId
-                            from tbl_Invoice as inv WHERE inv.CustomerID='" + customerId + "' and inv.CompnyID ='" + companyid + "';";
+                // This SQL query joins the invoice and customer tables
+                string sql = @"
+            SELECT 
+                inv.ID, 
+                inv.Number,
+                inv.Subtotal,
+                ISNULL(inv.AmountCollect, 0.00) as AmountCollect,
+                ISNULL(inv.DepositAmount, 0.00) as DepositAmount,
+                inv.Discount, 
+                inv.Tax, 
+                (inv.Total - ISNULL(inv.AmountCollect, 0.00)) as Due, 
+                inv.Type, 
+                CONVERT(VARCHAR(10), inv.InvoiceDate, 101) as InvoiceDate, 
+                inv.Total, 
+                inv.AppointmentId,
+                cust.CustomerGuid -- Fetches the CustomerGuid
+            FROM tbl_Invoice as inv
+            LEFT JOIN tbl_Customer as cust ON inv.CustomerID = cust.CustomerID AND inv.CompnyID = cust.CompanyID
+            WHERE inv.CustomerID = @CustomerID AND inv.CompnyID = @CompanyID;";
+
+                db.AddParameter("@CustomerID", customerId, SqlDbType.NVarChar);
+                db.AddParameter("@CompanyID", companyid, SqlDbType.NVarChar);
+
                 db.ExecuteParam(sql, out dt);
                 db.Close();
+
                 if (dt.Rows.Count > 0)
                 {
                     foreach (DataRow row in dt.Rows)
                     {
                         var invoice = new CustomerInvoice();
-                        invoice.CustomerID = customerId;
-                        invoice.CompanyID = companyid;
+
+                        // Populate all properties, including the new ones
                         invoice.ID = row.Field<string>("ID") ?? "";
-                        invoice.AppointmentId = row.Field<string>("AppointmentId") ?? "";
                         invoice.InvoiceNumber = row.Field<string>("Number") ?? "";
-                        invoice.InvoiceDate = row.Field<string>("InvoiceDate") ?? "";
                         invoice.InvoiceType = row.Field<string>("Type") ?? "";
-                        invoice.Subtotal = row["Subtotal"].ToString() ?? "0.0";
+                        invoice.AppointmentId = row.Field<string>("AppointmentId") ?? "";
+                        invoice.CustomerGuid = row.Field<string>("CustomerGuid") ?? ""; // Set the CustomerGuid
+                                                                                        // ... (populate other fields like Total, Subtotal, etc.)
                         invoice.Total = row["Total"].ToString() ?? "0.0";
+                        invoice.Subtotal = row["Subtotal"].ToString() ?? "0.0";
                         invoice.Due = row["Due"].ToString() ?? "0.0";
                         invoice.Discount = row["Discount"].ToString() ?? "0.0";
                         invoice.Tax = row["Tax"].ToString() ?? "0.0";
                         invoice.DepositAmount = row["DepositAmount"].ToString() ?? "0.0";
 
+
+                        // Determine status
                         if ((Convert.ToDouble(row["Total"].ToString()) - Convert.ToDouble(row["AmountCollect"].ToString())) <= 0)
                         {
                             invoice.InvoiceStatus = "Paid";
@@ -350,20 +372,26 @@ namespace FSM
                             invoice.InvoiceStatus = "Unpaid";
                         }
 
+                        // Construct the final URL
+                        if (!string.IsNullOrEmpty(invoice.ID) && !string.IsNullOrEmpty(invoice.CustomerGuid))
+                        {
+                            string inTypeForUrl = (invoice.InvoiceType == "Proposal") ? "Estimate" : invoice.InvoiceType;
+                            invoice.ExternalLink = $"https://testsite.myserviceforce.com/cec/Invoice.aspx?InvNum={invoice.ID}&cId={invoice.CustomerGuid}&InType={inTypeForUrl}&AppID={invoice.AppointmentId}&FromInvoices=1";
+                        }
+                        else
+                        {
+                            invoice.ExternalLink = "";
+                        }
+
                         invoices.Add(invoice);
                     }
                 }
             }
-            catch (Exception ex)
-            {
-                return invoices;
-            }
-            finally
-            {
-                db.Close();
-            }
+            catch (Exception ex) { /* Handle exceptions */ }
+            finally { db.Close(); }
             return invoices;
         }
+
 
         [WebMethod]
         [ScriptMethod(ResponseFormat = ResponseFormat.Json)]

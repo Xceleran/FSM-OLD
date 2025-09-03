@@ -164,8 +164,16 @@
                                 <option value="proposal">Estimate</option>
                             </select>
                         </div>
-                        <a class="btn btn-primary" onclick="redirectToInvoice('Invoice')">Create Invoice</a>
-                        <a class="btn btn-primary" onclick="redirectToInvoice('Proposal')">Create Estimate</a>
+                     <!-- This is the new, updated code -->
+<a class="btn btn-primary" 
+   onclick="window.open('https://testsite.myserviceforce.com/cec/Invoice.aspx?InType=Invoice&cId=' + customerGuid )">
+   Create Invoice
+</a>
+<a class="btn btn-primary" 
+   onclick="window.open('https://testsite.myserviceforce.com/cec/Invoice.aspx?InType=Proposal&cId=' + customerGuid )">
+   Create Estimate
+</a>
+
                         <button type="button" id="invExport" class="btn btn-primary d-none">Export to Excel</button>
                     </div>
                     <div class="table-responsive">
@@ -840,31 +848,37 @@
             tbody.empty();
 
             if (pageData.length === 0) {
-                tbody.append('<tr><td colspan="11">No invoices found.</td></tr>');
+                // Ensure the colspan is 12 to match the number of columns
+                tbody.append('<tr><td colspan="12">No invoices found.</td></tr>');
                 return;
             }
 
             pageData.forEach(item => {
+                // This is the critical part for the button
+                let cecButton = ''; // Default to an empty string
+                if (item.ExternalLink) { // This checks if the link is not null or empty
+                    cecButton = `<a href="${item.ExternalLink}" target="_blank" class="btn btn-sm btn-outline-primary">View on CEC</a>`;
+                }
+
                 tbody.append(`
-                <tr>
-                <td><a href="#" class="invoice-link"
-                   data-id="${item.ID}" 
-                   data-type="${item.InvoiceType}" 
-                   data-appid="${item.AppointmentId}">${item.InvoiceNumber || ''}</a></td>
-                <td>${item.AppointmentId || ''}</td>
-                <td>${item.InvoiceType || ''}</td>
-                <td>${item.InvoiceDate || ''}</td>
-                <td>${item.Subtotal || ''}</td>
-                <td>${item.Discount || ''}</td>
-                <td>${item.Tax || ''}</td>
-                <td>${item.Total || ''}</td>
-                <td>${item.Due || ''}</td>
-                <td>${item.DepositAmount || ''}</td>
-                <td>${item.InvoiceStatus || ''}</td>
-                </tr>
-                `);
+        <tr>
+            <td><a href="#" class="invoice-link" data-id="${item.ID}" data-type="${item.InvoiceType}" data-appid="${item.AppointmentId}">${item.InvoiceNumber || ''}</a></td>
+            <td>${item.AppointmentId || ''}</td>
+            <td>${item.InvoiceType || ''}</td>
+            <td>${item.InvoiceDate || ''}</td>
+            <td>${item.Subtotal || ''}</td>
+            <td>${item.Discount || ''}</td>
+            <td>${item.Tax || ''}</td>
+            <td>${item.Total || ''}</td>
+            <td>${item.Due || ''}</td>
+            <td>${item.DepositAmount || ''}</td>
+            <td>${item.InvoiceStatus || ''}</td>
+            <td>${cecButton}</td> <!-- The button is added here -->
+        </tr>
+        `);
             });
         }
+
 
         function updatePaginationInv() {
             const totalPages = Math.ceil(filteredInvoiceData.length / pageSizeInv);

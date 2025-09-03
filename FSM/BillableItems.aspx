@@ -2,33 +2,7 @@
 
 <asp:Content ID="BodyContent" ContentPlaceHolderID="MainContent" runat="server">
     <style>
-        :root {
-            --bg-gray-100: rgb(243, 244, 246);
-            --text-gray-800: rgb(31, 41, 55);
-            --text-gray-700: rgb(55, 65, 81);
-            --text-gray-600: rgb(75, 85, 99);
-            --text-orange-700: rgb(38, 85, 152);
-            --bg-orange-200: rgb(185, 215, 244);
-            --text-orange-500: rgb(28, 29, 96);
-            --bg-slate-200: rgb(226, 232, 240);
-            --bg-white: rgb(255, 255, 255);
-            --bg-gray-300: rgb(209, 213, 219);
-            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
-        }
 
-        [data-theme="dark"] {
-            --bg-gray-100: rgb(28, 29, 96);
-            --text-gray-800: rgb(198, 200, 204);
-            --text-gray-700: rgb(239, 242, 247);
-            --text-gray-600: rgb(75, 85, 99);
-            --text-orange-700: rgb(38, 85, 152);
-            --bg-orange-200: rgb(185, 215, 244);
-            --text-orange-500: rgb(28, 29, 96);
-            --bg-slate-200: rgb(226, 232, 240);
-            --bg-white: rgb(255, 255, 255);
-            --bg-gray-300: rgb(209, 213, 219);
-            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -4px rgba(0, 0, 0, 0.2);
-        }
 
         #categoryFilter option {
             background: #ffffffcc !important;
@@ -44,7 +18,10 @@
             margin-top: 75px;
             padding: 0 15px;
         }
-
+        i.fa.fa-plus {
+    margin-right: 5px;
+    font-size: 14px;
+}
         .bill-title {
             font-size: 32px;
             font-weight: bold;
@@ -566,9 +543,12 @@
                 <div class="col-md-6">
                     <span class="btn btn-primary" title="QuickBooks Online Sync" runat="server" id="SyncQuickBook" onclick="SyncQuickBook()">QuickBooks Online Sync</span>
                 </div>
-                <div class="col-md-6">
-                    <span class="btn btn-primary float-end" title="Add Item" runat="server" id="spnAddNew" onclick="AddNewClicked()"><i class="fa fa-plus"></i>+</span>
-                </div>
+               <div class="col-md-6">
+    <a href="https://testsite.myserviceforce.com/cec/Item.aspx" target="_blank" class="btn btn-primary float-end" title="Add Item" id="spnAddNew">
+        <i class="fa fa-plus"></i>Create New
+    </a>
+</div>
+
             </div>
         </section>
         <section class="mb-4">
@@ -635,7 +615,7 @@
             <p id="itemSummary" class="mt-3 text-muted"></p>
         </footer>
 
-        <div class="modal fade" id="itemModal" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true">
+<%--        <div class="modal fade" id="itemModal" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered modal-lg">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -714,7 +694,7 @@
                     </form>
                 </div>
             </div>
-        </div>
+        </div>--%>
     </div>
 
     <script>

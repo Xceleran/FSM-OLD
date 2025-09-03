@@ -132,7 +132,7 @@ namespace FSM
             Database db = new Database();
             try
             {
-                string whereCondition = "WHERE apt.CompanyID = @CompanyID ";
+                string whereCondition = "WHERE apt.CompanyID = @CompanyID AND (apt.SchedulingCal IS NULL OR apt.SchedulingCal != 'CEC') ";
                 if (!string.IsNullOrEmpty(searchValue))
                 {
                     whereCondition += @"AND (
@@ -149,11 +149,13 @@ namespace FSM
                 }
                 if (!string.IsNullOrEmpty(today))
                 {
-                    whereCondition += "AND CONVERT(DATE, apt.ApptDateTime) = @DateFilter ";
+
+                    whereCondition += "AND CONVERT(DATE, COALESCE(apt.StartDateTime, apt.ApptDateTime)) = @DateFilter ";
                 }
                 else if (!string.IsNullOrEmpty(fromDate) && !string.IsNullOrEmpty(toDate))
                 {
-                    whereCondition += "AND CONVERT(DATE, apt.ApptDateTime) BETWEEN @FromDate AND @ToDate ";
+
+                    whereCondition += "AND CONVERT(DATE, COALESCE(apt.StartDateTime, apt.ApptDateTime)) BETWEEN @FromDate AND @ToDate ";
                 }
 
                 db.Open();
@@ -636,8 +638,12 @@ namespace FSM
                 }
                 if (!string.IsNullOrEmpty(appointment.Status))
                 {
-                    setClauses.Add("[Status] = @Status");
-                    db.Command.Parameters.AddWithValue("@Status", appointment.Status);
+                    // This ensures only an integer ID is saved for Status.
+                    if (int.TryParse(appointment.Status, out int statusId) && statusId > 0)
+                    {
+                        setClauses.Add("[Status] = @Status");
+                        db.Command.Parameters.AddWithValue("@Status", statusId);
+                    }
                 }
                 if (appointment.ResourceID > 0)
                 {
@@ -646,9 +652,14 @@ namespace FSM
                 }
                 if (!string.IsNullOrEmpty(appointment.TicketStatus))
                 {
-                    setClauses.Add("[TicketStatus] = @TicketStatus");
-                    db.Command.Parameters.AddWithValue("@TicketStatus", appointment.TicketStatus);
+                    // This ensures only an integer ID is saved for TicketStatus.
+                    if (int.TryParse(appointment.TicketStatus, out int ticketStatusId) && ticketStatusId > 0)
+                    {
+                        setClauses.Add("[TicketStatus] = @TicketStatus");
+                        db.Command.Parameters.AddWithValue("@TicketStatus", ticketStatusId);
+                    }
                 }
+
                 if (appointment.Note != null)
                 {
                     setClauses.Add("[Note] = @Note");
