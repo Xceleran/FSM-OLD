@@ -7,6 +7,20 @@
     <!-- Local Styles and Scripts -->
     <link rel="stylesheet" href="Content/customerdetails.css">
 
+    <style>
+        #appointments .table-responsive {
+    overflow: visible;
+}
+
+#appointments .dropdown-menu {
+    z-index: 1080;
+}
+
+.icon-btn.dropdown-toggle::after {
+    display: none !important;
+}
+    </style>
+
     <div class="custdet-main-container">
         <h1 class="display-6 mb-4">Site : <span id="siteName">
             <asp:Label ID="lblSiteName" runat="server" /></span></h1>
@@ -75,6 +89,7 @@
                                         <asp:HyperLink ID="hlEmail" runat="server" />
                                     </td>
                                 </tr>
+
                                 <tr>
                                     <td>Address</td>
                                     <td id="siteAddress">
@@ -95,6 +110,22 @@
                                     <td id="siteDescription">
                                         <asp:Label ID="lblCreatedOn" runat="server" /></td>
                                 </tr>
+                                <tr>
+                                    <td>MMS or SMS</td>
+                                    <td>
+                                        <a id="btnSms" class="btn btn-sm btn-outline-primary me-2" href="#">
+                                            <i class="fa-solid fa-message me-1"></i>SMS
+                                        </a>
+                                        <a id="btnMms" class="btn btn-sm btn-outline-dark" href="#">
+                                            <i class="fa-solid fa-photo-film me-1"></i>MMS
+                                        </a>
+                                        <small id="smsHint" class="text-muted ms-2 d-none">Works best on mobile</small>
+                                    </td>
+                                </tr>
+
+
+
+
                             </tbody>
                         </table>
                     </div>
@@ -127,6 +158,7 @@
                         <table class="table table-bordered table-hover">
                             <thead class="table-light">
                                 <tr>
+                                    <th scope="col" style="width: 1%">Actions</th>
                                     <th scope="col">Request Date</th>
                                     <th scope="col">Time Slot</th>
                                     <th scope="col">Appointment Type</th>
@@ -135,6 +167,7 @@
                                     <th scope="col">Ticket Status</th>
                                 </tr>
                             </thead>
+
                             <tbody id="apptTableBody"></tbody>
                         </table>
                     </div>
@@ -164,15 +197,13 @@
                                 <option value="proposal">Estimate</option>
                             </select>
                         </div>
-                     <!-- This is the new, updated code -->
-<a class="btn btn-primary" 
-   onclick="window.open('https://testsite.myserviceforce.com/cec/Invoice.aspx?InType=Invoice&cId=' + customerGuid )">
-   Create Invoice
-</a>
-<a class="btn btn-primary" 
-   onclick="window.open('https://testsite.myserviceforce.com/cec/Invoice.aspx?InType=Proposal&cId=' + customerGuid )">
-   Create Estimate
-</a>
+                        
+                        <a class="btn btn-primary"
+                            onclick="window.open('https://testsite.myserviceforce.com/cec/Invoice.aspx?InType=Invoice&cId=' + customerGuid )">Create Invoice
+                        </a>
+                        <a class="btn btn-primary"
+                            onclick="window.open('https://testsite.myserviceforce.com/cec/Invoice.aspx?InType=Proposal&cId=' + customerGuid )">Create Estimate
+                        </a>
 
                         <button type="button" id="invExport" class="btn btn-primary d-none">Export to Excel</button>
                     </div>
@@ -474,7 +505,7 @@
             // Maintenance Agreements
             function renderAgreements(searchTerm = '') {
                 const tbody = document.getElementById('agreementTableBody');
-                const filteredAgreements = site.serviceAgreements.filter(a => 
+                const filteredAgreements = site.serviceAgreements.filter(a =>
                     (a.file || '').toLowerCase().includes(searchTerm.toLowerCase())
                 );
                 tbody.innerHTML = filteredAgreements.map(a => `
@@ -594,7 +625,7 @@
                     { name: 'Doc1.pdf', status: 'Active', link: '#' },
                     { name: 'Doc2.pdf', status: 'Pending', link: '#' }
                 ];
-                const filteredDocs = documents.filter(d => 
+                const filteredDocs = documents.filter(d =>
                     d.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                     d.status.toLowerCase().includes(searchTerm.toLowerCase())
                 );
@@ -709,25 +740,25 @@
             // Get siteId from the page (already available in your code)
             var siteId = parseInt(document.getElementById('<%= lblSiteId.ClientID %>').innerText);
 
-     $.ajax({
-         url: 'CustomerDetails.aspx/GetCustomerAppoinmets',
-         type: "POST",
-         contentType: "application/json; charset=utf-8",
-         data: JSON.stringify({
-             customerId: customerId,
-             siteId: siteId  // Add this parameter
-         }),
-         dataType: 'json',
-         success: function (rs) {
-             appointmentData = rs.d || [];
-             currentPage = 1;
-             applyFilters();
-         },
-         error: function (error) {
-             showToast("Failed to load appointments");
-         }
-     });
- }
+            $.ajax({
+                url: 'CustomerDetails.aspx/GetCustomerAppoinmets',
+                type: "POST",
+                contentType: "application/json; charset=utf-8",
+                data: JSON.stringify({
+                    customerId: customerId,
+                    siteId: siteId  // Add this parameter
+                }),
+                dataType: 'json',
+                success: function (rs) {
+                    appointmentData = rs.d || [];
+                    currentPage = 1;
+                    applyFilters();
+                },
+                error: function (error) {
+                    showToast("Failed to load appointments");
+                }
+            });
+        }
 
         function renderAppointments() {
             const startIndex = (currentPage - 1) * pageSize;
@@ -742,17 +773,100 @@
 
             pageData.forEach(item => {
                 tbody.append(`
-                <tr>
-                    <td>${item.RequestDate || ''}</td>
-                    <td>${item.TimeSlot || ''}</td>
-                    <td>${item.ServiceType || ''}</td>
-                    <td>${item.AppoinmentStatus || ''}</td>
-                    <td>${item.ResourceName || ''}</td>
-                    <td>${item.TicketStatus || ''}</td>
-                </tr>
-            `);
+  <tr>
+    <td class="text-nowrap">
+      <div class="dropdown position-static">
+        <button class="btn btn-sm btn-outline-secondary dropdown-toggle icon-btn"
+                type="button"
+                data-bs-toggle="dropdown"
+                data-bs-display="static"
+                aria-label="Actions"
+                aria-expanded="false"
+                title="Actions">
+          <i class="fa-solid fa-ellipsis-vertical"></i>
+        </button>
+        <ul class="dropdown-menu">
+          <li><a class="dropdown-item appt-action" data-action="reminderEmail" href="#">Send Reminder Email</a></li>
+          <li><a class="dropdown-item appt-action" data-action="reminderSms"   href="#">Send Reminder SMS</a></li>
+          <li><a class="dropdown-item appt-action" data-action="followupEmail" href="#">Send Follow Up Mail</a></li>
+          <li><a class="dropdown-item appt-action" data-action="followupSms"   href="#">Send Follow up SMS</a></li>
+        </ul>
+      </div>
+    </td>
+    <td>${item.RequestDate || ''}</td>
+    <td>${item.TimeSlot || ''}</td>
+    <td>${item.ServiceType || ''}</td>
+    <td>${item.AppoinmentStatus || ''}</td>
+    <td>${item.ResourceName || ''}</td>
+    <td>${item.TicketStatus || ''}</td>
+  </tr>
+`);
+
+
             });
         }
+
+        document.addEventListener('shown.bs.dropdown', function (e) {
+            const toggle = e.target;                         // the button
+            const menu = toggle.nextElementSibling;          // the <ul.dropdown-menu>
+            if (!menu || !menu.classList.contains('dropdown-menu')) return;
+
+            menu.__origParent = menu.parentElement;
+
+            document.body.appendChild(menu);
+
+            const place = () => {
+                const r = toggle.getBoundingClientRect();
+                const docLeft = window.scrollX || window.pageXOffset;
+                const docTop = window.scrollY || window.pageYOffset;
+
+                menu.style.position = 'absolute';
+                menu.style.top = (docTop + r.bottom) + 'px';
+                menu.style.left = (docLeft + r.left) + 'px';
+                menu.style.zIndex = '3000';
+                menu.style.transform = 'none';
+                menu.style.minWidth = Math.max(r.width, 160) + 'px';
+
+                const rightEdge = docLeft + window.innerWidth;
+                const overflowX = (docLeft + r.left) + menu.offsetWidth - rightEdge;
+                if (overflowX > 0) {
+                    menu.style.left = (docLeft + r.left - overflowX - 8) + 'px';
+                }
+
+                const bottomEdge = docTop + window.innerHeight;
+                const wouldBottom = (docTop + r.bottom) + menu.offsetHeight;
+                if (wouldBottom > bottomEdge) {
+                    menu.style.top = (docTop + r.top - menu.offsetHeight) + 'px';
+                }
+            };
+
+            place();
+            menu.__onResize = () => place();
+            window.addEventListener('resize', menu.__onResize);
+        });
+
+        document.addEventListener('hide.bs.dropdown', function (e) {
+            const toggle = e.target;
+            const menu = toggle?.nextElementSibling?.classList?.contains('dropdown-menu')
+                ? toggle.nextElementSibling
+                : document.querySelector('.dropdown-menu.show'); // fallback
+
+            if (!menu) return;
+
+            if (menu.__origParent) {
+                menu.__origParent.appendChild(menu);
+                menu.__origParent = null;
+            }
+            window.removeEventListener('resize', menu.__onResize || (() => { }));
+            menu.__onResize = null;
+
+            menu.style.position = '';
+            menu.style.top = '';
+            menu.style.left = '';
+            menu.style.zIndex = '';
+            menu.style.transform = '';
+            menu.style.minWidth = '';
+        });
 
         function updatePagination() {
             const totalPages = Math.ceil(filteredData.length / pageSize);
@@ -1191,4 +1305,19 @@
             redirectToInvoiceModify(id, type, appId);
         });
     </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const params = new URLSearchParams(location.search);
+            const tab = params.get('tab');
+            if (!tab) return;
+            const btn = document.querySelector(`#custdetTabs .nav-link[data-bs-target="#${tab}"]`);
+            if (btn) {
+                if (window.bootstrap && bootstrap.Tab) new bootstrap.Tab(btn).show();
+                else btn.click();
+            }
+        });
+    </script>
+
+
+
 </asp:Content>

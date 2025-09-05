@@ -507,6 +507,11 @@ function loadCustomerSiteData(customerId) {
 
             // Render Sites
             const sitesContainer = document.getElementById('sites');
+            const custName = (document.getElementById('customerName')?.textContent || '').trim();
+            const emailLinkEl = document.querySelector('#customerEmail a');
+            const custEmailText = (emailLinkEl?.textContent || document.getElementById('customerEmail')?.textContent || '').trim();
+            const custEmailHref = emailLinkEl?.getAttribute('href') || (custEmailText ? `mailto:${custEmailText}` : '');
+
             sitesContainer.innerHTML = '';
 
             sites.forEach(site => {
@@ -515,21 +520,31 @@ function loadCustomerSiteData(customerId) {
                 siteCard.dataset.siteId = site.Id;
 
                 siteCard.innerHTML = `
-          <h3 class="cust-site-title">${escapeHTML(site.SiteName)}</h3>
-          <p class="cust-site-info">Address: ${escapeHTML(site.Address)}</p>
-          <p class="cust-site-info">Contact: ${escapeHTML(site.Contact || '-')}</p>
-          <p class="cust-site-active">${site.IsActive ? "Active" : "Disabled"}</p>
+  <h3 class="cust-site-title">${escapeHTML(site.SiteName)}</h3>
+  <p class="cust-site-info">Address: ${escapeHTML(site.Address)}</p>
+  <p class="cust-site-info">Contact: ${escapeHTML(site.Contact || '-')}</p>
 
-          <div class="cust-site-actions">
-            <button class="cust-site-edit-btn" data-site-id="${site.Id}">Edit</button>
-            <a href="CustomerDetails.aspx?siteId=${site.Id}&custId=${encodeURIComponent(site.CustomerID)}" class="cust-site-view-link">View Details</a>
-          </div>
+  <p class="cust-site-info">Customer: ${escapeHTML(custName || '-')}</p>
+  <p class="cust-site-info">
+    Email: ${custEmailText
+                        ? `<a href="${custEmailHref}">${escapeHTML(custEmailText)}</a>`
+                        : '-'
+                    }
+  </p>
 
-          <div class="cust-site-appts-wrap">
-            <button class="cust-site-appts-toggle" data-site-id="${site.Id}">Show Appointments</button>
-            <div class="cust-site-appts" id="site-appts-${site.Id}" data-loaded="false" style="display:none;"></div>
-          </div>
-        `;
+  <p class="cust-site-active">${site.IsActive ? "Active" : "Disabled"}</p>
+
+  <div class="cust-site-actions">
+    <button class="cust-site-edit-btn" data-site-id="${site.Id}">Edit</button>
+    <a href="CustomerDetails.aspx?siteId=${site.Id}&custId=${encodeURIComponent(site.CustomerID)}" class="cust-site-view-link">View Details</a>
+  </div>
+
+  <div class="cust-site-appts-wrap">
+    <button class="cust-site-appts-toggle" data-site-id="${site.Id}">Show Appointments</button>
+    <div class="cust-site-appts" id="site-appts-${site.Id}" data-loaded="false" style="display:none;"></div>
+  </div>
+`;
+
 
                 if (!site.IsActive) {
                     siteCard.querySelector('.cust-site-view-link')?.classList.add('d-none');
@@ -664,7 +679,6 @@ function renderSiteAppointments(siteId, list, containerEl) {
     }
 
     const getDateStr = (item) => item.AppoinmentDate || item.RequestDate || '';
-
     const toTs = (s) => {
         if (!s) return NaN;
         const m = String(s).trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
@@ -675,7 +689,6 @@ function renderSiteAppointments(siteId, list, containerEl) {
         const t = Date.parse(s);
         return isNaN(t) ? NaN : t;
     };
-
     const normStatus = (s) => (s || '').toLowerCase().trim();
 
     const meta = list.map((item, origIdx) => ({
@@ -685,7 +698,6 @@ function renderSiteAppointments(siteId, list, containerEl) {
         statusNorm: normStatus(item.AppoinmentStatus || 'N/A')
     }));
 
-    // ---- Determining badges based on NEWEST and PREVIOUS-NEWEST overall ----
     const validByDate = meta.filter(m => !isNaN(m.ts))
         .sort((a, b) => (b.ts - a.ts) || (a.origIdx - b.origIdx));
     let mostOrigIdx = 0;
@@ -698,15 +710,16 @@ function renderSiteAppointments(siteId, list, containerEl) {
         prevOrigIdx = list.length > 1 ? 1 : -1;
     }
 
-    
     const rank = (s) => (s === 'scheduled' ? 0 : 1);
     meta.sort((a, b) => {
         const r = rank(a.statusNorm) - rank(b.statusNorm);
         if (r !== 0) return r;
-        const t = (isNaN(b.ts) - isNaN(a.ts)) || (b.ts - a.ts); 
+        const t = (isNaN(b.ts) - isNaN(a.ts)) || (b.ts - a.ts);
         if (t !== 0) return t;
-        return a.origIdx - b.origIdx; 
+        return a.origIdx - b.origIdx;
     });
+
+    const custId = document.getElementById('CustomerID')?.value || '';
 
     const rows = meta.map(({ item, origIdx }) => {
         const date = escapeHTML(getDateStr(item) || '—');
@@ -725,25 +738,59 @@ function renderSiteAppointments(siteId, list, containerEl) {
             }
         })(status);
 
-        let indicatorHtml = '&nbsp;';
+      
+        let indicatorHtml = '';
         if (origIdx === mostOrigIdx) {
-            indicatorHtml = '<span class="badge status-na">Most recent</span>';
+            indicatorHtml = '<span class="badge appt-indicator-badge">Most recent</span>';
         } else if (origIdx === prevOrigIdx) {
-            indicatorHtml = '<span class="badge status-na">Last appointment</span>';
+            indicatorHtml = '<span class="badge appt-indicator-badge">Last appointment</span>';
         }
 
+        // row HTML 
         return `
-      <div class="cust-appt-row d-flex align-items-center py-1 border-bottom">
-        <div class="small" style="min-width:140px">${indicatorHtml}</div>
-        <div class="small" style="min-width:140px"><strong>Date:</strong> ${date}</div>
-        <div class="small" style="min-width:180px"><strong>Type:</strong> ${type}</div>
-        <div class="small"><span class="badge ${statusClass}">${status}</span></div>
-      </div>`;
+  <div class="cust-appt-row"
+       role="button" tabindex="0"
+       data-site-id="${siteId}"
+       data-customer-id="${escapeHTML(document.getElementById('CustomerID')?.value || '')}">
+    <div class="appt-main">
+      <div class="appt-date">${escapeHTML(getDateStr(item) || '—')}</div>
+      <div class="appt-type">${escapeHTML(item.ServiceType || '—')}</div>
+    </div>
+
+    <div class="appt-status">
+      <span class="badge ${statusClass}">${status}</span>
+      ${indicatorHtml}
+      <span class="appt-chevron" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+          <path d="M9 6l6 6-6 6"></path>
+        </svg>
+      </span>
+    </div>
+  </div>`;
+
+
+
     }).join('');
 
     containerEl.innerHTML = `<div class="cust-appt-list">${rows}</div>`;
 }
 
+
+
+$('#sites').off('click.apptRowNav').on('click.apptRowNav', '.cust-appt-row', function () {
+    const siteId = $(this).data('site-id') || $(this).closest('.cust-site-card').data('siteId');
+    const custId = $(this).data('customer-id') || $('#CustomerID').val();
+    if (!siteId || !custId) return;
+    window.location.href = `CustomerDetails.aspx?siteId=${siteId}&custId=${encodeURIComponent(custId)}&tab=appointments`;
+});
+
+
+$('#sites').off('keydown.apptRowNav').on('keydown.apptRowNav', '.cust-appt-row', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        $(this).click();
+    }
+});
 
 
 
