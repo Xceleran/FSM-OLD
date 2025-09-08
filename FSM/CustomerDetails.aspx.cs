@@ -315,7 +315,8 @@ namespace FSM
             {
                 db.Open();
                 DataTable dt = new DataTable();
-                // This SQL query joins the invoice and customer tables
+
+                // InvoiceDate now falls back to CreatedDate/ExpirationDate if null
                 string sql = @"
             SELECT 
                 inv.ID, 
@@ -327,12 +328,13 @@ namespace FSM
                 inv.Tax, 
                 (inv.Total - ISNULL(inv.AmountCollect, 0.00)) as Due, 
                 inv.Type, 
-                CONVERT(VARCHAR(10), inv.InvoiceDate, 101) as InvoiceDate, 
+                CONVERT(VARCHAR(10), COALESCE(inv.InvoiceDate, inv.CreatedDate, inv.ExpirationDate), 101) as InvoiceDate, -- <—
                 inv.Total, 
                 inv.AppointmentId,
-                cust.CustomerGuid -- Fetches the CustomerGuid
+                cust.CustomerGuid
             FROM tbl_Invoice as inv
-            LEFT JOIN tbl_Customer as cust ON inv.CustomerID = cust.CustomerID AND inv.CompnyID = cust.CompanyID
+            LEFT JOIN tbl_Customer as cust 
+              ON inv.CustomerID = cust.CustomerID AND inv.CompnyID = cust.CompanyID
             WHERE inv.CustomerID = @CustomerID AND inv.CompnyID = @CompanyID;";
 
                 db.AddParameter("@CustomerID", customerId, SqlDbType.NVarChar);
@@ -347,13 +349,12 @@ namespace FSM
                     {
                         var invoice = new CustomerInvoice();
 
-                        // Populate all properties, including the new ones
+                        // mappings
                         invoice.ID = row.Field<string>("ID") ?? "";
                         invoice.InvoiceNumber = row.Field<string>("Number") ?? "";
                         invoice.InvoiceType = row.Field<string>("Type") ?? "";
                         invoice.AppointmentId = row.Field<string>("AppointmentId") ?? "";
-                        invoice.CustomerGuid = row.Field<string>("CustomerGuid") ?? ""; // Set the CustomerGuid
-                                                                                        // ... (populate other fields like Total, Subtotal, etc.)
+                        invoice.CustomerGuid = row.Field<string>("CustomerGuid") ?? "";
                         invoice.Total = row["Total"].ToString() ?? "0.0";
                         invoice.Subtotal = row["Subtotal"].ToString() ?? "0.0";
                         invoice.Due = row["Due"].ToString() ?? "0.0";
@@ -361,22 +362,21 @@ namespace FSM
                         invoice.Tax = row["Tax"].ToString() ?? "0.0";
                         invoice.DepositAmount = row["DepositAmount"].ToString() ?? "0.0";
 
+                        // map the computed date
+                        invoice.InvoiceDate = row.Field<string>("InvoiceDate") ?? "";
 
-                        // Determine status
+                        // existing status logic
                         if ((Convert.ToDouble(row["Total"].ToString()) - Convert.ToDouble(row["AmountCollect"].ToString())) <= 0)
-                        {
                             invoice.InvoiceStatus = "Paid";
-                        }
                         else
-                        {
                             invoice.InvoiceStatus = "Unpaid";
-                        }
 
-                        // Construct the final URL
+                        // existing external link logic
                         if (!string.IsNullOrEmpty(invoice.ID) && !string.IsNullOrEmpty(invoice.CustomerGuid))
                         {
                             string inTypeForUrl = (invoice.InvoiceType == "Proposal") ? "Estimate" : invoice.InvoiceType;
-                            invoice.ExternalLink = $"https://testsite.myserviceforce.com/cec/Invoice.aspx?InvNum={invoice.ID}&cId={invoice.CustomerGuid}&InType={inTypeForUrl}&AppID={invoice.AppointmentId}&FromInvoices=1";
+                            invoice.ExternalLink =
+                                $"https://testsite.myserviceforce.com/cec/Invoice.aspx?InvNum={invoice.ID}&cId={invoice.CustomerGuid}&InType={inTypeForUrl}&AppID={invoice.AppointmentId}&FromInvoices=1";
                         }
                         else
                         {
@@ -387,10 +387,11 @@ namespace FSM
                     }
                 }
             }
-            catch (Exception ex) { /* Handle exceptions */ }
+            catch (Exception) { /* Handle exceptions as needed */ }
             finally { db.Close(); }
             return invoices;
         }
+
 
 
         [WebMethod]

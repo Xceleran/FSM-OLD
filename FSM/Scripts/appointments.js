@@ -4410,6 +4410,55 @@ $(document).ready(function () {
     initializeFormsIntegration();
 });
 
+function toISODate(d) {
+    if (!d) return new Date().toISOString().slice(0, 10);
+    const dt = (d instanceof Date) ? d : new Date(d);
+    return new Date(dt.getFullYear(), dt.getMonth(), dt.getDate()).toISOString().slice(0, 10);
+}
+
+function startOfWeek(iso) {
+    const dt = new Date(iso);
+    const off = dt.getDay(); // 0..6
+    dt.setDate(dt.getDate() - off);
+    return toISODate(dt);
+}
+function endOfWeek(iso) {
+    const s = startOfWeek(iso);
+    const dt = new Date(s);
+    dt.setDate(dt.getDate() + 6);
+    return toISODate(dt);
+}
+function firstOfMonth(iso) {
+    const dt = new Date(iso);
+    return toISODate(new Date(dt.getFullYear(), dt.getMonth(), 1));
+}
+function lastOfMonth(iso) {
+    const dt = new Date(iso);
+    return toISODate(new Date(dt.getFullYear(), dt.getMonth() + 1, 0));
+}
+
+function computeRangeByMode(mode, isoDate) {
+    switch (mode) {
+        case 'day': return { from: isoDate, to: isoDate };
+        case 'threeDay': {
+            const d = new Date(isoDate);
+            const from = new Date(d); from.setDate(d.getDate() - 1);
+            const to = new Date(d); to.setDate(d.getDate() + 1);
+            return { from: toISODate(from), to: toISODate(to) };
+        }
+        case 'week': return { from: startOfWeek(isoDate), to: endOfWeek(isoDate) };
+        case 'month': return { from: firstOfMonth(isoDate), to: lastOfMonth(isoDate) };
+        case 'custom':  
+        default: return { from: isoDate, to: isoDate };
+    }
+}
+
+// Read current mode from either Date or Resource mode select
+function getCurrentMode() {
+    const dateMode = $("#viewSelect").val();
+    const resMode = $("#resourceViewSelect").val();
+    return (resMode || dateMode || 'day');
+}
 
 function syncDatePickers(changedPickerId, newDate) {
     if (isDateSyncing) {
@@ -4447,13 +4496,36 @@ function syncDatePickers(changedPickerId, newDate) {
         }
         // This block handles all single date picker changes.
         else {
+            
+            const iso = toISODate(newDate);
+
             ['#dayDatePicker', '#resourceDatePicker', '#mapDatePicker', '#listDatePicker'].forEach(pickerId => {
-                // Update the value of all other date pickers to match the one that was changed.
-                if (pickerId !== changedPickerId) {
-                    $(pickerId).val(newDate);
-                }
+                if (pickerId !== changedPickerId) $(pickerId).val(iso);
             });
+
+            const mode = getCurrentMode();
+
+            if (mode !== 'custom') {
+                const rng = computeRangeByMode(mode, iso);
+
+                // List view range
+                if ($("#listDatePickerFrom").length && $("#listDatePickerTo").length) {
+                    $("#listDatePickerFrom").val(rng.from);
+                    $("#listDatePickerTo").val(rng.to);
+                }
+
+                // Resource view range
+                const resMode = $("#resourceViewSelect").val();
+                if (resMode !== 'custom') {
+                    if ($("#resourceDatePickerFrom").length && $("#resourceDatePickerTo").length) {
+                        $("#resourceDatePickerFrom").val(rng.from);
+                        $("#resourceDatePickerTo").val(rng.to);
+                    }
+                    $("#resourceCustomDateRangeContainer").addClass('d-none');
+                }
+            }
         }
+
 
         // Set the global current date.
         currentDate = new Date(newDate);
@@ -4488,8 +4560,187 @@ function syncDatePickers(changedPickerId, newDate) {
     }
 }
 
+$(document).on('change', '#viewSelect', function () {
+    const mode = $(this).val();
+    $('#resourceViewSelect').val(mode); // reflect on resource mode
+    const d = $('#dayDatePicker').val() || $('#resourceDatePicker').val() || toISODate(new Date());
+    syncDatePickers('#dayDatePicker', d);
+});
 
-// Update the DOMContentLoaded event listener to handle the initial sync
+
+
+// ---- Global view/date sync --------------------------------------------------
+
+(function () {
+    const $dateWrap = $('.date-view-container');
+    const $resourceWrap = $('.resource-view-container');
+
+    // Elements (WebForms-safe, scoped)
+    const $dateMode = $dateWrap.find("[id$='viewSelect']");
+    const $datePicker = $dateWrap.find("[id$='dayDatePicker']");
+
+    const $resMode = $resourceWrap.find("[id$='viewSelect'], #resourceViewSelect");
+    const $resPicker = $resourceWrap.find("[id$='dayDatePicker'], [id$='resourceDatePicker']");
+
+    const $listDate = $("#listDatePicker");
+    const $listFrom = $("#listDatePickerFrom");
+    const $listTo = $("#listDatePickerTo");
+
+    function ymdLocal(d) {
+        const dt = (d instanceof Date) ? d : (typeof d === 'string' ? fromYMDLocal(d) : new Date());
+        const y = dt.getFullYear();
+        const m = String(dt.getMonth() + 1).padStart(2, '0');
+        const dd = String(dt.getDate()).padStart(2, '0');
+        return `${y}-${m}-${dd}`;
+    }
+    function fromYMDLocal(s) {
+        const [y, m, d] = String(s).split('-').map(Number);
+        return new Date(y, (m || 1) - 1, d || 1, 0, 0, 0, 0);
+    }
+    function startOfWeekLocal(iso) {
+        const dt = fromYMDLocal(iso);
+        const dow = dt.getDay(); // Sunday = 0
+        dt.setDate(dt.getDate() - dow);
+        return ymdLocal(dt);
+    }
+    function endOfWeekLocal(iso) {
+        const s = startOfWeekLocal(iso);
+        const dt = fromYMDLocal(s);
+        dt.setDate(dt.getDate() + 6);
+        return ymdLocal(dt);
+    }
+    function firstOfMonthLocal(iso) {
+        const dt = fromYMDLocal(iso);
+        return ymdLocal(new Date(dt.getFullYear(), dt.getMonth(), 1));
+    }
+    function lastOfMonthLocal(iso) {
+        const dt = fromYMDLocal(iso);
+        return ymdLocal(new Date(dt.getFullYear(), dt.getMonth() + 1, 0));
+    }
+    function computeRange(mode, iso) {
+        switch (mode || 'day') {
+            case 'day': return { from: iso, to: iso };
+            case 'threeDay': {
+                const d = fromYMDLocal(iso);
+                const from = new Date(d); from.setDate(d.getDate() - 1);
+                const to = new Date(d); to.setDate(d.getDate() + 1);
+                return { from: ymdLocal(from), to: ymdLocal(to) };
+            }
+            case 'week': return { from: startOfWeekLocal(iso), to: endOfWeekLocal(iso) };
+            case 'month': return { from: firstOfMonthLocal(iso), to: lastOfMonthLocal(iso) };
+            default: return { from: iso, to: iso };
+        }
+    }
+
+    // -------- Shared state + guard --------
+    const SYNC = {
+        mode: 'day',
+        date: ymdLocal(new Date()),
+        muted: false,
+
+        setMode(nextMode) {
+            nextMode = (nextMode || 'day');
+            if (this.muted || this.mode === nextMode) return;
+            this.mode = nextMode;
+            this.apply('mode');
+        },
+
+        setDate(nextISO) {
+            const localISO = ymdLocal(nextISO); 
+            if (this.muted || this.date === localISO) return;
+            this.date = localISO;
+            this.apply('date');
+        },
+
+        apply(source) {
+            this.muted = true; 
+
+            //view selectors in sync
+            if ($dateMode.length) $dateMode.val(this.mode);
+            const resModeNow = $resMode.val();
+            if (resModeNow !== 'custom' && $resMode.length) $resMode.val(this.mode);
+
+            //Sync date pickers 
+            if ($datePicker.length) $datePicker.val(this.date);
+            if ($resPicker.length && resModeNow !== 'custom') $resPicker.val(this.date);
+
+            //Update List by mode
+           
+            const { from, to } = computeRange(this.mode, this.date);
+
+            // Always show the focus date in the single-date control
+            if ($listDate.length) $listDate.val(this.date);
+
+            // And set range if the range controls exist
+            if ($listFrom.length && $listTo.length) {
+                $listFrom.val(from);
+                $listTo.val(to);
+            }
+            //Re-render
+            try {
+                if (typeof renderDateView === 'function') renderDateView(this.date);
+                if (typeof renderResourceView === 'function') renderResourceView(this.date);
+                if (typeof renderListView === 'function') renderListView();
+                if (typeof renderDateNav === 'function' && document.getElementById('resourceNav')) {
+                    renderDateNav('resourceNav', this.date);
+                }
+            } catch (e) {
+                console.warn('Sync render error:', e);
+            }
+
+            this.muted = false;
+        }
+    };
+
+    // Initial bootstrap 
+    const rawMode = ($dateMode.val() || $resMode.val() || 'day');
+    const initMode = (rawMode === 'custom') ? 'day' : rawMode;
+    const initDate =
+        ($datePicker.val() || $resPicker.val() || $listDate.val() || $listFrom.val() || ymdLocal(new Date()));
+
+    SYNC.mode = initMode;
+    SYNC.date = ymdLocal(initDate);
+    SYNC.apply('init');
+
+    // -------- Event wiring --------
+    // Mode changes
+    $(document).on('change', '.date-view-container [id$="viewSelect"]', function () {
+        SYNC.setMode($(this).val());
+    });
+    $(document).on('change', '.resource-view-container [id$="viewSelect"], #resourceViewSelect', function () {
+        SYNC.setMode($(this).val());
+    });
+
+    // Date changes 
+    $(document).on('change', '.date-view-container [id$="dayDatePicker"]', function () {
+        SYNC.setDate(this.value);
+    });
+    $(document).on('change',
+        '.resource-view-container [id$="dayDatePicker"], .resource-view-container [id$="resourceDatePicker"], #resourceDatePicker',
+        function () { SYNC.setDate(this.value); }
+    );
+    $(document).on('change', '#listDatePicker', function () {
+        SYNC.setDate(this.value);
+    });
+
+})();
+
+document.addEventListener('DOMContentLoaded', function () {
+    var today = (function () {
+        const d = new Date();
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${dd}`;
+    })();
+
+    const from = document.getElementById('resourceDatePickerFrom');
+    const to = document.getElementById('resourceDatePickerTo');
+    if (from) from.min = today;
+    if (to) to.min = today;
+});
+
+
 document.addEventListener("DOMContentLoaded", function () {
     const resourceFrom = document.getElementById("resourceDatePickerFrom");
     const resourceTo = document.getElementById("resourceDatePickerTo");

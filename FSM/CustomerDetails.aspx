@@ -9,16 +9,16 @@
 
     <style>
         #appointments .table-responsive {
-    overflow: visible;
-}
+            overflow: visible;
+        }
 
-#appointments .dropdown-menu {
-    z-index: 1080;
-}
+        #appointments .dropdown-menu {
+            z-index: 1080;
+        }
 
-.icon-btn.dropdown-toggle::after {
-    display: none !important;
-}
+        .icon-btn.dropdown-toggle::after {
+            display: none !important;
+        }
     </style>
 
     <div class="custdet-main-container">
@@ -196,8 +196,30 @@
                                 <option value="invoice">Invoice</option>
                                 <option value="proposal">Estimate</option>
                             </select>
+
+                   
+                            <!-- Date filter mode -->
+                            <label for="invDateMode" class="input-group-text">Date</label>
+                            <select id="invDateMode" class="form-select" aria-label="Date filter mode">
+                                <option value="all" selected>All</option>
+                                <option value="on">On</option>
+                                <option value="range">Range</option>
+                            </select>
+
+                            <!-- Single date (shown when mode = On) -->
+                            <span class="input-group-text d-none" id="lblInvOn">On</span>
+                            <input type="date" id="invOn" class="form-control d-none" aria-labelledby="lblInvOn" />
+
+                            <!-- Range dates (shown when mode = Range) -->
+                            <span class="input-group-text d-none" id="lblInvFrom">From</span>
+                            <input type="date" id="invFrom" class="form-control d-none" aria-labelledby="lblInvFrom" />
+                            <span class="input-group-text d-none" id="lblInvTo">To</span>
+                            <input type="date" id="invTo" class="form-control d-none" aria-labelledby="lblInvTo" />
+
+                            <button type="button" id="invClearDate" class="btn btn-outline-secondary">Clear</button>
+
                         </div>
-                        
+
                         <a class="btn btn-primary"
                             onclick="window.open('https://testsite.myserviceforce.com/cec/Invoice.aspx?InType=Invoice&cId=' + customerGuid )">Create Invoice
                         </a>
@@ -212,7 +234,7 @@
                             <thead class="table-light">
                                 <tr>
                                     <th scope="col">Number</th>
-                                    <th scope="col">Appointment ID</th>
+
                                     <th scope="col">Type</th>
                                     <th scope="col">Date</th>
                                     <th scope="col">Subtotal</th>
@@ -471,6 +493,7 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <script>
+
         // Toast Notification
         function showToast(message) {
             const toast = new bootstrap.Toast(document.getElementById('toast'));
@@ -963,7 +986,7 @@
 
             if (pageData.length === 0) {
                 // Ensure the colspan is 12 to match the number of columns
-                tbody.append('<tr><td colspan="12">No invoices found.</td></tr>');
+                tbody.append('<tr><td colspan="11">No invoices found.</td></tr>');
                 return;
             }
 
@@ -977,7 +1000,7 @@
                 tbody.append(`
         <tr>
             <td><a href="#" class="invoice-link" data-id="${item.ID}" data-type="${item.InvoiceType}" data-appid="${item.AppointmentId}">${item.InvoiceNumber || ''}</a></td>
-            <td>${item.AppointmentId || ''}</td>
+            
             <td>${item.InvoiceType || ''}</td>
             <td>${item.InvoiceDate || ''}</td>
             <td>${item.Subtotal || ''}</td>
@@ -1019,27 +1042,85 @@
             }
         });
 
+        //helpers related to date filter for invoice
+        function parseMDY(str) { // "MM/DD/YYYY" -> Date|null
+            if (!str) return null;
+            const p = str.split('/');
+            if (p.length !== 3) return null;
+            const m = +p[0], d = +p[1], y = +p[2];
+            if (!y || !m || !d) return null;
+            return new Date(y, m - 1, d);
+        }
+        function parseYMD(str) { // "YYYY-MM-DD" -> Date|null
+            if (!str) return null;
+            const d = new Date(str);
+            return isNaN(d) ? null : d;
+        }
+        function sameDay(a, b) {
+            return a && b &&
+                a.getFullYear() === b.getFullYear() &&
+                a.getMonth() === b.getMonth() &&
+                a.getDate() === b.getDate();
+        }
+
+        //////////////////
+        function updateDateFilterUI() {
+            const mode = ($('#invDateMode').val() || 'all');
+            const show = (ids, on) => ids.forEach(id => $(id).toggleClass('d-none', !on));
+
+            // On date controls
+            show(['#lblInvOn', '#invOn'], mode === 'on');
+
+            // Range controls
+            show(['#lblInvFrom', '#invFrom', '#lblInvTo', '#invTo'], mode === 'range');
+        }
+
+        $('#invDateMode').on('change', function () {
+            updateDateFilterUI();
+            applyFiltersInv();
+        });
+
+        $('#invOn').on('change', applyFiltersInv);
+        $('#invFrom').on('change', applyFiltersInv);
+        $('#invTo').on('change', applyFiltersInv);
+
+        $('#invClearDate').on('click', function () {
+            $('#invDateMode').val('all');
+            $('#invOn, #invFrom, #invTo').val('');
+            updateDateFilterUI();
+            applyFiltersInv();
+        });
+
+        // initialize visibility on load
+        updateDateFilterUI();
+
+        ///////////////////////////////////////
+
         function applyFiltersInv() {
-            const searchTerm = $('#invSearch').val().trim().toLowerCase();
-            const statusFilter = $('#invFilter').val().trim().toLowerCase();
-            const typeFilter = $('#invFilterType').val().trim().toLowerCase();
+            const searchTerm = ($('#invSearch').val() || '').trim().toLowerCase();
+            const statusFilter = ($('#invFilter').val() || '').trim().toLowerCase();
+            const typeFilter = ($('#invFilterType').val() || '').trim().toLowerCase();
+
+            const mode = ($('#invDateMode').val() || 'all');
+            const onDate = parseYMD(($('#invOn').val() || '').trim());
+            const from = parseYMD(($('#invFrom').val() || '').trim());
+            const to = parseYMD(($('#invTo').val() || '').trim());
 
             filteredInvoiceData = invoiceData.filter(item => {
-                if (item.InvoiceType == "Proposal") {
-                    item.InvoiceType = "Estimate"
-                }
+                
+                if (item.InvoiceType === 'Proposal') item.InvoiceType = 'Estimate';
 
-                // Filter by status if not "all"
-                const matchesStatus = statusFilter === 'all' ||
+                // Status filter
+                const matchesStatus = (statusFilter === 'all') ||
                     (item.InvoiceStatus && item.InvoiceStatus.toLowerCase() === statusFilter);
 
-                const matchesType = typeFilter === 'all' ||
+                // Type filter
+                const matchesType = (typeFilter === 'all') ||
                     (item.InvoiceType && item.InvoiceType.toLowerCase() === typeFilter);
 
-                // Search in multiple fields
+                // Search
                 const combinedText = [
                     item.InvoiceNumber,
-                    item.AppointmentId,
                     item.InvoiceType,
                     item.InvoiceDate,
                     item.Subtotal,
@@ -1048,18 +1129,38 @@
                     item.Total,
                     item.Due,
                     item.DepositAmount,
-                    item.InvoiceStatus,
+                    item.InvoiceStatus
                 ].join(' ').toLowerCase();
-
                 const matchesSearch = combinedText.includes(searchTerm);
 
-                return matchesStatus && matchesType && matchesSearch;
+                // Date filter
+                let matchesDate = true;
+                const invDateObj = parseMDY(item.InvoiceDate); // "MM/DD/YYYY" from server
+
+                if (mode === 'on') {
+                    if (!onDate || !invDateObj) matchesDate = false;
+                    else matchesDate = sameDay(invDateObj, onDate);
+                } else if (mode === 'range') {
+                    if (!invDateObj) {
+                        matchesDate = false;
+                    } else {
+                        if (from && invDateObj < new Date(from.getFullYear(), from.getMonth(), from.getDate())) matchesDate = false;
+                        if (to) {
+                         
+                            const toNext = new Date(to.getFullYear(), to.getMonth(), to.getDate() + 1);
+                            if (invDateObj >= toNext) matchesDate = false;
+                        }
+                    }
+                } // mode === 'all' -> no date constraint
+
+                return matchesStatus && matchesType && matchesSearch && matchesDate;
             });
 
-            currentPage = 1;
+            currentPageInv = 1;
             renderInvoices();
             updatePaginationInv();
         }
+
 
         $('#invSearch').on('input', function () {
             applyFiltersInv();
