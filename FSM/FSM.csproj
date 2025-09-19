@@ -212,6 +212,7 @@
     <Content Include="Scripts\appointments.js" />
     <Content Include="Invoice.aspx" />
     <Content Include="Scripts\customer.js" />
+    <Content Include="Scripts\customerdetails.js" />
     <Content Include="Scripts\forms.js" />
     <Content Include="Scripts\form-response.js" />
     <Content Include="Scripts\signature-handler.js" />

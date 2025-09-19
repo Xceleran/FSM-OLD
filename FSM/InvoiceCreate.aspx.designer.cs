@@ -195,6 +195,24 @@ namespace FSM
         protected global::System.Web.UI.WebControls.HiddenField SV_CustomeID;
 
         /// <summary>
+        /// hfCustomerIdInt control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.HiddenField hfCustomerIdInt;
+
+        /// <summary>
+        /// hfSiteId control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.HiddenField hfSiteId;
+
+        /// <summary>
         /// AppointmentID control.
         /// </summary>
         /// <remarks>
@@ -429,6 +447,24 @@ namespace FSM
         protected global::System.Web.UI.HtmlControls.HtmlInputText txt_Due;
 
         /// <summary>
+        /// txtReqAmount control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.HtmlControls.HtmlInputText txtReqAmount;
+
+        /// <summary>
+        /// hfRequestedAmtType control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.HiddenField hfRequestedAmtType;
+
+        /// <summary>
         /// lblPONO control.
         /// </summary>
         /// <remarks>
@@ -456,15 +492,6 @@ namespace FSM
         protected global::System.Web.UI.HtmlControls.HtmlGenericControl invPermission;
 
         /// <summary>
-        /// SendMail control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.HtmlControls.HtmlInputButton SendMail;
-
-        /// <summary>
         /// _SubmitInvoice control.
         /// </summary>
         /// <remarks>
@@ -472,5 +499,14 @@ namespace FSM
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.HtmlControls.HtmlInputButton _SubmitInvoice;
+
+        /// <summary>
+        /// SendMail control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.HtmlControls.HtmlInputButton SendMail;
     }
 }

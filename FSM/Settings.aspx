@@ -324,8 +324,8 @@
                 fields.forEach(field => {
                     const activeStatus = field.IsActive ? '' : "<span class='badge bg-light text-dark ms-2'>Inactive</span>";
                     const toggleButton = field.IsActive
-                        ? `<button type="button" class="btn btn-sm btn-outline-warning me-2 toggle-btn" data-fieldid="${field.FieldId}"><i class="bi bi-eye-slash-fill me-1"></i> Deactivate</button>`
-                        : `<button type="button" class="btn btn-sm btn-outline-info me-2 toggle-btn" data-fieldid="${field.FieldId}"><i class="bi bi-eye-fill me-1"></i> Activate</button>`;
+                        ? `<button type="button" class="btn btn-sm btn-outline-warning me-2 active-btn" data-fieldid="${field.FieldId}"><i class="bi bi-eye-slash-fill me-1"></i> Deactivate</button>`
+                        : `<button type="button" class="btn btn-sm btn-outline-info me-2 active-btn" data-fieldid="${field.FieldId}"><i class="bi bi-eye-fill me-1"></i> Activate</button>`;
 
                     const li = document.createElement('li');
                     li.className = 'list-group-item d-flex justify-content-between align-items-center';
@@ -396,7 +396,7 @@
                         PageMethods.DeleteField(fieldId, onModifySuccess, onApiError);
                     }
                 }
-                if (target.classList.contains('toggle-btn')) {
+                if (target.classList.contains('active-btn')) {
                     PageMethods.ToggleFieldActive(fieldId, onModifySuccess, onApiError);
                 }
             });

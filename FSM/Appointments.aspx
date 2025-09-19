@@ -76,10 +76,10 @@
                 <div class="date-view-container">
                     <div class="card calendar-container date-view">
                         <div class="loading-overlay" style="display: none;">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
                             </div>
+                        </div>
                         <div class="card-header">
                             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                                 <div class="d-flex flex-wrap gap-2 align-items-center">
@@ -92,9 +92,19 @@
                                         <option value="week">Week</option>
                                         <option value="threeDay">Three-Day</option>
                                         <option value="month">Month</option>
-
+                                        <option value="custom">Custom</option>
                                     </select>
-
+                                     <div id="dateCustomDateRangeContainer" class="custom-date-range-container d-none d-flex align-items-center gap-2">
+        <div class="d-flex align-items-center gap-1">
+            <label for="datePickerFrom" class="form-label mb-0" style="font-size: 12px;">From:</label>
+            <input type="date" id="datePickerFrom" class="form-control form-control-sm" />
+        </div>
+        <div class="d-flex align-items-center gap-1">
+            <label for="datePickerTo" class="form-label mb-0" style="font-size: 12px;">To:</label>
+            <input type="date" id="datePickerTo" class="form-control form-control-sm" />
+        </div>
+        <button id="dateCustomDateSearch" class="btn btn-primary btn-sm">Search</button>
+    </div>
                                     <label for="ServiceTypeFilter" class="form-label mb-0">Filter:</label>
                                     <select name="ServiceTypeFilter" id="ServiceTypeFilter" class="form-select w-200px" runat="server">
                                         <option value="all">All Types</option>
@@ -230,11 +240,11 @@
                                 <div id="resourceCustomDateRangeContainer" class="custom-date-range-container d-none d-flex align-items-center gap-2">
                                     <div class="d-flex align-items-center gap-1">
                                         <label for="resourceDatePickerFrom" class="form-label mb-0" style="font-size: 12px;">From:</label>
-                                        <input type="date" id="resourceDatePickerFrom" class="form-control form-control-sm" min="${new Date().toISOString().split('T')[0]}" />
+                                      <input type="date" id="resourceDatePickerFrom" class="form-control form-control-sm" />
                                     </div>
                                     <div class="d-flex align-items-center gap-1">
                                         <label for="resourceDatePickerTo" class="form-label mb-0" style="font-size: 12px;">To:</label>
-                                        <input type="date" id="resourceDatePickerTo" class="form-control form-control-sm" min="${new Date().toISOString().split('T')[0]}" />
+                                       <input type="date" id="resourceDatePickerTo" class="form-control form-control-sm" />
                                     </div>
                                     <button id="resourceCustomDateSearch" class="btn btn-primary btn-sm">Search</button>
                                 </div>
@@ -372,9 +382,6 @@
                                 <label for="ServiceTypeFilter_List" class="form-label mb-0">Service type:</label>
                                 <select name="ServiceTypeFilter_List" id="ServiceTypeFilter_List" class="form-select" runat="server" onchange="renderListView()">
                                     <option value="all">All Types</option>
-                                    <option value="IT Support">IT Support</option>
-                                    <option value="1 Hour">1 Hour</option>
-                                    <option value="2 Hour">2 Hour</option>
                                 </select>
                             </div>
                             <div>
@@ -389,22 +396,39 @@
                                     <option value="all">Select</option>
                                 </select>
                             </div>
+
                             <div>
+                                <label for="listViewSelect" class="form-label mb-0">View:</label>
+                                <select id="listViewSelect" class="form-select">
+                                    <option value="day" selected>Day</option>
+                                    <option value="threeDay">Three-Day</option>
+                                    <option value="week">Week</option>
+                                    <option value="month">Month</option>
+                                    <option value="custom">Custom</option>
+                                </select>
+                            </div>
+
+                            <div id="listDatePickerContainer">
                                 <label for="listDatePicker" class="form-label mb-0">Date:</label>
                                 <input type="date" id="listDatePicker" class="form-control w-200px">
                             </div>
-                            <div>
-                                <label for="listDatePickerFrom" class="form-label mb-0">From Date:</label>
-                                <input type="date" id="listDatePickerFrom" class="form-control w-200px">
+
+
+                            <div id="listCustomDateRangeContainer" class="d-none d-flex align-items-end gap-2">
+                                <div>
+                                    <label for="listDatePickerFrom" class="form-label mb-0">From Date:</label>
+                                    <input type="date" id="listDatePickerFrom" class="form-control w-200px">
+                                </div>
+                                <div>
+                                    <label for="listDatePickerTo" class="form-label mb-0">To Date:</label>
+                                    <input type="date" id="listDatePickerTo" class="form-control w-200px">
+                                </div>
+                                <div>
+                                    <button type="button" class="btn btn-primary" onclick="searchListView(event)">Search</button>
+                                </div>
                             </div>
-                            <div>
-                                <label for="listDatePickerTo" class="form-label mb-0">To Date:</label>
-                                <input type="date" id="listDatePickerTo" class="form-control w-200px">
-                            </div>
-                            <div>
-                                <label></label>
-                                <button type="button" class="btn btn-primary ms-2" onclick="searchListView(event)">Search By Date</button>
-                            </div>
+
+
                             <div>
                                 <button type="button" class="btn btn-secondary ms-2" onclick="clearFilterListView(event)">Clear</button>
                             </div>
@@ -704,19 +728,19 @@
                                             <option value="emergency">Emergency</option>
                                         </select>
                                     </div>
-                                <div class="col-md-6">
-    <label class="form-label">Time Required</label>
-    <input type="text" id="duration" name="duration" class="form-control" placeholder="e.g., 1 Hr : 30 Min" />
-</div>
-<div class="col-md-6">
-    <label class="form-label">Appointment Start Date</label>
-    <input type="text" name="txt_StartDate" class="form-control" id="txt_StartDate" placeholder="MM/DD/YYYY hh:mm AM/PM">
-</div>
-<div class="col-md-6">
-    <label class="form-label">Appointment End Date</label>
-    <input type="text" name="txt_EndDate" class="form-control" id="txt_EndDate" placeholder="MM/DD/YYYY hh:mm AM/PM">
-    <small id="customer_EndDate" style="display: none;" class="mb-3 text-warning">End date time cant be smaller than start date time.</small>
-</div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Time Required</label>
+                                        <input type="text" id="duration" name="duration" class="form-control" placeholder="e.g., 1 Hr : 30 Min" />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Appointment Start Date</label>
+                                        <input type="text" name="txt_StartDate" class="form-control" id="txt_StartDate" placeholder="MM/DD/YYYY hh:mm AM/PM">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Appointment End Date</label>
+                                        <input type="text" name="txt_EndDate" class="form-control" id="txt_EndDate" placeholder="MM/DD/YYYY hh:mm AM/PM">
+                                        <small id="customer_EndDate" style="display: none;" class="mb-3 text-warning">End date time cant be smaller than start date time.</small>
+                                    </div>
 
                                     <div class="col-12">
                                         <label class="form-label">Service Location (Site)</label>

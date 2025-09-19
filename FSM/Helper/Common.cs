@@ -77,5 +77,8 @@ namespace FSM.Helper
         public string OptionData { get; set; }
 
         public string TableRow { get; set; }
+        public string ReqAmtType { get; set; }
+        public string ReqDepoAmt { get; set; }
+        public string ReqDepoPercent { get; set; }
     }
 }

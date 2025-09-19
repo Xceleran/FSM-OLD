@@ -1,31 +1,4 @@
-﻿/* CSS Variables aligned with main site.css */
-:root {
-    --bg-gray-100: rgb(243, 244, 246);
-    --text-gray-800: rgb(31, 41, 55);
-    --text-gray-700: rgb(55, 65, 81);
-    --text-gray-600: rgb(75, 85, 99);
-    --text-orange-700: rgb(38, 85, 152);
-    --bg-orange-200: rgb(185, 215, 244);
-    --text-orange-500: rgb(28, 29, 96);
-    --bg-slate-200: rgb(226, 232, 240);
-    --bg-white: rgb(255, 255, 255);
-    --bg-gray-300: rgb(209, 213, 219);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
-}
-
-[data-theme="dark"] {
-    --bg-gray-100: rgb(28, 29, 96);
-    --text-gray-800: rgb(198, 200, 204);
-    --text-gray-700: rgb(239, 242, 247);
-    --text-gray-600: rgb(75, 85, 99);
-    --text-orange-700: rgb(38, 85, 152);
-    --bg-orange-200: rgb(185, 215, 244);
-    --text-orange-500: rgb(28, 29, 96);
-    --bg-slate-200: rgb(226, 232, 240);
-    --bg-white: rgb(255, 255, 255);
-    --bg-gray-300: rgb(209, 213, 219);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -4px rgba(0, 0, 0, 0.2);
-}
+﻿
 
 /* Main Container */
 .custdet-main-container {
@@ -33,8 +6,6 @@
     margin-top: 35px;
 
 }
-
-
 
 /* Container */
 .custdet-container {
@@ -74,12 +45,51 @@
 [data-theme="dark"] .custdet-container h2.h4 {
     color: var(--text-gray-700);
 }
+#appointments .table-responsive {
+    overflow: visible;
+}
+
+#appointments .dropdown-menu {
+    z-index: 1080;
+}
+
+.icon-btn.dropdown-toggle::after {
+    display: none !important;
+}
+/* Styles for sortable table headers */
+#invoiceEstimateTable thead th {
+    cursor: pointer;
+    position: relative;
+    user-select: none; /* Prevent text selection on click */
+}
+
+    #invoiceEstimateTable thead th .sort-icon {
+        display: inline-block;
+        width: 1em;
+        height: 1em;
+        margin-left: 5px;
+        vertical-align: middle;
+        opacity: 0.4;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: contain;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 512'%3E%3Cpath fill='currentColor' d='M41 288h238c21.4 0 32.1 25.9 17 41L177 448c-9.4 9.4-24.6 9.4-33.9 0L17 329c-15.1-15.1-4.4-41 17-41zm255-105L177 64c-9.4-9.4-24.6-9.4-33.9 0L17 183c-15.1 15.1-4.4 41 17 41h238c21.4 0 32.1-25.9 17-41z'/%3E%3C/svg%3E" );
+    }
+
+    #invoiceEstimateTable thead th[data-sort-dir="asc"] .sort-icon {
+        opacity: 1;
+        transform: rotate(180deg);
+    }
+
+    #invoiceEstimateTable thead th[data-sort-dir="desc"] .sort-icon {
+        opacity: 1;
+    }
 
 /* Tab Navigation */
 .nav-tabs {
     overflow-x: auto;
     white-space: nowrap;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     border-bottom: 1px solid var(--bg-gray-300);
@@ -249,7 +259,7 @@
 .invoice-link {
     background-color: rgb(94, 124, 253);
     color: white;
-    padding: 3px 10px;
+    padding: 3px 7px;
     border-radius: 10px;
     text-decoration: none;
     display: inline-block;
@@ -274,11 +284,12 @@
 .custdet-container .btn-outline-primary {
     background: var(--bg-white);
     color: rgb(94, 124, 253);
-    padding: 8px 16px;
+    padding: 2px 5px;
     border-radius: 8px;
     border: 1px solid rgb(94, 124, 253);
     cursor: pointer;
     transition: background 0.3s ease;
+    font-size: 14px;
 }
 
     .custdet-controls .btn-outline-primary:hover,
@@ -672,3 +683,20 @@
 [data-theme="dark"] .modal-footer .btn-outline-secondary:hover {
     background: rgba(185, 215, 244, 0.3);
 }
+
+.sortable-header {
+    cursor: pointer;
+    position: relative; 
+}
+
+    .sortable-header:hover {
+        background-color: #f8f9fa; 
+    }
+
+    .sortable-header .fa-sort,
+    .sortable-header .fa-sort-up,
+    .sortable-header .fa-sort-down {
+        color: #a0a0a0; 
+        font-size: 0.8em; 
+        margin-left: 5px; 
+    }

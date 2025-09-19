@@ -16,7 +16,7 @@ let listViewCurrentPage = 1;
 let listViewPageSize = 5;
 let listViewTotalPages = 1;
 let listViewFilteredAppointments = [];
-
+let globalCurrentDate = new Date().toISOString().split('T')[0];
 
 let resourceViewCurrentPage = 1;
 let resourceViewPageSize = 5;
@@ -444,20 +444,30 @@ function renderDateNav(containerId, selectedDate) {
 
     if (view !== 'month') {
         let daysToShow;
+        let startDate; 
 
-        const startDate = new Date(mainSelectedDate);
-
-        if (view === 'custom' && !isDateView && resourceCustomDateRange.from && resourceCustomDateRange.to) {
-            const fromParts = resourceCustomDateRange.from.split('-').map(p => parseInt(p, 10));
-            const toParts = resourceCustomDateRange.to.split('-').map(p => parseInt(p, 10));
-            const fromDate = new Date(fromParts[0], fromParts[1] - 1, fromParts[2]);
-            const toDate = new Date(toParts[0], toParts[1] - 1, toParts[2]);
-            daysToShow = Math.ceil((toDate - fromDate) / (1000 * 60 * 60 * 24)) + 1;
-
-            startDate.setTime(fromDate.getTime());
+        if (view === 'custom') {
+            const range = isDateView ? customDateRange : resourceCustomDateRange;
+            if (range.from && range.to) {
+                startDate = new Date(range.from.replace(/-/g, '\/'));
+                const toDate = new Date(range.to.replace(/-/g, '\/'));
+   
+                daysToShow = Math.ceil((toDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+            } else {
+                startDate = mainSelectedDate;
+                daysToShow = 1;
+            }
+        } else if (view === 'week') {
+            startDate = new Date(mainSelectedDate); 
+            daysToShow = 7;
+        } else if (view === 'threeDay') {
+            startDate = mainSelectedDate;
+            daysToShow = 3;
         } else {
-            daysToShow = view === 'week' ? 7 : view === 'threeDay' ? 3 : 1;
+            startDate = mainSelectedDate;
+            daysToShow = 1;
         }
+
 
 
         html += `<div class="date-boxes">`;
@@ -497,13 +507,10 @@ function renderDateNav(containerId, selectedDate) {
     $(pickerId).val(mainSelectedDateStr);
 }
 
-
-
 function prevPeriod(containerId) {
     const isDateView = containerId === "dateNav";
     const view = isDateView ? $("#viewSelect").val() : $("#resourceViewSelect").val();
-    const pickerId = isDateView ? "#dayDatePicker" : "#resourceDatePicker";
-    const currentDate = new Date($(pickerId).val());
+    const currentDate = new Date(globalCurrentDate);
 
     if (view === 'month') {
         currentDate.setMonth(currentDate.getMonth() - 1);
@@ -511,14 +518,15 @@ function prevPeriod(containerId) {
         const daysToMove = view === 'week' ? 7 : view === 'threeDay' ? 3 : 1;
         currentDate.setDate(currentDate.getDate() - daysToMove);
     }
-    syncDatePickers(pickerId, currentDate.toISOString().split('T')[0]);
+
+    const newDate = currentDate.toISOString().split('T')[0];
+    syncDatePickers(null, newDate);
 }
 
 function nextPeriod(containerId) {
     const isDateView = containerId === "dateNav";
     const view = isDateView ? $("#viewSelect").val() : $("#resourceViewSelect").val();
-    const pickerId = isDateView ? "#dayDatePicker" : "#resourceDatePicker";
-    const currentDate = new Date($(pickerId).val());
+    const currentDate = new Date(globalCurrentDate);
 
     if (view === 'month') {
         currentDate.setMonth(currentDate.getMonth() + 1);
@@ -526,13 +534,13 @@ function nextPeriod(containerId) {
         const daysToMove = view === 'week' ? 7 : view === 'threeDay' ? 3 : 1;
         currentDate.setDate(currentDate.getDate() + daysToMove);
     }
-    syncDatePickers(pickerId, currentDate.toISOString().split('T')[0]);
+
+    const newDate = currentDate.toISOString().split('T')[0];
+    syncDatePickers(null, newDate);
 }
 
 function selectDate(dateStr, containerId) {
-    const isDateView = containerId === "dateNav";
-    const pickerId = isDateView ? "#dayDatePicker" : "#resourceDatePicker";
-    syncDatePickers(pickerId, dateStr);
+    syncDatePickers(null, dateStr);
 }
 
 function gotoToday(containerId) {
@@ -680,58 +688,56 @@ function renderDateView(date) {
     currentDate = new Date(date);
     const container = $("#dayCalendar").addClass('date-view').removeClass('resource-view');
     const view = $("#viewSelect").val();
-
-
+    $("#dayDatePicker").toggleClass('d-none', view === 'custom');
     const $svc = $("[id$='ServiceTypeFilter']");
     const selectedValue = String($svc.val() ?? '').trim();
     const selectedText = String($svc.find('option:selected').text() ?? '').trim();
 
-
-    const isAll = selectedValue === '' ||
-        /^all(\s+(types|services))?$/i.test(selectedValue) ||
-        /^all(\s+(types|services))?$/i.test(selectedText);
-
-
+    const isAll = selectedValue === '' || /^all(\s+(types|services))?$/i.test(selectedValue) || /^all(\s+(types|services))?$/i.test(selectedText);
     const selectedId = (!isAll && /^\d+$/.test(selectedValue)) ? selectedValue : null;
-
-
     const selectedTextNorm = isAll ? '' : selectedText.toLowerCase();
-    ;
 
     const dateStr = currentDate.toISOString().split('T')[0];
     renderDateNav("dateNav", dateStr);
+
     let fromDate, toDate, todayParam;
     let fromStr, toStr;
 
-    switch (view) {
-        case 'month':
-            fromDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-            toDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0); // Use last day of month
-            fromStr = fromDate.toISOString().split('T')[0];
-            toStr = toDate.toISOString().split('T')[0];
-            todayParam = "";
-            break;
-        case 'week':
-            fromDate = new Date(currentDate);
-            toDate = new Date(currentDate);
-            toDate.setDate(currentDate.getDate() + 6);
-            fromStr = fromDate.toISOString().split('T')[0];
-            toStr = toDate.toISOString().split('T')[0];
-            todayParam = "";
-            break;
-        case 'threeDay':
-            fromDate = new Date(currentDate);
-            toDate = new Date(currentDate);
-            toDate.setDate(currentDate.getDate() + 2);
-            fromStr = fromDate.toISOString().split('T')[0];
-            toStr = toDate.toISOString().split('T')[0];
-            todayParam = "";
-            break;
-        default: // 'day' view
-            fromStr = date;
-            toStr = date;
-            todayParam = date;
-            break;
+    if (view === 'custom' && customDateRange.from && customDateRange.to) {
+        fromStr = customDateRange.from;
+        toStr = customDateRange.to;
+        todayParam = "";
+    } else {
+        switch (view) {
+            case 'month':
+                fromDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+                toDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+                fromStr = fromDate.toISOString().split('T')[0];
+                toStr = toDate.toISOString().split('T')[0];
+                todayParam = "";
+                break;
+            case 'week':
+                fromDate = new Date(currentDate);
+                toDate = new Date(currentDate);
+                toDate.setDate(currentDate.getDate() + 6);
+                fromStr = fromDate.toISOString().split('T')[0];
+                toStr = toDate.toISOString().split('T')[0];
+                todayParam = "";
+                break;
+            case 'threeDay':
+                fromDate = new Date(currentDate);
+                toDate = new Date(currentDate);
+                toDate.setDate(currentDate.getDate() + 2);
+                fromStr = fromDate.toISOString().split('T')[0];
+                toStr = toDate.toISOString().split('T')[0];
+                todayParam = "";
+                break;
+            default: // 'day' view
+                fromStr = date;
+                toStr = date;
+                todayParam = date;
+                break;
+        }
     }
 
     const slotDurationMinutes = 30;
@@ -740,10 +746,8 @@ function renderDateView(date) {
         const norm = s => String(s ?? '').trim().toLowerCase();
 
         const filteredAppointments = isAll ? fetchedAppointments : fetchedAppointments.filter(a => {
-
             const aId = a.ServiceTypeID ?? a.ServiceTypeId ?? a.serviceTypeId ?? null;
             if (selectedId != null && aId != null && String(aId) === selectedId) return true;
-
 
             const s = norm(a.ServiceType);
             const f = selectedTextNorm;
@@ -757,13 +761,12 @@ function renderDateView(date) {
             return false;
         });
 
-        let html = `
-            <div class="custom-calendar-header d-flex justify-content-center">
+        let html = `<div class="custom-calendar-header d-flex justify-content-center">
                 <span>${view === 'month' ? currentDate.toLocaleString('default', { month: 'long', year: 'numeric' }) : currentDate.toLocaleDateString()}</span>
             </div>`;
 
-
         if (view === 'month') {
+            // ... (rest of the month view logic remains unchanged)
             const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
             const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
             const startWeek = firstDay.getDay();
@@ -773,97 +776,75 @@ function renderDateView(date) {
             for (let i = 1; i <= totalDays; i++) calendarDays.push(i);
             while (calendarDays.length % 7 !== 0) calendarDays.push(null);
 
-            html += `
-            <div class="calendar-grid-month">
-                ${['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => `
-                    <div class="text-center font-weight-medium p-2 calendar-header-cell">${day}</div>
-                `).join('')}
-            `;
+            html += `<div class="calendar-grid-month">
+                ${['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => `<div class="text-center font-weight-medium p-2 calendar-header-cell">${day}</div>`).join('')}`;
             calendarDays.forEach(day => {
                 const dayDate = day ? `${currentDate.getFullYear()}-${(currentDate.getMonth() + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}` : '';
-                html += `
-                <div class="min-h-100px border p-1 drop-target calendar-cell ${dayDate === dateStr ? 'bg-blue-50 border-blue-200' : ''}" 
-                     data-date="${dayDate}">
-                    ${day ? `
-                        <div class="text-right fs-7 mb-1">${day}</div>
+                html += `<div class="min-h-100px border p-1 drop-target calendar-cell ${dayDate === dateStr ? 'bg-blue-50 border-blue-200' : ''}" data-date="${dayDate}">
+                    ${day ? `<div class="text-right fs-7 mb-1">${day}</div>
                         <div class="space-y-1">
                             ${filteredAppointments.filter(a => a.RequestDate === dayDate).map(a => `
-                                <div class="calendar-event ${getEventTimeSlotClass(a)} fs-7 p-1 cursor-move" 
-                                     data-id="${a.AppoinmentId}" draggable="true">
-
+                                <div class="calendar-event ${getEventTimeSlotClass(a)} fs-7 p-1 cursor-move" data-id="${a.AppoinmentId}" draggable="true">
                                     ${getAppointmentStatusIcon(a.AppoinmentStatus)}
                                     ${getTicketStatusIcon(a.TicketStatus)} 
                                     ${a.CustomerName} 
-
                                     <div class="fs-7 truncate">${a.ServiceType} (${a.Duration})</div>                                
                                    <div class="fs-7 truncate status status-${a.AppoinmentStatus.toLowerCase().replace(/\s+/g, '-')}">${a.AppoinmentStatus}</div>
-                                </div>
-                            `).join('')}
-                        </div>
-                    ` : ''}
-                </div>
-                `;
+                                </div>`).join('')}
+                        </div>` : ''}
+                </div>`;
             });
             html += `</div>`;
-        } else if (view === 'week' || view === 'threeDay') {
-            const days = view === 'week' ? 7 : 3;
-            const startDate = new Date(currentDate);
+        } else if (view === 'week' || view === 'threeDay' || view === 'custom') {
+            let dates = [];
+            if (view === 'custom' && customDateRange.from && customDateRange.to) {
+                const start = new Date(customDateRange.from);
+                const end = new Date(customDateRange.to);
+                for (let d = start; d <= end; d.setDate(d.getDate() + 1)) {
+                    dates.push(new Date(d).toISOString().split('T')[0]);
+                }
+            } else {
+                const days = view === 'week' ? 7 : 3;
+                const startDate = new Date(currentDate);
+                dates = Array.from({ length: days }, (_, i) => {
+                    const d = new Date(startDate);
+                    d.setDate(startDate.getDate() + i);
+                    return d.toISOString().split('T')[0];
+                });
+            }
 
-
-            const dayDates = Array.from({ length: days }, (_, i) => {
-                const d = new Date(startDate);
-                d.setDate(startDate.getDate() + i);
-                return d.toISOString().split('T')[0];
-            });
-
-            html += `
-            <div class="border rounded overflow-hidden">
-               <div class="calendar-grid" style="grid-template-columns: 80px repeat(${dayDates.length}, 1fr);">
+            html += `<div class="border rounded overflow-hidden">
+               <div class="calendar-grid" style="grid-template-columns: 80px repeat(${dates.length}, 1fr);">
                     <div class="p-2 border-right bg-gray-50 calendar-header-cell"></div>
-                    ${dayDates.map(day => `
+                    ${dates.map(day => `
                         <div class="p-2 text-center font-weight-medium border-right last-border-right-none bg-gray-50 calendar-header-cell">
                             <div>${new Date(day).toLocaleDateString('en-US', { weekday: 'short' })}</div>
                             <div>${new Date(day).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
-                        </div>
-                    `).join('')}
+                        </div>`).join('')}
                 </div>
-                <div class="calendar-body">
-            `;
+                <div class="calendar-body">`;
 
             if (!allTimeSlots || allTimeSlots.length === 0) {
-                html += `
-                <div class="text-center py-4 text-muted">
-                    No time slots available. Please try refreshing the page.
-                </div>
-                `;
+                html += `<div class="text-center py-4 text-muted">No time slots available. Please try refreshing the page.</div>`;
             } else {
+                // ... (rest of the week/threeDay/custom view logic remains unchanged)
                 const renderedAppointments = {};
-                dayDates.forEach(d => {
+                dates.forEach(d => {
                     renderedAppointments[d] = new Set();
                 });
 
                 allTimeSlots.forEach((time, index) => {
-                    html += `
-                     <div class="calendar-grid" style="grid-template-columns: 80px repeat(${dayDates.length}, 1fr);">
+                    html += `<div class="calendar-grid" style="grid-template-columns: 80px repeat(${dates.length}, 1fr);">
                         <div class="h-60px border-bottom last-border-bottom-none p-1 fs-7 text-right pr-2 bg-gray-50 calendar-time-cell">
                             ${formatTimeRange(time.TimeBlockSchedule)}
-                        </div>
-                    `;
-                    dayDates.forEach(dStr => {
-                        // Group appointments by time slot for this day
+                        </div>`;
+                    dates.forEach(dStr => {
                         const cellAppointments = filteredAppointments
                             .filter(a => a.RequestDate === dStr && a.TimeSlot)
                             .map(a => {
-
-                                const timeSlot = allTimeSlots.find(slot =>
-                                    slot.TimeBlockSchedule === a.TimeSlot ||
-                                    slot.TimeBlock.toLowerCase() === a.TimeSlot.toLowerCase()
-                                );
+                                const timeSlot = allTimeSlots.find(slot => slot.TimeBlockSchedule === a.TimeSlot || slot.TimeBlock.toLowerCase() === a.TimeSlot.toLowerCase());
                                 if (!timeSlot) {
-                                    console.warn(`No matching time slot for appointment ${a.AppoinmentId}:`, {
-                                        appointmentTimeSlot: a.TimeSlot,
-                                        availableTimeSlots: allTimeSlots.map(s => s.TimeBlockSchedule)
-                                    });
+                                    console.warn(`No matching time slot for appointment ${a.AppoinmentId}:`, { appointmentTimeSlot: a.TimeSlot, availableTimeSlots: allTimeSlots.map(s => s.TimeBlockSchedule) });
                                     return null;
                                 }
                                 const startIndex = allTimeSlots.findIndex(slot => slot.TimeBlockSchedule === timeSlot.TimeBlockSchedule);
@@ -872,13 +853,7 @@ function renderDateView(date) {
                                     const startTimeMinutes = parseTimeToMinutes(timeSlot.TimeBlockSchedule.split('-')[0]);
                                     const slotStartTimeMinutes = parseTimeToMinutes(time.TimeBlockSchedule.split('-')[0]);
                                     if (isNaN(startTimeMinutes) || isNaN(slotStartTimeMinutes) || isNaN(durationMinutes) || slotDurationMinutes === 0) {
-                                        console.warn(`Invalid data for appointment ${a.AppoinmentId}:`, {
-                                            startTimeMinutes,
-                                            slotStartTimeMinutes,
-                                            durationMinutes,
-                                            slotDurationMinutes,
-                                            timeSlot: a.TimeSlot
-                                        });
+                                        console.warn(`Invalid data for appointment ${a.AppoinmentId}:`, { startTimeMinutes, slotStartTimeMinutes, durationMinutes, slotDurationMinutes, timeSlot: a.TimeSlot });
                                         return null;
                                     }
                                     const offsetMinutes = startTimeMinutes - slotStartTimeMinutes;
@@ -890,7 +865,6 @@ function renderDateView(date) {
                             })
                             .filter(a => a && a.startIndex === index);
 
-                        // Sort appointments by start time to ensure consistent ordering
                         cellAppointments.sort((a, b) => {
                             const aStart = parseTimeToMinutes(a.appointment.TimeSlot.split('-')[0]);
                             const bStart = parseTimeToMinutes(b.appointment.TimeSlot.split('-')[0]);
@@ -899,72 +873,52 @@ function renderDateView(date) {
 
                         const numAppointments = cellAppointments.length;
 
-                        html += `
-                        <div class="h-60px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
-                                                       style="overflow: visible;"
-                             data-date="${dStr}" data-time="${time.TimeBlockSchedule}">
+                        html += `<div class="h-60px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell" style="overflow: visible;" data-date="${dStr}" data-time="${time.TimeBlockSchedule}">
                             ${cellAppointments.map((appt, idx) => {
                             renderedAppointments[dStr].add(appt.appointment.AppoinmentId);
-                            return `
-                                <div class="calendar-event ${getEventTimeSlotClass(appt.appointment)} cursor-move fs-7 truncate"
+                            return `<div class="calendar-event ${getEventTimeSlotClass(appt.appointment)} cursor-move fs-7 truncate"
                                      style="position: absolute; top: ${appt.offsetPx}px; left: calc(${idx} * 100% / ${numAppointments}); height: ${appt.heightPx}px; width: calc(100% / ${numAppointments});"
                                      data-id="${appt.appointment.AppoinmentId}" draggable="true">
-
                                     <div class="font-weight-medium fs-7">
                                     ${getAppointmentStatusIcon(appt.appointment.AppoinmentStatus)}
                                     ${getTicketStatusIcon(appt.appointment.TicketStatus)}
                                     ${appt.appointment.CustomerName}
                                     </div>
-
                                     <div class="fs-7 truncate">${appt.appointment.ServiceType} (${appt.appointment.Duration})</div>
-             
-                                </div>
-                                `;
+                                </div>`;
                         }).join('')}
-                        </div>
-                        `;
+                        </div>`;
                     });
                     html += `</div>`;
                 });
             }
-
             html += `</div></div>`;
         } else {
-            html += `
-            <div class="border rounded overflow-hidden">
+
+            html += `<div class="border rounded overflow-hidden">
                 <div class="calendar-grid" style="grid-template-columns: 80px 1fr;">
                     <div class="p-2 border-right bg-gray-50 calendar-header-cell"></div>
                     <div class="p-2 text-center font-weight-medium bg-gray-50 calendar-header-cell">
                        ${currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                     </div>
                 </div>
-                <div class="calendar-body">
-            `;
+                <div class="calendar-body">`;
 
             if (!allTimeSlots || allTimeSlots.length === 0) {
-                html += `
-                <div class="text-center py-4 text-muted">
-                    No time slots available. Please try refreshing the page.
-                </div>
-                `;
+                html += `<div class="text-center py-4 text-muted">No time slots available. Please try refreshing the page.</div>`;
             } else {
                 const renderedAppointments = new Set();
 
                 allTimeSlots.forEach((time, index) => {
-                    html += `
-                    <div class="calendar-grid" style="grid-template-columns: 80px 1fr;">
+                    html += `<div class="calendar-grid" style="grid-template-columns: 80px 1fr;">
                         <div class="h-60px border-bottom last-border-bottom-none p-1 fs-7 text-left pr-2 bg-gray-50 calendar-time-cell">
                             ${formatTimeRange(time.TimeBlockSchedule)}
-                        </div>
-                    `;
+                        </div>`;
 
                     const cellAppointments = filteredAppointments
                         .filter(a => a.RequestDate === dateStr && a.TimeSlot)
                         .map(a => {
-                            const timeSlot = allTimeSlots.find(slot =>
-                                slot.TimeBlockSchedule === a.TimeSlot ||
-                                slot.TimeBlock.toLowerCase() === a.TimeSlot.toLowerCase()
-                            );
+                            const timeSlot = allTimeSlots.find(slot => slot.TimeBlockSchedule === a.TimeSlot || slot.TimeBlock.toLowerCase() === a.TimeSlot.toLowerCase());
                             if (!timeSlot) {
                                 console.warn(`No matching time slot for appointment ${a.AppoinmentId}: TimeSlot=${a.TimeSlot}`);
                                 return null;
@@ -975,13 +929,7 @@ function renderDateView(date) {
                                 const startTimeMinutes = parseTimeToMinutes(timeSlot.TimeBlockSchedule.split('-')[0]);
                                 const slotStartTimeMinutes = parseTimeToMinutes(time.TimeBlockSchedule.split('-')[0]);
                                 if (isNaN(startTimeMinutes) || isNaN(slotStartTimeMinutes) || isNaN(durationMinutes) || slotDurationMinutes === 0) {
-                                    console.warn(`Invalid data for appointment ${a.AppoinmentId}:`, {
-                                        startTimeMinutes,
-                                        slotStartTimeMinutes,
-                                        durationMinutes,
-                                        slotDurationMinutes,
-                                        timeSlot: a.TimeSlot
-                                    });
+                                    console.warn(`Invalid data for appointment ${a.AppoinmentId}:`, { startTimeMinutes, slotStartTimeMinutes, durationMinutes, slotDurationMinutes, timeSlot: a.TimeSlot });
                                     return null;
                                 }
                                 const offsetMinutes = startTimeMinutes - slotStartTimeMinutes;
@@ -993,28 +941,21 @@ function renderDateView(date) {
                         })
                         .filter(a => a);
 
-
                     cellAppointments.sort((a, b) => {
                         const aStart = parseTimeToMinutes(a.appointment.TimeSlot.split('-')[0]);
                         const bStart = parseTimeToMinutes(b.appointment.TimeSlot.split('-')[0]);
                         return aStart - bStart;
                     });
 
-
                     const appointmentWidth = 150;
                     const maxAppointments = cellAppointments.length;
                     const totalWidth = maxAppointments * appointmentWidth;
 
-
-                    html += `
-                                      <div class="h-60px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell"
-                     style="min-width: ${totalWidth}px; overflow: visible;"
-                     data-date="${dateStr}" data-time="${time.TimeBlockSchedule}">
+                    html += `<div class="h-60px border-bottom last-border-bottom-none border-right last-border-right-none p-1 relative drop-target calendar-cell" style="min-width: ${totalWidth}px; overflow: visible;" data-date="${dateStr}" data-time="${time.TimeBlockSchedule}">
                     ${cellAppointments.map((appt, idx) => {
                         const leftPx = idx * appointmentWidth;
                         renderedAppointments.add(appt.appointment.AppoinmentId);
-                        return `
-                            <div class="calendar-event ${getEventTimeSlotClass(appt.appointment)} cursor-move fs-7 truncate"
+                        return `<div class="calendar-event ${getEventTimeSlotClass(appt.appointment)} cursor-move fs-7 truncate"
                                  style="position: absolute; top: ${appt.offsetPx}px; left: ${leftPx}px; height: ${appt.heightPx}px; width: ${appointmentWidth}px;"
                                  data-id="${appt.appointment.AppoinmentId}" draggable="true">
                                 <div class="font-weight-medium fs-7">
@@ -1024,15 +965,12 @@ function renderDateView(date) {
                                 </div>
                                 <div class="truncate">${appt.appointment.ServiceType} (${appt.appointment.Duration})</div>
                            <div class="fs-7 status status-${appt.appointment.AppoinmentStatus.toLowerCase().replace(/\s+/g, '-')}">${appt.appointment.AppoinmentStatus}</div>
-                            </div>
-                        `;
+                            </div>`;
                     }).join('')}
-                </div>
-            `;
+                </div>`;
                     html += `</div>`;
                 });
             }
-
             html += `</div></div>`;
         }
 
@@ -1047,6 +985,7 @@ function renderDateView(date) {
         }, 100);
     });
 }
+
 
 $(document).off('change.servicetype', "[id$='ServiceTypeFilter']")
     .on('change.servicetype', "[id$='ServiceTypeFilter']", function () {
@@ -1162,11 +1101,68 @@ $(document).off('click', 'th.sortable').on('click', 'th.sortable', function () {
     updateListViewPagination();
 });
 
-
 function renderListView() {
+    const viewMode = $("#listViewSelect").val() || 'day';
     const selectedDate = $("#listDatePicker").val() || "";
     const selectedDateFrom = $("#listDatePickerFrom").val() || "";
     const selectedDateTo = $("#listDatePickerTo").val() || "";
+
+    let fromDate, toDate;
+
+    if (viewMode === 'custom' && selectedDateFrom && selectedDateTo) {
+
+        fromDate = selectedDateFrom;
+        toDate = selectedDateTo;
+    } else {
+
+        const computeRange = (mode, iso) => {
+            const fromYMDLocal = (s) => {
+                const [y, m, d] = String(s).split('-').map(Number);
+                return new Date(y, (m || 1) - 1, d || 1, 0, 0, 0, 0);
+            };
+            const ymdLocal = (d) => {
+                const dt = (d instanceof Date) ? d : fromYMDLocal(d);
+                const y = dt.getFullYear();
+                const m = String(dt.getMonth() + 1).padStart(2, '0');
+                const dd = String(dt.getDate()).padStart(2, '0');
+                return `${y}-${m}-${dd}`;
+            };
+            const startOfWeekLocal = (isoDate) => {
+                const dt = fromYMDLocal(isoDate);
+                dt.setDate(dt.getDate() - dt.getDay());
+                return ymdLocal(dt);
+            };
+            const endOfWeekLocal = (isoDate) => {
+                const dt = fromYMDLocal(startOfWeekLocal(isoDate));
+                dt.setDate(dt.getDate() + 6);
+                return ymdLocal(dt);
+            };
+            const firstOfMonthLocal = (isoDate) => {
+                const dt = fromYMDLocal(isoDate);
+                return ymdLocal(new Date(dt.getFullYear(), dt.getMonth(), 1));
+            };
+            const lastOfMonthLocal = (isoDate) => {
+                const dt = fromYMDLocal(isoDate);
+                return ymdLocal(new Date(dt.getFullYear(), dt.getMonth() + 1, 0));
+            };
+
+            switch (mode || 'day') {
+                case 'day': return { from: iso, to: iso };
+                case 'threeDay': {
+                    const d = fromYMDLocal(iso);
+                    const to = new Date(d); to.setDate(d.getDate() + 2);
+                    return { from: ymdLocal(d), to: ymdLocal(to) };
+                }
+                case 'week': return { from: startOfWeekLocal(iso), to: endOfWeekLocal(iso) };
+                case 'month': return { from: firstOfMonthLocal(iso), to: lastOfMonthLocal(iso) };
+                default: return { from: iso, to: iso };
+            }
+        };
+
+        const range = computeRange(viewMode, selectedDate);
+        fromDate = range.from;
+        toDate = range.to;
+    }
     const searchTerm = ($("#search_term").val() || "").trim().toLowerCase();
 
     const $type = $("[id$='ServiceTypeFilter_List']");
@@ -1185,7 +1181,7 @@ function renderListView() {
     const statusIsAll = isAll(statusVal) || isAll(statusText);
     const ticketIsAll = isAll(ticketVal) || isAll(ticketText);
 
-    //  ID filters 
+ 
     const typeIdSel = (!typeIsAll && /^\d+$/.test(typeVal)) ? typeVal : null;
     const statusIdSel = (!statusIsAll && /^\d+$/.test(statusVal)) ? statusVal : null;
     const ticketIdSel = (!ticketIsAll && /^\d+$/.test(ticketVal)) ? ticketVal : null;
@@ -1194,8 +1190,6 @@ function renderListView() {
     const statusTextSel = statusIsAll ? "" : statusText.toLowerCase();
     const ticketTextSel = ticketIsAll ? "" : ticketText.toLowerCase();
 
-    let fromDate = selectedDateFrom, toDate = selectedDateTo;
-    if (!selectedDateFrom || !selectedDateTo) { fromDate = selectedDate; toDate = selectedDate; }
 
     if (fromDate && toDate && new Date(toDate) < new Date(fromDate)) {
         showAlert({ icon: "error", title: "Invalid Date Range", text: "To date must be after or equal to from date." });
@@ -1203,6 +1197,7 @@ function renderListView() {
     }
 
     $("#listViewLoading").show();
+
 
     getAppoinments(searchTerm, fromDate, toDate, "", function (appointments) {
         const norm = s => String(s ?? "").trim().toLowerCase();
@@ -1303,6 +1298,7 @@ function renderListView() {
     });
 }
 
+
 function renderUnscheduledList(view = 'date') {
     const isResourceView = view === 'resource';
 
@@ -1386,7 +1382,6 @@ function renderUnscheduledList(view = 'date') {
     }
 
     sortedAppointments.forEach(app => {
-        // THIS IS THE KEY CHANGE: Use StartDateTime for the display date
         const displayDate = app.StartDateTime ? app.StartDateTime.split(' ')[0] : app.RequestDate;
 
         const card = `
@@ -2314,6 +2309,7 @@ function renderResourceView(date) {
 
     const selectedGroup = $("#dispatchGroup").val();
     const view = $("#resourceViewSelect").val();
+    $("#resourceDatePicker").toggleClass('d-none', view === 'custom');
     const filteredResources = resources;
     const slotDurationMinutes = 30;
     const pixelsPerSlot = 100;
@@ -2707,7 +2703,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const newModalInstance = new bootstrap.Modal(document.getElementById("newModal"));
     const editModalInstance = new bootstrap.Modal(document.getElementById("editModal"));
     const confirmModalInstance = new bootstrap.Modal(document.getElementById("confirmModal"));
-
+    globalCurrentDate = new Date().toISOString().split('T')[0];
+    $('#dayDatePicker').val(globalCurrentDate);
+    $('#resourceDatePicker').val(globalCurrentDate);
+    $('#mapDatePicker').val(globalCurrentDate);
+    $('#listDatePicker').val(globalCurrentDate);
     window.newModalInstance = newModalInstance;
     window.editModalInstance = editModalInstance;
     window.confirmModalInstance = confirmModalInstance;
@@ -2922,21 +2922,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
 
             });
-            const setupDatePickerSync = (pickerId) => {
-                const pickerElement = document.getElementById(pickerId.replace('#', ''));
-                if (pickerElement) {
-                    pickerElement.addEventListener('change', (e) => {
 
-                        if (pickerId === '#listDatePicker' && e.target.value) {
-                            $("#listDatePickerFrom").val("");
-                            $("#listDatePickerTo").val("");
-                        }
-                        syncDatePickers(pickerId, e.target.value);
-                    });
-                }
-            };
-
-            ['#dayDatePicker', '#resourceDatePicker', '#mapDatePicker', '#listDatePicker'].forEach(setupDatePickerSync);
 
 
             // View select handlers
@@ -3208,9 +3194,6 @@ function populateTimeSlotDropdown(slots) {
     });
 }
 
-/**
- * Recalculates the "Time Required" field based on the start and end dates.
- */
 function calculateTimeRequired() {
     const modal = document.getElementById('editModal');
     const startDateInput = modal.querySelector('#txt_StartDate');
@@ -3243,9 +3226,6 @@ function calculateTimeRequired() {
     durationInput.value = `${hours} Hr : ${minutes} Min`;
 }
 
-/**
- * Recalculates the "End Date" based on the "Start Date" and the "Time Required" duration.
- */
 function updateEndDateFromDuration() {
     const modal = document.getElementById('editModal');
     const startDateInput = modal.querySelector('#txt_StartDate');
@@ -3503,7 +3483,6 @@ function calculateStartEndTime() {
     const dateValue = form.querySelector("[name='date']").value;
 
     if (!timeSlot || !dateValue) {
-        // Clear fields if data is missing
         form.querySelector("[id='txt_StartDate']").value = '';
         form.querySelector("[id='txt_EndDate']").value = '';
         return;
@@ -4461,121 +4440,185 @@ function getCurrentMode() {
 }
 
 function syncDatePickers(changedPickerId, newDate) {
-    if (isDateSyncing) {
-        console.log('Date syncing already in progress, skipping...');
-        return;
-    }
+    if (isDateSyncing) return;
     isDateSyncing = true;
 
     try {
         if (!newDate || isNaN(new Date(newDate))) {
-            console.warn('Invalid date in syncDatePickers, using today');
-            newDate = new Date().toISOString().split('T')[0];
-        }
-        console.log(`Syncing date pickers: changedPickerId=${changedPickerId}, newDate=${newDate}`);
-
-        // This block handles the special case where a date *range* is selected in the list view.
-        // It should remain as is.
-        if (changedPickerId === '#listDatePickerFrom' || changedPickerId === '#listDatePickerTo') {
-            const fromDate = $("#listDatePickerFrom").val();
-            const toDate = $("#listDatePickerTo").val();
-
-            if (fromDate && toDate) {
-                $("#resourceDatePickerFrom").val(fromDate);
-                $("#resourceDatePickerTo").val(toDate);
-                $("#resourceViewSelect").val('custom');
-                $("#resourceCustomDateRangeContainer").removeClass('d-none');
-
-                resourceCustomDateRange.from = fromDate;
-                resourceCustomDateRange.to = toDate;
-
-                if (currentView === "resource") {
-                    renderResourceView(fromDate);
-                }
-            }
-        }
-        // This block handles all single date picker changes.
-        else {
-            
-            const iso = toISODate(newDate);
-
-            ['#dayDatePicker', '#resourceDatePicker', '#mapDatePicker', '#listDatePicker'].forEach(pickerId => {
-                if (pickerId !== changedPickerId) $(pickerId).val(iso);
-            });
-
-            const mode = getCurrentMode();
-
-            if (mode !== 'custom') {
-                const rng = computeRangeByMode(mode, iso);
-
-                // List view range
-                if ($("#listDatePickerFrom").length && $("#listDatePickerTo").length) {
-                    $("#listDatePickerFrom").val(rng.from);
-                    $("#listDatePickerTo").val(rng.to);
-                }
-
-                // Resource view range
-                const resMode = $("#resourceViewSelect").val();
-                if (resMode !== 'custom') {
-                    if ($("#resourceDatePickerFrom").length && $("#resourceDatePickerTo").length) {
-                        $("#resourceDatePickerFrom").val(rng.from);
-                        $("#resourceDatePickerTo").val(rng.to);
-                    }
-                    $("#resourceCustomDateRangeContainer").addClass('d-none');
-                }
-            }
+            newDate = globalCurrentDate;
         }
 
+        // Update global date
+        globalCurrentDate = newDate;
 
-        // Set the global current date.
-        currentDate = new Date(newDate);
+        // Update all pickers
+        $('#dayDatePicker').val(newDate);
+        $('#resourceDatePicker').val(newDate);
+        $('#mapDatePicker').val(newDate);
+        $('#listDatePicker').val(newDate);
 
-        // This is the crucial part: After any date change, we must determine which view is
-        // currently active and re-render it along with its specific date navigation.
-        switch (currentView) {
-            case "date":
-                renderDateView(newDate);
-                break;
-            case "resource":
-                // For the resource view, it's essential to re-render both the view
-                // and its date navigation bar to keep them in sync.
-                renderResourceView(newDate);
-                renderDateNav('resourceNav', newDate); // Explicitly call renderDateNav for the resource view
-                break;
-            case "map":
-                renderMapView(newDate); // The map view doesn't have a complex date nav, so just re-render the map.
-                break;
-            case "list":
-                renderListView(); // The list view's rendering is handled by its own function.
-                break;
-            default:
-                console.warn(`Unknown currentView: ${currentView}`);
+        // Update current views based on active tab
+        if (currentView === "date") {
+            renderDateView(newDate);
+        } else if (currentView === "resource") {
+            renderResourceView(newDate);
+        } else if (currentView === "map") {
+            renderMapView(newDate);
+        } else if (currentView === "list") {
+            renderListView();
         }
+
+        // Update both navigation components
+        renderDateNav('dateNav', newDate);
+        renderDateNav('resourceNav', newDate);
+
     } catch (error) {
         console.error('Error syncing date pickers:', error);
     } finally {
-        // Release the lock to allow the next sync operation.
         isDateSyncing = false;
-        console.log('Date syncing completed');
     }
 }
 
-$(document).on('change', '#viewSelect', function () {
-    const mode = $(this).val();
-    $('#resourceViewSelect').val(mode); // reflect on resource mode
-    const d = $('#dayDatePicker').val() || $('#resourceDatePicker').val() || toISODate(new Date());
-    syncDatePickers('#dayDatePicker', d);
-});
+(function () {
 
+    function toLocalISO(d) {
+        const dt = (d instanceof Date) ? d : (typeof d === 'string' ? fromLocalISO(d) : new Date());
+        if (isNaN(dt.getTime())) return toLocalISO(new Date());
+        const y = dt.getFullYear();
+        const m = String(dt.getMonth() + 1).padStart(2, '0');
+        const dd = String(dt.getDate()).padStart(2, '0');
+        return `${y}-${m}-${dd}`;
+    }
 
+    function fromLocalISO(s) {
+        if (!s) return new Date();
+        const parts = String(s).split('-').map(Number);
+        return new Date(parts[0], (parts[1] || 1) - 1, parts[2] || 1);
+    }
 
-// ---- Global view/date sync --------------------------------------------------
+    const SYNC = {
+        mode: 'day',
+        date: toLocalISO(new Date()), 
+        from: toLocalISO(new Date()), 
+        to: toLocalISO(new Date()),  
+        isSyncing: false,
+
+        setMode(newMode) {
+            newMode = (newMode || 'day');
+            if (this.isSyncing || this.mode === newMode) return;
+            this.mode = newMode;
+            this.applyState('mode_change');
+        },
+
+        setDate(newDate) {
+            const localISO = toLocalISO(newDate);
+            if (this.isSyncing || this.date === localISO) return;
+            this.date = localISO;
+            if (this.mode === 'custom') {
+                this.mode = 'day';
+            }
+            this.applyState('date_change');
+        },
+
+        setCustomRange(fromDate, toDate) {
+            const fromISO = toLocalISO(fromDate);
+            const toISO = toLocalISO(toDate);
+            if (this.isSyncing) return;
+
+            this.mode = 'custom';
+            this.from = fromISO;
+            this.to = toISO;
+            this.applyState('custom_range_set');
+        },
+
+        applyState(trigger) {
+            if (this.isSyncing) return;
+            this.isSyncing = true;
+
+            $("#viewSelect, #resourceViewSelect, #listViewSelect").val(this.mode);
+            const isCustom = this.mode === 'custom';
+            $('#dateCustomDateRangeContainer, #resourceCustomDateRangeContainer, #listCustomDateRangeContainer').toggleClass('d-none', !isCustom);
+            $('#dayDatePicker, #resourceDatePicker, #listDatePickerContainer').toggleClass('d-none', isCustom);
+            if (isCustom) {
+                $('#datePickerFrom, #resourceDatePickerFrom, #listDatePickerFrom').val(this.from);
+                $('#datePickerTo, #resourceDatePickerTo, #listDatePickerTo').val(this.to);
+            } else {
+                $('#dayDatePicker, #resourceDatePicker, #mapDatePicker, #listDatePicker').val(this.date);
+            }
+
+            customDateRange.from = this.from;
+            customDateRange.to = this.to;
+            resourceCustomDateRange.from = this.from;
+            resourceCustomDateRange.to = this.to;
+            try {
+                const renderDate = isCustom ? this.from : this.date;
+
+                switch (currentView) {
+                    case "date":
+                        renderDateView(renderDate);
+                        break;
+                    case "resource":
+                        renderResourceView(renderDate);
+                        break;
+                    case "list":
+                        renderListView(); 
+                        break;
+                    case "map":
+                        renderMapView(); 
+                        break;
+                }
+                renderDateNav('dateNav', renderDate);
+                renderDateNav('resourceNav', renderDate);
+            } catch (e) {
+                console.error('Error during view re-render:', e);
+            }
+
+            this.isSyncing = false; // Release the lock
+        }
+    };
+
+    $(document).ready(function () {
+        $(document).on('change', '#viewSelect, #resourceViewSelect, #listViewSelect', function () {
+            SYNC.setMode($(this).val());
+        });
+
+     
+        $(document).on('change', '#dayDatePicker, #resourceDatePicker, #listDatePicker, #mapDatePicker', function () {
+            SYNC.setDate(this.value);
+        });
+
+        function handleCustomSearch(fromId, toId) {
+            const fromDate = $(fromId).val();
+            const toDate = $(toId).val();
+            if (!fromDate || !toDate) {
+                showAlert({ icon: 'warning', title: 'Missing Dates', text: 'Please select both a "From" and "To" date.' });
+                return;
+            }
+            if (new Date(toDate) < new Date(fromDate)) {
+                showAlert({ icon: 'error', title: 'Invalid Range', text: '"To" date must be on or after the "From" date.' });
+                return;
+            }
+            SYNC.setCustomRange(fromDate, toDate);
+        }
+
+        $('#dateCustomDateSearch').on('click', () => handleCustomSearch('#datePickerFrom', '#datePickerTo'));
+        $('#resourceCustomDateSearch').on('click', () => handleCustomSearch('#resourceDatePickerFrom', '#resourceDatePickerTo'));
+        $('#listCustomDateRangeContainer button').on('click', () => handleCustomSearch('#listDatePickerFrom', '#listDatePickerTo'));
+
+        const initialDate = $("#dayDatePicker").val() || toLocalISO(new Date());
+        SYNC.date = initialDate;
+        SYNC.from = initialDate;
+        SYNC.to = initialDate;
+        SYNC.applyState('init');
+    });
+
+})();
+
 
 (function () {
     const $dateWrap = $('.date-view-container');
     const $resourceWrap = $('.resource-view-container');
 
-    // Elements (WebForms-safe, scoped)
     const $dateMode = $dateWrap.find("[id$='viewSelect']");
     const $datePicker = $dateWrap.find("[id$='dayDatePicker']");
 
@@ -4632,7 +4675,6 @@ $(document).on('change', '#viewSelect', function () {
         }
     }
 
-    // -------- Shared state + guard --------
     const SYNC = {
         mode: 'day',
         date: ymdLocal(new Date()),
@@ -4692,7 +4734,6 @@ $(document).on('change', '#viewSelect', function () {
         }
     };
 
-    // Initial bootstrap 
     const rawMode = ($dateMode.val() || $resMode.val() || 'day');
     const initMode = (rawMode === 'custom') ? 'day' : rawMode;
     const initDate =
@@ -4702,8 +4743,6 @@ $(document).on('change', '#viewSelect', function () {
     SYNC.date = ymdLocal(initDate);
     SYNC.apply('init');
 
-    // -------- Event wiring --------
-    // Mode changes
     $(document).on('change', '.date-view-container [id$="viewSelect"]', function () {
         SYNC.setMode($(this).val());
     });
@@ -4736,10 +4775,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const from = document.getElementById('resourceDatePickerFrom');
     const to = document.getElementById('resourceDatePickerTo');
-    if (from) from.min = today;
-    if (to) to.min = today;
-});
-
+    });
 
 document.addEventListener("DOMContentLoaded", function () {
     const resourceFrom = document.getElementById("resourceDatePickerFrom");
@@ -4747,27 +4783,24 @@ document.addEventListener("DOMContentLoaded", function () {
     const listFrom = document.getElementById("listDatePickerFrom");
     const listTo = document.getElementById("listDatePickerTo");
 
-    // Helper function to sync dates and trigger appropriate actions
+
     function syncDates(source, target, isFromDate) {
         source.addEventListener("change", () => {
-            // Update the corresponding field
+  
             target.value = source.value;
 
-            // If we're updating from list view to resource view
+
             if (source === listFrom || source === listTo) {
                 const fromDate = $("#listDatePickerFrom").val();
                 const toDate = $("#listDatePickerTo").val();
 
                 if (fromDate && toDate) {
-                    // Set resource view to custom mode
                     $("#resourceViewSelect").val('custom');
                     $("#resourceCustomDateRangeContainer").removeClass('d-none');
-
-                    // Update the resource view's custom date range
                     resourceCustomDateRange.from = fromDate;
                     resourceCustomDateRange.to = toDate;
 
-                    // If we're in resource view, trigger the search
+
                     if (currentView === "resource") {
                         renderResourceView(fromDate);
                     }
@@ -4776,7 +4809,6 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // Sync both directions
     syncDates(resourceFrom, listFrom, true);
     syncDates(listFrom, resourceFrom, true);
     syncDates(resourceTo, listTo, false);
@@ -4820,16 +4852,13 @@ function loadCustomerDataForModal(appointmentId) {
 }
 
 
-// Populate customer data tab in the modal
 function populateCustomerDataTab(customerData) {
-    // Update the customer data tab content
     const customerDataTab = document.getElementById('customer-data');
     if (!customerDataTab) {
         console.error('Customer data tab not found');
         return;
     }
 
-    // Update the table content
     const customerNameCell = customerDataTab.querySelector('#customerName');
     const siteContactCell = customerDataTab.querySelector('#siteContact');
     const customerEmailCell = customerDataTab.querySelector('#customerEmail');
@@ -4875,17 +4904,15 @@ function populateCustomerDataTab(customerData) {
     }
 }
 
-// Pagination functions for list view
+
 function updateListViewPagination() {
     const totalItems = listViewFilteredAppointments.length;
     listViewTotalPages = Math.ceil(totalItems / listViewPageSize);
 
-    // Ensure current page is within bounds
     if (listViewCurrentPage > listViewTotalPages) {
         listViewCurrentPage = listViewTotalPages || 1;
     }
 
-    // Update pagination controls
     const pageInfo = document.getElementById('listViewPageInfo');
     const prevBtn = document.getElementById('listViewPrevPage');
     const nextBtn = document.getElementById('listViewNextPage');

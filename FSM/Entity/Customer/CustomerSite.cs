@@ -17,6 +17,11 @@ namespace FSM.Entity.Customer
         public string Note { get; set; }
         public bool IsActive { get; set; }
         public DateTime? CreatedDateTime { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public string Country { get; set; }
+        public string State { get; set; }
+        public string Zip { get; set; }
     }
 
     public class Equipment : CustomerBaseEntity

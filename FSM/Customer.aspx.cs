@@ -225,6 +225,7 @@ namespace FSM
                 {
                     foreach (DataRow dr in dt.Rows)
                     {
+
                         sites.Add(new CustomerSite
                         {
                             Id = Convert.ToInt32(dr["Id"]),
@@ -232,12 +233,20 @@ namespace FSM
                             CustomerID = dr["CustomerID"].ToString(),
                             CustomerGuid = dr["CustomerGuid"].ToString(),
                             SiteName = dr["SiteName"].ToString() ?? "",
+                            FirstName = dr["FirstName"].ToString() ?? "",
+                            LastName = dr["LastName"].ToString() ?? "",
                             Address = dr["Address"].ToString() ?? "",
+                            Country = dr["Country"].ToString() ?? "",
+                            State = dr["State"].ToString() ?? "",
+                            Zip = dr["Zip"].ToString() ?? "",
                             Contact = dr["Contact"].ToString() ?? "",
+                            Email = dr["Email"].ToString() ?? "",
+                            PhoneNumber = dr["PhoneNumber"].ToString() ?? "",
                             Note = dr["Note"].ToString() ?? "",
                             IsActive = Convert.ToBoolean(dr["IsActive"]),
                             CreatedDateTime = Convert.ToDateTime(dr["CreatedDateTime"])
                         });
+
                     }
                 }
             }
@@ -250,6 +259,32 @@ namespace FSM
                 db.Close();
             }
             return sites;
+        }
+        [WebMethod]
+        [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
+        public static bool DeleteCustomerSite(int siteId)
+        {
+            string companyid = HttpContext.Current.Session["CompanyID"].ToString();
+            Database db = new Database();
+            bool success = false;
+            try
+            {
+                db.Open();
+                string strSQL = @"DELETE FROM [msSchedulerV3].dbo.tbl_CustomerSite 
+                          WHERE Id = @Id AND CompanyID = @CompanyID";
+                db.AddParameter("@Id", siteId, SqlDbType.Int);
+                db.AddParameter("@CompanyID", companyid, SqlDbType.NVarChar);
+                success = db.UpdateSql(strSQL);
+            }
+            catch (Exception ex)
+            {
+                success = false;
+            }
+            finally
+            {
+                db.Close();
+            }
+            return success;
         }
 
         [WebMethod]
@@ -280,17 +315,27 @@ namespace FSM
             try
             {
                 db.Open();
+ 
                 string strSQL = @"INSERT INTO [msSchedulerV3].dbo.tbl_CustomerSite
-                        (CompanyID, CustomerID, CustomerGuid, SiteName, Address, Contact, Note, IsActive) output INSERTED.ID
-                        VALUES (@CompanyID, @CustomerID, @CustomerGuid, @SiteName, @Address, @Contact, @Note, @IsActive)";
+        (CompanyID, CustomerID, CustomerGuid, SiteName, FirstName, LastName, PhoneNumber, Email, Contact, Address, Country, State, Zip, Note, IsActive) output INSERTED.ID
+        VALUES (@CompanyID, @CustomerID, @CustomerGuid, @SiteName, @FirstName, @LastName, @PhoneNumber, @Email, @Contact, @Address, @Country, @State, @Zip, @Note, @IsActive)";
+
                 db.AddParameter("@CompanyID", companyid, SqlDbType.NVarChar);
                 db.AddParameter("@CustomerID", site.CustomerID, SqlDbType.NVarChar);
                 db.AddParameter("@CustomerGuid", site.CustomerGuid, SqlDbType.NVarChar);
                 db.AddParameter("@SiteName", site.SiteName, SqlDbType.NVarChar);
-                db.AddParameter("@Address", site.Address, SqlDbType.NVarChar);
+                db.AddParameter("@FirstName", site.FirstName, SqlDbType.NVarChar);
+                db.AddParameter("@LastName", site.LastName, SqlDbType.NVarChar);
+                db.AddParameter("@PhoneNumber", site.PhoneNumber, SqlDbType.NVarChar);
+                db.AddParameter("@Email", site.Email, SqlDbType.NVarChar);
                 db.AddParameter("@Contact", site.Contact, SqlDbType.NVarChar);
+                db.AddParameter("@Address", site.Address, SqlDbType.NVarChar);
+                db.AddParameter("@Country", site.Country, SqlDbType.NVarChar);
+                db.AddParameter("@State", site.State, SqlDbType.NVarChar);
+                db.AddParameter("@Zip", site.Zip, SqlDbType.NVarChar);
                 db.AddParameter("@Note", site.Note, SqlDbType.NVarChar);
                 db.AddParameter("@IsActive", site.IsActive, SqlDbType.Bit);
+
                 object result = db.ExecuteScalarData(strSQL);
                 if (result != null)
                 {
@@ -316,19 +361,37 @@ namespace FSM
             try
             {
                 db.Open();
+                // The strSQL variable
                 string strSQL = @"UPDATE [msSchedulerV3].dbo.tbl_CustomerSite SET 
-                                    SiteName = @SiteName,
-                                    Address = @Address,
-                                    Contact = @Contact,
-                                    Note = @Note,
-                                    IsActive = @IsActive WHERE Id=@Id and CustomerID = @CustomerID";
+                    SiteName = @SiteName,
+                    FirstName = @FirstName,
+                    LastName = @LastName,
+                    PhoneNumber = @PhoneNumber,
+                    Email = @Email,
+                    Contact = @Contact,
+                    Address = @Address,
+                    Country = @Country,
+                    State = @State,
+                    Zip = @Zip,
+                    Note = @Note,
+                    IsActive = @IsActive 
+                  WHERE Id=@Id and CustomerID = @CustomerID";
+                // The db.AddParameter calls
                 db.AddParameter("@SiteName", site.SiteName, SqlDbType.NVarChar);
-                db.AddParameter("@CustomerID", site.CustomerID, SqlDbType.NVarChar);
-                db.AddParameter("@Address", site.Address, SqlDbType.NVarChar);
+                db.AddParameter("@FirstName", site.FirstName, SqlDbType.NVarChar);
+                db.AddParameter("@LastName", site.LastName, SqlDbType.NVarChar);
+                db.AddParameter("@PhoneNumber", site.PhoneNumber, SqlDbType.NVarChar);
+                db.AddParameter("@Email", site.Email, SqlDbType.NVarChar);
                 db.AddParameter("@Contact", site.Contact, SqlDbType.NVarChar);
+                db.AddParameter("@Address", site.Address, SqlDbType.NVarChar);
+                db.AddParameter("@Country", site.Country, SqlDbType.NVarChar);
+                db.AddParameter("@State", site.State, SqlDbType.NVarChar);
+                db.AddParameter("@Zip", site.Zip, SqlDbType.NVarChar);
                 db.AddParameter("@Note", site.Note, SqlDbType.NVarChar);
                 db.AddParameter("@IsActive", site.IsActive, SqlDbType.Bit);
                 db.AddParameter("@Id", site.Id, SqlDbType.Int);
+                db.AddParameter("@CustomerID", site.CustomerID, SqlDbType.NVarChar); // Ensure this is present
+
                 success = db.UpdateSql(strSQL);
             }
             catch (Exception ex)

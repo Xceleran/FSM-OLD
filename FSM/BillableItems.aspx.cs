@@ -6,19 +6,14 @@ using Intuit.Ipp.Data;
 using Intuit.Ipp.DataService;
 using Intuit.Ipp.QueryFilter;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel.Design;
 using System.Configuration;
 using System.Data;
-using System.Diagnostics;
 using System.Linq;
 using System.Web;
+using System.IO;
 using System.Web.Script.Services;
 using System.Web.Services;
-using System.Web.UI;
-using System.Web.UI.WebControls;
-using System.Xml.Serialization;
 
 namespace FSM
 {
@@ -47,7 +42,7 @@ namespace FSM
             {
                 db.Open();
                 DataTable dt = new DataTable();
-                string sql = @"Select * from [myServiceJobs].[dbo].[ItemTypes]";
+                string sql = @"Select Id, Name, QboId, ImageUrl from [myServiceJobs].[dbo].[ItemTypes]";
                 db.Execute(sql, out dt);
                 db.Close();
                 if (dt.Rows.Count > 0)
@@ -57,11 +52,13 @@ namespace FSM
                         var itemType = new ItemTypes();
                         itemType.Id = Convert.ToInt32(row["Id"].ToString());
                         itemType.Name = row.Field<string>("Name") ?? "";
+                        itemType.QboId = row.Field<string>("QboId") ?? "";
+                        itemType.ImageUrl = row.Field<string>("ImageUrl") ?? "";
                         items.Add(itemType);
                     }
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return items;
             }
@@ -69,7 +66,6 @@ namespace FSM
             {
                 db.Close();
             }
-
             return items;
         }
 
@@ -85,8 +81,7 @@ namespace FSM
                 db.Open();
                 DataTable dt = new DataTable();
                 string sql = @"select Id,Name as ItemName, ItemTypeId, Description, Location, Sku, Quantity, QboId,(case when IsTaxable = 'FALSE' then 'NO' else 'YES' end )as IsTaxable, Price 
-                from [msSchedulerV3].[dbo].[Items] where IsDeleted = 0 and CompanyId= '" + companyid + "' order by ItemName;";
-
+                               from [msSchedulerV3].[dbo].[Items] where IsDeleted = 0 and CompanyId= '" + companyid + "' and QboId IS NOT NULL and QboId <> 0 order by ItemName;";
                 db.ExecuteParam(sql, out dt);
                 db.Close();
                 if (dt.Rows.Count > 0)
@@ -112,14 +107,81 @@ namespace FSM
             }
             catch (Exception ex)
             {
+                // Log ex.Message
                 return items;
             }
             finally
             {
                 db.Close();
             }
-
             return items;
+        }
+
+        private static bool InsertItemType(ItemTypes itemTypeData)
+        {
+            Database db = new Database(connStrJobs);
+            try
+            {
+                db.Open();
+                string sql = "INSERT INTO [myServiceJobs].[dbo].[ItemTypes] (Name, ImageUrl) VALUES (@Name, @ImageUrl)";
+                db.AddParameter("@Name", itemTypeData.Name, SqlDbType.NVarChar);
+                db.AddParameter("@ImageUrl", (object)itemTypeData.ImageUrl ?? DBNull.Value, SqlDbType.NVarChar);
+                return db.UpdateSql(sql);
+            }
+            catch (Exception ex)
+            {
+                // Log ex.Message
+                return false;
+            }
+            finally
+            {
+                db.Close();
+            }
+        }
+
+        private static bool UpdateItemType(ItemTypes itemTypeData)
+        {
+            Database db = new Database(connStrJobs);
+            try
+            {
+                db.Open();
+                string sql = "UPDATE [myServiceJobs].[dbo].[ItemTypes] SET Name = @Name, ImageUrl = @ImageUrl WHERE Id = @Id";
+                db.AddParameter("@Name", itemTypeData.Name, SqlDbType.NVarChar);
+                db.AddParameter("@ImageUrl", (object)itemTypeData.ImageUrl ?? DBNull.Value, SqlDbType.NVarChar);
+                db.AddParameter("@Id", itemTypeData.Id, SqlDbType.Int);
+                return db.UpdateSql(sql);
+            }
+            catch (Exception ex)
+            {
+                // Log ex.Message
+                return false;
+            }
+            finally
+            {
+                db.Close();
+            }
+        }
+
+        [WebMethod]
+        [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
+        public static bool DeleteItemType(int itemTypeId)
+        {
+            Database db = new Database(connStrJobs);
+            try
+            {
+                string sql = "DELETE FROM [myServiceJobs].[dbo].[ItemTypes] WHERE Id = @Id";
+                db.AddParameter("@Id", itemTypeId, SqlDbType.Int);
+                return db.UpdateSql(sql);
+            }
+            catch (Exception ex)
+            {
+                // Log ex.Message
+                return false;
+            }
+            finally
+            {
+                db.Close();
+            }
         }
 
         [WebMethod]
@@ -155,7 +217,7 @@ namespace FSM
                         item.ItemTypeId = Convert.ToInt32(dItem["ItemTypeId"].ToString());
                     }
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     return item;
                 }
@@ -199,7 +261,8 @@ namespace FSM
                         QBSaveItem(ref QboItemId, itemData);
                         itemData.QboId = QboItemId.ToString();
                     }
-                    catch (Exception ex) {
+                    catch (Exception ex)
+                    {
                         throw new ApplicationException(ex.Message.ToString());
                     }
 
@@ -377,13 +440,62 @@ namespace FSM
             }
             return success;
         }
+        [WebMethod]
+        [ScriptMethod(ResponseFormat = ResponseFormat.Json)]
+        public static bool AssignItemsToType(List<string> itemIds, int itemTypeId)
+        {
+            if (itemIds == null || !itemIds.Any())
+            {
+                Database db = new Database(connStr);
+                try
+                {
+                    string unassignSql = @"UPDATE [msSchedulerV3].[dbo].[Items] 
+                                   SET ItemTypeId = 0, ModifiedDate = GETDATE()
+                                   WHERE ItemTypeId = @ItemTypeId";
+                    db.AddParameter("@ItemTypeId", itemTypeId, SqlDbType.Int);
+                    db.UpdateSql(unassignSql);
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    return false;
+                }
+                finally
+                {
+                    db.Close();
+                }
+            }
+
+            var sanitizedIds = itemIds.Select(id => $"'{Common.CleanInput(id)}'").ToList();
+            string idList = string.Join(",", sanitizedIds);
+
+            Database updateDb = new Database(connStr);
+            try
+            {
+                string strSQL = $@"UPDATE [msSchedulerV3].[dbo].[Items] 
+                           SET ItemTypeId = @ItemTypeId, ModifiedDate = GETDATE()
+                           WHERE Id IN ({idList})";
+
+                updateDb.AddParameter("@ItemTypeId", itemTypeId, SqlDbType.Int);
+
+                return updateDb.UpdateSql(strSQL);
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+            finally
+            {
+                updateDb.Close();
+            }
+        }
+
 
         private static bool QBUpdateItem(Item itemData)
         {
             string ItemId = itemData.Id;
             Database db = new Database(connStr);
             string CompanyID = HttpContext.Current.Session["CompanyID"].ToString();
-            //  db.Open();
             string query = "select QboId from Items where Id='" + ItemId + "' and CompanyID='" + CompanyID + "' ";
             DataTable dt;
             db.Execute(query, out dt);
@@ -429,28 +541,18 @@ namespace FSM
                             Itm.TrackQtyOnHand = objItemFound.TrackQtyOnHand;
                             Itm.TrackQtyOnHandSpecified = objItemFound.TrackQtyOnHandSpecified;
                             Itm.QtyOnHandSpecified = objItemFound.QtyOnHandSpecified;
-                           
                             Itm.InvStartDateSpecified = objItemFound.InvStartDateSpecified;
                             Itm.InvStartDate = objItemFound.InvStartDate;
-
                             Itm.UnitPriceSpecified = objItemFound.UnitPriceSpecified;
                             Itm.PurchaseDesc = objItemFound.PurchaseDesc;
-
                             Itm.PurchaseCostSpecified = objItemFound.PurchaseCostSpecified;
                             Itm.PurchaseCost = objItemFound.PurchaseCost;
-
                             Itm.AssetAccountRef = objItemFound.AssetAccountRef;
                             Itm.IncomeAccountRef = objItemFound.IncomeAccountRef;
                             Itm.ExpenseAccountRef = objItemFound.ExpenseAccountRef;
 
-                            //Itm.IncomeAccountRef = new ReferenceType();
-                            //Itm.IncomeAccountRef.Value = "1";
-
                             DataService dataService = new DataService(serviceContext);
-                            //Intuit.Ipp.Data.Item Item = dataService.Add(Itm);
-                            //ItemId = Convert.ToInt16(Item.Id);
                             Intuit.Ipp.Data.Item UpdateEntity = dataService.Update<Intuit.Ipp.Data.Item>(Itm);
-
                         }
                         return true;
                     }
@@ -461,7 +563,6 @@ namespace FSM
                         if (innerException != null)
                         {
                             errDetail = innerException.Detail;
-                            //throw new ApplicationException(innerException.Detail);
                         }
                         return false;
                     }
@@ -472,7 +573,6 @@ namespace FSM
             else return false;
         }
 
-        // Sync With QBO -- Yuvi
         [WebMethod(EnableSession = false)]
         public static string SyncQBOItems()
         {
@@ -480,19 +580,14 @@ namespace FSM
             try
             {
                 string QboLastUpdatedTime = string.Empty;
-
                 string Sql = @"SELECT QboLastUpdatedTime FROM [msSchedulerV3].[dbo].[tbl_Company]  Where [CompanyID] = '" + HttpContext.Current.Session["CompanyID"].ToString() + "'";
-
                 Database db = new Database(ConfigurationManager.AppSettings["ConnString"].ToString());
-
                 DataTable dt = new DataTable();
-
                 QboLastUpdatedTime = db.ExecuteScalarString(Sql);
                 if (string.IsNullOrEmpty(QboLastUpdatedTime))
                 {
                     QboLastUpdatedTime = "1990-01-01T00:00:00";
                 }
-
                 QboLastUpdatedTime = Convert.ToDateTime(QboLastUpdatedTime).ToString("yyyy-MM-ddTHH:mm:ss");
 
                 QBOSettins qBoStngPost = new QBOSettins();
@@ -515,7 +610,6 @@ namespace FSM
 
         private static bool QBSaveItem(ref int ItemId, Item itemData)
         {
-
             string cId = itemData.CompanyID;
             QBOSettins qBoStng = new QBOSettins();
             QBOManager qBOManager = new QBOManager();
@@ -524,7 +618,6 @@ namespace FSM
                 try
                 {
                     ServiceContext serviceContext = qBOManager.GetServiceContext(qBoStng, cId);
-
                     string qboQuery = "select * from Item ";
                     QueryService<Intuit.Ipp.Data.Item> qsItem = new QueryService<Intuit.Ipp.Data.Item>(serviceContext);
                     List<Intuit.Ipp.Data.Item> listItems = qsItem.ExecuteIdsQuery(qboQuery).ToList<Intuit.Ipp.Data.Item>();
@@ -555,12 +648,10 @@ namespace FSM
                             Itm.Type = ItemTypeEnum.Service;
 
                         Itm.Sku = itemData.Sku;
-
                         Itm.TrackQtyOnHand = false;
                         Itm.TrackQtyOnHandSpecified = false;
                         Itm.QtyOnHandSpecified = false;
                         Itm.QtyOnHand = 0;
-
                         Itm.InvStartDateSpecified = true;
                         Itm.InvStartDate = DateTime.Now;
                         Itm.UnitPriceSpecified = true;
@@ -568,57 +659,10 @@ namespace FSM
                         Itm.PurchaseCostSpecified = true;
                         Itm.PurchaseCost = 0;
 
-                        //Itm.TrackQtyOnHand = true;
-                        //Itm.TrackQtyOnHandSpecified = true;
-                        //Itm.QtyOnHandSpecified = true;
-                        //
-                        //Itm.InvStartDateSpecified = true;
-                        //Itm.InvStartDate = DateTime.Now;
-                        //Itm.UnitPriceSpecified = true;
-                        //Itm.PurchaseDesc = "";
-                        //Itm.PurchaseCostSpecified = true;
-                        //Itm.PurchaseCost = 0;
-
-
                         string AccTypeId = "";
                         qBOManager.AccountTypeCheck(qBoStng, cId, itemData.ItemTypeId.ToString(), ref AccTypeId);
                         Itm.IncomeAccountRef = new ReferenceType();
                         Itm.IncomeAccountRef.Value = AccTypeId;
-
-                        //Itm.IncomeAccountRef = new ReferenceType();
-                        //Itm.IncomeAccountRef.Value = "1";
-
-                        //Itm.IncomeAccountRef = new ReferenceType();
-                        //Itm.IncomeAccountRef.Value = "79";
-
-                        //Itm.ExpenseAccountRef = new ReferenceType();
-                        //Itm.ExpenseAccountRef.Value = "80";
-
-                        //Itm.AssetAccountRef = new ReferenceType();
-                        //Itm.AssetAccountRef.Value = "81";
-
-                        //QueryService<Intuit.Ipp.Data.Account> querySvc = new QueryService<Intuit.Ipp.Data.Account>(serviceContext);
-                        //var AccountList = querySvc.ExecuteIdsQuery("SELECT * FROM Account").ToList();
-                        //var AssetAccountRef = AccountList.Where(x => x.AccountType == AccountTypeEnum.OtherCurrentAsset && x.Name == "Inventory Asset").FirstOrDefault();
-                        //if (AssetAccountRef != null)
-                        //{
-                        //    Itm.AssetAccountRef = new ReferenceType();
-                        //    Itm.AssetAccountRef.Value = AssetAccountRef.Id;
-                        //}
-
-                        //var IncomeAccountRef = AccountList.Where(x => x.AccountType == AccountTypeEnum.Income && x.Name == "Sales of Product Income").FirstOrDefault();
-                        //if (IncomeAccountRef != null)
-                        //{
-                        //    Itm.IncomeAccountRef = new ReferenceType();
-                        //    Itm.IncomeAccountRef.Value = IncomeAccountRef.Id;
-                        //}
-
-                        //var ExpenseAccountRef = AccountList.Where(x => x.AccountType == AccountTypeEnum.CostofGoodsSold && x.Name == "Cost of Goods Sold").FirstOrDefault();
-                        //if (ExpenseAccountRef != null)
-                        //{
-                        //    Itm.ExpenseAccountRef = new ReferenceType();
-                        //    Itm.ExpenseAccountRef.Value = ExpenseAccountRef.Id;
-                        //}
 
                         DataService dataService = new DataService(serviceContext);
                         Intuit.Ipp.Data.Item Item = dataService.Add(Itm);
@@ -643,7 +687,6 @@ namespace FSM
         }
     }
 
-
     public class Item
     {
         public string CompanyID { get; set; }
@@ -663,7 +706,6 @@ namespace FSM
         public DateTime ModifiedDate { get; set; }
         public string CreatedBy { get; set; }
         public string ModifiedBy { get; set; }
-
     }
 
     public class ItemTypes
@@ -671,6 +713,7 @@ namespace FSM
         public int Id { get; set; }
         public string Name { get; set; }
         public string QboId { get; set; }
+        public string ImageUrl { get; set; }
     }
 
     public enum ItemTypeFSMEnum

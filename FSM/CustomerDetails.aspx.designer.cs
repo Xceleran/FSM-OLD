@@ -138,7 +138,7 @@ namespace FSM
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.HtmlControls.HtmlSelect apptFilter;
+        protected global::System.Web.UI.WebControls.DropDownList apptFilter;
 
         /// <summary>
         /// ticketStatus control.
@@ -147,6 +147,6 @@ namespace FSM
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.HtmlControls.HtmlSelect ticketStatus;
+        protected global::System.Web.UI.WebControls.DropDownList ticketStatus;
     }
 }

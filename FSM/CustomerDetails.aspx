@@ -1,12 +1,14 @@
 ﻿<%@ Page Title="Customer Site Details" Language="C#" MasterPageFile="~/FSM.Master" AutoEventWireup="true" CodeBehind="CustomerDetails.aspx.cs" Inherits="FSM.CustomerDetails" %>
 
 <asp:Content ID="BodyContent" ContentPlaceHolderID="MainContent" runat="server">
-    <!-- Bootstrap 5 CSS -->
+    <!-- External CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <!-- Local Styles and Scripts -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+
     <link rel="stylesheet" href="Content/customerdetails.css">
 
+    <!-- Inline Styles -->
     <style>
         #appointments .table-responsive {
             overflow: visible;
@@ -22,8 +24,13 @@
     </style>
 
     <div class="custdet-main-container">
-        <h1 class="display-6 mb-4">Site : <span id="siteName">
-            <asp:Label ID="lblSiteName" runat="server" /></span></h1>
+        <h1 class="display-6 mb-4">Site :
+            <asp:Label ID="lblSiteName" runat="server" /></h1>
+
+        <!-- Hidden Labels to pass data from Server to JavaScript -->
+        <asp:Label Style="display: none;" ID="lblCustomerId" runat="server" />
+        <asp:Label Style="display: none;" ID="lblSiteId" runat="server" />
+        <asp:Label Style="display: none;" ID="lblCustomerGuid" runat="server" />
 
         <!-- Tab Navigation -->
         <ul class="nav nav-tabs mb-3" id="custdetTabs" role="tablist">
@@ -31,23 +38,21 @@
                 <button class="nav-link active" id="basic-tab" data-bs-toggle="tab" data-bs-target="#basic" type="button" role="tab" aria-controls="basic" aria-selected="true">Basic Information</button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="appointments-tab" data-bs-toggle="tab" data-bs-target="#appointments" type="button" role="tab" aria-controls="appointments" aria-selected="false">Service & Appointments</button>
+                <button class="nav-link" id="appointments-tab" data-bs-toggle="tab" data-bs-target="#appointments" type="button" role="tab" aria-controls="appointments" aria-selected="false">Appointments</button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="invoices-tab" data-bs-toggle="tab" data-bs-target="#invoices" type="button" role="tab" aria-controls="invoices" aria-selected="false">Invoices & Estimates</button>
+                <button class="nav-link" id="invoices-tab" data-bs-toggle="tab" data-bs-target="#invoices" type="button" role="tab" aria-controls="invoices" aria-selected="false">Invoices/Estimates</button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="equipment-tab" data-bs-toggle="tab" data-bs-target="#equipment" type="button" role="tab" aria-controls="equipment" aria-selected="false">Equipment</button>
+                <button class="nav-link" id="equipment-tab" data-bs-toggle="tab" data-bs-target="#equipment" type="button" role="tab" aria-controls="equipment" aria-selected="false">Equipments</button>
             </li>
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="agreements-tab" data-bs-toggle="tab" data-bs-target="#agreements" type="button" role="tab" aria-controls="agreements" aria-selected="false">Maintenance Agreements</button>
             </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="documents-tab" data-bs-toggle="tab" data-bs-target="#documents" type="button" role="tab" aria-controls="documents" aria-selected="false">Proposals</button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="pictures-tab" data-bs-toggle="tab" data-bs-target="#pictures" type="button" role="tab" aria-controls="pictures" aria-selected="false">Pictures</button>
-            </li>
+       <li class="nav-item" role="presentation">
+    <button class="nav-link" id="files-tab" data-bs-toggle="tab" data-bs-target="#files" type="button" role="tab" aria-controls="files" aria-selected="false">Files</button>
+</li>
+
         </ul>
 
         <!-- Tab Content -->
@@ -56,9 +61,6 @@
             <div class="tab-pane fade show active" id="basic" role="tabpanel" aria-labelledby="basic-tab">
                 <div class="custdet-container">
                     <h2 class="h4 mb-3">Basic Information</h2>
-                    <asp:Label Style="display: none;" ID="lblCustomerId" runat="server" />
-                    <asp:Label Style="display: none;" ID="lblSiteId" runat="server" />
-                    <asp:Label Style="display: none;" ID="lblCustomerGuid" runat="server" />
                     <div class="table-responsive">
                         <table class="table table-bordered table-hover">
                             <thead class="table-light">
@@ -70,62 +72,54 @@
                             <tbody>
                                 <tr>
                                     <td>Customer Name</td>
-                                    <td id="customerName">
+                                    <td>
                                         <asp:Label ID="lblCustomerName" runat="server" /></td>
                                 </tr>
                                 <tr>
                                     <td>Site Contact</td>
-                                    <td id="siteContact">
-                                        <asp:Label ID="lblContact" runat="server" /><br />
+                                    <td>
+                                        <asp:Label ID="lblContact" runat="server" />
+
                                         <i class="fas fa-phone me-1" style="font-size: 13px;"></i>Phone:
-                                        <asp:HyperLink ID="hlPhone" runat="server" /><br />
+                                        <asp:HyperLink ID="hlPhone" runat="server" />
+
                                         <i class="fas fa-mobile-alt me-1"></i>Mobile:
                                         <asp:HyperLink ID="hlMobile" runat="server" />
                                     </td>
                                 </tr>
                                 <tr>
                                     <td>Email</td>
-                                    <td id="customerEmail">
-                                        <asp:HyperLink ID="hlEmail" runat="server" />
-                                    </td>
+                                    <td>
+                                        <asp:HyperLink ID="hlEmail" runat="server" /></td>
                                 </tr>
-
                                 <tr>
                                     <td>Address</td>
-                                    <td id="siteAddress">
+                                    <td>
                                         <asp:Label ID="lblAddress" runat="server" /></td>
                                 </tr>
                                 <tr>
                                     <td>Status</td>
-                                    <td id="siteStatus">
+                                    <td>
                                         <asp:Label ID="lblActive" runat="server" /></td>
                                 </tr>
                                 <tr>
                                     <td>Special Instructions</td>
-                                    <td id="siteInstructions">
+                                    <td>
                                         <asp:Label ID="lblNote" runat="server" /></td>
                                 </tr>
                                 <tr>
                                     <td>Created On</td>
-                                    <td id="siteDescription">
+                                    <td>
                                         <asp:Label ID="lblCreatedOn" runat="server" /></td>
                                 </tr>
                                 <tr>
                                     <td>MMS or SMS</td>
                                     <td>
-                                        <a id="btnSms" class="btn btn-sm btn-outline-primary me-2" href="#">
-                                            <i class="fa-solid fa-message me-1"></i>SMS
-                                        </a>
-                                        <a id="btnMms" class="btn btn-sm btn-outline-dark" href="#">
-                                            <i class="fa-solid fa-photo-film me-1"></i>MMS
-                                        </a>
+                                        <a id="btnSms" class="btn btn-sm btn-outline-primary me-2" href="#"><i class="fa-solid fa-message me-1"></i>SMS</a>
+                                        <a id="btnMms" class="btn btn-sm btn-outline-dark" href="#"><i class="fa-solid fa-photo-film me-1"></i>MMS</a>
                                         <small id="smsHint" class="text-muted ms-2 d-none">Works best on mobile</small>
                                     </td>
                                 </tr>
-
-
-
-
                             </tbody>
                         </table>
                     </div>
@@ -139,18 +133,8 @@
                     <div class="custdet-controls mb-3 d-flex align-items-center flex-wrap gap-2">
                         <div class="input-group">
                             <input type="text" id="apptSearch" class="form-control" placeholder="Search appointments...">
-                            <select runat="server" id="apptFilter" class="form-select">
-                                <option value="all">All Status</option>
-                            </select>
-                            <select runat="server" id="ticketStatus" class="form-select">
-                                <option value="all">All Status</option>
-                            </select>
-                            <%-- <select id="apptFilter" class="form-select">
-                                <option value="all">All Status</option>
-                                <option value="scheduled">Scheduled</option>
-                                <option value="pending">Pending</option>
-                                <option value="closed">Closed</option>
-                            </select>--%>
+                            <asp:DropDownList ID="apptFilter" runat="server" CssClass="form-select" />
+                            <asp:DropDownList ID="ticketStatus" runat="server" CssClass="form-select" />
                         </div>
                         <button type="button" id="apptExport" class="btn btn-primary d-none">Export to Excel</button>
                     </div>
@@ -167,7 +151,6 @@
                                     <th scope="col">Ticket Status</th>
                                 </tr>
                             </thead>
-
                             <tbody id="apptTableBody"></tbody>
                         </table>
                     </div>
@@ -194,60 +177,38 @@
                             <select id="invFilterType" class="form-select">
                                 <option value="all">All Type</option>
                                 <option value="invoice">Invoice</option>
-                                <option value="proposal">Estimate</option>
+                                <option value="estimate">Estimate</option>
                             </select>
-
-                   
-                            <!-- Date filter mode -->
-                            <label for="invDateMode" class="input-group-text">Date</label>
-                            <select id="invDateMode" class="form-select" aria-label="Date filter mode">
-                                <option value="all" selected>All</option>
-                                <option value="on">On</option>
-                                <option value="range">Range</option>
-                            </select>
-
-                            <!-- Single date (shown when mode = On) -->
-                            <span class="input-group-text d-none" id="lblInvOn">On</span>
-                            <input type="date" id="invOn" class="form-control d-none" aria-labelledby="lblInvOn" />
-
-                            <!-- Range dates (shown when mode = Range) -->
-                            <span class="input-group-text d-none" id="lblInvFrom">From</span>
-                            <input type="date" id="invFrom" class="form-control d-none" aria-labelledby="lblInvFrom" />
-                            <span class="input-group-text d-none" id="lblInvTo">To</span>
-                            <input type="date" id="invTo" class="form-control d-none" aria-labelledby="lblInvTo" />
-
-                            <button type="button" id="invClearDate" class="btn btn-outline-secondary">Clear</button>
+                            <button id="invDateRangePicker" class="btn btn-outline-secondary">
+                                <i class="fa fa-calendar"></i>&nbsp;
+    <span>Date Range</span> <i class="fa fa-caret-down"></i>
+                            </button>
 
                         </div>
-
-                        <a class="btn btn-primary"
-                            onclick="window.open('https://testsite.myserviceforce.com/cec/Invoice.aspx?InType=Invoice&cId=' + customerGuid )">Create Invoice
-                        </a>
-                        <a class="btn btn-primary"
-                            onclick="window.open('https://testsite.myserviceforce.com/cec/Invoice.aspx?InType=Proposal&cId=' + customerGuid )">Create Estimate
-                        </a>
-
+                        <a class="btn btn-primary" id="createInvoiceBtn">Create Invoice</a>
+                        <a class="btn btn-primary" id="createEstimateBtn">Create Estimate</a>
                         <button type="button" id="invExport" class="btn btn-primary d-none">Export to Excel</button>
                     </div>
                     <div class="table-responsive">
                         <table class="table table-bordered table-hover">
                             <thead class="table-light">
                                 <tr>
-                                    <th scope="col">Number</th>
-
-                                    <th scope="col">Type</th>
-                                    <th scope="col">Date</th>
-                                    <th scope="col">Subtotal</th>
-                                    <th scope="col">Discount</th>
-                                    <th scope="col">Tax</th>
-                                    <th scope="col">Total</th>
-                                    <th scope="col">Due</th>
-                                    <th scope="col">Diposit</th>
-                                    <th scope="col">Status</th>
+                                    <th scope="col" class="sortable-header" data-sort="InvoiceNumber">Number <i class="fas fa-sort"></i></th>
+                                    <th scope="col" class="sortable-header" data-sort="InvoiceType">Type <i class="fas fa-sort"></i></th>
+                                    <th scope="col" class="sortable-header" data-sort="InvoiceDate">Date <i class="fas fa-sort"></i></th>
+                                    <th scope="col" class="sortable-header" data-sort="Subtotal">Subtotal <i class="fas fa-sort"></i></th>
+                                    <th scope="col" class="sortable-header" data-sort="Discount">Discount <i class="fas fa-sort"></i></th>
+                                    <th scope="col" class="sortable-header" data-sort="Tax">Tax <i class="fas fa-sort"></i></th>
+                                    <th scope="col" class="sortable-header" data-sort="Total">Total <i class="fas fa-sort"></i></th>
+                                    <th scope="col" class="sortable-header" data-sort="Due">Due <i class="fas fa-sort"></i></th>
+                                    <th scope="col" class="sortable-header" data-sort="DepositAmount">Deposit <i class="fas fa-sort"></i></th>
+                                    <th scope="col" class="sortable-header" data-sort="InvoiceStatus">Status <i class="fas fa-sort"></i></th>
+                                    <th scope="col">Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="invTableBody"></tbody>
                         </table>
+
                     </div>
                     <div class="d-flex justify-content-between align-items-center mt-3">
                         <button type="button" id="invPrev" class="btn btn-outline-secondary">Previous</button>
@@ -264,12 +225,6 @@
                     <div class="custdet-controls mb-3 d-flex align-items-center flex-wrap gap-2">
                         <div class="input-group">
                             <input type="text" id="equipSearch" class="form-control col-4" placeholder="Search equipment...">
-                            <%-- <select id="equipFilter" class="form-select">
-                                <option value="all">All Types</option>
-                                <option value="HVAC">HVAC</option>
-                                <option value="Generator">Generator</option>
-                                <option value="Plumbing">Plumbing</option>
-                            </select>--%>
                         </div>
                         <button type="button" id="equipAdd" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#equipModal">Add Equipment</button>
                     </div>
@@ -282,10 +237,10 @@
                                     <th scope="col">Make</th>
                                     <th scope="col">Model</th>
                                     <th scope="col">Warranty Start</th>
-                                    <th scope="col">Warranty Date</th>
+                                    <th scope="col">Warranty End</th>
                                     <th scope="col">Labor Warranty Start</th>
-                                    <th scope="col">Labor Warranty Date</th>
-                                    <th scope="col">Barcode</th>
+                                    <th scope="col">Labor Warranty End</th>
+                                    <th scope="col">SKU</th>
                                     <th scope="col">Install Date</th>
                                     <th scope="col">Notes</th>
                                     <th scope="col">Actions</th>
@@ -325,53 +280,39 @@
                     </div>
                 </div>
             </div>
+<!-- Files Tab -->
+    <div class="tab-pane fade" id="files" role="tabpanel" aria-labelledby="files-tab">
+    <div class="custdet-container">
+        <h2 class="h4 mb-3">Files</h2>
+        <div class="custdet-controls mb-3 d-flex align-items-center flex-wrap gap-2">
 
-            <!-- Documents -->
-            <div class="tab-pane fade" id="documents" role="tabpanel" aria-labelledby="documents-tab">
-                <div class="custdet-container">
-                    <h2 class="h4 mb-3">Documents</h2>
-                    <div class="custdet-controls mb-3 d-flex align-items-center flex-wrap gap-2">
-                        <div class="input-group">
-                            <input type="text" id="docSearch" class="form-control" placeholder="Search documents...">
-                        </div>
-                    </div>
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-hover">
-                            <thead class="table-light">
-                                <tr>
-                                    <th scope="col">Name</th>
-                                    <th scope="col">Status</th>
-                                    <th scope="col">Link</th>
-                                </tr>
-                            </thead>
-                            <tbody id="docTableBody"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+            <input type="file" id="fileUploadInput" class="d-none" multiple>
 
-            <!-- Pictures -->
-            <div class="tab-pane fade" id="pictures" role="tabpanel" aria-labelledby="pictures-tab">
-                <div class="custdet-container">
-                    <h2 class="h4 mb-3">Pictures</h2>
-                    <div class="custdet-controls mb-3 d-flex align-items-center flex-wrap gap-2">
-                        <div class="input-group">
-                            <select id="picCategory" class="form-select">
-                                <option value="equipment">Equipment</option>
-                                <option value="service">Service</option>
-                                <option value="folder">Folder</option>
-                            </select>
-                            <input type="file" id="picUpload" accept="image/*" class="form-control">
-                        </div>
-                        <button type="button" id="picUploadBtn" class="btn btn-primary">Upload</button>
-                    </div>
-                    <div class="custdet-gallery d-flex flex-wrap gap-3" id="picGallery"></div>
-                </div>
-            </div>
+            <button type="button" id="uploadFileBtn" class="btn btn-primary">
+                <i class="fas fa-upload me-2"></i>Upload Files
+            </button>
+        </div>
+
+        <!-- Table to display uploaded files -->
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col">File Name</th>
+                        <th scope="col">Type</th>
+                        <th scope="col">Date Uploaded</th>
+                        <th scope="col" style="width: 15%;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="filesTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
         </div>
 
         <!-- Back Button -->
-        <div class="custdet-container text-end">
+        <div class="custdet-container text-end mt-4">
             <a href="Customer.aspx" class="btn btn-outline-secondary">Back to Customers</a>
         </div>
 
@@ -394,24 +335,19 @@
                                 <div class="col-6">
                                     <label for="equipType" class="form-label">Type <span class="text-danger">*</span></label>
                                     <input type="text" id="equipType" class="form-control" required>
-                                    <%--                                <select id="equipType" class="form-select" required>
-        <option value="HVAC">HVAC</option>
-        <option value="Generator">Generator</option>
-        <option value="Plumbing">Plumbing</option>
-    </select>--%>
                                 </div>
                             </div>
                             <div class="row mb-4">
                                 <div class="col-4">
-                                    <label for="Make" class="form-label">Make </label>
+                                    <label for="Make" class="form-label">Make</label>
                                     <input type="text" id="Make" class="form-control">
                                 </div>
                                 <div class="col-4">
-                                    <label for="Model" class="form-label">Model </label>
+                                    <label for="Model" class="form-label">Model</label>
                                     <input type="text" id="Model" class="form-control">
                                 </div>
                                 <div class="col-4">
-                                    <label for="Barcode" class="form-label">Barcode </label>
+                                    <label for="Barcode" class="form-label">Barcode</label>
                                     <input type="text" id="Barcode" class="form-control">
                                 </div>
                             </div>
@@ -449,7 +385,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="button" onclick="equipmentSave(event)" id="equipSave" class="btn btn-primary">Save</button>
+                        <button type="button" id="equipSave" class="btn btn-primary">Save</button>
                     </div>
                 </div>
             </div>
@@ -488,937 +424,15 @@
         </div>
     </div>
 
-    <!-- Bootstrap 5 JS and Popper.js -->
+    <!-- External Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
 
-    <script>
 
-        // Toast Notification
-        function showToast(message) {
-            const toast = new bootstrap.Toast(document.getElementById('toast'));
-            document.querySelector('#toast .toast-body').textContent = message;
-            toast.show();
-        }
-
-        function closeModal(modalId) {
-            const modal = document.getElementById(modalId);
-            if (modal) {
-                modal.style.display = 'none';
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const ITEMS_PER_PAGE = 5;
-            const urlParams = new URLSearchParams(window.location.search);
-
-            // Equipment Modal
-            let editingEquipId = null;
-
-            document.getElementById('equipAdd').addEventListener('click', () => {
-                editingEquipId = null;
-                document.getElementById('equipModalLabel').textContent = 'Add Equipment';
-                document.getElementById('equipForm').reset();
-            });
-
-            window.assignWorkOrder = (id) => {
-                showToast(`Assigning equipment ${id} to work order...`);
-            };
-
-            // Maintenance Agreements
-            function renderAgreements(searchTerm = '') {
-                const tbody = document.getElementById('agreementTableBody');
-                const filteredAgreements = site.serviceAgreements.filter(a =>
-                    (a.file || '').toLowerCase().includes(searchTerm.toLowerCase())
-                );
-                tbody.innerHTML = filteredAgreements.map(a => `
-                    <tr>
-                        <td>${a.file ? 'Agreement PDF' : 'No file'}</td>
-                        <td>
-                            ${a.file ? `<a href="${a.file}" class="btn btn-sm btn-outline-primary me-1" download>Download</a>` : ''}
-                            <button type="button" class="btn btn-sm btn-outline-primary me-1" onclick="editAgreement('${a.id}')">Edit</button>
-                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteAgreement('${a.id}')">Delete</button>
-                        </td>
-                    </tr>
-                `).join('') || '<tr><td colspan="2">No agreements</td></tr>';
-            }
-
-            // Agreement Modal
-            let editingAgreeId = null;
-
-            document.getElementById('agreeAdd').addEventListener('click', () => {
-                editingAgreeId = null;
-                document.getElementById('agreeModalLabel').textContent = 'Upload Agreement';
-                document.getElementById('agreeForm').reset();
-                document.getElementById('agreeFilePreview').style.display = 'none';
-            });
-
-            window.editAgreement = (id) => {
-                const agree = site.serviceAgreements.find(a => a.id === id);
-                if (agree) {
-                    editingAgreeId = id;
-                    document.getElementById('agreeModalLabel').textContent = 'Edit Agreement';
-                    document.getElementById('agreeFile').value = '';
-                    const preview = document.getElementById('agreeFilePreview');
-                    if (agree.file) {
-                        preview.innerHTML = `<iframe src="${agree.file}" style="width:100%;height:100%;"></iframe>`;
-                        preview.style.display = 'block';
-                    } else {
-                        preview.style.display = 'none';
-                    }
-                    const modal = new bootstrap.Modal(document.getElementById('agreeModal'));
-                    modal.show();
-                }
-            };
-
-            window.deleteAgreement = (id) => {
-                if (confirm('Are you sure you want to delete this agreement?')) {
-                    const index = site.serviceAgreements.findIndex(a => a.id === id);
-                    if (index !== -1) {
-                        site.serviceAgreements.splice(index, 1);
-                        renderAgreements();
-                        showToast('Agreement deleted successfully');
-                    }
-                }
-            };
-
-            document.getElementById('agreeFile').addEventListener('change', (e) => {
-                const file = e.target.files[0];
-                const preview = document.getElementById('agreeFilePreview');
-                if (file && file.type === 'application/pdf') {
-                    const url = URL.createObjectURL(file);
-                    preview.innerHTML = `<iframe src="${url}" style="width:100%;height:100%;"></iframe>`;
-                    preview.style.display = 'block';
-                } else {
-                    preview.style.display = 'none';
-                    if (file) showToast('Please upload a PDF file.');
-                }
-            });
-
-            document.getElementById('agreeSave').addEventListener('click', () => {
-                if (!document.getElementById('agreeForm').checkValidity()) {
-                    document.getElementById('agreeForm').reportValidity();
-                    return;
-                }
-
-                const fileInput = document.getElementById('agreeFile');
-                let file = null;
-                if (fileInput.files[0]) {
-                    if (fileInput.files[0].type === 'application/pdf') {
-                        file = URL.createObjectURL(fileInput.files[0]);
-                    } else {
-                        showToast('Please upload a PDF file.');
-                        return;
-                    }
-                } else if (editingAgreeId) {
-                    file = site.serviceAgreements.find(a => a.id === editingAgreeId).file;
-                }
-
-                const agree = {
-                    id: editingAgreeId || String(site.serviceAgreements.length + 1),
-                    file
-                };
-
-                if (editingAgreeId) {
-                    const index = site.serviceAgreements.findIndex(a => a.id === editingAgreeId);
-                    site.serviceAgreements[index] = agree;
-                } else {
-                    site.serviceAgreements.push(agree);
-                }
-
-                renderAgreements();
-                const modal = bootstrap.Modal.getInstance(document.getElementById('agreeModal'));
-                modal.hide();
-                document.body.classList.remove('modal-open');
-                document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
-                showToast(editingAgreeId ? 'Agreement updated successfully' : 'Agreement uploaded successfully');
-            });
-
-            // Agreements Search
-            document.getElementById('agreeSearch').addEventListener('input', () => {
-                const searchTerm = document.getElementById('agreeSearch').value;
-                renderAgreements(searchTerm);
-            });
-
-            // Documents Search
-            function renderDocuments(searchTerm = '') {
-                const tbody = document.getElementById('docTableBody');
-                // Placeholder data (replace with actual data source)
-                const documents = [
-                    { name: 'Doc1.pdf', status: 'Active', link: '#' },
-                    { name: 'Doc2.pdf', status: 'Pending', link: '#' }
-                ];
-                const filteredDocs = documents.filter(d =>
-                    d.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    d.status.toLowerCase().includes(searchTerm.toLowerCase())
-                );
-                tbody.innerHTML = filteredDocs.map(d => `
-                    <tr>
-                        <td>${d.name}</td>
-                        <td>${d.status}</td>
-                        <td><a href="${d.link}" class="invoice-link">View</a></td>
-                    </tr>
-                `).join('') || '<tr><td colspan="3">No documents found</td></tr>';
-            }
-
-            document.getElementById('docSearch').addEventListener('input', () => {
-                const searchTerm = document.getElementById('docSearch').value;
-                renderDocuments(searchTerm);
-            });
-
-            // Pictures
-            let pictures = { equipment: {}, service: {}, folder: {} };
-            function renderPictures(category, id = '') {
-                const gallery = document.getElementById('picGallery');
-                const pics = pictures[category][id] || [];
-                gallery.innerHTML = pics.map((p, i) => `
-                    <div class="custdet-gallery-item">
-                        <img src="${p}" alt="Picture">
-                        <button type="button" class="custdet-delete-btn" onclick="deletePicture('${category}', '${id}', ${i})">X</button>
-                    </div>
-                `).join('') || 'No pictures available';
-            }
-
-            window.showPictures = (category, id) => {
-                document.getElementById('picCategory').value = category;
-                renderPictures(category, id);
-            };
-
-            document.getElementById('picUploadBtn').addEventListener('click', () => {
-                const file = document.getElementById('picUpload').files[0];
-                const category = document.getElementById('picCategory').value;
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        const id = category === 'folder' ? '' : 'default';
-                        if (!pictures[category][id]) pictures[category][id] = [];
-                        pictures[category][id].push(e.target.result);
-                        renderPictures(category, id);
-                    };
-                    reader.readAsDataURL(file);
-                }
-            });
-
-            window.deletePicture = (category, id, index) => {
-                pictures[category][id].splice(index, 1);
-                renderPictures(category, id);
-            };
-
-            // Excel Export
-            function exportToExcel(data, filename, headers) {
-                if (typeof XLSX === 'undefined') {
-                    showToast('SheetJS library is required for Excel export.');
-                    return;
-                }
-
-                const mappedData = data.map(item => {
-                    const row = {};
-                    headers.forEach((header, index) => {
-                        const key = Object.keys(item)[index];
-                        row[header] = item[key];
-                    });
-                    return row;
-                });
-
-                const ws = XLSX.utils.json_to_sheet(mappedData, { header: headers });
-                const wb = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
-                XLSX.writeFile(wb, filename);
-            }
-
-            // Initial Render
-            renderAgreements();
-            renderDocuments();
-            renderPictures('equipment');
-        });
-
-        let appointmentData = [];
-        let filteredData = [];
-        let currentPage = 1;
-        const pageSize = 10;
-
-        let invoiceData = [];
-        let filteredInvoiceData = [];
-        let currentPageInv = 1;
-        const pageSizeInv = 10;
-
-        let equipmentData = [];
-        let filteredEquipmentData = [];
-        let currentPageEqp = 1;
-        const pageSizeEqp = 10;
-
-        var customerId = document.getElementById('<%= lblCustomerId.ClientID %>').innerText;
-        var siteId = parseInt(document.getElementById('<%= lblSiteId.ClientID %>').innerText);
-        var customerGuid = document.getElementById('<%= lblCustomerGuid.ClientID %>').innerText;
-
-        loadData();
-
-        function loadData() {
-            loadAppoinments(customerId);
-            loadInvoices(customerId);
-            loadEquipment(siteId, customerGuid);
-        }
-
-        function loadAppoinments(customerId) {
-            // Get siteId from the page (already available in your code)
-            var siteId = parseInt(document.getElementById('<%= lblSiteId.ClientID %>').innerText);
-
-            $.ajax({
-                url: 'CustomerDetails.aspx/GetCustomerAppoinmets',
-                type: "POST",
-                contentType: "application/json; charset=utf-8",
-                data: JSON.stringify({
-                    customerId: customerId,
-                    siteId: siteId  // Add this parameter
-                }),
-                dataType: 'json',
-                success: function (rs) {
-                    appointmentData = rs.d || [];
-                    currentPage = 1;
-                    applyFilters();
-                },
-                error: function (error) {
-                    showToast("Failed to load appointments");
-                }
-            });
-        }
-
-        function renderAppointments() {
-            const startIndex = (currentPage - 1) * pageSize;
-            const pageData = filteredData.slice(startIndex, startIndex + pageSize);
-            const tbody = $('#apptTableBody');
-            tbody.empty();
-
-            if (pageData.length === 0) {
-                tbody.append('<tr><td colspan="7">No appointments found.</td></tr>');
-                return;
-            }
-
-            pageData.forEach(item => {
-                tbody.append(`
-  <tr>
-    <td class="text-nowrap">
-      <div class="dropdown position-static">
-        <button class="btn btn-sm btn-outline-secondary dropdown-toggle icon-btn"
-                type="button"
-                data-bs-toggle="dropdown"
-                data-bs-display="static"
-                aria-label="Actions"
-                aria-expanded="false"
-                title="Actions">
-          <i class="fa-solid fa-ellipsis-vertical"></i>
-        </button>
-        <ul class="dropdown-menu">
-          <li><a class="dropdown-item appt-action" data-action="reminderEmail" href="#">Send Reminder Email</a></li>
-          <li><a class="dropdown-item appt-action" data-action="reminderSms"   href="#">Send Reminder SMS</a></li>
-          <li><a class="dropdown-item appt-action" data-action="followupEmail" href="#">Send Follow Up Mail</a></li>
-          <li><a class="dropdown-item appt-action" data-action="followupSms"   href="#">Send Follow up SMS</a></li>
-        </ul>
-      </div>
-    </td>
-    <td>${item.RequestDate || ''}</td>
-    <td>${item.TimeSlot || ''}</td>
-    <td>${item.ServiceType || ''}</td>
-    <td>${item.AppoinmentStatus || ''}</td>
-    <td>${item.ResourceName || ''}</td>
-    <td>${item.TicketStatus || ''}</td>
-  </tr>
-`);
-
-
-            });
-        }
-
-        document.addEventListener('shown.bs.dropdown', function (e) {
-            const toggle = e.target;                         // the button
-            const menu = toggle.nextElementSibling;          // the <ul.dropdown-menu>
-            if (!menu || !menu.classList.contains('dropdown-menu')) return;
-
-            menu.__origParent = menu.parentElement;
-
-            document.body.appendChild(menu);
-
-            const place = () => {
-                const r = toggle.getBoundingClientRect();
-                const docLeft = window.scrollX || window.pageXOffset;
-                const docTop = window.scrollY || window.pageYOffset;
-
-                menu.style.position = 'absolute';
-                menu.style.top = (docTop + r.bottom) + 'px';
-                menu.style.left = (docLeft + r.left) + 'px';
-                menu.style.zIndex = '3000';
-                menu.style.transform = 'none';
-                menu.style.minWidth = Math.max(r.width, 160) + 'px';
-
-                const rightEdge = docLeft + window.innerWidth;
-                const overflowX = (docLeft + r.left) + menu.offsetWidth - rightEdge;
-                if (overflowX > 0) {
-                    menu.style.left = (docLeft + r.left - overflowX - 8) + 'px';
-                }
-
-                const bottomEdge = docTop + window.innerHeight;
-                const wouldBottom = (docTop + r.bottom) + menu.offsetHeight;
-                if (wouldBottom > bottomEdge) {
-                    menu.style.top = (docTop + r.top - menu.offsetHeight) + 'px';
-                }
-            };
-
-            place();
-            menu.__onResize = () => place();
-            window.addEventListener('resize', menu.__onResize);
-        });
-
-        document.addEventListener('hide.bs.dropdown', function (e) {
-            const toggle = e.target;
-            const menu = toggle?.nextElementSibling?.classList?.contains('dropdown-menu')
-                ? toggle.nextElementSibling
-                : document.querySelector('.dropdown-menu.show'); // fallback
-
-            if (!menu) return;
-
-            if (menu.__origParent) {
-                menu.__origParent.appendChild(menu);
-                menu.__origParent = null;
-            }
-            window.removeEventListener('resize', menu.__onResize || (() => { }));
-            menu.__onResize = null;
-
-            menu.style.position = '';
-            menu.style.top = '';
-            menu.style.left = '';
-            menu.style.zIndex = '';
-            menu.style.transform = '';
-            menu.style.minWidth = '';
-        });
-
-        function updatePagination() {
-            const totalPages = Math.ceil(filteredData.length / pageSize);
-            $('#apptPageInfo').text(`Page ${currentPage} of ${totalPages || 1}`);
-
-            $('#apptPrev').prop('disabled', currentPage <= 1);
-            $('#apptNext').prop('disabled', currentPage >= totalPages);
-        }
-
-        $('#apptPrev').click(function () {
-            if (currentPage > 1) {
-                currentPage--;
-                renderAppointments();
-                updatePagination();
-            }
-        });
-
-        $('#apptNext').click(function () {
-            const totalPages = Math.ceil(filteredData.length / pageSize);
-            if (currentPage < totalPages) {
-                currentPage++;
-                renderAppointments();
-                updatePagination();
-            }
-        });
-
-        function applyFilters() {
-            const searchTerm = $('#apptSearch').val().trim().toLowerCase();
-            const statusFilter = $('#MainContent_apptFilter').val();
-            const ticketFilter = $('#MainContent_ticketStatus').val();
-
-            filteredData = appointmentData.filter(item => {
-                // Filter by status if not "all"
-                const matchesStatus = statusFilter === '' ||
-                    (item.AppoinmentStatus === statusFilter);
-
-                const matchesTicketStatus = ticketFilter === '' ||
-                    (item.TicketStatus === ticketFilter);
-
-                // Search in multiple fields
-                const combinedText = [
-                    item.RequestDate,
-                    item.TimeSlot,
-                    item.ServiceType,
-                    item.AppoinmentStatus,
-                    item.ResourceName,
-                    item.TicketStatus
-                ].join(' ').toLowerCase();
-
-                const matchesSearch = combinedText.includes(searchTerm);
-
-                return matchesStatus && matchesTicketStatus && matchesSearch;
-            });
-
-            currentPage = 1;
-            renderAppointments();
-            updatePagination();
-        }
-
-        $('#apptSearch').on('input', function () {
-            applyFilters();
-        });
-
-        $('#MainContent_apptFilter').on('change', function () {
-            applyFilters();
-        });
-
-        $('#MainContent_ticketStatus').on('change', function () {
-            applyFilters();
-        });
-
-        function loadInvoices(customerId) {
-            $.ajax({
-                url: 'CustomerDetails.aspx/GetCustomerInvoices',
-                type: "POST",
-                contentType: "application/json; charset=utf-8",
-                data: JSON.stringify({ customerId: customerId }),
-                dataType: 'json',
-                success: function (rs) {
-                    invoiceData = rs.d || [];
-                    console.log(invoiceData);
-                    currentPage = 1;
-                    applyFiltersInv();
-                },
-                error: function (error) { }
-            })
-        }
-
-        function renderInvoices() {
-            const startIndex = (currentPageInv - 1) * pageSizeInv;
-            const pageData = filteredInvoiceData.slice(startIndex, startIndex + pageSizeInv);
-            const tbody = $('#invTableBody');
-            tbody.empty();
-
-            if (pageData.length === 0) {
-                // Ensure the colspan is 12 to match the number of columns
-                tbody.append('<tr><td colspan="11">No invoices found.</td></tr>');
-                return;
-            }
-
-            pageData.forEach(item => {
-                // This is the critical part for the button
-                let cecButton = ''; // Default to an empty string
-                if (item.ExternalLink) { // This checks if the link is not null or empty
-                    cecButton = `<a href="${item.ExternalLink}" target="_blank" class="btn btn-sm btn-outline-primary">View on CEC</a>`;
-                }
-
-                tbody.append(`
-        <tr>
-            <td><a href="#" class="invoice-link" data-id="${item.ID}" data-type="${item.InvoiceType}" data-appid="${item.AppointmentId}">${item.InvoiceNumber || ''}</a></td>
-            
-            <td>${item.InvoiceType || ''}</td>
-            <td>${item.InvoiceDate || ''}</td>
-            <td>${item.Subtotal || ''}</td>
-            <td>${item.Discount || ''}</td>
-            <td>${item.Tax || ''}</td>
-            <td>${item.Total || ''}</td>
-            <td>${item.Due || ''}</td>
-            <td>${item.DepositAmount || ''}</td>
-            <td>${item.InvoiceStatus || ''}</td>
-            <td>${cecButton}</td> <!-- The button is added here -->
-        </tr>
-        `);
-            });
-        }
-
-
-        function updatePaginationInv() {
-            const totalPages = Math.ceil(filteredInvoiceData.length / pageSizeInv);
-            $('#invPageInfo').text(`Page ${currentPageInv} of ${totalPages || 1}`);
-
-            $('#invPrev').prop('disabled', currentPageInv <= 1);
-            $('#invNext').prop('disabled', currentPageInv >= totalPages);
-        }
-
-        $('#invPrev').click(function () {
-            if (currentPageInv > 1) {
-                currentPageInv--;
-                renderInvoices();
-                updatePaginationInv();
-            }
-        });
-
-        $('#invNext').click(function () {
-            const totalPages = Math.ceil(filteredInvoiceData.length / pageSizeInv);
-            if (currentPageInv < totalPages) {
-                currentPageInv++;
-                renderInvoices();
-                updatePaginationInv();
-            }
-        });
-
-        //helpers related to date filter for invoice
-        function parseMDY(str) { // "MM/DD/YYYY" -> Date|null
-            if (!str) return null;
-            const p = str.split('/');
-            if (p.length !== 3) return null;
-            const m = +p[0], d = +p[1], y = +p[2];
-            if (!y || !m || !d) return null;
-            return new Date(y, m - 1, d);
-        }
-        function parseYMD(str) { // "YYYY-MM-DD" -> Date|null
-            if (!str) return null;
-            const d = new Date(str);
-            return isNaN(d) ? null : d;
-        }
-        function sameDay(a, b) {
-            return a && b &&
-                a.getFullYear() === b.getFullYear() &&
-                a.getMonth() === b.getMonth() &&
-                a.getDate() === b.getDate();
-        }
-
-        //////////////////
-        function updateDateFilterUI() {
-            const mode = ($('#invDateMode').val() || 'all');
-            const show = (ids, on) => ids.forEach(id => $(id).toggleClass('d-none', !on));
-
-            // On date controls
-            show(['#lblInvOn', '#invOn'], mode === 'on');
-
-            // Range controls
-            show(['#lblInvFrom', '#invFrom', '#lblInvTo', '#invTo'], mode === 'range');
-        }
-
-        $('#invDateMode').on('change', function () {
-            updateDateFilterUI();
-            applyFiltersInv();
-        });
-
-        $('#invOn').on('change', applyFiltersInv);
-        $('#invFrom').on('change', applyFiltersInv);
-        $('#invTo').on('change', applyFiltersInv);
-
-        $('#invClearDate').on('click', function () {
-            $('#invDateMode').val('all');
-            $('#invOn, #invFrom, #invTo').val('');
-            updateDateFilterUI();
-            applyFiltersInv();
-        });
-
-        // initialize visibility on load
-        updateDateFilterUI();
-
-        ///////////////////////////////////////
-
-        function applyFiltersInv() {
-            const searchTerm = ($('#invSearch').val() || '').trim().toLowerCase();
-            const statusFilter = ($('#invFilter').val() || '').trim().toLowerCase();
-            const typeFilter = ($('#invFilterType').val() || '').trim().toLowerCase();
-
-            const mode = ($('#invDateMode').val() || 'all');
-            const onDate = parseYMD(($('#invOn').val() || '').trim());
-            const from = parseYMD(($('#invFrom').val() || '').trim());
-            const to = parseYMD(($('#invTo').val() || '').trim());
-
-            filteredInvoiceData = invoiceData.filter(item => {
-                
-                if (item.InvoiceType === 'Proposal') item.InvoiceType = 'Estimate';
-
-                // Status filter
-                const matchesStatus = (statusFilter === 'all') ||
-                    (item.InvoiceStatus && item.InvoiceStatus.toLowerCase() === statusFilter);
-
-                // Type filter
-                const matchesType = (typeFilter === 'all') ||
-                    (item.InvoiceType && item.InvoiceType.toLowerCase() === typeFilter);
-
-                // Search
-                const combinedText = [
-                    item.InvoiceNumber,
-                    item.InvoiceType,
-                    item.InvoiceDate,
-                    item.Subtotal,
-                    item.Discount,
-                    item.Tax,
-                    item.Total,
-                    item.Due,
-                    item.DepositAmount,
-                    item.InvoiceStatus
-                ].join(' ').toLowerCase();
-                const matchesSearch = combinedText.includes(searchTerm);
-
-                // Date filter
-                let matchesDate = true;
-                const invDateObj = parseMDY(item.InvoiceDate); // "MM/DD/YYYY" from server
-
-                if (mode === 'on') {
-                    if (!onDate || !invDateObj) matchesDate = false;
-                    else matchesDate = sameDay(invDateObj, onDate);
-                } else if (mode === 'range') {
-                    if (!invDateObj) {
-                        matchesDate = false;
-                    } else {
-                        if (from && invDateObj < new Date(from.getFullYear(), from.getMonth(), from.getDate())) matchesDate = false;
-                        if (to) {
-                         
-                            const toNext = new Date(to.getFullYear(), to.getMonth(), to.getDate() + 1);
-                            if (invDateObj >= toNext) matchesDate = false;
-                        }
-                    }
-                } // mode === 'all' -> no date constraint
-
-                return matchesStatus && matchesType && matchesSearch && matchesDate;
-            });
-
-            currentPageInv = 1;
-            renderInvoices();
-            updatePaginationInv();
-        }
-
-
-        $('#invSearch').on('input', function () {
-            applyFiltersInv();
-        });
-
-        $('#invFilter').on('change', function () {
-            applyFiltersInv();
-        });
-
-        $('#invFilterType').on('change', function () {
-            applyFiltersInv();
-        });
-
-        function loadEquipment(siteId, customerGuid) {
-            $.ajax({
-                url: 'CustomerDetails.aspx/GetSiteEquipmentData',
-                type: "POST",
-                contentType: "application/json; charset=utf-8",
-                data: JSON.stringify({ siteId: siteId, customerGuid: customerGuid }),
-                dataType: 'json',
-                success: function (rs) {
-                    equipmentData = rs.d || [];
-                    console.log(rs.d);
-                    currentPage = 1;
-                    applyFiltersEqp();
-                },
-                error: function (error) { }
-            })
-        }
-
-        function renderEquipments() {
-            const startIndex = (currentPage - 1) * pageSize;
-            const pageData = filteredEquipmentData.slice(startIndex, startIndex + pageSize);
-            const tbody = $('#equipTableBody');
-            tbody.empty();
-
-            if (pageData.length === 0) {
-                tbody.append('<tr><td colspan="12">No equipment found.</td></tr>');
-                return;
-            }
-
-            pageData.forEach(item => {
-                tbody.append(`
-                <tr>
-                <td>${item.EquipmentType || ''}</td>
-                <td>${item.SerialNumber || ''}</td>
-                <td>${item.Make || ''}</td>
-                <td>${item.Model || ''}</td>
-                <td>${item.WarrantyStart || ''}</td>
-                <td>${item.WarrantyEnd || ''}</td>
-                <td>${item.LaborWarrantyStart || ''}</td>
-                <td>${item.LaborWarrantyEnd || ''}</td>
-                <td>${item.Barcode || ''}</td>
-                <td>${item.InstallDate || ''}</td>
-                <td>${item.Notes || ''}</td>
-                <td>
-                <button type="button" class="btn btn-primary" onclick="editEqp(event,'${item.Id}')">Edit</button>
-                <button type="button" class="btn btn-danger" onclick="deleteEqp(event,'${item.Id}')">Delete</button>
-                </td>
-                </tr>`);
-            });
-        }
-
-        function applyFiltersEqp() {
-            const searchTerm = $('#equipSearch').val().trim().toLowerCase();
-            // const typeFilter = $('#equipFilter').val().trim().toLowerCase();
-
-            filteredEquipmentData = equipmentData.filter(item => {
-                // Filter by status if not "all"
-                //const matchesType = typeFilter === 'all' ||
-                //    (item.EquipmentType && item.EquipmentType.toLowerCase() === typeFilter);
-
-                // Search in multiple fields
-                const combinedText = [
-                    item.EquipmentType,
-                    item.SerialNumber,
-                    item.Make,
-                    item.Model,
-                    item.WarrantyStart,
-                    item.WarrantyEnd,
-                    item.LaborWarrantyStart,
-                    item.LaborWarrantyEnd,
-                    item.Barcode,
-                    item.InstallDate,
-                    item.Notes
-                ].join(' ').toLowerCase();
-
-                const matchesSearch = combinedText.includes(searchTerm);
-
-                return matchesSearch;
-            });
-
-            currentPage = 1;
-            renderEquipments();
-            updatePagination();
-        }
-
-        function updatePaginationInv() {
-            const totalPages = Math.ceil(filteredEquipmentData.length / pageSizeEqp);
-            $('#eqpPageInfo').text(`Page ${currentPageEqp} of ${totalPages || 1}`);
-
-            $('#eqpPrev').prop('disabled', currentPageEqp <= 1);
-            $('#eqpNext').prop('disabled', currentPageEqp >= totalPages);
-        }
-
-        $('#equipSearch').on('input', function () {
-            applyFiltersEqp();
-        });
-
-        //$('#equipFilter').on('change', function () {
-        //    applyFiltersEqp();
-        //});
-
-        function equipmentSave(event) {
-            event.preventDefault();
-            if (validateForm()) {
-                const equipment = {
-                    Id: parseInt($('#equipId').val()),
-                    SiteId: siteId,
-                    CustomerID: customerId,
-                    CustomerGuid: customerGuid,
-                    Notes: $('#instruction').val().trim(),
-                    WarrantyStart: $('#WarrantyStart').val().trim(),
-                    WarrantyEnd: $('#WarrantyEnd').val().trim(),
-                    LaborWarrantyStart: $('#LaborWarrantyStart').val().trim(),
-                    LaborWarrantyEnd: $('#LaborWarrantyEnd').val().trim(),
-                    InstallDate: $('#equipInstallDate').val().trim(),
-                    SerialNumber: $('#SerialNumber').val().trim(),
-                    EquipmentType: $('#equipType').val().trim(),
-                    Barcode: $('#Barcode').val().trim(),
-                    Model: $('#Model').val().trim(),
-                    Make: $('#Make').val().trim(),
-                };
-
-                let message = "saved";
-                if (equipment.Id > 0) {
-                    message = "updated";
-                }
-
-                $.ajax({
-                    type: "POST",
-                    url: "CustomerDetails.aspx/SaveEquipmentData",
-                    data: JSON.stringify({ equipment: equipment }),
-                    contentType: "application/json; charset=utf-8",
-                    dataType: "json",
-                    success: function (response) {
-                        console.log(response);
-                        if (response.d) {
-                            closeModal('equipModal');
-                            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
-                            showToast("Equipment " + message + " successfully!");
-                            loadEquipment(siteId, customerGuid);
-                        }
-                        else {
-                            showToast("Something went wrong!");
-                        }
-                    },
-                    error: function (xhr, status, error) {
-                        console.error("Error updating details: ", error);
-                    }
-                });
-            }
-        }
-
-        function editEqp(event, data) {
-            event.preventDefault();
-            const equip = equipmentData.find(e => e.Id == data);
-            if (equip) {
-                document.getElementById('equipModalLabel').textContent = 'Edit Equipment';
-                document.getElementById('equipId').value = data;
-                document.getElementById('SerialNumber').value = equip.SerialNumber;
-                document.getElementById('equipType').value = equip.EquipmentType;
-                document.getElementById('Barcode').value = equip.Barcode;
-                document.getElementById('Model').value = equip.Model;
-                document.getElementById('Make').value = equip.Make;
-                document.getElementById('equipInstallDate').value = equip.InstallDate || '';
-                document.getElementById('WarrantyStart').value = equip.WarrantyStart || '';
-                document.getElementById('WarrantyEnd').value = equip.WarrantyEnd || '';
-                document.getElementById('LaborWarrantyStart').value = equip.LaborWarrantyStart || '';
-                document.getElementById('LaborWarrantyEnd').value = equip.LaborWarrantyEnd || '';
-                document.getElementById('instruction').value = equip.Notes || '';
-                const modal = new bootstrap.Modal(document.getElementById('equipModal'));
-                modal.show();
-            }
-        }
-
-        function deleteEqp(e, data) {
-            e.preventDefault();
-            if (confirm('Are you sure you want to delete this equipment?')) {
-                $.ajax({
-                    url: 'CustomerDetails.aspx/DeleteEquipment',
-                    type: "POST",
-                    contentType: 'application/json',
-                    data: "{ equipmentId: '" + data + "'}",
-                    dataType: 'json',
-                    success: function (rs) {
-                        if (rs.d) {
-                            showToast('Deleted Successfully');
-                            loadEquipment(siteId, customerGuid)
-                        }
-                    },
-                    error: function (error) { }
-                })
-            }
-        }
-
-        function validateForm() {
-            let isValid = true;
-            let errorMessage = "";
-
-            // Required field validation
-            if ($("#SerialNumber").val().trim() === "") {
-                errorMessage += "Serial Number is required.\n";
-                isValid = false;
-            }
-
-            if ($("#equipType").val().trim() === "") {
-                errorMessage += "Equipment type is required.\n";
-                isValid = false;
-            }
-
-            if (!isValid) {
-                showToast(errorMessage);
-            }
-            return isValid;
-        }
-
-        function redirectToInvoice(type) {
-            var cid = customerGuid;
-            window.location.href = 'InvoiceCreate.aspx?InvNum=0&cId=' + cid + '&InType=' + type + '';
-        }
-
-        function redirectToInvoiceModify(InvNum, Type, apptID) {
-            var cID = customerGuid;
-            window.location.href = "InvoiceCreate.aspx?InvNum=" + InvNum + "&cId=" + cID + "&InType=" + Type + "&AppID=" + apptID + "&FromCustomer=1";
-        }
-
-        $(document).on('click', '.invoice-link', function (e) {
-            e.preventDefault(); // Prevent page reload
-            const id = $(this).data('id');
-            const type = $(this).data('type');
-            const appId = $(this).data('appid');
-            redirectToInvoiceModify(id, type, appId);
-        });
-    </script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const params = new URLSearchParams(location.search);
-            const tab = params.get('tab');
-            if (!tab) return;
-            const btn = document.querySelector(`#custdetTabs .nav-link[data-bs-target="#${tab}"]`);
-            if (btn) {
-                if (window.bootstrap && bootstrap.Tab) new bootstrap.Tab(btn).show();
-                else btn.click();
-            }
-        });
-    </script>
-
-
+    <!-- Your Custom Local Script -->
+    <script src="Scripts/customerdetails.js"></script>
 
 </asp:Content>

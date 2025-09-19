@@ -9,40 +9,40 @@
     <link rel="stylesheet" href="Content/customer.css">
 
     <style>
-    .cust-action-btns {
-        display: flex;
-        gap: 10px; /* more space between icons */
-        align-items: center;
-    }
-
-    .cust-action-btn {
-        background: none;
-        border: none;
-        cursor: pointer;
-        color: #444;
-        font-size: 22px; /* <-- increase size (was 16px) */
-        padding: 6px;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-        .cust-action-btn:hover {
-            background: #f0f0f0;
-            color: #007bff;
+        .cust-action-btns {
+            display: flex;
+            gap: 10px; /* more space between icons */
+            align-items: center;
         }
 
-    .sms-btn {
-        color: green; /* SMS icon */
-        font-size: 22px; /* ensure fa icon also bigger */
-    }
+        .cust-action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #444;
+            font-size: 22px; /* <-- increase size (was 16px ) */
+            padding: 6px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-    .edit-btn svg {
-        width: 22px; /* increase SVG size */
-        height: 22px;
-    }
-</style>
+            .cust-action-btn:hover {
+                background: #f0f0f0;
+                color: #007bff;
+            }
+
+        .sms-btn {
+            color: green; /* SMS icon */
+            font-size: 22px; /* ensure fa icon also bigger */
+        }
+
+        .edit-btn svg {
+            width: 22px; /* increase SVG size */
+            height: 22px;
+        }
+    </style>
 
 
     <div class="cust-page-container">
@@ -68,8 +68,8 @@
             <!-- Customer List -->
 
             <div class="cust-list-container">
-                <div class="mb-3 d-flex justify-content-between align-items-center">
-                    <div class=" pt-3 ps-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class=" pt-2 ps-2">
                         <label for="statusFilter" class="form-label">Filter by Status:</label>
                         <select id="statusFilter" class="form-select w-auto">
                             <option value="all">All Statuses</option>
@@ -108,51 +108,66 @@
                     </div>
                     <div class="cust-details-actions">
 
-                        <button class="btn btn-primary" id="editCustomerBtn">Edit Customer</button>
+                        <button class="cust-table-edit-btn" title="Edit Customer" id="editCustomerBtn">
+                            <i class="fa-solid fa-user-pen"></i>
+                        </button>
                     </div>
                 </div>
 
-                <div class="cust-details-content">
-                    <!-- Contact Info -->
-                    <div class="cust-section-block">
-                        <button class="cust-section-toggle" data-section="contact" id="contactBtn">Contact Info</button>
-                        <div class="cust-section-content" id="contact">
-                            <p class="cust-info-text">
-                                <span class="cust-info-label">Phone:</span>
-                                <span class="cust-info-value" id="customerPhone">-</span>
-                            </p>
-                            <p class="cust-info-text">
-                                <span class="cust-info-label">Mobile:</span>
-                                <span class="cust-info-value" id="customerMobile">-</span>
-                            </p>
-                            <p class="cust-info-text">
-                                <span class="cust-info-label">Email:</span>
-                                <span class="cust-info-value" id="customerEmail">-</span>
-                            </p>
-                            <p class="cust-info-text">
-                                <span class="cust-info-label">Address:</span>
-                                <span class="cust-info-value" id="customerAddress">-</span>
-                            </p>
-                            <p class="cust-info-text">
-                                <span class="cust-info-label">Job Title:</span>
-                                <span class="cust-info-value" id="customerJobTitle">-</span>
-                            </p>
+                <!-- This is the moved section -->
+                <div  id="contact">
+                    <!-- Row 1: Address -->
+                    <div class="ci-row">
+                        <div class="ci-item" id="customerAddress-container">
+                            <i class="ci-icon fas fa-map-marker-alt"></i>
+                            <span class="ci-value" id="customerAddress">-</span>
                         </div>
                     </div>
+                    <!-- Row 2: Phone and Mobile -->
+                    <div class="ci-row">
+                        <!-- Phone -->
+                        <div class="ci-item" id="customerPhone-container">
+                            <i class="ci-icon fas fa-phone-alt"></i>
+                            <span class="ci-value" id="customerPhone">-</span>
+                        </div>
+                        <!-- Mobile -->
+                        <div class="ci-item" id="customerMobile-container">
+                            <i class="ci-icon fas fa-mobile-alt"></i>
+                            <span class="ci-value" id="customerMobile">-</span>
+                        </div>
+                    </div>
+                    <!-- Row 3: Email & Job Title -->
+                    <div class="ci-row">
+                        <div class="ci-item" id="customerEmail-container">
+                            <i class="ci-icon fas fa-envelope"></i>
+                            <span class="ci-value" id="customerEmail">-</span>
+                        </div>
+                        <div class="ci-item" id="customerJobTitle-container">
+                            <i class="ci-icon fas fa-briefcase"></i>
+                            <span class="ci-value" id="customerJobTitle">-</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- End of moved section -->
 
-
-                    <!-- Sites & Locations -->
+                <div class="cust-details-content">
+                    <!-- Note: The original cust-section-block wrappers have been removed as requested -->
                     <div class="cust-section-block">
                         <button class="cust-section-toggle" data-section="sites" id="sitesBtn">Sites & Locations</button>
                         <div class="cust-section-content" id="sites">
+                            <div class="sites-header">
+                            </div>
+                            <div class="sites-list">
+                            </div>
                         </div>
                     </div>
+
                 </div>
             </div>
         </section>
     </div>
 
-    <!-- Add Customer Modal -->
+
     <div class="cust-modal" id="addCustomerModal">
         <div class="cust-modal-content">
             <button class="cust-modal-close" id="closeAddCustomerIcon">×</button>
@@ -212,42 +227,107 @@
         </div>
     </div>
 
-    <!-- Add Site Modal -->
     <div class="cust-modal" id="addSiteModal">
         <div class="cust-modal-content">
             <button class="cust-modal-close" id="closeAddSiteIcon">×</button>
             <h2 class="cust-modal-title">Add New Site</h2>
-            <input type="number" id="SiteId" value="0" hidden="hidden" />
-            <input type="text" id="CustomerID" hidden="hidden" />
-            <input type="text" id="CustomerGuid" hidden="hidden" />
+
+            <!-- Hidden fields for IDs -->
+            <input type="number" id="SiteId" value="0" hidden />
+            <input type="text" id="CustomerID" hidden />
+            <input type="text" id="CustomerGuid" hidden />
+
             <form id="addSiteForm" class="cust-modal-form">
-                <div class="cust-modal-field">
-                    <label for="siteName" class="cust-modal-label">Site Name</label>
-                    <input type="text" id="siteName" name="siteName" class="cust-modal-input" required />
+
+                <!-- Site Name -->
+                <div class="form-row">
+                    <div class="cust-modal-field full-width">
+                        <label for="siteName" class="cust-modal-label">Site Name</label>
+                        <input type="text" id="siteName" name="siteName" class="cust-modal-input" required />
+                    </div>
                 </div>
-                <div class="cust-modal-field">
-                    <label for="address" class="cust-modal-label">Address</label>
-                    <input type="text" id="address" name="address" class="cust-modal-input" required />
+
+                <!-- Contact Person -->
+                <div class="form-row">
+                    <div class="cust-modal-field half-width">
+                        <label for="firstName" class="cust-modal-label">First Name</label>
+                        <input type="text" id="firstName" name="firstName" class="cust-modal-input" />
+                    </div>
+                    <div class="cust-modal-field half-width">
+                        <label for="lastName" class="cust-modal-label">Last Name</label>
+                        <input type="text" id="lastName" name="lastName" class="cust-modal-input" />
+                    </div>
                 </div>
-                <div class="cust-modal-field">
-                    <label for="siteContact" class="cust-modal-label">Site Contact</label>
-                    <input type="text" id="siteContact" name="contact" class="cust-modal-input" />
+
+                <!-- Phone + Email -->
+                <div class="form-row">
+                    <div class="cust-modal-field half-width">
+                        <label for="phoneNumber" class="cust-modal-label">Phone Number</label>
+                        <input type="tel" id="phoneNumber" name="phoneNumber" class="cust-modal-input" />
+                    </div>
+                    <div class="cust-modal-field half-width">
+                        <label for="email" class="cust-modal-label">Email</label>
+                        <input type="email" id="email" name="email" class="cust-modal-input" />
+                    </div>
                 </div>
-                <div class="cust-modal-field">
-                    <label for="note" class="cust-modal-label">Note</label>
-                    <input id="note" type="text" name="note" class="cust-modal-input" />
+
+                <hr class="form-divider" />
+
+                <!-- Address -->
+                <div class="form-row">
+                    <div class="cust-modal-field full-width">
+                        <label for="address" class="cust-modal-label">Street Address</label>
+                        <input type="text" id="address" name="address" class="cust-modal-input" required />
+                    </div>
                 </div>
-                <div class="cust-modal-field cust-toggle-switch">
-                    <label for="isActive">Active</label>
-                    <input type="checkbox" id="isActive" name="isActive" checked />
+
+                <!-- Country / State / Zip -->
+                <div class="form-row">
+                    <div class="cust-modal-field third-width">
+                        <label for="country" class="cust-modal-label">Country</label>
+                        <select id="country" name="country" class="cust-modal-input">
+                            <option value="USA">USA</option>
+                            <option value="Canada">Canada</option>
+                        </select>
+                    </div>
+                    <div class="cust-modal-field third-width">
+                        <label for="state" class="cust-modal-label">State / Province</label>
+                        <select id="state" name="state" class="cust-modal-input"></select>
+                    </div>
+                    <div class="cust-modal-field third-width">
+                        <label for="zip" id="zipLabel" class="cust-modal-label">Zip Code</label>
+                        <input type="text" id="zip" name="zip" class="cust-modal-input" />
+                    </div>
                 </div>
+
+                <hr class="form-divider" />
+
+                <!-- Note -->
+                <div class="form-row">
+                    <div class="cust-modal-field full-width">
+                        <label for="note" class="cust-modal-label">Note</label>
+                        <textarea id="note" name="note" class="cust-modal-input" rows="2"></textarea>
+                    </div>
+                </div>
+
+                <!-- Active Switch -->
+                <div class="form-row">
+                    <div class="cust-modal-field cust-toggle-switch">
+                        <label for="isActive">Active</label>
+                        <input type="checkbox" id="isActive" name="isActive" checked />
+                    </div>
+                </div>
+
+                <!-- Buttons -->
                 <div class="cust-modal-btns">
                     <button type="button" class="cust-modal-cancel" id="closeAddSite">Cancel</button>
-                    <button type="button" onclick="saveSite(event)" class="cust-modal-submit">Add Site</button>
+                    <button type="button" onclick="saveSite(event )" class="cust-modal-submit">Add Site</button>
                 </div>
             </form>
         </div>
     </div>
+
+
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/2.2.2/js/dataTables.min.js"></script>
@@ -269,7 +349,7 @@
         function OpenCustomerChatHistory(mobile, name, customerId) {
             if (!mobile || mobile.trim() === "") {
                 Swal.fire('Validation Error', 'Please insert phone number for this customer.', 'warning');
-                return; 
+                return;
             }
 
             window.open('CustomerChatHistory.aspx?mobile=' + encodeURIComponent(mobile) +

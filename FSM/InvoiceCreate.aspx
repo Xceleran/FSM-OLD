@@ -3,23 +3,18 @@
 <asp:Content ID="BodyContent" ContentPlaceHolderID="MainContent" runat="server">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
-       
         /* Main Invoice Container */
         .invoice-container {
             padding: 20px;
             margin-top: 50px;
-
         }
-
-
         /* Card Container */
         .card.card-custom {
             overflow: hidden;
-            padding: 20px;
             margin-bottom: 20px;
             border-radius: 8px;
-            background: var(--bg-card);
             box-shadow: var(--shadow-lg);
+            background: #f1f1f1;
         }
 
         [data-theme="dark"] .card.card-custom {
@@ -45,6 +40,7 @@
             align-items: center;
             padding: 0;
             margin: 0;
+            gap: 10px;
         }
 
         /* Save button styling */
@@ -71,7 +67,7 @@
             }
 
             #MainContent__SubmitInvoice:active {
-                background-color: #cc3300;
+                background-color: #4caf50;
                 transform: translateY(1px);
             }
 
@@ -138,14 +134,7 @@
             color: var(--text-primary);
         }
 
-        /* Form Controls (Inputs, Selects, Textareas) */
-        .form-control, .form-select, textarea {
-            background: var(--input-bg);
-            border: 1px solid var(--input-border);
-            color: var(--input-text);
-            border-radius: 6px;
-            padding: 8px;
-        }
+
 
         [data-theme="dark"] .form-control,
         [data-theme="dark"] .form-select,
@@ -167,26 +156,108 @@
         [data-theme="dark"] .form-select {
             background-image: url('data:image/svg+xml;utf8,<svg fill="rgb(239,242,247)" height="20" viewBox="0 0 24 24" width="20" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>') !important;
             background: #414e64;
+        }
+
+        [data-theme="dark"] h6.poppinsmed.m-0 {
+            color: #cacaca !important;
+        }
+
+        .tax-toggle-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 28px;
+        }
+
+            .toggle-switch input {
+                opacity: 0;
+                width: 0;
+                height: 0;
             }
-       [data-theme="dark"]  h6.poppinsmed.m-0 {
-    color: #cacaca !important;
-}
 
+        .slider-tax {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 28px;
+        }
 
-        /* Table Styling */
+            .slider-tax:before {
+                position: absolute;
+                content: "";
+                height: 20px;
+                width: 20px;
+                left: 4px;
+                bottom: 4px;
+                background-color: white;
+                transition: .4s;
+                border-radius: 50%;
+            }
+
+        input:checked + .slider-tax {
+            background-color: #5e7cfd !important;
+        }
+
+            input:checked + .slider-tax:before {
+                transform: translateX(22px);
+            }
+
+        .form-control, .form-select, textarea, input[type='text'], input[type='number'], input[type='date'] {
+            background: #ffffff;
+            border: 1px solid #a9a9a9;
+            color: var(--input-text);
+            border-radius: 6px;
+            padding: 8px;
+        }
+
+        .card.card-custom {
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .col-12.bgtopin, .col-12.bgbotin {
+            position: absolute;
+            width: 100%;
+            left: 0; /* Ensure it aligns to the card's edge */
+            z-index: 0;
+            margin-top: 0; /* Remove negative margin */
+        }
+
+        .col-12.bgtopin {
+            top: 0;
+        }
+
+        .col-12.bgbotin {
+            bottom: 0;
+            margin-top: 0; /* Remove negative margin */
+        }
+
         .table {
             background: var(--table-bg);
             color: var(--table-text);
-        }
-
-        .table-bordered th,
-        .table-bordered td {
             border: 1px solid var(--table-border);
+            border-radius: 8px; /* Optional: adds rounded corners */
         }
 
-        .table thead th {
-            color: var(--table-text);
-        }
+
+            .table thead th {
+                color: var(--table-text);
+            }
 
         /* Labels and Messages */
         .text-warning {
@@ -242,6 +313,64 @@
         [data-theme="dark"] #MainContent_txtFirstName,
         [data-theme="dark"] #MainContent_PageTitle {
             color: var(--text-gray-700) !important;
+        }
+
+        .deposit-switch-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background-color: #ffffff;
+            border-radius: 20px;
+            width: fit-content;
+            position: relative;
+            border: 1px solid rgb(94 124 253);
+        }
+
+        [data-theme="dark"] .deposit-switch-container {
+            background-color: #2b384e;
+        }
+
+        .deposit-switch-option {
+            padding: 6px 16px;
+            cursor: pointer;
+            font-weight: 500;
+            color: #495057;
+            z-index: 2;
+            transition: color 0.3s ease;
+            border-radius: 18px;
+        }
+
+        [data-theme="dark"] .deposit-switch-option {
+            color: #adb5bd;
+        }
+
+        .deposit-switch-option.active {
+            color: #fff;
+        }
+
+        [data-theme="dark"] .deposit-switch-option.active {
+            color: #e9ecef;
+        }
+
+        .deposit-switch-slider {
+            position: absolute;
+            top: 0px;
+            left: 4px;
+            height: calc(100% - 0px );
+            background-color: rgb(94 124 253);
+            border-radius: 18px;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            z-index: 1;
+        }
+
+        .request-deposit {
+            display: flex;
+            gap: 10px;
+            justify-content: end;
+            align-items: baseline;
+        }
+        .table>:not(caption)>*>*{
+            background: #f1f1f1 !important;
         }
     </style>
 
@@ -409,7 +538,7 @@
             <div class="container">
                 <div class="row">
                     <div class="col-12 mb-3">
-                        <div class="card card-custom gutter-b card-stretch p-3">
+                        <div class="card card-custom gutter-b card-stretch">
                             <input type="hidden" id="ItemOpts" />
                             <div class="col-12 bgtopin" style="background-image: url(./crv_sched/img/invoice/bgtopin.png); background-position: center center; background-size: 100% 100%; width: 100%;">
                             </div>
@@ -421,7 +550,9 @@
 
                                 <asp:HiddenField ID="hdCompanyGUID" runat="server" />
                                 <asp:HiddenField ID="SV_CustomeID" runat="server" />
+                                <asp:HiddenField ID="hfCustomerIdInt" runat="server" />
 
+                                <asp:HiddenField ID="hfSiteId" runat="server" ClientIDMode="Static" />
                                 <asp:HiddenField ID="AppointmentID" runat="server" />
                                 <asp:HiddenField ID="Indicator" runat="server" />
                                 <asp:HiddenField ID="hd_IsQuickBookEnabled" Value="False" runat="server" />
@@ -544,10 +675,13 @@
                                                                 </td>
                                                                 <td align='center' style="border: 0px">
                                                                     <input type='text' id='txt_Deposit' runat="server" readonly style="width: 100px" class="form-control" value='' />
-
                                                                 </td>
-                                                                <td style="border: 0px">
-                                                                    <input class="btn btn-secondary" width="20px;" id="btn_viewDeposite" onclick="ViewDepositList()" type="button" value="..." /></td>
+                                                                <td style="border: 0px; text-align: left; padding-left: 5px;">
+                                                                    <%-- Upgraded Button --%>
+                                                                    <button id="btn_viewDeposite" onclick="ViewDepositList()" type="button" class="btn btn-sm btn-outline-secondary">
+                                                                        <i class="fas fa-list-ul" style="padding: 6px; font-size: 18px;"></i>
+                                                                    </button>
+                                                                </td>
                                                                 <td style="border: 0px">&nbsp;</td>
                                                             </tr>
                                                             <tr align='right' style="border: 0px;">
@@ -560,6 +694,23 @@
                                                                 <td colspan="2" style="border: 0px"></td>
                                                             </tr>
                                                         </table>
+
+                                                        <div class="request-deposit">
+                                                            <div class="col-auto">
+                                                                <h6 class="poppinsmed m-0" style="color: #41464b;">Requested Deposit Amount</h6>
+                                                            </div>
+                                                            <div class="col-auto">
+                                                                <div class="deposit-switch-container">
+                                                                    <div class="deposit-switch-slider"></div>
+                                                                    <div class="deposit-switch-option active" data-value="1">%</div>
+                                                                    <div class="deposit-switch-option" data-value="2">$</div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-auto" style="padding-left: 0;">
+                                                                <input type='text' id='txtReqAmount' runat="server" style="width: 100px;" class="form-control" value='' onchange='CalRequestedDepoAmount()' />
+                                                            </div>
+                                                            <asp:HiddenField ID="hfRequestedAmtType" runat="server" ClientIDMode="Static" Value="1" />
+                                                        </div>
 
                                                     </div>
                                                 </div>
@@ -581,26 +732,21 @@
                                                             <h4>You do not have permission to Add/Edit Invoice.</h4>
                                                         </div>
                                                     </div>
+                                                    <div class="col-lg-12 mt-2 save-button-container">
+                                                        <div class="">
+                                                            <a id="btnBack" href="#" class="btn btn-outline-secondary w-100">Back</a>
+                                                        </div>
+                                                        <input type="button" runat="server" id="_SubmitInvoice" value="Save" class="btn btn-secondary btn-transparentdark mt-3 w-100" onclick="submitInvoice()" />
+                                                    </div>
                                                     <div class="row justify-content-start save-button-row">
 
                                                         <div class="col-lg-4 mt-2">
                                                             <input type="button" runat="server" id="SendMail" value="E-Mail/Print" class="btn btn-secondary btn-transparentdark mt-3 w-100 d-none" onclick="OpenMailPopUp()" />
                                                         </div>
-
-                                                        <%--<div class="col-lg-2 mt-2">
-                                                            <asp:Button ID="btnBack" runat="server" Text="Back" OnClick="btnBack_Click" class="btn btn-secondary btn-transparentdark mt-3 w-100" />
-                                                        </div>--%>
-
                                                         <div class="col-lg-4 mt-2">
                                                             <p style="display: none" id="ProgressGIF">
                                                                 <img id="imgProcess" src="./images/Rolling.gif" />
                                                             </p>
-                                                        </div>
-                                                        <%--<div class="col-lg-2 mt-2" id="CreateOf">
-                                                            <asp:Button ID="btn_ConvertToInvocie" runat="server" Text="Convert to Invoice" OnClick="btnSave_Click_ConvertToInvoice" class="btn btn-secondary btn-transparentdark mt-3 w-100" />
-                                                        </div>--%>
-                                                        <div class="col-lg-3 mt-2 save-button-container">
-                                                            <input type="button" runat="server" id="_SubmitInvoice" value="Save" class="btn btn-secondary btn-transparentdark mt-3 w-100" onclick="submitInvoice()" />
                                                         </div>
                                                     </div>
                                                 </div>
@@ -619,24 +765,25 @@
             </div>
         </div>
 
-        <div class="modal fade" id="ShowDeposit" tabindex="-1" role="dialog" aria-labelledby="Collect_deposit" aria-hidden="true" style="z-index: 1000000000000000">
+        <div class="modal fade" id="ShowDeposit" tabindex="-1" role="dialog" aria-labelledby="depositListModalLabel" aria-hidden="true" style="z-index: 1000000000000000">
             <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">Deposit List</h5>
+                        <h5 class="modal-title" id="depositListModalLabel">Deposit & Payment List</h5>
+                        <%-- Added Close Icon Button --%>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <div class="row">
                             <div class="float-start">
                                 <p style="display: none" id="d_ProgressGIF">
-                                    <img id="imgProcess" src="images/Rolling.gif" />
-                                    Sync on progress....
+                                    <img src="images/Rolling.gif" />
+                                    Loading...
                                 </p>
                             </div>
                         </div>
                         <div class="row mt-2">
                             <div class="table-responsive">
-
                                 <table class="table table-bordered">
                                     <thead style="font-weight: normal; color: black;">
                                         <tr>
@@ -648,16 +795,16 @@
                                             <th>Date</th>
                                         </tr>
                                     </thead>
-
                                     <tbody id="NewRowForDeposit">
+                                        <%-- Data will be loaded here by JavaScript --%>
                                     </tbody>
                                 </table>
                             </div>
                         </div>
-                        <br />
                     </div>
-                    <div class="modal-footer justify-content-between">
-                        <button type="button" class="btn btn-secondary  btn-block ml-1" data-dismiss="modal" onclick="CloseCollect_DepositListPopup()" style="float: left">Close</button>
+                    <div class="modal-footer">
+                        <%-- Corrected Close Button --%>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     </div>
                 </div>
             </div>
@@ -692,7 +839,6 @@
             ViewInvoice(_InvsId);
 
         function ViewInvoice(ivId) {
-            debugger;
             $.ajax({
                 type: "POST",
                 url: "InvoiceCreate.aspx/GetInvoiceDetailsById",
@@ -743,16 +889,26 @@
 
         function CreateNewTR(Sl) {
             var ItemOpts = $('#ItemOpts').val();
-            $('#tblNewInvoice').append("<tr class='invTR'><td>" + Sl + "</td>"
-                + "<td><select id='id_Name" + Sl + "' class='allInputs idSelect form-select' onchange='FillItemsInfo(this)'>" + ItemOpts + "</select></td>"
-                + "<td><input id='id_Desc" + Sl + "' type='text' class='idInput form-control itmDesc' /></td>"
-                + "<td><input id='id_ServDate" + Sl + "' type='date' class='idInput form-control srvDate' /></td>"
-                + "<td><input id='id_Qty" + Sl + "' type='number' oninput=this.value=this.value.replace(/[.,][^.0-9.,]/g,'');  class='idInput form-control itmQty numbers-only' onchange='CalLineTotal(this)' /></td>"
-                + "<td><input id='id_Rate" + Sl + "' type='number' onclick='removeZero(this)' onfocusout='FormatDecimal(this)'  class='idInput form-control itmRate numbers-only' onchange='CalLineTotal(this)' /></td>"
-                + "<td><input id='id_Amount" + Sl + "' type='number' class='idInput form-control itmAmount' readonly /></td>"
-                + "<td><input id='id_Tax" + Sl + "' type='checkbox' class='idInput itmTax' onchange='TaxRecal()' /></td>"
-                + "<td><a href='javascript: void(0);' onclick='removeThis(this)' title='Delete' class='delete-icon'><i class='fa fa-trash'></i></a></td>"
-                + "</tr>");
+            var newRow = `
+        <tr class='invTR'>
+            <td>${Sl}</td>
+            <td><select id='id_Name${Sl}' class='allInputs idSelect form-select' onchange='FillItemsInfo(this)'>${ItemOpts}</select></td>
+            <td><input id='id_Desc${Sl}' type='text' class='idInput form-control itmDesc' /></td>
+            <td><input id='id_ServDate${Sl}' type='date' class='idInput form-control srvDate' /></td>
+            <td><input id='id_Qty${Sl}' type='number' oninput="this.value=this.value.replace(/[^0-9.]/g,'');" class='idInput form-control itmQty numbers-only' onchange='CalLineTotal(this)' /></td>
+            <td><input id='id_Rate${Sl}' type='number' onclick='removeZero(this)' onfocusout='FormatDecimal(this)' class='idInput form-control itmRate numbers-only' onchange='CalLineTotal(this)' /></td>
+            <td><input id='id_Amount${Sl}' type='number' class='idInput form-control itmAmount' readonly /></td>
+            <td>
+                <div class="tax-toggle-container">
+                    <label class="toggle-switch">
+                        <input id='id_Tax${Sl}' type='checkbox' class='idInput itmTax' onchange='TaxRecal()'>
+                        <span class="slider-tax"></span>
+                    </label>
+                </div>
+            </td>
+            <td><a href='javascript: void(0);' onclick='removeThis(this)' title='Delete' class='delete-icon'><i class='fa fa-trash'></i></a></td>
+        </tr>`;
+            $('#tblNewInvoice').append(newRow);
         }
 
         function removeThis(_this) {
@@ -1087,28 +1243,112 @@
                     else {
                         $("#MainContent_EnableSaveOnly").val('0')
                     }
-                    //prgBarInv.style.display = "none";
+
                 }
             });
         }
 
 
         function ViewDepositList() {
-            $("#ShowDeposit").modal('show');
+            var depositModal = new bootstrap.Modal(document.getElementById('ShowDeposit'));
+
+            var invoiceId = $("#MainContent_HdInvoiceId").val();
+            if (!invoiceId) {
+                alert("Please save the invoice before viewing payments.");
+                return;
+            }
+
+            depositModal.show();
+
             $("#NewRowForDeposit").html("");
             var prgBar = document.getElementById("d_ProgressGIF");
             prgBar.style.display = "block";
+
             $.ajax({
                 type: "POST",
                 url: "InvoiceCreate.aspx/GetDepositsById",
-                data: JSON.stringify({ 'iId': $("#MainContent_HdInvoiceId").val() }),
+                data: JSON.stringify({ 'iId': invoiceId }),
                 contentType: "application/json",
                 dataType: "json",
-                success: function (Data) {
+                success: function (response) {
                     prgBar.style.display = "none";
-                    $("#NewRowForDeposit").html(Data.d.TableRow);
+                    $("#NewRowForDeposit").html(response.d.TableRow);
+                },
+                error: function (err) {
+                    prgBar.style.display = "none";
+                    $("#NewRowForDeposit").html("<tr><td colspan='6' class='text-center text-danger'>Failed to load payment data.</td></tr>");
+                    console.error("Error fetching deposit list:", err);
                 }
             });
         }
+
     </script>
+    <script type="text/javascript">
+        document.addEventListener('DOMContentLoaded', function () {
+            const backButton = document.getElementById('btnBack');
+
+            if (backButton) {
+                backButton.addEventListener('click', function (e) {
+                    e.preventDefault();
+
+                    const currentUrl = new URL(window.location.href);
+                    const customerIdInt = currentUrl.searchParams.get("custId_int");
+                    const siteId = currentUrl.searchParams.get("siteId");
+                    if (!customerIdInt || !siteId) {
+                        alert("Error: Cannot determine the return page. The required IDs were not found in the URL. Returning to the main customer list.");
+                        window.location.href = 'Customer.aspx';
+                        return;
+                    }
+                    const returnUrl = `CustomerDetails.aspx?custId=${customerIdInt}&siteId=${siteId}&tab=invoices`;
+                    window.location.href = returnUrl;
+                });
+            }
+        });
+    </script>
+    <script type="text/javascript">
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const options = document.querySelectorAll('.deposit-switch-option');
+            const slider = document.querySelector('.deposit-switch-slider');
+            const hfRequestedAmtType = document.getElementById('hfRequestedAmtType');
+            const txtReqAmount = document.getElementById('<%= txtReqAmount.ClientID %>');
+
+            function updateSlider(activeIndex) {
+                const activeOption = options[activeIndex];
+                slider.style.width = activeOption.offsetWidth + 'px';
+                slider.style.transform = `translateX(${activeOption.offsetLeft - 4}px)`;
+            }
+
+            options.forEach((option, index) => {
+                option.addEventListener('click', function () {
+                    options.forEach(opt => opt.classList.remove('active'));
+                    this.classList.add('active');
+                    hfRequestedAmtType.value = this.getAttribute('data-value');
+                    updateSlider(index);
+                    CalRequestedDepoAmount();
+                });
+            });
+
+            const initialActiveIndex = hfRequestedAmtType.value === '2' ? 1 : 0;
+            options[initialActiveIndex].classList.add('active');
+            options[initialActiveIndex === 0 ? 1 : 0].classList.remove('active');
+            setTimeout(() => updateSlider(initialActiveIndex), 100);
+        });
+
+        function CalRequestedDepoAmount() {
+            const reqAmtType = document.getElementById('hfRequestedAmtType').value;
+            const reqAmountInput = document.getElementById('<%= txtReqAmount.ClientID %>');
+            const dueAmount = parseFloat(document.getElementById('<%= txt_Due.ClientID %>').value) || 0;
+            let reqValue = parseFloat(reqAmountInput.value) || 0;
+            let finalDepositAmount = 0;
+
+            if (reqAmtType === '1') { // Percentage
+                finalDepositAmount = (dueAmount * reqValue) / 100;
+            } else { // Dollar
+                finalDepositAmount = reqValue;
+            }
+            console.log("Calculated Deposit: $" + finalDepositAmount.toFixed(2));
+        }
+    </script>
+
 </asp:Content>
