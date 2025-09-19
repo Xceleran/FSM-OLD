@@ -27,5 +27,7 @@ namespace FSM.Entity.Appoinments
         public string Note { get; set; }
         public string CustomFieldsJson { get; set; }
         public string Duration { get; set; } = "0";
+        public int StatusID { get; set; }      
+        public int TicketStatusID { get; set; }
     }
 }

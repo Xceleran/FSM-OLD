@@ -21,6 +21,7 @@
         .icon-btn.dropdown-toggle::after {
             display: none !important;
         }
+
     </style>
 
     <div class="custdet-main-container">

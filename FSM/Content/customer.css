@@ -1092,7 +1092,7 @@ div#contact {
 .ci-value {
     font-size: 14px;
     color: #212529;
-    word-break: break-all;
+    max-width: 70%;
 }
 
     .ci-value a {
